@@ -17,8 +17,8 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database Connection
-// Database Connection
-mongoose.connect('mongodb://localhost:27017/everything_spread')
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
+mongoose.connect(MONGO_URI)
     .then(() => console.log('MongoDB Connected'))
     .catch(err => console.log(err));
 
