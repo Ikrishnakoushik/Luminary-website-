@@ -4,12 +4,19 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs'); // Import fs
 const User = require('./models/User');
 const Post = require('./models/Post');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const JWT_SECRET = 'your_jwt_secret_key_here'; // In production, use environment variable
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Middleware
 app.use(cors());
