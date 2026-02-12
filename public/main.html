@@ -663,6 +663,112 @@
         }
 
         /* Dark mode toggle for reader could be added later */
+
+        /* --- REDESIGN: Modal & Chips --- */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(15, 23, 42, 0.6);
+            /* Darker overlay */
+            backdrop-filter: blur(8px);
+            /* Blur effect */
+            align-items: center;
+            justify-content: center;
+            animation: fadeInModal 0.3s ease;
+        }
+
+        @keyframes fadeInModal {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-content {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            transform: translateY(0);
+            animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+        }
+
+        @keyframes slideUpModal {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            color: #aaa;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .close:hover {
+            color: var(--text-main);
+        }
+
+        /* Interest Chips */
+        .pref-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+            margin: 20px 0 30px 0;
+        }
+
+        .pref-chip {
+            padding: 10px 20px;
+            border-radius: 50px;
+            cursor: pointer;
+            border: 2px solid #e2e8f0;
+            background: #fff;
+            color: var(--text-light);
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            user-select: none;
+        }
+
+        .pref-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .pref-chip.selected {
+            background: linear-gradient(135deg, var(--accent), var(--secondary));
+            border-color: transparent;
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+            transform: scale(1.05);
+        }
     </style>
 </head>
 
@@ -697,7 +803,14 @@
                 <i class="fas fa-user"></i> <span>Profile</span>
             </a>
 
+            <a href="publish.html" class="nav-item" id="publisher-link" style="display: none;">
+                <i class="fas fa-pen-nib"></i> <span>Publisher Studio</span>
+            </a>
+
             <div class="section-label">Topics</div>
+            <a href="#" class="nav-item" onclick="openPreferences()">
+                <i class="fas fa-sliders-h"></i> <span>Preferences</span>
+            </a>
             <a href="#" class="nav-item" onclick="filterPosts('General')">
                 <i class="fas fa-hashtag"></i> <span>General</span>
             </a>
@@ -870,43 +983,89 @@
             }
 
             container.innerHTML = posts.map(post => {
-                const authorName = post.username || post.author || 'User';
+                // Post Author Details
+                const authorName = post.user?.username || post.username || 'User';
                 const initial = authorName.charAt(0).toUpperCase();
                 const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
                 const likesCount = post.likes ? post.likes.length : 0;
                 const commentsCount = post.comments ? post.comments.length : 0;
+                const authorId = post.user?._id || '#';
 
-                // Safe content escaping
-                const safeContent = (post.content || '').replace(/`/g, '\\`').replace(/\\/g, '\\\\');
-                const safeAuthor = authorName.replace(/'/g, "\\'");
-                const safeDate = dateStr.replace(/'/g, "\\'");
+                // Post Avatar logic
+                const postAvatar = post.user?.profilePicture
+                    ? `<img src="${post.user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
+                    : `<div class="avatar-sm">${initial}</div>`;
 
-                // Comments HTML (Updated with Avatar and Link)
+                // Build Post Content HTML
+                let postContentHTML = '';
+
+                // Title
+                if (post.title) {
+                    postContentHTML += `<h3 style="margin-bottom: 10px; font-size: 1.2rem;">${post.title}</h3>`;
+                }
+
+                // Image
+                if (post.image) {
+                    postContentHTML += `
+                    <div style="width: 100%; margin-bottom: 15px; border-radius: 12px; overflow: hidden;">
+                        <img src="${post.image}" alt="Post Image" style="width: 100%; height: auto; display: block;">
+                    </div>`;
+                }
+
+                // Text Content
+                postContentHTML += `<div style="margin-bottom: 15px;">${linkify(post.content || '')}</div>`;
+
+                // Video Embed
+                if (post.videoUrl) {
+                    const videoId = getYouTubeID(post.videoUrl);
+                    if (videoId) {
+                        postContentHTML += `
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px;">
+                            <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
+                                src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen>
+                            </iframe>
+                        </div>`;
+                    }
+                }
+
+                // Attachment
+                if (post.attachment) {
+                    const fileName = post.attachment.split('/').pop().replace(/^\d+-/, '');
+                    postContentHTML += `
+                    <a href="${post.attachment}" download class="attachment-btn" style="
+                        display: inline-flex; align-items: center; gap: 8px; 
+                        background: #f1f5f9; padding: 10px 16px; border-radius: 8px; 
+                        text-decoration: none; color: var(--text-main); font-weight: 600; margin-bottom: 15px;">
+                        <i class="fas fa-file-download" style="color: var(--accent);"></i> Download: ${fileName}
+                    </a>`;
+                }
+
+                // Comments HTML
                 const commentsList = (post.comments || []).map(c => {
-                    const cInitial = (c.username || 'U').charAt(0).toUpperCase();
-                    const cUserId = c.user || c._id; // Assuming c.user is the ID, fallback if needed
-                    // Note: c.user might be an object if populated, or ID string. 
-                    // In Post model: user: { type: ObjectId, ref: 'User' }
-                    // If not populated, it is ID.
+                    const cName = c.user?.username || c.username || 'User';
+                    const cInitial = cName.charAt(0).toUpperCase();
+                    const cUserId = c.user?._id || c.user || '#';
+                    const cProfilePic = c.user?.profilePicture;
+
+                    const commentAvatar = cProfilePic
+                        ? `<img src="${cProfilePic}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
+                        : `<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">${cInitial}</div>`;
 
                     return `
                     <div style="display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-                        <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">
-                            ${cInitial}
-                        </div>
+                        ${commentAvatar}
                         <div>
                             <div style="font-size: 0.9rem;">
-                                <a href="profile.html?user=${c.user}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${c.username || 'User'}</a>
+                                <a href="profile.html?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
                                 <span style="font-size: 0.8rem; color: #aaa;">• Commented</span>
                             </div>
                             <div style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
                                 ${c.text}
                             </div>
                         </div>
-                    </div>
-                `}).join('');
+                    </div>`;
+                }).join('');
 
-                // Always show 'Like' text, append count if > 0
                 const likeText = likesCount > 0 ? `${likesCount}` : 'Like';
                 const commentText = commentsCount > 0 ? `${commentsCount}` : 'Comment';
 
@@ -914,15 +1073,17 @@
                 <div class="post-card" id="post-${post._id}">
                     <div class="post-header">
                         <div class="post-user-info">
-                            <div class="avatar-sm">${initial}</div>
-                            <div>
-                                <div class="post-author">${authorName}</div>
-                                <div class="post-time">${dateStr}</div>
-                            </div>
+                            <a href="profile.html?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                                ${postAvatar}
+                                <div>
+                                    <div class="post-author">${authorName}</div>
+                                    <div class="post-time">${dateStr}</div>
+                                </div>
+                            </a>
                         </div>
-                        <span class="post-tag">${post.tag || 'General'}</span>
+                        <span class="post-tag" style="background: var(--tag-bg); color: var(--tag-text); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">${post.category || 'General'}</span>
                     </div>
-                    <div class="post-content">${linkify(post.content || '')}</div>
+                    <div class="post-content">${postContentHTML}</div>
                     
                     <div class="post-actions">
                         <div class="action-btn" onclick="toggleLike('${post._id}')">
@@ -932,10 +1093,6 @@
                             <i class="far fa-comment"></i> ${commentText}
                         </div>
                         
-                        <div class="action-btn" onclick="openReader('Prism Post', '${safeAuthor}', '${safeDate}', \`${safeContent}\`)">
-                            <i class="fas fa-book-open"></i> Read
-                        </div>
-
                         <div class="action-btn" onclick="sharePost('${post._id}')">
                             <i class="far fa-share-square"></i> Share
                         </div>
@@ -951,8 +1108,7 @@
                             <button onclick="submitComment('${post._id}')" class="btn btn-primary" style="padding: 8px 20px; border-radius: 20px; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Post</button>
                         </div>
                     </div>
-                </div>
-                `;
+                </div>`;
             }).join('');
         }
 
@@ -963,7 +1119,7 @@
                 const token = localStorage.getItem('token');
                 if (!token) return alert('Please login to like');
 
-                const res = await fetch(`${API_URL}/posts/${postId}/like`, {
+                const res = await fetch(`${API_URL} /posts/${postId}/like`, {
                     method: 'PUT',
                     headers: { 'x-auth-token': token }
                 });
@@ -1096,6 +1252,85 @@
         // but CSS @media query handles display:flex vs none.
         // We set inline style display:none initially to avoid flash, but CSS will override.
         // Actually best to remove inline style and rely on CSS.
+    </script>
+    <!-- PREFERENCES MODAL -->
+    <div id="prefModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('prefModal')">&times;</span>
+            <h2>Select Your Interests</h2>
+            <p style="color: #666; margin-bottom: 20px;">Choose what you want to see in your feed.</p>
+
+            <div id="pref-options" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
+                <!-- Generating via JS -->
+            </div>
+
+            <button class="btn btn-primary" onclick="savePreferences()"
+                style="width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer;">Save
+                Preferences</button>
+        </div>
+    </div>
+
+    <script>
+
+        // --- PREFERENCES LOGIC ---
+        const interests = ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other', 'General'];
+        let userPreferences = [];
+
+        function closeModal(id) {
+            document.getElementById(id).style.display = 'none';
+        }
+
+        function openPreferences() {
+            const container = document.getElementById('pref-options');
+
+            // Allow 'pref-container' class if not present
+            container.classList.add('pref-container');
+            container.style.display = 'flex'; // Restore display if overwritten
+
+            container.innerHTML = interests.map(cat => {
+                const isSelected = userPreferences.includes(cat) ? 'selected' : '';
+                return `<div class="pref-chip ${isSelected}" onclick="togglePref(this, '${cat}')">${cat}</div>`;
+            }).join('');
+
+            document.getElementById('prefModal').style.display = 'flex';
+        }
+
+        function togglePref(el, cat) {
+            if (userPreferences.includes(cat)) {
+                userPreferences = userPreferences.filter(c => c !== cat);
+                el.classList.remove('selected');
+            } else {
+                userPreferences.push(cat);
+                el.classList.add('selected');
+            }
+        }
+
+        async function savePreferences() {
+            try {
+                const res = await fetch(`${API_URL}/users/preferences`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token')
+                    },
+                    body: JSON.stringify({ preferences: userPreferences })
+                });
+
+                if (res.ok) {
+                    closeModal('prefModal');
+                    // Reload posts with new prefs
+                    // For now, reload page is easiest to sync state
+                    window.location.reload();
+                }
+            } catch (e) { console.error(e); }
+        }
+
+        // Initialize Publisher Link visibility
+        const role = localStorage.getItem('role');
+        const pubLink = document.getElementById('publisher-link');
+        if (role === 'publisher' && pubLink) {
+            pubLink.style.display = 'flex'; // Use flex to match nav-item display
+        }
     </script>
 </body>
 

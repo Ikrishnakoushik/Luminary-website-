@@ -35,6 +35,26 @@ const UserSchema = new mongoose.Schema({
     loginHistory: [{
         type: Date,
         default: Date.now
+    }],
+    resetPasswordOtp: {
+        type: String
+    },
+    resetPasswordExpires: {
+        type: Date
+    },
+    isVerified: {
+        type: Boolean,
+        default: false
+    },
+    verificationOtp: {
+        type: String
+    },
+    verificationExpires: {
+        type: Date
+    },
+    preferences: [{
+        type: String,
+        enum: ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other']
     }]
 });
 

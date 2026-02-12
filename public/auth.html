@@ -312,6 +312,10 @@
 
                     <button type="submit" class="btn-submit">Sign In</button>
                     <div class="error-msg" id="loginError"></div>
+                    <p style="text-align: center; margin-top: 15px;">
+                        <a href="#" onclick="switchTab('forgot')"
+                            style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
+                    </p>
                 </form>
             </div>
 
@@ -361,6 +365,76 @@
                 </form>
             </div>
 
+            <!-- Forgot Password Form -->
+            <div class="auth-form" id="forgot-form" style="display: none; transform: translateX(20px);">
+                <h2>Reset Password</h2>
+                <p class="subtitle">Enter your email to receive an OTP.</p>
+
+                <!-- Step 1: Send OTP -->
+                <form id="forgotFormStep1">
+                    <div class="input-group">
+                        <label>Email Address</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-envelope"></i>
+                            <input type="email" id="forgotEmail" placeholder="you@example.com" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit" id="btnSendOtp">Send OTP</button>
+                    <div class="error-msg" id="forgotError1"></div>
+                </form>
+
+                <!-- Step 2: Verify & Reset (Hidden initially) -->
+                <form id="forgotFormStep2" style="display: none; margin-top: 20px;">
+                    <div class="input-group">
+                        <label>Enter OTP</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-key"></i>
+                            <input type="text" id="forgotOtp" placeholder="6-digit OTP" required>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>New Password</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-lock"></i>
+                            <input type="password" id="newPassword" placeholder="New Password" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Reset Password</button>
+                    <div class="error-msg" id="forgotError2"></div>
+                </form>
+
+                <p style="text-align: center; margin-top: 15px;">
+                    <a href="#" onclick="switchTab('login')"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
+                        In</a>
+                </p>
+            </div>
+
+            <!-- Verify Email Form -->
+            <div class="auth-form" id="verify-form" style="display: none; transform: translateX(20px);">
+                <h2>Verify Email</h2>
+                <p class="subtitle">Enter the code sent to <span id="verifyEmailDisplay"
+                        style="color: var(--white);">your email</span>.</p>
+
+                <form id="verifyForm">
+                    <div class="input-group">
+                        <label>Enter OTP</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-key"></i>
+                            <input type="text" id="verifyOtp" placeholder="6-digit OTP" required>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-submit">Verify Account</button>
+                    <div class="error-msg" id="verifyError"></div>
+                </form>
+
+                <p style="text-align: center; margin-top: 15px;">
+                    <a href="#" onclick="switchTab('login')"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
+                        In</a>
+                </p>
+            </div>
+
         </div>
     </div>
 
@@ -375,25 +449,71 @@
         const registerForm = document.getElementById('register-form');
         const tabs = document.querySelectorAll('.tab');
 
+        const forgotForm = document.getElementById('forgot-form');
+        const verifyForm = document.getElementById('verify-form');
+
         function switchTab(tab) {
             if (tab === 'login') {
                 indicator.style.left = '0';
                 loginForm.classList.add('active');
+                loginForm.style.display = 'block';
+
                 registerForm.classList.remove('active');
                 registerForm.style.transform = 'translateX(20px)';
                 loginForm.style.transform = 'translateX(0)';
 
+                forgotForm.style.display = 'none'; // Hide forgot form
+                verifyForm.style.display = 'none'; // Hide verify form
+
                 tabs[0].classList.add('active');
                 tabs[1].classList.remove('active');
-            } else {
+            } else if (tab === 'register') {
                 indicator.style.left = '50%';
                 loginForm.classList.remove('active');
+
                 registerForm.classList.add('active');
+                registerForm.style.display = 'block';
+
                 loginForm.style.transform = 'translateX(-20px)';
                 registerForm.style.transform = 'translateX(0)';
 
+                forgotForm.style.display = 'none'; // Hide forgot form
+                verifyForm.style.display = 'none'; // Hide verify form
+
                 tabs[0].classList.remove('active');
                 tabs[1].classList.add('active');
+            } else if (tab === 'forgot') {
+                // Show Forgot Form, Hide others
+                loginForm.classList.remove('active');
+                registerForm.classList.remove('active');
+
+                forgotForm.classList.add('active');
+
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'none';
+                verifyForm.style.display = 'none';
+
+                forgotForm.style.display = 'block';
+                forgotForm.style.transform = 'translateX(0)';
+
+                // Reset indicator or hide it? Let's keep it at login pos mostly
+                indicator.style.left = '0';
+                tabs[0].classList.remove('active');
+                tabs[1].classList.remove('active');
+            } else if (tab === 'verify') {
+                loginForm.classList.remove('active');
+                registerForm.classList.remove('active');
+
+                verifyForm.classList.add('active');
+
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'none';
+                forgotForm.style.display = 'none';
+
+                verifyForm.style.display = 'block';
+                verifyForm.style.transform = 'translateX(0)';
+
+                indicator.style.left = '50%'; // Keep under Signup mostly
             }
         }
 
@@ -430,6 +550,9 @@
             }
         });
 
+        // Global variable to store email for verification
+        let registrationEmail = '';
+
         // Handle Register
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -448,13 +571,118 @@
                     body: JSON.stringify({ username, email, password, role })
                 });
 
-                if (res.ok) {
-                    // Auto login after register or switch to login tab
-                    alert('Registration successful! Please sign in.');
-                    switchTab('login');
+                const data = await res.json();
+
+                if (res.status === 201) {
+                    // Registration successful, verification required
+                    registrationEmail = data.email;
+                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
+                    switchTab('verify');
+                    // alert('Registration successful! Please verify your email.');
                 } else {
-                    const data = await res.json();
                     errorMsg.innerText = data.msg || 'Registration failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // Handle Verification
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = document.getElementById('verifyOtp').value;
+            const errorMsg = document.getElementById('verifyError');
+
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: registrationEmail, otp })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    alert('Email Verified! Logging you in...');
+                    window.location.href = 'main.html';
+                } else {
+                    errorMsg.innerText = data.msg || 'Verification failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // Handle Forgot Password
+        document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const btn = document.getElementById('btnSendOtp');
+
+            btn.innerText = 'Sending...';
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    // Show Step 2
+                    document.getElementById('forgotFormStep1').style.display = 'none';
+                    document.getElementById('forgotFormStep2').style.display = 'block';
+                    // Store email for step 2 (could also just read from input, but let's be safe)
+                    // document.getElementById('forgotEmail').disabled = true; 
+                } else {
+                    errorMsg.innerText = data.msg || 'Failed to send OTP';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            } finally {
+                btn.innerText = 'Send OTP';
+            }
+        });
+
+        document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const otp = document.getElementById('forgotOtp').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const errorMsg = document.getElementById('forgotError2');
+
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert('Password reset successful! Please login with your new password.');
+                    switchTab('login');
+                    // Reset form state
+                    document.getElementById('forgotFormStep1').reset();
+                    document.getElementById('forgotFormStep2').reset();
+                    document.getElementById('forgotFormStep1').style.display = 'block';
+                    document.getElementById('forgotFormStep2').style.display = 'none';
+                } else {
+                    errorMsg.innerText = data.msg || 'Reset failed';
                 }
             } catch (err) {
                 console.error(err);

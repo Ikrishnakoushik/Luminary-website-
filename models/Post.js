@@ -14,8 +14,30 @@ const PostSchema = new mongoose.Schema({
         required: true
     },
     tag: {
-        type: String,
+        type: String, // Kept for backward compatibility, sync with category if needed
         default: 'General'
+    },
+    title: {
+        type: String
+    },
+    category: {
+        type: String,
+        enum: ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other', 'General'],
+        default: 'General'
+    },
+    videoUrl: {
+        type: String
+    },
+    image: {
+        type: String
+    },
+    attachment: {
+        type: String // Path to file
+    },
+    type: {
+        type: String,
+        enum: ['quick', 'article'],
+        default: 'quick'
     },
     likes: [{
         type: mongoose.Schema.Types.ObjectId,

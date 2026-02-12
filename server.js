@@ -11,6 +11,16 @@ const Post = require('./models/Post');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const nodemailer = require('nodemailer');
+
+// Nodemailer Transporter (Configure with your email service)
+const transporter = nodemailer.createTransport({
+    service: 'gmail', // or your preferred service
+    auth: {
+        user: 'meta81210@gmail.com',
+        pass: 'mlonvmknxplafkrj'
+    }
+});
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'public/uploads');
@@ -60,24 +70,27 @@ const upload = multer({
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }
-}).single('avatar');
+});
 
 // Check File Type
 function checkFileType(file, cb) {
-    const filetypes = /jpeg|jpg|png|gif/;
+    // Allowed ext
+    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    // Check mime
     const mimetype = filetypes.test(file.mimetype);
 
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb('Error: Images Only!');
+        cb('Error: Images, PDFs and Documents Only!');
     }
 }
 
 // Upload Avatar Route
 app.post('/api/users/avatar', auth, (req, res) => {
-    upload(req, res, async (err) => {
+    upload.single('avatar')(req, res, async (err) => {
         if (err) {
             return res.status(400).json({ msg: err });
         } else {
@@ -126,21 +139,177 @@ app.post('/api/register', async (req, res) => {
         const validRoles = ['publisher', 'reader'];
         const userRole = validRoles.includes(role) ? role : 'reader';
 
-        // Create user
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+
+
+        // Create user with isVerified: false
         user = new User({
             username,
             email,
             password: hashedPassword,
-            role: userRole
+            role: userRole,
+            isVerified: false,
+            verificationOtp: otp,
+            verificationExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
         });
 
         await user.save();
 
-        res.status(201).json({ msg: 'User registered successfully' });
+        // Send Verification Email
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@prism.com',
+            to: user.email,
+            subject: 'Prism - Verify Your Email',
+            text: `Welcome to Prism! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending verification email:', error);
+                return res.status(500).json({ msg: 'Error sending verification email. User registered but not verified.' });
+            } else {
+                console.log('Verification email sent: ' + info.response);
+                res.status(201).json({ msg: 'Verification required', email: user.email });
+            }
+        });
+
     } catch (err) {
         console.log('Error in register route:', err);
         console.error(err);
         res.status(500).send('Server Error: ' + err.message);
+    }
+});
+
+// Verify Email
+app.post('/api/verify-email', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+        const user = await User.findOne({
+            email,
+            verificationOtp: otp,
+            verificationExpires: { $gt: Date.now() }
+        });
+
+        if (!user) {
+            return res.status(400).json({ msg: 'Invalid or expired OTP' });
+        }
+
+        user.isVerified = true;
+        user.verificationOtp = undefined;
+        user.verificationExpires = undefined;
+        await user.save();
+
+        // Return Token (Login successful)
+        const payload = {
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role
+            }
+        };
+
+        jwt.sign(
+            payload,
+            JWT_SECRET,
+            { expiresIn: '1h' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token, username: user.username, role: user.role });
+            }
+        );
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Forgot Password (Send OTP)
+app.post('/api/auth/forgot-password', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res.status(404).json({ msg: 'User with this email does not exist' });
+        }
+
+        // Generate 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Save OTP and expiration (10 minutes)
+        user.resetPasswordOtp = otp;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+
+
+        // Send Email
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@prism.com',
+            to: user.email,
+            subject: 'Prism - Password Reset OTP',
+            text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.error('Error sending email:', error);
+                return res.status(500).json({ msg: 'Error sending email. Please check server logs and credentials.' });
+            } else {
+                console.log('Email sent: ' + info.response);
+                res.json({ msg: 'OTP sent to email', email: user.email });
+            }
+        });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Reset Password (Verify OTP and Update)
+app.post('/api/auth/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        console.log(`[DEBUG] Reset attempt for: ${email} with OTP: ${otp}`);
+
+        // Debug: Find user by email first to see what's in DB
+        const debugUser = await User.findOne({ email });
+        if (debugUser) {
+            console.log(`[DEBUG] DB User found. Stored OTP: ${debugUser.resetPasswordOtp}, Expires: ${debugUser.resetPasswordExpires}, Now: ${Date.now()}`);
+        } else {
+            console.log(`[DEBUG] No user found with email: ${email}`);
+        }
+
+        const user = await User.findOne({
+            email,
+            resetPasswordOtp: otp,
+            resetPasswordExpires: { $gt: Date.now() } // Check if not expired
+        });
+
+        if (!user) {
+            console.log('[DEBUG] OTP Verification Failed');
+            return res.status(400).json({ msg: 'Invalid or expired OTP' });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        user.password = await bcrypt.hash(newPassword, salt);
+
+        // Clear OTP fields
+        user.resetPasswordOtp = undefined;
+        user.resetPasswordExpires = undefined;
+        await user.save();
+
+        res.json({ msg: 'Password reset successful. Please login.' });
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 
@@ -251,6 +420,22 @@ app.put('/api/users/password', auth, async (req, res) => {
     }
 });
 
+// Update Preferences
+app.put('/api/users/preferences', auth, async (req, res) => {
+    try {
+        const { preferences } = req.body;
+        const user = await User.findById(req.user.id);
+
+        user.preferences = preferences;
+        await user.save();
+
+        res.json({ msg: 'Preferences updated', preferences: user.preferences });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get User by ID (Public Profile)
 app.get('/api/users/:id', async (req, res) => {
     try {
@@ -267,24 +452,53 @@ app.get('/api/users/:id', async (req, res) => {
 
 
 // Create Post (Protected Route)
-app.post('/api/posts', auth, async (req, res) => {
-    try {
-        const { content, tag } = req.body;
+// Create Post (Protected Route)
+app.post('/api/posts', auth, (req, res) => {
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'attachment', maxCount: 1 }, { name: 'avatar', maxCount: 1 }])(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ msg: err });
+        }
 
-        // Create new post
-        const newPost = new Post({
-            user: req.user.id,
-            username: req.user.username,
-            content,
-            tag
-        });
+        try {
+            const { title, content, category, videoUrl, type } = req.body;
 
-        const post = await newPost.save();
-        res.json(post);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
-    }
+            let attachment = '';
+            let image = '';
+
+            if (req.files) {
+                if (req.files['attachment']) {
+                    attachment = `/uploads/${req.files['attachment'][0].filename}`;
+                }
+                if (req.files['image']) {
+                    image = `/uploads/${req.files['image'][0].filename}`;
+                }
+                // Legacy support (avatar was used for attachment in previous implementation)
+                if (req.files['avatar'] && !attachment) {
+                    attachment = `/uploads/${req.files['avatar'][0].filename}`;
+                }
+            }
+
+            // Create new post
+            const newPost = new Post({
+                user: req.user.id,
+                username: req.user.username,
+                title,
+                content,
+                category: category || 'General',
+                tag: category || 'General', // Sync tag
+                videoUrl,
+                attachment,
+                image,
+                type: type || 'quick'
+            });
+
+            const post = await newPost.save();
+            res.json(post);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
 });
 
 
@@ -335,7 +549,10 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
 // Get All Posts
 app.get('/api/posts', async (req, res) => {
     try {
-        const posts = await Post.find().sort({ createdAt: -1 });
+        const posts = await Post.find()
+            .sort({ createdAt: -1 })
+            .populate('user', 'username profilePicture')
+            .populate('comments.user', 'username profilePicture');
         res.json(posts);
     } catch (err) {
         console.error(err.message);

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prism | Publisher Studio</title>
+    <!-- Google Fonts: Outfit -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --accent: #6366f1;
+            --accent-hover: #4f46e5;
+            --border-radius: 16px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 100%);
+            color: var(--text-main);
+            padding: 40px 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: #1e293b;
+        }
+
+        .header a {
+            text-decoration: none;
+            color: #64748b;
+            font-weight: 600;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header a:hover {
+            color: var(--accent);
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 20px 40px -5px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #334155;
+            font-size: 0.95rem;
+        }
+
+        input,
+        textarea,
+        select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-family: inherit;
+            outline: none;
+            background: #fff;
+            transition: 0.2s;
+            font-size: 1rem;
+        }
+
+        input:focus,
+        textarea:focus,
+        select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+        }
+
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+        }
+
+        /* Custom File Input */
+        .file-upload {
+            border: 2px dashed #cbd5e1;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: 0.2s;
+            background: #f8fafc;
+        }
+
+        .file-upload:hover {
+            border-color: var(--accent);
+            background: #eff6ff;
+        }
+
+        .file-upload i {
+            font-size: 2rem;
+            color: #94a3b8;
+            margin-bottom: 10px;
+        }
+
+        .file-upload p {
+            color: #64748b;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--accent), #4f46e5);
+            color: white;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            cursor: pointer;
+            width: 100%;
+            transition: 0.3s;
+            box-shadow: 0 10px 20px -5px rgba(79, 70, 229, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px -5px rgba(79, 70, 229, 0.4);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Publisher Studio ✍️</h1>
+            <a href="main.html" style="text-decoration: none; color: var(--text-main);"><i
+                    class="fas fa-arrow-left"></i> Back to Feed</a>
+        </div>
+
+        <div class="card">
+            <form id="publishForm">
+                <div class="form-group">
+                    <label>Article Title</label>
+                    <input type="text" id="title" placeholder="Enter a catchy title..." required>
+                </div>
+
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="category" required>
+                        <option value="General">General</option>
+                        <option value="World News">World News</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Study">Study Materials</option>
+                        <option value="Animals">Animals</option>
+                        <option value="Coding">Professional Coder</option>
+                        <option value="Other">Other Country's News</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Content</label>
+                    <textarea id="content" placeholder="Write your knowledge here..." required></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Cover Image</label>
+                    <label class="file-upload">
+                        <input type="file" id="image" accept="image/*" style="display: none;"
+                            onchange="updateFileName(this, 'imageName')">
+                        <i class="fas fa-image"></i>
+                        <p id="imageName">Click or Drag image to upload</p>
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label>Video URL (YouTube)</label>
+                    <input type="url" id="videoUrl" placeholder="https://youtube.com/watch?v=...">
+                </div>
+
+                <div class="form-group">
+                    <label>Attachment (PDF/Doc)</label>
+                    <label class="file-upload">
+                        <input type="file" id="attachment" accept=".pdf,.doc,.docx" style="display: none;"
+                            onchange="updateFileName(this)">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                        <p id="fileName">Click or Drag file to upload</p>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn">Publish Article</button>
+                <div id="msg" style="margin-top: 15px; text-align: center;"></div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const role = localStorage.getItem('role');
+
+        // Protect Route
+        if (role !== 'publisher') {
+            alert('Access Denied. Publishers only.');
+            window.location.href = 'main.html';
+        }
+
+        function updateFileName(input, elementId) {
+            const name = input.files[0]?.name || 'Click or Drag to upload';
+            const el = document.getElementById(elementId);
+            el.innerText = name;
+            el.style.color = input.files[0] ? '#6366f1' : '#64748b';
+            el.style.fontWeight = input.files[0] ? '600' : '400';
+        }
+
+        document.getElementById('publishForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.querySelector('.btn');
+            const msg = document.getElementById('msg');
+
+            btn.innerHTML = 'Publishing... <i class="fas fa-spinner fa-spin"></i>';
+            msg.innerText = '';
+
+            const formData = new FormData();
+            formData.append('title', document.getElementById('title').value);
+            formData.append('category', document.getElementById('category').value);
+            formData.append('content', document.getElementById('content').value);
+            formData.append('videoUrl', document.getElementById('videoUrl').value);
+            formData.append('type', 'article');
+
+            const fileInput = document.getElementById('attachment');
+            if (fileInput.files[0]) {
+                formData.append('attachment', fileInput.files[0]);
+            }
+
+            const imageInput = document.getElementById('image');
+            if (imageInput.files[0]) {
+                formData.append('image', imageInput.files[0]);
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/posts`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    alert('Published Successfully!');
+                    window.location.href = 'main.html';
+                } else {
+                    const data = await res.json();
+                    msg.innerText = data.msg || 'Error publishing';
+                    msg.style.color = 'red';
+                }
+            } catch (err) {
+                console.error(err);
+                msg.innerText = 'Server Error';
+            } finally {
+                btn.innerHTML = 'Publish Article';
+            }
+        });
+    </script>
+
+</body>
+
+</html>
