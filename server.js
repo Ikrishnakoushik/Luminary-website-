@@ -7,6 +7,7 @@ const path = require('path');
 const fs = require('fs'); // Import fs
 const User = require('./models/User');
 const Post = require('./models/Post');
+const seedData = require('./seed'); // Import seed script
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -568,6 +569,18 @@ app.get('/api/posts', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// Seeding Route (Protected by simple query param or removed after use)
+app.get('/api/seed_db', async (req, res) => {
+    try {
+        console.log('Starting remote seeding...');
+        await seedData();
+        res.send('Seeding Complete! Database populated.');
+    } catch (err) {
+        console.error('Seeding Failed:', err);
+        res.status(500).send('Seeding Failed: ' + err.message);
     }
 });
 

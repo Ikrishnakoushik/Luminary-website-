@@ -4,7 +4,7 @@ const User = require('./models/User');
 const Post = require('./models/Post');
 
 // Database Connection
-const MONGO_URI = 'mongodb://localhost:27017/everything_spread';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
 
 const categories = ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other', 'General'];
 
@@ -101,8 +101,10 @@ const generateBookLikeContent = (author, category) => {
 
 const seedData = async () => {
     try {
-        await mongoose.connect(MONGO_URI);
-        console.log('MongoDB Connected...');
+        if (mongoose.connection.readyState !== 1) {
+            await mongoose.connect(MONGO_URI);
+            console.log('MongoDB Connected...');
+        }
 
         console.log('Clearing old data...');
         await User.deleteMany({});
@@ -169,11 +171,17 @@ const seedData = async () => {
         }
 
         console.log('Seeding Complete! Massive book-like articles generated.');
-        process.exit();
+        // process.exit(); // Don't exit process if called from server
+        return true;
     } catch (err) {
         console.error(err);
-        process.exit(1);
+        // process.exit(1);
+        throw err;
     }
 };
 
-seedData();
+if (require.main === module) {
+    seedData().then(() => process.exit());
+}
+
+module.exports = seedData;
