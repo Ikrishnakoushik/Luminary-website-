@@ -447,6 +447,29 @@ app.put('/api/users/preferences', auth, async (req, res) => {
     }
 });
 
+// Get Top Users (Spreaders) - for Sidebar
+app.get('/api/users/top', async (req, res) => {
+    try {
+        // Fetch 5 random users with 'publisher' role
+        const users = await User.aggregate([
+            { $match: { role: 'publisher' } },
+            { $sample: { size: 5 } },
+            { $project: { password: 0, email: 0, verificationOtp: 0, resetPasswordOtp: 0 } }
+        ]);
+
+        // If not enough publishers, just get any users
+        if (users.length === 0) {
+            const anyUsers = await User.find().select('-password -email').limit(5);
+            return res.json(anyUsers);
+        }
+
+        res.json(users);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get User by ID (Public Profile)
 app.get('/api/users/:id', async (req, res) => {
     try {
