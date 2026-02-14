@@ -462,6 +462,15 @@
     </div>
 
     <script>
+        // Apply Theme from LocalStorage immediately
+        (function () {
+            const savedAccent = localStorage.getItem('prism-theme-accent');
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--primary', savedAccent);
+                document.documentElement.style.setProperty('--accent', savedAccent);
+            }
+        })();
+
         const API_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
             ? 'http://localhost:3000/api'
             : '/api';

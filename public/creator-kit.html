@@ -214,6 +214,64 @@
         <a href="main.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
     </div>
 
+    <div id="toast"
+        style="visibility: hidden; min-width: 250px; margin-left: -125px; background-color: #333; color: #fff; text-align: center; border-radius: 2px; padding: 16px; position: fixed; z-index: 1; left: 50%; bottom: 30px; font-size: 17px; border-radius: 50px; opacity: 0; transition: opacity 0.3s, bottom 0.3s;">
+        Notification
+    </div>
+
+    <script>
+        // Copy functionality for Colors
+        document.querySelectorAll('.color-card').forEach(card => {
+            card.style.cursor = 'pointer';
+            card.addEventListener('click', () => {
+                const hex = card.querySelector('.color-hex').innerText;
+                navigator.clipboard.writeText(hex).then(() => {
+                    showToast(`Copied ${hex} to clipboard!`);
+                });
+            });
+        });
+
+        // Download functionality for Logos
+        document.querySelectorAll('.logo-box').forEach(box => {
+            box.addEventListener('click', () => {
+                const text = box.querySelector('span').innerText;
+                const isDark = text.includes('Dark');
+
+                // Simulating an SVG download
+                const svgContent = `
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+                        <rect width="200" height="200" fill="${isDark ? '#1e293b' : '#ffffff'}"/>
+                        <circle cx="100" cy="100" r="80" fill="${isDark ? '#ffffff' : '#6366f1'}"/>
+                        <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-family="Arial" font-size="40" fill="${isDark ? '#1e293b' : '#ffffff'}">Prism</text>
+                    </svg>`;
+
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `prism-logo-${isDark ? 'dark' : 'light'}.svg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showToast(`Downloading ${text}...`);
+            });
+        });
+
+        function showToast(message) {
+            const toast = document.getElementById("toast");
+            toast.innerText = message;
+            toast.style.visibility = "visible";
+            toast.style.opacity = "1";
+            toast.style.bottom = "50px";
+            setTimeout(function () {
+                toast.style.opacity = "0";
+                toast.style.bottom = "30px";
+                toast.style.visibility = "hidden";
+            }, 3000);
+        }
+    </script>
 </body>
 
 </html>

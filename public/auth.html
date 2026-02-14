@@ -444,6 +444,16 @@
     </footer>
 
     <script>
+        // Apply Theme from LocalStorage immediately
+        (function () {
+            const savedAccent = localStorage.getItem('prism-theme-accent');
+            if (savedAccent) {
+                document.documentElement.style.setProperty('--primary', savedAccent);
+                // Auth page might use different variables, let's update common ones
+                document.documentElement.style.setProperty('--accent', savedAccent);
+            }
+        })();
+
         const indicator = document.getElementById('indicator');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
