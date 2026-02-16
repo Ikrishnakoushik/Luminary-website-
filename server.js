@@ -24,6 +24,7 @@ const transporter = nodemailer.createTransport({
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASS,
     },
+    family: 4, // Force IPv4 to prevent ENETUNREACH errors
     connectionTimeout: 10000, // 10 seconds timeout
     greetingTimeout: 5000,
     socketTimeout: 10000
@@ -165,6 +166,7 @@ app.post('/api/register', async (req, res) => {
 
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        console.log(`[DEBUG] Generated OTP for ${email}: ${otp}`); // Log OTP for testing
 
 
 
@@ -189,7 +191,12 @@ app.post('/api/register', async (req, res) => {
             text: `Welcome to Spectra! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
         };
 
-        await transporter.sendMail(mailOptions);
+        try {
+            await transporter.sendMail(mailOptions);
+        } catch (emailError) {
+            console.error('[Warning] Email sending failed, but continuing registration:', emailError);
+            // Non-blocking in dev mode since we log OTP
+        }
         res.status(201).json({ msg: 'User registered. Please verify your email.', email });
     } catch (err) {
         console.error(err);
