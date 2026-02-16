@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Legal Center | Luminary</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #f8fafc;
+            --bg-surface: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --accent: #6366f1;
+            --border: #e2e8f0;
+            --sidebar-width: 280px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border);
+            padding: 0 40px;
+            height: 70px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 1.3rem;
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .cta-button {
+            padding: 8px 16px;
+            background: var(--text-primary);
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .cta-button:hover {
+            background: var(--accent);
+        }
+
+        /* Layout */
+        .layout {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            flex: 1;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            padding: 40px;
+            border-right: 1px solid var(--border);
+            position: sticky;
+            top: 70px;
+            height: calc(100vh - 70px);
+            overflow-y: auto;
+            background: var(--bg-body);
+        }
+
+        .nav-label {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .nav-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 10px 0;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+            border-left: 2px solid transparent;
+            padding-left: 15px;
+            margin-left: -17px;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: var(--accent);
+            border-left-color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            padding: 60px 80px;
+            background: var(--bg-surface);
+            max-width: 900px;
+            /* Readability limit */
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            letter-spacing: -0.02em;
+        }
+
+        .meta {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            margin-top: 50px;
+            margin-bottom: 20px;
+            scroll-margin-top: 100px;
+            /* Offset for sticky header */
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+        }
+
+        p,
+        li {
+            font-family: 'Merriweather', serif;
+            /* Enterprise standard for text */
+            color: #334155;
+            font-size: 1.05rem;
+            line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        .legal-box {
+            background: #f8fafc;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        /* Footer */
+        .footer {
+            border-top: 1px solid var(--border);
+            padding: 40px;
+            background: var(--bg-body);
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <a href="/" class="brand">
+            <i class="fas fa-sun" style="color: var(--accent);"></i> Luminary
+        </a>
+        <a href="main.html" class="cta-button" id="backBtn">Back to App</a>
+    </nav>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="nav-label">Legal Documents</div>
+            <ul class="nav-list">
+                <li><a href="#terms" class="nav-item">Terms of Service</a></li>
+                <li><a href="#privacy" class="nav-item">Privacy Policy</a></li>
+                <li><a href="#compliance" class="nav-item">Compliance (GDPR/CCPA)</a></li>
+                <li><a href="#contact" class="nav-item">Contact Information</a></li>
+            </ul>
+        </aside>
+
+        <!-- Document Content -->
+        <main class="content">
+            <h1>Legal Information</h1>
+            <div class="meta">Effective Date: February 16, 2026 | Version 2.1</div>
+
+            <section id="terms">
+                <h2>Terms of Service</h2>
+                <p>Welcome to <strong>Luminary</strong>. These Terms of Service ("Terms") govern your access to and use
+                    of our website, services, and applications (collectively, the "Services"). By accessing or using our
+                    Services, you agree to be bound by these Terms.</p>
+
+                <h3>1. Account Security</h3>
+                <p>You are responsible for safeguarding the password that you use to access the Services and for any
+                    activities or actions under your password. Unauthorized access to our systems is a violation of the
+                    <strong>Computer Fraud and Abuse Act (CFAA)</strong> and will be reported to law enforcement.</p>
+
+                <h3>2. Intellectual Property (DMCA)</h3>
+                <p>Luminary respects the intellectual property rights of others and expects users to do the same. We
+                    will respond to notices of alleged copyright infringement that comply with applicable law and are
+                    properly provided to us, as per the <strong>Digital Millennium Copyright Act (17 U.S.C. §
+                        512)</strong>.</p>
+            </section>
+
+            <section id="privacy">
+                <h2>Privacy Policy</h2>
+                <p>Your privacy is important to us. This policy outlines how we collect, use, and share your personal
+                    information.</p>
+
+                <div class="legal-box">
+                    <strong>Summary:</strong> We only collect what we need. We do not sell your data. You own your
+                    content.
+                </div>
+
+                <h3>1. Data Collection</h3>
+                <p>We collect information you provide directly to us, such as your username, email address, and content
+                    you post. We also automatically collect certain technical data (IP address, device type) to ensure
+                    site security and performance.</p>
+            </section>
+
+            <section id="compliance">
+                <h2>Compliance Rights</h2>
+
+                <h3>GDPR (European Union)</h3>
+                <p>If you are a resident of the EEU, you have the right to access (Art. 15), rectify (Art. 16), erase
+                    (Art. 17), and restrict processing of (Art. 18) your personal data. To exercise these rights,
+                    contact our Data Protection Officer.</p>
+
+                <h3>CCPA (California)</h3>
+                <p>Under the California Consumer Privacy Act, California residents have the right to know what personal
+                    information is collected, request its deletion, and opt-out of the sale of their information.
+                    Luminary explicitly <strong>does not sell</strong> user data to third parties.</p>
+
+                <h3>COPPA (Children)</h3>
+                <p>We do not knowingly collect data from children under 13. In compliance with the Children's Online
+                    Privacy Protection Act, any such data found will be immediately deleted.</p>
+            </section>
+
+            <section id="contact">
+                <h2>Contact Us</h2>
+                <p>If you have any questions about these Terms or our Privacy Policy, please contact us at:</p>
+                <ul style="list-style: none; padding: 0;">
+                    <li><strong>Email:</strong> <a href="mailto:meta81210@gmail.com"
+                            style="color: var(--accent);">meta81210@gmail.com</a></li>
+                    <li><strong>Address:</strong> [INSERT YOUR PHYSICAL BUSINESS ADDRESS HERE]</li>
+                </ul>
+            </section>
+
+            <p style="margin-top: 60px; font-size: 0.9rem; color: #94a3b8; font-style: italic;">
+                Disclaimer: The information on this page is for informational purposes only and does not constitute
+                legal advice.
+            </p>
+        </main>
+    </div>
+
+    <script>
+        // Active Link Highlighting
+        const sections = document.querySelectorAll('section');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navItems.forEach(li => {
+                li.classList.remove('active');
+                if (li.getAttribute('href').includes(current)) {
+                    li.classList.add('active');
+                }
+            });
+        });
+
+        // Smart Back Button
+        document.addEventListener('DOMContentLoaded', () => {
+            const backBtn = document.getElementById('backBtn');
+            const token = localStorage.getItem('token');
+            if (!token) {
+                backBtn.href = 'index.html';
+                backBtn.innerText = 'Back to Home';
+            }
+        });
+    </script>
+</body>
+
+</html>

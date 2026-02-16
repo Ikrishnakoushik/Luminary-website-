@@ -4,14 +4,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prism | Your Name</title>
+    <title>Luminary | Your Name</title>
 
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         /* --- CSS VARIABLES --- */
@@ -760,6 +761,84 @@
             font-style: italic;
             background: #f8fafc;
         }
+
+        /* Skeleton Loader */
+        .skeleton-loader {
+            width: 100%;
+        }
+
+        .skeleton-post {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .skeleton-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .skeleton-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-text {
+            flex: 1;
+        }
+
+        .skeleton-line {
+            height: 10px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-line.short {
+            width: 40%;
+        }
+
+        .skeleton-line.shorter {
+            width: 25%;
+        }
+
+        .skeleton-content {
+            height: 80px;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .skeleton-footer {
+            height: 20px;
+            width: 30%;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            border-radius: 4px;
+            animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        @keyframes pulse {
+            0% {
+                background-position: 200% 0;
+            }
+
+            100% {
+                background-position: -200% 0;
+            }
+        }
     </style>
 </head>
 
@@ -787,7 +866,7 @@
             </div>
 
             <div class="social-links">
-                <a href="#" class="social-btn" title="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
                 <a href="#" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
                 <a href="#" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
             </div>
@@ -835,6 +914,13 @@
                             <label>Email</label>
                             <input type="email" id="setEmail" required>
                         </div>
+                        <div class="form-group">
+                            <label>Social Links</label>
+                            <input type="text" id="setTwitter" placeholder="X (Twitter) URL"
+                                style="margin-bottom:10px;">
+                            <input type="text" id="setGithub" placeholder="GitHub URL" style="margin-bottom:10px;">
+                            <input type="text" id="setLinkedin" placeholder="LinkedIn URL">
+                        </div>
                         <button type="submit" class="form-btn">Save Profile</button>
                         <div id="profileMsg" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
                     </form>
@@ -862,7 +948,7 @@
                 // Apply Full Theme from LocalStorage immediately
                 (function () {
                     try {
-                        const themeData = localStorage.getItem('prism-theme-data');
+                        const themeData = localStorage.getItem('spectra-theme-data');
                         if (themeData) {
                             const colors = JSON.parse(themeData);
                             Object.entries(colors).forEach(([key, value]) => {
@@ -918,6 +1004,20 @@
                     const initial = (user.username || 'U').charAt(0).toUpperCase();
                     const avatarEl = document.getElementById('profile-avatar');
 
+                    // Update Social Links
+                    const socialLinksContainer = document.querySelector('.social-links');
+                    if (socialLinksContainer) {
+                        const twitterUrl = user.socials && user.socials.twitter ? user.socials.twitter : '#';
+                        const githubUrl = user.socials && user.socials.github ? user.socials.github : '#';
+                        const linkedinUrl = user.socials && user.socials.linkedin ? user.socials.linkedin : '#';
+
+                        socialLinksContainer.innerHTML = `
+                            <a href="${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                            <a href="${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        `;
+                    }
+
                     // Clear previous content
                     avatarEl.innerHTML = '';
                     avatarEl.style.backgroundImage = 'none';
@@ -952,25 +1052,91 @@
                         if (!user.email) fetchMeData();
                     }
 
+                    // Add Connect/Share Button
+                    const authSection = document.getElementById('auth-section');
+                    // Existing auth buttons are cleared by updateAuthUI, but let's inject our profile specific actions here or in the profile card
+
+                    // Let's add it below social links
+                    const existingActionBtn = document.getElementById('profile-action-btn');
+                    if (existingActionBtn) existingActionBtn.remove();
+
+                    const actionBtn = document.createElement('button');
+                    actionBtn.id = 'profile-action-btn';
+                    actionBtn.className = 'form-btn';
+                    actionBtn.style.marginTop = '15px';
+                    actionBtn.style.width = '100%';
+
+                    if (user.isMe) {
+                        actionBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Profile';
+                        actionBtn.onclick = () => {
+                            const url = window.location.href.split('?')[0] + '?user=' + (user._id || '');
+                            navigator.clipboard.writeText(url).then(() => {
+                                alert('Profile link copied to clipboard!');
+                            });
+                        };
+                        actionBtn.style.background = 'var(--bg-color)';
+                        actionBtn.style.color = 'var(--text-main)';
+                        actionBtn.style.border = '1px solid #ddd';
+                    } else {
+                        // "Connect" or "Follow" - Mock functionality for now as per "make it work able to connect"
+                        // Since we don't have a Follow API yet, let's make it a "Connect" button that toggles state
+                        actionBtn.innerHTML = '<i class="fas fa-user-plus"></i> Connect';
+                        actionBtn.onclick = () => {
+                            if (actionBtn.innerText.includes('Connect')) {
+                                actionBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                                actionBtn.style.background = '#dcfce7';
+                                actionBtn.style.color = '#166534';
+                            } else {
+                                actionBtn.innerHTML = '<i class="fas fa-user-plus"></i> Connect';
+                                actionBtn.style.background = 'var(--accent)';
+                                actionBtn.style.color = 'white';
+                            }
+                        };
+                    }
+
+                    // Append to profile card
+                    const profileCard = document.querySelector('.profile-card');
+                    // Insert before auth-buttons if exists, or at end
+                    if (authSection) {
+                        profileCard.insertBefore(actionBtn, authSection);
+                    } else {
+                        profileCard.appendChild(actionBtn);
+                    }
+
                     // Render Projects
-                    renderProjects(user.projects || [], user._id === (token ? JSON.parse(atob(token.split('.')[1])).user.id : null));
+                    // Render Projects
+                    // Use user.isMe if available, otherwise check IDs
+                    const isMe = user.isMe !== undefined ? user.isMe : (user._id === (token ? JSON.parse(atob(token.split('.')[1])).user.id : null));
+                    renderProjects(user.projects || [], isMe);
                 }
 
                 function renderProjects(projects, isMe) {
                     const grid = document.getElementById('projects-grid');
+                    const section = grid.closest('section'); // Find parent section
                     grid.innerHTML = '';
 
                     if (projects.length === 0) {
                         if (isMe) {
-                            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#888;">No projects yet. Add one to showcase your work!</div>';
+                            // Professional Empty State for Owner
+                            if (section) section.style.display = 'block';
+                            grid.innerHTML = `
+                                <div style="grid-column:1/-1; text-align:center; padding: 40px 20px; background: #fff; border: 2px dashed #e2e8f0; border-radius: 16px; color: #64748b;">
+                                    <div style="font-size: 2rem; margin-bottom: 10px;">🚀</div>
+                                    <h3 style="margin-bottom: 5px; color: var(--text-main);">Showcase Your Work</h3>
+                                    <p style="margin-bottom: 20px; font-size: 0.9rem;">Add your projects here to impress visitors.</p>
+                                    <button class="auth-btn btn-sm" onclick="openModal('projectModal')" style="width:auto;">
+                                        <i class="fas fa-plus"></i> Add First Project
+                                    </button>
+                                </div>`;
                         } else {
-                            // Static placeholders for others if empty, or just empty?
-                            // Let's show existing placeholders if empty for "demo" feel, or just text.
-                            // User requested "Options to use", implying they want to see their own.
-                            // Let's stick to empty message.
-                            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:20px; color:#888;">No projects to show.</div>';
+                            // Hide section for visitors if empty
+                            if (section) section.style.display = 'none';
                         }
+                        return;
                     }
+
+                    // If we have projects, ensure section is visible
+                    if (section) section.style.display = 'block';
 
                     projects.forEach(proj => {
                         const div = document.createElement('a');
@@ -978,14 +1144,14 @@
                         div.className = 'project-card';
                         div.target = '_blank';
                         div.innerHTML = `
-            <div class="project-img">${proj.icon || '🚀'}</div>
-            <div class="project-content">
-                <h3 class="project-title">${proj.title}
-                    ${isMe ? `<span onclick="deleteProject(event, '${proj._id}')" style="float:right; color:red; cursor:pointer; font-size:0.8rem;"><i class="fas fa-trash"></i></span>` : ''}
-                </h3>
-                <p class="project-desc">${proj.description || ''}</p>
-            </div>
-        `;
+                            <div class="project-img">${proj.icon || '🚀'}</div>
+                            <div class="project-content">
+                                <h3 class="project-title">${proj.title}
+                                    ${isMe ? `<span onclick="deleteProject(event, '${proj._id}')" style="float:right; color:#ef4444; cursor:pointer; font-size:0.8rem; padding:4px;"><i class="fas fa-trash"></i></span>` : ''}
+                                </h3>
+                                <p class="project-desc">${proj.description || ''}</p>
+                            </div>
+                        `;
                         grid.appendChild(div);
                     });
                 }
@@ -1146,6 +1312,17 @@
                     document.getElementById('setUsername').value = user.username || '';
                     document.getElementById('setBio').value = user.bio || '';
                     document.getElementById('setEmail').value = user.email || '';
+
+                    if (user.socials) {
+                        document.getElementById('setTwitter').value = user.socials.twitter || '';
+                        document.getElementById('setGithub').value = user.socials.github || '';
+                        document.getElementById('setLinkedin').value = user.socials.linkedin || '';
+                    } else {
+                        document.getElementById('setTwitter').value = '';
+                        document.getElementById('setGithub').value = '';
+                        document.getElementById('setLinkedin').value = '';
+                    }
+
                     openModal('settingsModal');
                 }
 
@@ -1181,6 +1358,13 @@
                         const username = document.getElementById('setUsername').value;
                         const bio = document.getElementById('setBio').value;
                         const email = document.getElementById('setEmail').value;
+
+                        const socials = {
+                            twitter: document.getElementById('setTwitter').value,
+                            github: document.getElementById('setGithub').value,
+                            linkedin: document.getElementById('setLinkedin').value
+                        };
+
                         const msg = document.getElementById('profileMsg');
 
                         try {
@@ -1191,7 +1375,7 @@
                                     'Content-Type': 'application/json',
                                     'x-auth-token': token
                                 },
-                                body: JSON.stringify({ displayName, username, bio, email })
+                                body: JSON.stringify({ displayName, username, bio, email, socials })
                             });
                             const data = await res.json();
 
@@ -1315,15 +1499,15 @@
                 </div>
             </div>
 
-            <!-- BLOG/POSTS SECTION -->
+            <!-- PERSONAL FEED SECTION -->
             <section class="fade-in" style="animation-delay: 0.3s;">
                 <div class="section-header">
-                    <h2 class="section-title">Community Feed</h2>
+                    <h2 class="section-title">Recent Spreads</h2>
                 </div>
 
                 <div id="posts-container" class="blog-list">
                     <!-- Posts will be loaded here -->
-                    <div style="text-align:center; padding: 20px; color: #888;">Loading posts...</div>
+                    <div style="text-align:center; padding: 20px; color: #888;">Loading spreads...</div>
                 </div>
             </section>
 
@@ -1424,6 +1608,8 @@
         </div>
     </div>
 
+
+
     <script>
         // Modal Logic
         function openModal(modalId) {
@@ -1446,8 +1632,12 @@
             }
         }
 
-        // Auth Logic
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+
+        // Force localhost API if opening via file://
+        const API_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
+            ? 'http://localhost:3000/api'
+            : '/api';
+
 
         // Check login status on load
         document.addEventListener('DOMContentLoaded', () => {
@@ -1551,49 +1741,59 @@
                 const userId = urlParams.get('user');
 
                 let url = `${API_URL}/posts`;
+                let isMyProfile = false;
 
                 // FILTERING LOGIC
-                // If viewing a user profile, show ONLY their posts
                 if (userId) {
                     url += `?user=${userId}`;
                 } else {
-                    // If no user param, check if we are logged in and viewing "my" profile (default view)
-                    // Actually, if no user param, `loadProfile` falls back to localStorage username.
-                    // But `fetchPosts` is independent.
-                    // If we are on profile.html without ?user=..., we usually mean "My Profile".
-                    // Let's check:
+                    // Check if we are logged in
                     const token = localStorage.getItem('token');
                     if (token) {
                         try {
                             const payload = JSON.parse(atob(token.split('.')[1]));
-                            // If we are strictly on profile.html with no params, it's my profile.
+                            // If strictly on profile.html with no params, it's my profile.
                             if (!window.location.search) {
                                 url += `?user=${payload.user.id}`;
+                                isMyProfile = true;
                             }
-                        } catch (e) { }
+                        } catch (e) {
+                            console.error("Token parse error during fetchPosts", e);
+                        }
+                    } else {
+                        // Not logged in and no user param -> Guest on profile page (should probably not happen if redirected, but handle it)
+                        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Please <a href="#" onclick="openModal(\'loginModal\')" style="color:var(--primary); font-weight:600;">sign in</a> to view your spreads.</div>';
+                        return;
                     }
                 }
 
-                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">Loading posts...</div>';
+                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;"><i class="fas fa-circle-notch fa-spin"></i> Loading entries...</div>';
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
 
                 const res = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
 
-                if (!res.ok) throw new Error(`Server error: ${res.status}`);
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`Server error: ${res.status} ${errText}`);
+                }
 
                 const posts = await res.json();
-                renderPosts(posts); // Use the new advanced renderer
+                renderPosts(posts);
 
             } catch (err) {
-                console.error(err);
+                console.error("fetchPosts Error:", err);
                 container.innerHTML = `
-                    <div style="text-align: center; color: red; padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px;">
-                        <i class="fas fa-exclamation-circle"></i> Failed to load feed.<br>
-                        <small>${err.message}</small><br>
-                        <button onclick="fetchPosts()" style="margin-top:10px; cursor:pointer; padding:5px 10px;">Retry</button>
+                    <div style="text-align: center; color: var(--accent); padding: 20px; background: #fff; border: 1px solid #ddd; border-radius: 8px; margin-top: 20px;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
+                        <strong style="font-size: 1.1rem;">Failed to load spreads</strong><br>
+                        <p style="color: #666; margin: 10px 0; font-size: 0.9rem;">${err.message}</p>
+                        <small style="display:block; color: #999; margin-bottom: 15px;">Target: ${url}</small>
+                        <button onclick="fetchPosts()" class="auth-btn btn-sm" style="width: auto;">
+                            <i class="fas fa-redo"></i> Retry
+                        </button>
                     </div>`;
             }
         }
@@ -1611,6 +1811,7 @@
                 const authorName = post.user?.username || post.username || 'User';
                 const initial = authorName.charAt(0).toUpperCase();
                 const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
+                const authorId = post.user?._id || '#';
                 const tag = post.tag || 'General';
                 const likesCount = post.likes ? post.likes.length : 0;
                 const commentsCount = post.comments ? post.comments.length : 0;
@@ -1645,15 +1846,35 @@
                      `;
                 }
 
+                // Delete Button Logic (Moved inside renderPosts scope for safety)
+                let deleteBtn = '';
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        const payload = JSON.parse(atob(token.split('.')[1]));
+                        // Check if current user is owner
+                        // post.user might be populated object or ID string. Backend sends populated user object usually.
+                        const postUserId = post.user?._id || post.user;
+                        if (postUserId === payload.user.id) {
+                            deleteBtn = `
+                            <div class="action-btn delete-btn" onclick="deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </div>`;
+                        }
+                    }
+                } catch (e) { }
+
                 const postHTML = `
-                    <article class="post-card">
+                    <article class="post-card" id="post-${post._id}">
                         <div class="post-header">
                             <div class="post-user-info">
+                                <a href="profile.html?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
                                 ${postAvatar}
                                 <div>
                                     <div class="post-author">@${authorName}</div>
                                     <div class="post-time">${dateStr}</div>
                                 </div>
+                                </a>
                             </div>
                             <span class="post-tag">#${tag}</span>
                         </div>
@@ -1666,11 +1887,12 @@
 
                         ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
 
-                        <div class="post-actions">
+                        <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
                             <div class="action-btn"><i class="far fa-heart"></i> ${likesCount}</div>
                             <div class="action-btn"><i class="far fa-comment"></i> ${commentsCount}</div>
                             <div class="action-btn"><i class="far fa-share-square"></i> Share</div>
                             ${readActionBtn}
+                            ${deleteBtn}
                         </div>
                     </article>
                 `;
@@ -1783,6 +2005,8 @@
             <div id="reader-body" class="reader-body">
                 <!-- Content -->
             </div>
+        </div>
+        <div style="position:fixed; bottom:5px; right:5px; font-size:10px; opacity:0.5; pointer-events:none;">v3001
         </div>
     </div>
 </body>

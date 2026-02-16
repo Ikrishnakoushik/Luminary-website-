@@ -61,7 +61,12 @@ const UserSchema = new mongoose.Schema({
         description: { type: String },
         link: { type: String },
         icon: { type: String, default: '🚀' }
-    }]
+    }],
+    socials: {
+        twitter: { type: String, default: '' },
+        github: { type: String, default: '' },
+        linkedin: { type: String, default: '' }
+    }
 });
 
 module.exports = mongoose.model('User', UserSchema);

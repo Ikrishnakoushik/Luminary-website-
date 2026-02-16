@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -20,8 +21,8 @@ const transporter = nodemailer.createTransport({
     port: 465,
     secure: true, // Use SSL
     auth: {
-        user: 'meta81210@gmail.com',
-        pass: 'zidl aiex mtza umao',
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
     },
     connectionTimeout: 10000, // 10 seconds timeout
     greetingTimeout: 5000,
@@ -71,9 +72,10 @@ const auth = (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-mongoose.connect(MONGO_URI)
-    .then(() => console.log('MongoDB Connected'))
-    .catch(err => console.log(err));
+console.error('[Startup] Checking Mongo connection...');
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
+    .then(() => console.error('[Startup] MongoDB Connected'))
+    .catch(err => console.error('[Startup] MongoDB Error:', err));
 
 // Routes
 const multer = require('multer');
@@ -181,98 +183,64 @@ app.post('/api/register', async (req, res) => {
 
         // Send Verification Email
         const mailOptions = {
-            from: process.env.EMAIL_USER || 'no-reply@prism.com',
+            from: process.env.EMAIL_USER || 'no-reply@spectra.com',
             to: user.email,
-            subject: 'Prism - Verify Your Email',
-            text: `Welcome to Prism! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
+            subject: 'Spectra - Verify Your Email',
+            text: `Welcome to Spectra! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
         };
 
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('Error sending verification email:', error);
-                return res.status(500).json({ msg: 'Error sending verification email. User registered but not verified.' });
-            } else {
-                console.log('Verification email sent: ' + info.response);
-                res.status(201).json({ msg: 'Verification required', email: user.email });
-            }
-        });
-
+        await transporter.sendMail(mailOptions);
+        res.status(201).json({ msg: 'User registered. Please verify your email.', email });
     } catch (err) {
-        console.log('Error in register route:', err);
         console.error(err);
-        res.status(500).send('Server Error: ' + err.message);
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
-// Verify Email
+// Verify Email Route
 app.post('/api/verify-email', async (req, res) => {
+    const { email, otp } = req.body;
     try {
-        const { email, otp } = req.body;
-        const user = await User.findOne({
-            email,
-            verificationOtp: otp,
-            verificationExpires: { $gt: Date.now() }
-        });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ msg: 'User not found' });
 
-        if (!user) {
-            return res.status(400).json({ msg: 'Invalid or expired OTP' });
-        }
+        if (user.isVerified) return res.status(400).json({ msg: 'User already verified' });
+
+        if (user.verificationOtp !== otp) return res.status(400).json({ msg: 'Invalid OTP' });
 
         user.isVerified = true;
         user.verificationOtp = undefined;
-        user.verificationExpires = undefined;
         await user.save();
 
-        // Return Token (Login successful)
-        const payload = {
-            user: {
-                id: user.id,
-                username: user.username,
-                role: user.role
-            }
-        };
-
-        jwt.sign(
-            payload,
-            JWT_SECRET,
-            { expiresIn: '1h' },
-            (err, token) => {
-                if (err) throw err;
-                res.json({ token, username: user.username, role: user.role });
-            }
-        );
+        // Login automatically
+        const payload = { user: { id: user.id, role: user.role } };
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+            if (err) throw err;
+            res.json({ token, username: user.username, role: user.role });
+        });
 
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error(err);
+        res.status(500).json({ msg: 'Server error' });
     }
 });
 
 // Forgot Password (Send OTP)
 app.post('/api/auth/forgot-password', async (req, res) => {
+    const { email } = req.body;
     try {
-        const { email } = req.body;
         const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ msg: 'User not found' });
 
-        if (!user) {
-            return res.status(404).json({ msg: 'User with this email does not exist' });
-        }
-
-        // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-
-        // Save OTP and expiration (10 minutes)
         user.resetPasswordOtp = otp;
-        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000;
+        user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
         await user.save();
-        console.log(`[DEBUG] OTP saved for ${user.email}: ${otp}`);
 
-        // Send Email
-        console.log(`[DEBUG] Attempting to send Forgot Password OTP to ${user.email}`);
         const mailOptions = {
-            from: 'Prism <meta81210@gmail.com>', // Use authenticated email
-            to: user.email,
-            subject: 'Prism - Password Reset OTP',
+            from: 'Spectra <meta81210@gmail.com>', // Use authenticated email
+            to: email,
+            subject: 'Spectra - Password Reset OTP',
             text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
         };
 
@@ -385,7 +353,7 @@ app.post('/api/login', async (req, res) => {
 // Update Profile Info
 app.put('/api/users/profile', auth, async (req, res) => {
     try {
-        const { displayName, bio, username, email } = req.body;
+        const { displayName, bio, username, email, socials } = req.body;
 
         // Build update object
         const updateFields = {};
@@ -393,6 +361,7 @@ app.put('/api/users/profile', auth, async (req, res) => {
         if (bio) updateFields.bio = bio;
         if (username) updateFields.username = username;
         if (email) updateFields.email = email;
+        if (socials) updateFields.socials = socials;
 
         // Check if username/email already taken (if changed)
         if (username || email) {
@@ -592,22 +561,48 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
     }
 });
 
+// Delete Post
+app.delete('/api/posts/:id', auth, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        // Check user
+        if (post.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'User not authorized' });
+        }
+
+        await post.deleteOne();
+
+        res.json({ msg: 'Post removed' });
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get All Posts (with optional filtering)
 app.get('/api/posts', async (req, res) => {
-    console.log('GET /api/posts hit', req.query);
+    console.error(`[API] GET /api/posts request received with query:`, req.query);
     try {
         const query = {};
         if (req.query.user) {
             query.user = req.query.user;
         }
 
-        // If category filtering is needed later
-        // if (req.query.category) query.category = req.query.category;
+        const limit = parseInt(req.query.limit) || 20;
 
         const posts = await Post.find(query)
             .sort({ createdAt: -1 })
-            .populate('user', 'username profilePicture') // Population is key for avatars
-            .populate('comments.user', 'username profilePicture'); // Populate comment authors too
+            .limit(limit)
+            .populate('user', 'username profilePicture')
+            .populate('comments.user', 'username profilePicture');
 
         res.json(posts);
     } catch (err) {
@@ -678,4 +673,4 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT}`));

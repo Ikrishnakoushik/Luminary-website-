@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publisher Studio | Prism</title>
+    <title>Publisher Studio | Luminary</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -129,7 +129,8 @@
             box-shadow: inset 20px 0 30px -10px rgba(0, 0, 0, 0.02);
             display: flex;
             flex-direction: column;
-            align-items: center;
+            align-items: flex-start;
+            /* Changed to Left Align */
         }
 
         .workspace::before {
@@ -148,8 +149,10 @@
             position: relative;
             /* Above overlay */
             width: 100%;
-            max-width: 850px;
-            padding: 60px 40px 100px 40px;
+            max-width: 900px;
+            /* Reduced padding-left to bring text closer to sidebar */
+            padding: 40px 60px;
+            margin-left: 0;
         }
 
         /* Title Input */
@@ -161,7 +164,8 @@
             color: var(--text-main);
             background: transparent;
             outline: none;
-            margin-bottom: 30px;
+            margin-bottom: 15px;
+            /* Reduced from 30px */
             line-height: 1.2;
         }
 
@@ -182,7 +186,8 @@
             gap: 8px;
             flex-wrap: wrap;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            margin-bottom: 40px;
+            margin-bottom: 25px;
+            /* Reduced from 40px */
             z-index: 50;
             transition: all 0.3s;
         }
@@ -369,7 +374,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <i class="fas fa-layer-group"></i> Prism Studio
+                <i class="fas fa-sun"></i> Luminary Studio
             </div>
             <a href="main.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
 
@@ -465,7 +470,7 @@
         // Apply Full Theme from LocalStorage immediately
         (function () {
             try {
-                const themeData = localStorage.getItem('prism-theme-data');
+                const themeData = localStorage.getItem('spectra-theme-data');
                 if (themeData) {
                     const colors = JSON.parse(themeData);
                     Object.entries(colors).forEach(([key, value]) => {

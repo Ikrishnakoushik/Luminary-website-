@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prism - Authentication</title>
+    <title>Luminary - Authentication</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -360,6 +360,16 @@
                         </div>
                     </div>
 
+                    <div class="input-group" style="margin-bottom: 25px;">
+                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <input type="checkbox" id="regConsent" required style="width:auto; transform:scale(1.2);">
+                            <span style="font-size:0.85rem; color:rgba(255,255,255,0.7);">
+                                I agree to the <a href="legal.html" target="_blank" style="color:var(--accent);">Terms &
+                                    Privacy Policy</a>
+                            </span>
+                        </label>
+                    </div>
+
                     <button type="submit" class="btn-submit">Sign Up</button>
                     <div class="error-msg" id="regError"></div>
                 </form>
@@ -440,14 +450,14 @@
 
     <footer
         style="position: fixed; bottom: 10px; text-align: center; width: 100%; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-        &copy; 2026 Prism. All rights reserved.
+        &copy; 2026 Luminary. All rights reserved.
     </footer>
 
     <script>
         // Apply Full Theme from LocalStorage
         (function () {
             try {
-                const themeData = localStorage.getItem('prism-theme-data');
+                const themeData = localStorage.getItem('spectra-theme-data');
                 if (themeData) {
                     const colors = JSON.parse(themeData);
                     Object.entries(colors).forEach(([key, value]) => {

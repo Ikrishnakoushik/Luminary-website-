@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Appearance | Prism Studio</title>
+    <title>Appearance | Luminary Studio</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -201,24 +201,84 @@
             position: fixed;
             bottom: 30px;
             left: 50%;
-            transform: translateX(-50%) translateY(100px);
-            background: #1e293b;
-            color: white;
+            transform: translateX(-50%);
+            background: var(--text-main);
+            color: var(--surface);
             padding: 12px 24px;
-            border-radius: 50px;
-            font-weight: 500;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            border-radius: 30px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             opacity: 0;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 100;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 1000;
         }
 
         .toast.show {
-            transform: translateX(-50%) translateY(0);
             opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Custom Theme Builder Styles */
+        .color-picker-wrapper {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-picker-wrapper:hover {
+            transform: translateY(-2px);
+        }
+
+        .color-picker-wrapper input[type="color"] {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+            z-index: 2;
+        }
+
+        .color-swatch {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            border: 2px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1rem;
+        }
+
+        .color-picker-wrapper:hover .color-swatch {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .picker-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+        }
+
+        /* Checkered background for transparent/white feel */
+        .swatch-checkered {
+            background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #ccc 75%),
+                linear-gradient(-45deg, transparent 75%, #ccc 75%);
+            background-size: 10px 10px;
+            background-position: 0 0, 0 5px, 5px -5px, -5px 0px;
         }
     </style>
 </head>
@@ -227,7 +287,8 @@
 
     <aside class="sidebar">
         <div class="brand">
-            <i class="fas fa-layer-group"></i> Prism
+            <i class="fas fa-sun"></i> Luminary
+
         </div>
         <a href="main.html" class="nav-item">
             <i class="fas fa-home"></i> Home Feed
@@ -237,14 +298,14 @@
         </a>
         <div style="flex:1"></div>
         <div style="font-size:0.8rem; color:var(--text-muted); padding: 0 15px;">
-            Prism Studio v2.0
+            Luminary Studio v2.0
         </div>
     </aside>
 
     <main class="main-content">
         <div class="page-header">
             <h1>Appearance</h1>
-            <p>Customize how Prism looks and feels for you. Changes apply globally across the website.</p>
+            <p>Customize how Luminary looks and feels for you. Changes apply globally across the website.</p>
         </div>
 
         <!-- Theme Selection -->
@@ -262,7 +323,7 @@
         <div style="background: var(--surface); padding: 30px; border-radius: 16px; border: 1px solid var(--border);">
             <h1 style="margin-top:0;">The quick brown fox</h1>
             <p style="font-size: 1.1rem; line-height: 1.6; color: var(--text-muted); margin-bottom: 0;">
-                Prism uses <strong>Outfit</strong>, a geometric sans-serif typeface that feels modern and clean. It's
+                Luminary uses <strong>Outfit</strong>, a geometric sans-serif typeface that feels modern and clean. It's
                 optimized for legibility across all devices.
             </p>
         </div>
@@ -279,8 +340,8 @@
         const themes = [
             {
                 id: 'default',
-                name: 'Prism Light',
-                desc: 'The classic clean Prism experience.',
+                name: 'Luminary Light',
+                desc: 'The classic clean Luminary experience.',
                 colors: {
                     '--bg-color': '#f1f5f9',
                     '--surface': '#ffffff',
@@ -364,9 +425,119 @@
             }
         ];
 
+        // Add even more themes
+        themes.push(
+            {
+                id: 'mint',
+                name: 'Mint Fresh',
+                desc: 'Crisp and refreshing teal tones.',
+                colors: {
+                    '--bg-color': '#f0fdfa',
+                    '--surface': '#ffffff',
+                    '--primary': '#14b8a6',
+                    '--accent': '#0d9488',
+                    '--accent-hover': '#0f766e',
+                    '--text-main': '#134e4a',
+                    '--text-muted': '#115e59',
+                    '--border': '#ccfbf1',
+                    '--input-bg': '#f0fdfa',
+                    '--card-shadow': '0 4px 6px -1px rgba(20, 184, 166, 0.15)'
+                }
+            },
+            {
+                id: 'berry',
+                name: 'Berry Burst',
+                desc: 'Vibrant pinks and deep magentas.',
+                colors: {
+                    '--bg-color': '#fdf2f8',
+                    '--surface': '#ffffff',
+                    '--primary': '#db2777',
+                    '--accent': '#be185d',
+                    '--accent-hover': '#9d174d',
+                    '--text-main': '#831843',
+                    '--text-muted': '#9d174d',
+                    '--border': '#fbcfe8',
+                    '--input-bg': '#fdf2f8',
+                    '--card-shadow': '0 4px 6px -1px rgba(219, 39, 119, 0.15)'
+                }
+            },
+            {
+                id: 'cyberpunk',
+                name: 'Cyberpunk Neon',
+                desc: 'High contrast neon on deep black.',
+                colors: {
+                    '--bg-color': '#050505',
+                    '--surface': '#111',
+                    '--primary': '#00ff9d',
+                    '--accent': '#d600ff',
+                    '--accent-hover': '#00ff9d',
+                    '--text-main': '#e0e0e0',
+                    '--text-muted': '#a0a0a0',
+                    '--border': '#333',
+                    '--input-bg': '#1a1a1a',
+                    '--card-shadow': '0 4px 6px -1px rgba(0, 255, 157, 0.2)'
+                }
+            }
+        );
+
+        // Add more themes
+        themes.push(
+            {
+                id: 'ocean',
+                name: 'Ocean Blue',
+                desc: 'Deep and calming blue tones.',
+                colors: {
+                    '--bg-color': '#ecfeff',
+                    '--surface': '#ffffff',
+                    '--primary': '#06b6d4',
+                    '--accent': '#06b6d4',
+                    '--accent-hover': '#0891b2',
+                    '--text-main': '#155e75',
+                    '--text-muted': '#0e7490',
+                    '--border': '#cffafe',
+                    '--input-bg': '#ecfeff',
+                    '--card-shadow': '0 4px 6px -1px rgba(6, 182, 212, 0.15)'
+                }
+            },
+            {
+                id: 'sunset',
+                name: 'Sunset Vibes',
+                desc: 'Warm oranges and energized reds.',
+                colors: {
+                    '--bg-color': '#fff7ed',
+                    '--surface': '#ffffff',
+                    '--primary': '#f97316',
+                    '--accent': '#f97316',
+                    '--accent-hover': '#ea580c',
+                    '--text-main': '#7c2d12',
+                    '--text-muted': '#c2410c',
+                    '--border': '#ffedd5',
+                    '--input-bg': '#fff7ed',
+                    '--card-shadow': '0 4px 6px -1px rgba(249, 115, 22, 0.15)'
+                }
+            },
+            {
+                id: 'lavender',
+                name: 'Lavender Mist',
+                desc: 'Soft purples for a dreamy feel.',
+                colors: {
+                    '--bg-color': '#faf5ff',
+                    '--surface': '#ffffff',
+                    '--primary': '#d8b4fe',
+                    '--accent': '#c084fc',
+                    '--accent-hover': '#a855f7',
+                    '--text-main': '#581c87',
+                    '--text-muted': '#7e22ce',
+                    '--border': '#f3e8ff',
+                    '--input-bg': '#faf5ff',
+                    '--card-shadow': '0 4px 6px -1px rgba(192, 132, 252, 0.15)'
+                }
+            }
+        );
+
         // Init
         const themeGrid = document.getElementById('themeGrid');
-        const currentThemeId = localStorage.getItem('prism-theme-id') || 'default';
+        const currentThemeId = localStorage.getItem('spectra-theme-id') || 'default';
 
         // Apply current theme
         const t = themes.find(t => t.id === currentThemeId) || themes[0];
@@ -409,6 +580,157 @@
             themeGrid.appendChild(card);
         });
 
+        // Add Custom Theme Card
+        const customCard = document.createElement('div');
+        customCard.className = `theme-card ${currentThemeId === 'custom' ? 'active' : ''}`;
+
+        // Prevent card click from overriding pickers, but allow selection
+        customCard.onclick = (e) => {
+            if (e.target.tagName !== 'INPUT') {
+                selectCustomTheme(customCard);
+            }
+        };
+
+        const savedCustomPrimary = localStorage.getItem('spectra-custom-primary') || '#6366f1';
+        const savedCustomBg = localStorage.getItem('spectra-custom-bg') || '#f8fafc';
+        const savedCustomText = localStorage.getItem('spectra-custom-text') || '#0f172a';
+
+        customCard.innerHTML = `
+            <div class="theme-preview" style="background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; padding: 25px; border-bottom: 1px solid var(--border); border-radius: 16px 16px 0 0; min-height: 200px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px;">
+                    <span style="font-weight: 800; font-size: 0.9rem; letter-spacing: 0.5px; text-transform: uppercase; color: var(--text-muted);">Theme Builder</span>
+                    <i class="fas fa-magic" style="color: var(--primary); font-size: 1rem; background: var(--bg-color); padding: 8px; border-radius: 50%;"></i>
+                </div>
+                
+                <div style="display: flex; gap: 15px; width: 100%; justify-content: space-around; align-items: flex-end;">
+                    <!-- Primary -->
+                    <div class="color-picker-wrapper" title="Brand Color">
+                        <input type="color" id="customPrimary" value="${savedCustomPrimary}">
+                        <div class="color-swatch" id="swatchPrimary" style="background: ${savedCustomPrimary}">
+                            <i class="fas fa-eye-dropper"></i>
+                        </div>
+                        <label class="picker-label">Primary</label>
+                    </div>
+
+                    <!-- Background -->
+                    <div class="color-picker-wrapper" title="Background">
+                        <input type="color" id="customBg" value="${savedCustomBg}">
+                        <div class="color-swatch shadow-inner" id="swatchBg" style="background: ${savedCustomBg}; border: 1px solid var(--border);">
+                             <!-- No Icon, clean -->
+                        </div>
+                        <label class="picker-label">Back</label>
+                    </div>
+
+                    <!-- Text -->
+                    <div class="color-picker-wrapper" title="Text Color">
+                        <input type="color" id="customText" value="${savedCustomText}">
+                        <div class="color-swatch" id="swatchText" style="background: ${savedCustomText}">
+                            <span style="font-weight:900; font-family:serif;">Aa</span>
+                        </div>
+                        <label class="picker-label">Text</label>
+                    </div>
+                </div>
+            </div>
+             <div class="theme-info">
+                <div class="theme-name">Custom Logic</div>
+                <div class="theme-desc">Pro-level control over your interface.</div>
+                
+                <!-- Small indicators at bottom -->
+                <div class="color-dots" style="justify-content: flex-start; opacity: 0.5;">
+                     <div class="dot" style="background: ${savedCustomBg}" id="dotBg"></div>
+                     <div class="dot" style="background: ${savedCustomPrimary}" id="dotPrimary"></div>
+                     <div class="dot" style="background: ${savedCustomText}" id="dotText"></div>
+                </div>
+            </div>
+        `;
+        themeGrid.appendChild(customCard);
+
+        function updateCustomTheme() {
+            const primary = document.getElementById('customPrimary').value;
+            const bg = document.getElementById('customBg').value;
+            const text = document.getElementById('customText').value;
+
+            // Save individual values
+            localStorage.setItem('spectra-custom-primary', primary);
+            localStorage.setItem('spectra-custom-bg', bg);
+            localStorage.setItem('spectra-custom-text', text);
+
+            // Update Swatches & Dots
+            if (document.getElementById('swatchPrimary')) {
+                document.getElementById('swatchPrimary').style.background = primary;
+                document.getElementById('swatchBg').style.background = bg;
+                document.getElementById('swatchText').style.background = text;
+                document.getElementById('swatchText').style.color = bg;
+            }
+
+            document.getElementById('dotPrimary').style.background = primary;
+            document.getElementById('dotBg').style.background = bg;
+            document.getElementById('dotText').style.background = text;
+
+            applyCustomTheme(primary, bg, text);
+
+            customCard.classList.add('active');
+            document.querySelectorAll('.theme-card').forEach(c => {
+                if (c !== customCard) c.classList.remove('active');
+            });
+        }
+
+        ['customPrimary', 'customBg', 'customText'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateCustomTheme);
+        });
+
+        function selectCustomTheme(card) {
+            const primary = document.getElementById('customPrimary').value;
+            const bg = document.getElementById('customBg').value;
+            const text = document.getElementById('customText').value;
+
+            applyCustomTheme(primary, bg, text);
+
+            document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            showToast('Applied Custom Theme');
+        }
+
+        function applyCustomTheme(primary, bg, text) {
+            const root = document.documentElement;
+
+            // Calculate surface (slightly lighter/darker than bg)
+            // For simplicity, we'll just use bg for surface or a generic mix
+            // But to ensure "whatever colours", we just map them directly.
+            // We might want to make surface distinct, but for now let's reuse BG or keep white/black?
+            // Actually, usually users want BG control. Surface is harder. 
+            // Let's assume Surface = BG for "Full Custom" or user picks Main BG.
+
+            // To be safe/simple:
+            const surface = bg; // Or maybe we should add a Surface picker? 3 is good for now.
+
+            root.style.setProperty('--bg-color', bg);
+            root.style.setProperty('--surface', bg); // Monochromatic bg/surface for custom
+            root.style.setProperty('--primary', primary);
+            root.style.setProperty('--accent', primary);
+            root.style.setProperty('--accent-hover', primary);
+
+            root.style.setProperty('--text-main', text);
+            root.style.setProperty('--text-muted', text); // Simplified
+
+            root.style.setProperty('--border', text); // Use text color for border with opacity usually, but here solid
+            root.style.setProperty('--input-bg', bg);
+
+            // We need to save the DATA object for the main app to load
+            localStorage.setItem('spectra-theme-id', 'custom');
+            localStorage.setItem('spectra-theme-data', JSON.stringify({
+                '--bg-color': bg,
+                '--surface': bg, // or maybe calculated?
+                '--primary': primary,
+                '--accent': primary,
+                '--accent-hover': primary,
+                '--text-main': text,
+                '--text-muted': text,
+                '--border': text, // High contrast border if using text col
+                '--input-bg': bg,
+            }));
+        }
+
         function selectTheme(theme, card) {
             // Update UI
             document.querySelectorAll('.theme-card').forEach(c => c.classList.remove('active'));
@@ -428,8 +750,8 @@
         }
 
         function saveTheme(theme) {
-            localStorage.setItem('prism-theme-id', theme.id);
-            localStorage.setItem('prism-theme-data', JSON.stringify(theme.colors));
+            localStorage.setItem('spectra-theme-id', theme.id);
+            localStorage.setItem('spectra-theme-data', JSON.stringify(theme.colors));
         }
 
         function showToast(msg) {
