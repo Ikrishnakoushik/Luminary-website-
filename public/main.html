@@ -1043,7 +1043,11 @@
 <body>
 
     <header>
-        <a href="main.html" class="logo">Luminary</a>
+        <a href="main.html" class="logo">
+            <img src="luminary_logo.svg" alt="Luminary"
+                style="height: 32px; vertical-align: bottom; margin-right: 8px;">
+            Luminary
+        </a>
 
         <div class="search-bar">
             <i class="fas fa-search"></i>
@@ -1063,6 +1067,9 @@
         <aside class="sidebar-left">
             <a href="#" class="nav-item active" onclick="filterPosts('all')">
                 <i class="fas fa-home"></i> <span>Home Feed</span>
+            </a>
+            <a href="#" class="nav-item" onclick="filterPosts('foryou')">
+                <i class="fas fa-magic"></i> <span>For You</span>
             </a>
             <a href="#" class="nav-item" onclick="filterPosts('trending')">
                 <i class="fas fa-fire"></i> <span>Trending</span>
@@ -1864,6 +1871,45 @@
                 return;
             }
 
+            if (category.toLowerCase() === 'foryou') {
+                if (!userPreferences || userPreferences.length === 0) {
+                    document.getElementById('feed-container').innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-sliders-h fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3>Personalize Your Feed</h3>
+                            <p>Select your interests to see a curated feed just for you.</p>
+                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                                Select Interests
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const filtered = allPosts.filter(post => {
+                    return userPreferences.includes(post.category) ||
+                        (post.tags && post.tags.some(t => userPreferences.includes(t))) ||
+                        (post.category === 'General'); // Always show General? Maybe not.
+                });
+
+                if (filtered.length === 0) {
+                    document.getElementById('feed-container').innerHTML = `
+                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                            <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
+                            <h3>No matches found</h3>
+                            <p>We couldn't find any posts matching your interests yet.</p>
+                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                                Update Interests
+                            </button>
+                        </div>
+                    `;
+                    return;
+                }
+
+                renderPosts(filtered);
+                return;
+            }
+
             // Filter by category
             const filtered = allPosts.filter(post => {
                 return (post.category === category) || (post.tags && post.tags.includes(category));
@@ -2092,6 +2138,35 @@
         function closeModal(id) {
             document.getElementById(id).style.display = 'none';
         }
+
+        // Fetch User Profile to get Preferences
+        async function fetchUserProfile() {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            try {
+                // Decode token to get ID
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                const userId = payload.user.id;
+
+                const res = await fetch(`${API_URL}/users/${userId}`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (res.ok) {
+                    const user = await res.json();
+                    if (user.preferences) {
+                        userPreferences = user.preferences;
+                        console.log('Loaded user preferences:', userPreferences);
+                    }
+                }
+            } catch (err) {
+                console.error('Error fetching user profile:', err);
+            }
+        }
+
+        // Call on load
+        fetchUserProfile();
 
         function openPreferences() {
             const container = document.getElementById('pref-options');

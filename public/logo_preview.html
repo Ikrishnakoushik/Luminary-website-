@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luminary Logo Preview</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: #f1f5f9;
+        }
+
+        .container {
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            transition: transform 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .bg-light {
+            background: white;
+        }
+
+        .bg-dark {
+            background: #0f172a;
+            color: white;
+        }
+
+        img {
+            width: 150px;
+            height: 150px;
+        }
+
+        h2 {
+            margin: 0;
+            font-weight: 600;
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+
+        p {
+            max-width: 600px;
+            text-align: center;
+            color: #64748b;
+            margin-top: 40px;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+    <div style="margin-bottom: 40px; text-align: center;">
+        <h1 style="color: #6366f1; font-size: 2.5rem; margin-bottom: 10px;">Luminary</h1>
+        <span
+            style="background: #e0e7ff; color: #4338ca; padding: 5px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">NEW
+            BRAND IDENTITY</span>
+    </div>
+
+    <div class="container">
+        <!-- Light Mode Preview -->
+        <div class="card bg-light">
+            <img src="luminary_logo.svg" alt="Luminary Logo">
+            <h2>Light Mode</h2>
+        </div>
+
+        <!-- Dark Mode Preview -->
+        <div class="card bg-dark">
+            <img src="luminary_logo.svg" alt="Luminary Logo">
+            <h2>Dark Mode</h2>
+        </div>
+    </div>
+
+    <p>
+        The new <strong>Luminary</strong> logo represents the convergence of ideas and technology.
+        Constructed with pure geometric vectors, it scales infinitely and features a signature "Luminary Glow".
+        <br><br>
+        <em>Saved as: public/luminary_logo.svg</em>
+    </p>
+</body>
+
+</html>

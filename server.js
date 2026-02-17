@@ -602,6 +602,9 @@ app.get('/api/posts', async (req, res) => {
         if (req.query.user) {
             query.user = req.query.user;
         }
+        if (req.query.likedBy) {
+            query.likes = req.query.likedBy;
+        }
 
         const limit = parseInt(req.query.limit) || 20;
 

@@ -83,7 +83,13 @@
             .profile-card {
                 position: relative !important;
                 top: 0 !important;
+                height: auto !important;
+                /* Reset full height */
+                overflow-y: visible !important;
+                /* Remove scroll */
                 margin-bottom: 20px;
+                display: block !important;
+                /* Reset flex */
             }
 
             h1 {
@@ -97,15 +103,36 @@
             padding: 30px;
             border-radius: var(--border-radius);
             text-align: center;
+
+            /* Professional Sticky Sidebar */
             position: sticky;
-            top: 40px;
+            top: 20px;
+            /* Space from top */
+            height: calc(100vh - 40px);
+            /* Full viewport visible height */
+            overflow-y: auto;
+            /* Scrollable if content is too tall */
+            display: flex;
+            flex-direction: column;
+
             box-shadow: var(--shadow);
             border: 1px solid rgba(0, 0, 0, 0.03);
+            scrollbar-width: none;
+            /* Firefox */
+        }
+
+        .profile-card::-webkit-scrollbar {
+            display: none;
+            /* Chrome/Safari */
         }
 
         .avatar {
             width: 120px;
             height: 120px;
+            aspect-ratio: 1 / 1;
+            /* Force square ratio */
+            flex-shrink: 0;
+            /* Prevent shrinking */
             background: linear-gradient(135deg, #e0e0e0 0%, #f5f5f5 100%);
             border-radius: 50%;
             margin: 0 auto 20px;
@@ -115,6 +142,8 @@
             font-size: 3rem;
             border: 4px solid white;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            object-fit: cover;
+            /* For img tags if used */
         }
 
         h1 {
@@ -190,6 +219,8 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
+            margin-top: auto;
+            /* Pushes to bottom of flex container */
         }
 
         .auth-btn {
@@ -839,6 +870,118 @@
                 background-position: -200% 0;
             }
         }
+
+        /* Grid Layout for Favorite Spreads */
+        .posts-grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .post-card.compact {
+            padding: 0;
+            border: 1px solid #eee;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .post-card.compact:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .compact-img-container {
+            width: 100%;
+            height: 160px;
+            background: #f8f9fa;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .compact-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .compact-body {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .compact-tag {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--accent);
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .compact-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1.4;
+            color: var(--text-main);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .compact-excerpt {
+            font-size: 0.9rem;
+            color: var(--text-light);
+            margin-bottom: 15px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .compact-footer {
+            margin-top: auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid #f0f0f0;
+            padding-top: 10px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+
+        /* Professional Log Out Button */
+        .logout-btn {
+            width: 100%;
+            margin-top: 25px;
+            padding: 12px;
+            border: 1px solid #fee2e2;
+            background: #fff;
+            color: #ef4444;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 0.95rem;
+        }
+
+        .logout-btn:hover {
+            background: #fef2f2;
+            border-color: #fca5a5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+        }
     </style>
 </head>
 
@@ -1034,17 +1177,70 @@
                         avatarEl.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Reset default gradient
                     }
 
+                    // --- READER vs PUBLISHER LOGIC ---
+                    if (user.role === 'reader') {
+                        // Hide Projects
+                        const projSection = document.getElementById('projects-section');
+                        if (projSection) projSection.style.display = 'none';
+
+                        // Show Interests
+                        const intrSection = document.getElementById('interests-section');
+                        const intrList = document.getElementById('interests-list');
+                        if (intrSection && intrList) {
+                            intrSection.style.display = 'block';
+                            if (user.preferences && user.preferences.length > 0) {
+                                intrList.innerHTML = user.preferences.map(pref =>
+                                    `<span class="tag" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">${pref}</span>`
+                                ).join('');
+                            } else {
+                                intrList.innerHTML = '<span style="color:#94a3b8; font-size:0.9rem;">No interests selected yet.</span>';
+                            }
+                        }
+
+                        // Change Feed Title to "Favorite Spreads"
+                        const spreadTitle = document.getElementById('spreads-title');
+                        if (spreadTitle) spreadTitle.innerText = 'Favorite Spreads';
+
+                        // Fetch Liked Posts
+                        // We need the user ID. 'user' obj has it.
+                        // Check if we are viewing this profile (user._id)
+                        const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
+
+                        if (targetId) {
+                            // Trigger fetch with likedBy filter
+                            // We need to wait a tick to ensure fetchPosts is defined/available if it was hoisted or script order issues
+                            // But since it's in the same file it should be fine.
+                            fetchPosts({ likedBy: targetId });
+                        }
+
+                    } else {
+                        // Publisher Logic (Default)
+                        const spreadTitle = document.getElementById('spreads-title');
+                        if (spreadTitle) spreadTitle.innerText = 'Recent Spreads';
+                        // Fetch standard posts (handled by default fetchPosts call on load, or we can trigger it)
+                        // But wait, if we are loading profile *after* load, the initial fetchPosts might have run with default logic.
+                        // If we are a publisher, the default logic (user=ID) is correct.
+                        // So we don't need to do anything extra here unless we want to be explicit.
+                    }
+
+
                     // Show Settings Button if Me
                     const token = localStorage.getItem('token');
-                    if (token && user._id) {
+                    if (token && (user._id || user.isMe)) {
                         try {
                             const payload = JSON.parse(atob(token.split('.')[1]));
-                            if (payload.user.id === user._id) {
+                            // Compare IDs properly
+                            const myId = payload.user.id;
+                            const profileId = user._id || myId; // If isMe, use myId
+
+                            if (myId === profileId) {
                                 showSettingsButton(user);
                                 enableAvatarUpload(user, avatarEl);
-                                // Show Add Project Button
-                                const addProjBtn = document.getElementById('add-project-btn');
-                                if (addProjBtn) addProjBtn.style.display = 'inline-block';
+                                // Show Add Project Button ONLY if Publisher
+                                if (user.role !== 'reader') {
+                                    const addProjBtn = document.getElementById('add-project-btn');
+                                    if (addProjBtn) addProjBtn.style.display = 'inline-block';
+                                }
                             }
                         } catch (e) { }
                     } else if (!user._id && user.isMe) {
@@ -1104,10 +1300,13 @@
                     }
 
                     // Render Projects
-                    // Render Projects
                     // Use user.isMe if available, otherwise check IDs
                     const isMe = user.isMe !== undefined ? user.isMe : (user._id === (token ? JSON.parse(atob(token.split('.')[1])).user.id : null));
-                    renderProjects(user.projects || [], isMe);
+
+                    // ONLY render projects if NOT reader
+                    if (user.role !== 'reader') {
+                        renderProjects(user.projects || [], isMe);
+                    }
                 }
 
                 function renderProjects(projects, isMe) {
@@ -1447,8 +1646,14 @@
                     if (token) {
                         const username = localStorage.getItem('username');
                         authSection.innerHTML = `
-                        <div id="user-greeting" style="margin-bottom:10px; font-weight:600;">Welcome, ${username}</div>
-                        <button class="auth-btn secondary" onclick="logout()">Log Out</button>
+                        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                            <div id="user-greeting" style="margin-bottom:15px; font-weight:500; color:#94a3b8; font-size:0.85rem; text-align:center;">
+                                Currently logged in as <strong style="color:var(--text-main);">${username}</strong>
+                            </div>
+                            <button class="logout-btn" onclick="logout()">
+                                <i class="fas fa-sign-out-alt"></i> Log Out
+                            </button>
+                        </div>
                      `;
                     } else {
                         authSection.innerHTML = `
@@ -1468,8 +1673,18 @@
                 window.addEventListener('DOMContentLoaded', loadProfile);
             </script>
 
+            <!-- INTERESTS SECTION (Visible for everyone, but prominent for Readers) -->
+            <section id="interests-section" class="fade-in" style="animation-delay: 0.15s; display: none;">
+                <div class="section-header">
+                    <h2 class="section-title">Interests</h2>
+                </div>
+                <div id="interests-list" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <!-- Injected via JS -->
+                </div>
+            </section>
+
             <!-- PROJECTS SECTION -->
-            <section class="fade-in" style="animation-delay: 0.2s;">
+            <section id="projects-section" class="fade-in" style="animation-delay: 0.2s;">
                 <div class="section-header">
                     <h2 class="section-title">Selected Projects</h2>
                     <div style="display:flex; gap:10px; align-items:center;">
@@ -1502,7 +1717,7 @@
             <!-- PERSONAL FEED SECTION -->
             <section class="fade-in" style="animation-delay: 0.3s;">
                 <div class="section-header">
-                    <h2 class="section-title">Recent Spreads</h2>
+                    <h2 class="section-title" id="spreads-title">Recent Spreads</h2>
                 </div>
 
                 <div id="posts-container" class="blog-list">
@@ -1732,45 +1947,60 @@
 
         // --- POSTS LOGIC ---
 
-        async function fetchPosts() {
+        async function fetchPosts(filters = {}) {
             const container = document.getElementById('posts-container');
 
+            // If filters.likedBy is set, use that logic
+            // Otherwise use default logic
+
             try {
-                // Determine if we are viewing a specific user's profile
-                const urlParams = new URLSearchParams(window.location.search);
-                const userId = urlParams.get('user');
-
                 let url = `${API_URL}/posts`;
-                let isMyProfile = false;
+                const params = new URLSearchParams();
 
-                // FILTERING LOGIC
-                if (userId) {
-                    url += `?user=${userId}`;
+                if (filters.likedBy) {
+                    params.append('likedBy', filters.likedBy);
+                    // Default limit for likedBy is 7 (to check if we have > 6)
+                    // unless explicitly overridden e.g. 'all'
+                    if (filters.limit !== 'all') {
+                        params.append('limit', filters.limit || 7);
+                    }
                 } else {
-                    // Check if we are logged in
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        try {
-                            const payload = JSON.parse(atob(token.split('.')[1]));
-                            // If strictly on profile.html with no params, it's my profile.
-                            if (!window.location.search) {
-                                url += `?user=${payload.user.id}`;
-                                isMyProfile = true;
-                            }
-                        } catch (e) {
-                            console.error("Token parse error during fetchPosts", e);
-                        }
+                    // Default logic
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const userId = urlParams.get('user');
+
+                    if (userId) {
+                        params.append('user', userId);
                     } else {
-                        // Not logged in and no user param -> Guest on profile page (should probably not happen if redirected, but handle it)
-                        container.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Please <a href="#" onclick="openModal(\'loginModal\')" style="color:var(--primary); font-weight:600;">sign in</a> to view your spreads.</div>';
-                        return;
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            try {
+                                const payload = JSON.parse(atob(token.split('.')[1]));
+                                if (!window.location.search) {
+                                    params.append('user', payload.user.id);
+                                }
+                            } catch (e) {
+                                console.error("Token parse error", e);
+                            }
+                        } else {
+                            container.innerHTML = '<div style="text-align:center; padding: 20px; color: #666;">Please <a href="#" onclick="openModal(\'loginModal\')" style="color:var(--primary); font-weight:600;">sign in</a> to view your spreads.</div>';
+                            return;
+                        }
                     }
                 }
 
-                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;"><i class="fas fa-circle-notch fa-spin"></i> Loading entries...</div>';
+                if ([...params].length > 0) {
+                    url += `?${params.toString()}`;
+                }
+
+                // If this is a "View All" action, don't clear, maybe show loading?
+                // For now, simple replace is fine.
+                if (!filters.append) {
+                    container.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;"><i class="fas fa-circle-notch fa-spin"></i> Loading entries...</div>';
+                }
 
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
 
                 const res = await fetch(url, { signal: controller.signal });
                 clearTimeout(timeoutId);
@@ -1781,7 +2011,13 @@
                 }
 
                 const posts = await res.json();
-                renderPosts(posts);
+
+                // If filters.likedBy is active, use grid layout
+                if (filters.likedBy) {
+                    renderPosts(posts, 'grid', filters.limit === 'all');
+                } else {
+                    renderPosts(posts, 'list');
+                }
 
             } catch (err) {
                 console.error("fetchPosts Error:", err);
@@ -1790,7 +2026,6 @@
                         <i class="fas fa-exclamation-triangle" style="font-size: 2rem; margin-bottom: 10px;"></i><br>
                         <strong style="font-size: 1.1rem;">Failed to load spreads</strong><br>
                         <p style="color: #666; margin: 10px 0; font-size: 0.9rem;">${err.message}</p>
-                        <small style="display:block; color: #999; margin-bottom: 15px;">Target: ${url}</small>
                         <button onclick="fetchPosts()" class="auth-btn btn-sm" style="width: auto;">
                             <i class="fas fa-redo"></i> Retry
                         </button>
@@ -1798,106 +2033,214 @@
             }
         }
 
-        function renderPosts(posts) {
+
+        function renderPosts(posts, layout = 'list', showAll = false) {
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
 
+            if (layout === 'grid') {
+                container.className = 'posts-grid-container';
+            } else {
+                container.className = 'blog-list';
+            }
+
             if (!posts || posts.length === 0) {
-                container.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">No posts yet. Be the first to share!</div>';
+                container.style.display = 'block';
+                container.innerHTML = '<div style="text-align:center; padding: 40px; color: #94a3b8; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0;">No spreads found. Start reading and liking!</div>';
                 return;
             }
 
-            posts.forEach(post => {
+            // Logic for "View All"
+            // If layout is grid and NOT showAll, we limit to 6.
+            // But we fetched 7 to check.
+            let displayPosts = posts;
+            let hasMore = false;
+
+            if (layout === 'grid' && !showAll) {
+                if (posts.length > 6) {
+                    hasMore = true;
+                    displayPosts = posts.slice(0, 6);
+                }
+            }
+
+            displayPosts.forEach(post => {
                 const authorName = post.user?.username || post.username || 'User';
                 const initial = authorName.charAt(0).toUpperCase();
                 const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
                 const authorId = post.user?._id || '#';
                 const tag = post.tag || 'General';
                 const likesCount = post.likes ? post.likes.length : 0;
-                const commentsCount = post.comments ? post.comments.length : 0;
+
+                // Safe content strings
+                const safeTitle = (post.title || 'Untitled Update').replace(/'/g, "&apos;");
+                const safeAuthor = authorName.replace(/'/g, "&apos;");
+                const safeTime = dateStr.replace(/'/g, "&apos;");
+
+                // Content prep
+                let fullContent = LinkifyAndFormat(post.content || '');
+                // Strip HTML for excerpt
+                let tmp = document.createElement("DIV");
+                tmp.innerHTML = fullContent;
+                let plainText = tmp.textContent || tmp.innerText || "";
+                let excerpt = plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
 
                 // Avatar
-                const postAvatar = post.user?.profilePicture
-                    ? `<img src="${post.user.profilePicture}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
-                    : `<div class="avatar" style="width:40px;height:40px;font-size:1.2rem;margin:0;">${initial}</div>`;
+                const postAvatarUrl = post.user?.profilePicture;
+                const authorAvatar = postAvatarUrl
+                    ? `<img src="${postAvatarUrl}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
+                    : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
 
-                // Content Logic
-                let fullContent = LinkifyAndFormat(post.content || ''); // Use our existing formatter
-                let displayContent = fullContent;
-                let readActionBtn = '';
 
-                // Reader Mode Logic
-                const isLong = (post.content || '').length > 500;
+                if (layout === 'grid') {
+                    // GRID CARD HTML
+                    const card = document.createElement('article');
+                    card.className = 'post-card compact';
+                    card.onclick = () => openReaderFromId(post._id, safeTitle, safeAuthor, safeTime);
+                    card.style.cursor = 'pointer';
 
-                if (isLong) {
-                    const safeTitle = (post.title || 'Update').replace(/'/g, "&apos;");
-                    const safeAuthor = authorName.replace(/'/g, "&apos;");
-                    const safeTime = dateStr.replace(/'/g, "&apos;");
-
-                    // Truncate for display
-                    // Simple truncate of HTML is hard, so we just show a snippet or the full formatted content if it's not too huge visually.
-                    // For safety, let's just use the Read Story button for long content
-
-                    readActionBtn = `
-                        <div class="action-btn" onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')" style="margin-left:auto; color:var(--accent); background: #eff6ff;">
-                            <i class="fas fa-book-open"></i> Read Story
-                        </div>
-                        <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
-                     `;
-                }
-
-                // Delete Button Logic (Moved inside renderPosts scope for safety)
-                let deleteBtn = '';
-                try {
-                    const token = localStorage.getItem('token');
-                    if (token) {
-                        const payload = JSON.parse(atob(token.split('.')[1]));
-                        // Check if current user is owner
-                        // post.user might be populated object or ID string. Backend sends populated user object usually.
-                        const postUserId = post.user?._id || post.user;
-                        if (postUserId === payload.user.id) {
-                            deleteBtn = `
-                            <div class="action-btn delete-btn" onclick="deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;">
-                                <i class="fas fa-trash-alt"></i> Delete
-                            </div>`;
-                        }
+                    let imageHtml = '';
+                    if (post.image) {
+                        imageHtml = `<img src="${post.image}" class="compact-img" alt="${safeTitle}">`;
+                    } else {
+                        // Placeholder
+                        imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); display:flex; align-items:center; justify-content:center; color:#bae6fd; font-size:2rem;"><i class="fas fa-feather-alt"></i></div>`;
                     }
-                } catch (e) { }
 
-                const postHTML = `
+                    card.innerHTML = `
+                        <div class="compact-img-container">
+                            ${imageHtml}
+                        </div>
+                        <div class="compact-body">
+                            <div class="compact-tag">${tag}</div>
+                            <h3 class="compact-title">${post.title || 'Untitled'}</h3>
+                            <p class="compact-excerpt">${excerpt}</p>
+                            
+                            <div class="compact-footer">
+                                <div style="display:flex; align-items:center;">
+                                    ${authorAvatar}
+                                    <span>${authorName}</span>
+                                </div>
+                                <div><i class="far fa-heart"></i> ${likesCount}</div>
+                            </div>
+                        </div>
+                        <!-- Hidden content store for Reader -->
+                        <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
+                    `;
+                    container.appendChild(card);
+
+                } else {
+                    // STANDARD LIST HTML (Previous Logic)
+                    const postAvatar = post.user?.profilePicture
+                        ? `<img src="${post.user.profilePicture}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+                        : `<div class="avatar" style="width:40px;height:40px;font-size:1.2rem;margin:0;">${initial}</div>`;
+
+                    const isLong = (post.content || '').length > 500;
+                    let readActionBtn = '';
+                    if (isLong) {
+                        readActionBtn = `
+                            <div class="action-btn" onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')" style="margin-left:auto; color:var(--accent); background: #eff6ff;">
+                                <i class="fas fa-book-open"></i> Read Story
+                            </div>
+                            <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
+                        `;
+                    }
+
+                    let deleteBtn = '';
+                    try {
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            const postUserId = post.user?._id || post.user;
+                            if (postUserId === payload.user.id) {
+                                deleteBtn = `<div class="action-btn delete-btn" onclick="deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash-alt"></i> Delete</div>`;
+                            }
+                        }
+                    } catch (e) { }
+
+                    const postHTML = `
                     <article class="post-card" id="post-${post._id}">
                         <div class="post-header">
                             <div class="post-user-info">
                                 <a href="profile.html?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
-                                ${postAvatar}
-                                <div>
-                                    <div class="post-author">@${authorName}</div>
-                                    <div class="post-time">${dateStr}</div>
-                                </div>
+                                    ${postAvatar}
+                                    <div>
+                                        <div class="post-author">@${authorName}</div>
+                                        <div class="post-time">${dateStr}</div>
+                                    </div>
                                 </a>
                             </div>
                             <span class="post-tag">#${tag}</span>
                         </div>
-                        
                         ${post.title ? `<h3 style="margin-bottom:10px; font-size:1.2rem;">${post.title}</h3>` : ''}
-                        
                         <div class="post-content" style="margin-bottom:15px;">
                             ${isLong ? `<div class="blog-excerpt">${fullContent.substring(0, 300)}...</div>` : `<div class="blog-excerpt">${fullContent}</div>`}
                         </div>
-
                         ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
-
                         <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
                             <div class="action-btn"><i class="far fa-heart"></i> ${likesCount}</div>
-                            <div class="action-btn"><i class="far fa-comment"></i> ${commentsCount}</div>
+                            <div class="action-btn"><i class="far fa-comment"></i> ${post.comments ? post.comments.length : 0}</div>
                             <div class="action-btn"><i class="far fa-share-square"></i> Share</div>
                             ${readActionBtn}
                             ${deleteBtn}
                         </div>
-                    </article>
-                `;
-                container.innerHTML += postHTML;
+                    </article>`;
+                    container.innerHTML += postHTML;
+                }
             });
+
+            // "View All" Button Logic
+            if (hasMore) {
+                // We need to fetch ID to pass to button? No, we can just use the url params or a closure.
+                // We can't access 'filters' here easily unless passed.
+                // But we can just create a generic "Load All" button that calls fetchPosts with modified args.
+                // We need to know WHOSE liked posts we are viewing.
+                const viewAllDiv = document.createElement('div');
+                viewAllDiv.style.gridColumn = '1 / -1';
+                viewAllDiv.style.textAlign = 'center';
+                viewAllDiv.style.marginTop = '20px';
+
+                // We need to deduce the User ID again or store it.
+                // It was passed to fetchPosts...
+                // Let's stick it on the container dataset or just retry logic.
+                // Use a simple onclick handler that re-calls fetchPosts with correct params.
+                // We can check URL params or token.
+                // Simplest: The User ID is likely available in the closure if we defined it? No.
+                // Let's grab it from top of renderPosts logic or...
+                // Actually, let's just use the current filters. Oh wait, render doesn't know filters.
+                // We can infer it:
+                // If grid layout, it's likedBy.
+
+                // We can attach the ID to the function call in the HTML.
+                // But where do we get the ID?
+                // From the first post? post.likes contains the user ID? No.
+                // We can get it from the URL or Token like fetchPosts does.
+
+                viewAllDiv.innerHTML = `
+                    <button id="view-all-btn" class="auth-btn secondary" style="width:auto; padding: 10px 20px;">
+                        View All <i class="fas fa-arrow-right"></i>
+                    </button>
+                `;
+                container.appendChild(viewAllDiv);
+
+                document.getElementById('view-all-btn').onclick = function () {
+                    // Logic to load all
+                    // We need to reconstruct the filter.
+                    // This is a bit hacky but works:
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const userId = urlParams.get('user');
+                    let targetId = userId;
+                    if (!targetId) {
+                        try {
+                            const token = localStorage.getItem('token');
+                            if (token) targetId = JSON.parse(atob(token.split('.')[1])).user.id;
+                        } catch (e) { }
+                    }
+
+                    if (targetId) {
+                        fetchPosts({ likedBy: targetId, limit: 'all' });
+                    }
+                };
+            }
         }
 
         // Reader Functions
@@ -2008,6 +2351,12 @@
         </div>
         <div style="position:fixed; bottom:5px; right:5px; font-size:10px; opacity:0.5; pointer-events:none;">v3001
         </div>
+    </div>
+    <!-- Footer -->
+    <div style="text-align: center; padding: 40px 0; color: #94a3b8; font-size: 0.9rem;">
+        <img src="luminary_logo.svg" alt="Luminary"
+            style="width: 20px; height: 20px; vertical-align: middle; opacity: 0.7;">
+        <span style="vertical-align: middle; margin-left: 5px;">Powered by Luminary</span>
     </div>
 </body>
 
