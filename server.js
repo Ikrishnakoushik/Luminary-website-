@@ -245,17 +245,17 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         await user.save();
 
         const mailOptions = {
-            from: 'Spectra <meta81210@gmail.com>', // Use authenticated email
+            from: 'Luminary <' + (process.env.EMAIL_USER || 'no-reply@luminary.com') + '>',
             to: email,
-            subject: 'Spectra - Password Reset OTP',
+            subject: 'Luminary - Password Reset OTP',
             text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
         };
 
         transporter.sendMail(mailOptions, (error, info) => {
             if (error) {
                 console.error('[DEBUG] Nodemailer Error:', error);
-                // Don't leak full error to client, but log it
-                return res.status(500).json({ msg: 'Error sending email. Server logs have details.' });
+                // Return actual error to client for debugging
+                return res.status(500).json({ msg: 'Email failed: ' + error.message });
             } else {
                 console.log('[DEBUG] Email sent successfully: ' + info.response);
                 res.json({ msg: 'OTP sent to email', email: user.email });
