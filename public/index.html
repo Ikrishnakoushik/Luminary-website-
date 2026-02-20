@@ -215,39 +215,51 @@
         /* Responsive */
         @media (max-width: 768px) {
             nav {
-                flex-direction: column;
-                gap: 1rem;
-                padding: 1rem;
+                padding: 15px 20px;
+            }
+
+            /* Hide links except auth buttons on mobile for a clean look */
+            .nav-links a:not(.btn-login):not(.btn-signup) {
+                display: none;
             }
 
             .nav-links {
-                display: flex;
-                gap: 1rem;
-                flex-wrap: wrap;
-                justify-content: center;
+                gap: 10px;
             }
 
-            .nav-links a {
+            .btn-login,
+            .btn-signup {
+                padding: 8px 16px;
+                font-size: 0.9rem;
                 margin-left: 0;
             }
 
             h1 {
                 font-size: 2.5rem;
+                line-height: 1.2;
+                margin-top: 40px;
             }
 
             p.subtitle {
-                font-size: 1rem;
-                padding: 0 1rem;
+                font-size: 1.1rem;
+                padding: 0 10px;
+                line-height: 1.5;
             }
 
             .features-container {
                 margin-top: 2rem;
+                grid-template-columns: 1fr;
                 gap: 1.5rem;
-                padding: 0 1rem;
+                padding: 0 20px;
             }
 
             .feature-card {
-                padding: 1.5rem;
+                padding: 2rem 1.5rem;
+                text-align: center;
+            }
+
+            .hero {
+                padding-top: 100px;
             }
         }
     </style>

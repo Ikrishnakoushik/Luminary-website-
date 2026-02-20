@@ -102,6 +102,60 @@
             margin-bottom: 15px;
         }
 
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                height: auto;
+                position: relative;
+                padding: 20px;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+                display: flex;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 10px;
+                box-sizing: border-box;
+            }
+
+            .logo {
+                margin-bottom: 5px;
+                width: 100%;
+            }
+
+            .nav-section {
+                display: none;
+                /* Hide sections on mobile for tight fit */
+            }
+
+            .nav-item {
+                display: inline-block;
+                margin-bottom: 5px;
+                font-size: 0.9rem;
+                padding: 8px 12px;
+            }
+
+            .content {
+                margin-left: 0;
+                padding: 30px 20px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            h1 {
+                font-size: 2rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+                margin-top: 30px;
+            }
+        }
+
         p {
             line-height: 1.7;
             color: #475569;

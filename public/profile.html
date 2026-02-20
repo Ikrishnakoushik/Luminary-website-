@@ -74,26 +74,52 @@
         }
 
         /* Mobile Layout */
-        @media (max-width: 850px) {
+        @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
                 gap: 20px;
+                padding: 15px;
             }
 
             .profile-card {
                 position: relative !important;
-                top: 0 !important;
+                top: auto !important;
                 height: auto !important;
-                /* Reset full height */
                 overflow-y: visible !important;
-                /* Remove scroll */
-                margin-bottom: 20px;
+                margin-bottom: 0px;
                 display: block !important;
-                /* Reset flex */
+                padding: 25px 20px;
+            }
+
+            .avatar {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 15px;
             }
 
             h1 {
-                font-size: 1.2rem;
+                font-size: 1.5rem;
+            }
+
+            .bio {
+                font-size: 0.95rem;
+            }
+
+            .projects-grid,
+            .favorites-grid {
+                grid-template-columns: 1fr;
+                /* 1 column on mobile */
+                gap: 15px;
+            }
+
+            .nav-links {
+                padding: 10px;
+                gap: 10px;
+            }
+
+            .nav-links a {
+                padding: 8px 15px;
+                font-size: 0.9rem;
             }
         }
 

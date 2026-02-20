@@ -499,10 +499,11 @@
             }
         }
 
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .container {
                 grid-template-columns: 1fr;
-                padding-bottom: 80px;
+                padding: 10px 15px 90px 15px;
+                gap: 20px;
             }
 
             .sidebar-left {
@@ -511,32 +512,68 @@
                 top: auto;
                 left: 0;
                 width: 100%;
-                height: 60px;
-                background: var(--card-bg);
+                height: 65px;
+                background: rgba(255, 255, 255, 0.85);
+                /* Glassmorphism */
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border-top: 1px solid rgba(0, 0, 0, 0.05);
                 display: flex;
                 justify-content: space-around;
+                align-items: center;
                 z-index: 90;
-                padding: 0;
-                box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+                padding: 0 10px;
+                box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
             }
 
             .nav-item {
                 margin: 0;
                 padding: 10px;
-                border-radius: 0;
+                border-radius: 12px;
+                flex: 1;
+                display: flex;
+                justify-content: center;
+            }
+
+            .nav-item i {
+                font-size: 1.4rem;
+                margin: 0;
             }
 
             .section-label {
                 display: none;
             }
 
-            .search-bar {
-                display: none;
+            header {
+                padding: 10px 15px;
+                flex-wrap: wrap;
+                gap: 15px;
             }
 
-            /* Hide search on mobile for simplicity or add toggle */
-            header {
-                padding: 0 20px;
+            .search-bar {
+                display: flex;
+                width: 100%;
+                max-width: 100%;
+                order: 3;
+                /* Push to bottom row */
+                margin-top: 5px;
+            }
+
+            .header-right {
+                flex: 1;
+                justify-content: flex-end;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+            }
+
+            .post-card {
+                padding: 20px 15px;
+            }
+
+            .post-content {
+                font-size: 0.95rem;
             }
         }
 
