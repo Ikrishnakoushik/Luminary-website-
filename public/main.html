@@ -248,12 +248,17 @@
         }
 
         .section-label {
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 1px;
             color: var(--text-muted);
             margin: 20px 0 10px 15px;
             font-weight: 700;
+        }
+
+        /* Mobile Categories Ribbon */
+        .mobile-categories {
+            display: none;
         }
 
         /* Main Feed */
@@ -506,6 +511,49 @@
                 gap: 20px;
             }
 
+            /* Hide Desktop Right Sidebar completely */
+            .sidebar-right {
+                display: none;
+            }
+
+            /* Show Mobile Categories Ribbon under header */
+            .mobile-categories {
+                display: flex;
+                overflow-x: auto;
+                padding: 10px 15px;
+                gap: 10px;
+                background: var(--surface);
+                border-bottom: 1px solid var(--border);
+                scrollbar-width: none;
+                /* Firefox */
+                position: sticky;
+                top: var(--header-height);
+                z-index: 95;
+            }
+
+            .mobile-categories::-webkit-scrollbar {
+                display: none;
+            }
+
+            .category-pill {
+                white-space: nowrap;
+                padding: 6px 16px;
+                background: var(--input-bg);
+                border-radius: 20px;
+                font-size: 0.9rem;
+                color: var(--text-muted);
+                font-weight: 600;
+                text-decoration: none;
+                border: 1px solid var(--border);
+            }
+
+            .category-pill.active {
+                background: var(--primary);
+                color: white;
+                border-color: var(--primary);
+            }
+
+            /* Transform Left Sidebar into Bottom Nav */
             .sidebar-left {
                 position: fixed;
                 bottom: 0;
@@ -526,28 +574,47 @@
                 box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.05);
             }
 
+            /* Hide everything in sidebar except Core Nav on mobile */
+            .sidebar-left>* {
+                display: none !important;
+            }
+
+            /* Show only essential icons in bottom nav */
+            .sidebar-left .core-nav {
+                display: flex !important;
+                width: 100%;
+                justify-content: space-around;
+            }
+
             .nav-item {
                 margin: 0;
                 padding: 10px;
                 border-radius: 12px;
                 flex: 1;
                 display: flex;
+                flex-direction: column;
                 justify-content: center;
+                align-items: center;
+                gap: 4px;
+            }
+
+            /* Hide text labels on bottom nav icons */
+            .nav-item span {
+                display: none;
             }
 
             .nav-item i {
-                font-size: 1.4rem;
+                font-size: 1.5rem;
                 margin: 0;
-            }
-
-            .section-label {
-                display: none;
             }
 
             header {
                 padding: 10px 15px;
                 flex-wrap: wrap;
-                gap: 15px;
+                gap: 10px;
+                height: auto;
+                min-height: var(--header-height);
+                justify-content: space-between;
             }
 
             .search-bar {
@@ -556,16 +623,21 @@
                 max-width: 100%;
                 order: 3;
                 /* Push to bottom row */
-                margin-top: 5px;
+                margin: 5px 0 5px 0;
+                flex-basis: 100%;
+                /* Force onto new line */
             }
 
             .header-right {
-                flex: 1;
+                display: flex;
+                flex: 0 0 auto;
                 justify-content: flex-end;
             }
 
             .logo {
                 font-size: 1.3rem;
+                flex: 1;
+                /* Allow logo to take up remaining space on top row */
             }
 
             .post-card {
@@ -1079,56 +1151,51 @@
 
 <body>
 
-    <header>
-        <a href="main.html" class="logo">
-            <img src="luminary_logo.svg" alt="Luminary"
-                style="height: 32px; vertical-align: bottom; margin-right: 8px;">
-            Luminary
-        </a>
+    <!-- Header -->
+    <header id="main-header">
+        <a href="index.html" class="logo"><i class="fa-solid fa-compass"></i> Luminary</a>
 
         <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search posts, topics, or spreaders...">
+            <i class="fa-solid fa-search"></i>
+            <input type="text" placeholder="Search creators, topics, or ideas...">
         </div>
 
-        <div class="user-menu">
-            <a href="profile.html" class="avatar-sm" title="Your Profile">
-                <i class="fas fa-user"></i>
-            </a>
+        <div class="header-right" id="auth-section">
+            <a href="auth.html" class="btn" style="text-decoration: none;">Log In</a>
         </div>
     </header>
 
+    <!-- Mobile Categories Ribbon (Visible only on Mobile) -->
+    <div class="mobile-categories">
+        <a href="#" class="category-pill active">All For You</a>
+        <a href="#" class="category-pill">Technology</a>
+        <a href="#" class="category-pill">Design</a>
+        <a href="#" class="category-pill">Business</a>
+        <a href="#" class="category-pill">Lifestyle</a>
+        <a href="#" class="category-pill">Writing</a>
+    </div>
+
+    <!-- Main Layout -->
     <div class="container">
-
-        <!-- Sidebar Left -->
+        <!-- Core Navigation -->
         <aside class="sidebar-left">
-            <a href="#" class="nav-item active" onclick="filterPosts('all')">
-                <i class="fas fa-home"></i> <span>Home Feed</span>
-            </a>
-            <a href="#" class="nav-item" onclick="filterPosts('foryou')">
-                <i class="fas fa-magic"></i> <span>For You</span>
-            </a>
-            <a href="#" class="nav-item" onclick="filterPosts('trending')">
-                <i class="fas fa-fire"></i> <span>Trending</span>
-            </a>
-            <a href="profile.html" class="nav-item">
-                <i class="fas fa-user"></i> <span>Profile</span>
-            </a>
+            <div class="core-nav">
+                <a href="main.html" class="nav-item active" data-type="core">
+                    <i class="fa-solid fa-house"></i>
+                    <span>Home</span>
+                </a>
 
-            <a href="publish.html" class="nav-item" id="publisher-link" style="display: none;">
-                <i class="fas fa-pen-nib"></i> <span>Publisher Studio</span>
-            </a>
+                <a href="publish.html" class="nav-item" data-type="core">
+                    <i class="fa-solid fa-pen-nib"></i>
+                    <span>Create</span>
+                </a>
 
-            <div class="section-label">Resources</div>
-            <a href="documentation.html" class="nav-item">
-                <i class="fas fa-book" style="color: #6366f1;"></i> <span>Documentation</span>
-            </a>
-            <a href="creator-kit.html" class="nav-item">
-                <i class="fas fa-palette" style="color: #ec4899;"></i> <span>Creator Kit</span>
-            </a>
-            <a href="community.html" class="nav-item">
-                <i class="fas fa-shield-alt" style="color: #8b5cf6;"></i> <span>Community</span>
-            </a>
+                <a href="#" class="nav-item" id="nav-profile-link" data-type="core"
+                    onclick="return enforceLogin(event)">
+                    <i class="fa-regular fa-user"></i>
+                    <span>Profile</span>
+                </a>
+            </div>
 
             <div class="section-label">Topics</div>
             <a href="#" class="nav-item" onclick="openPreferences()">
@@ -2092,51 +2159,8 @@
             }
         }
 
-        // Carousel Logic
-        const track = document.getElementById('track');
-        if (track) {
-            const slides = document.querySelectorAll('.slide');
-            const dots = document.querySelectorAll('.dot');
-            let currentSlide = 0;
-            function updateCarousel() {
-                track.style.transform = `translateX(-${currentSlide * 100}%)`;
-                slides.forEach((slide, index) => {
-                    if (index === currentSlide) slide.classList.add('active');
-                    else slide.classList.remove('active');
-                });
-                dots.forEach((dot, index) => {
-                    if (index === currentSlide) dot.classList.add('active');
-                    else dot.classList.remove('active');
-                });
-            }
-            setInterval(() => {
-                currentSlide = (currentSlide + 1) % slides.length;
-                updateCarousel();
-            }, 5000);
-        }
-    </script>
-    <!-- Bottom Navigation for Mobile -->
-    <nav class="mobile-nav">
-        <a href="#" class="mobile-nav-item active" onclick="filterPosts('All')">
-            <i class="fas fa-home"></i>
-            <span>Home</span>
-        </a>
-        <a href="#" class="mobile-nav-item" onclick="filterPosts('Trending')">
-            <i class="fas fa-fire"></i>
-            <span>Trending</span>
-        </a>
-        <a href="profile.html" class="mobile-nav-item">
-            <i class="fas fa-user"></i>
-            <span>Profile</span>
-        </a>
-    </nav>
-
     <script>
-        // Simple logic to show mobile nav only on small screens via JS if needed, 
-        // but CSS @media query handles display:flex vs none.
-        // We set inline style display:none initially to avoid flash, but CSS will override.
-        // Actually best to remove inline style and rely on CSS.
-    </script>
+        // Carousel Logic
     <!-- PREFERENCES MODAL -->
     <div id="prefModal" class="modal">
         <div class="modal-content">
