@@ -8,6 +8,7 @@ const path = require('path');
 const fs = require('fs'); // Import fs
 const User = require('./models/User');
 const Post = require('./models/Post');
+const Message = require('./models/Message');
 const seedData = require('./seed'); // Import seed script
 
 const app = express();
@@ -678,6 +679,103 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
         res.json(user.projects);
     } catch (err) {
         console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// --- MESSAGING API ---
+
+// 1. Get List of Conversations (for inbox sidebar)
+app.get('/api/messages/conversations', auth, async (req, res) => {
+    try {
+        const currentUserId = req.user.id;
+
+        // Find all messages sent or received by the user
+        const messages = await Message.find({
+            $or: [{ sender: currentUserId }, { receiver: currentUserId }]
+        })
+            .sort({ createdAt: -1 })
+            .populate('sender', 'username profilePicture displayName')
+            .populate('receiver', 'username profilePicture displayName');
+
+        const conversationsMap = new Map();
+
+        for (const msg of messages) {
+            // Determine the "other" user
+            const otherUser = msg.sender._id.toString() === currentUserId
+                ? msg.receiver
+                : msg.sender;
+
+            const otherUserIdStr = otherUser._id.toString();
+
+            if (!conversationsMap.has(otherUserIdStr)) {
+                conversationsMap.set(otherUserIdStr, {
+                    user: otherUser,
+                    lastMessage: msg.content,
+                    timestamp: msg.createdAt,
+                    unread: !msg.read && msg.receiver._id.toString() === currentUserId
+                });
+            }
+        }
+
+        const conversationsLineup = Array.from(conversationsMap.values());
+        res.json(conversationsLineup);
+
+    } catch (err) {
+        console.error("Error fetching conversations:", err);
+        res.status(500).send('Server error');
+    }
+});
+
+// 2. Get Chat History with a specific user
+app.get('/api/messages/:userId', auth, async (req, res) => {
+    try {
+        const currentUserId = req.user.id;
+        const otherUserId = req.params.userId;
+
+        const messages = await Message.find({
+            $or: [
+                { sender: currentUserId, receiver: otherUserId },
+                { sender: otherUserId, receiver: currentUserId }
+            ]
+        }).sort({ createdAt: 1 }); // Oldest first for chat timeline
+
+        // Mark unread messages as read when opening conversation
+        await Message.updateMany(
+            { sender: otherUserId, receiver: currentUserId, read: false },
+            { $set: { read: true } }
+        );
+
+        res.json(messages);
+
+    } catch (err) {
+        console.error("Error fetching messages:", err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 3. Send a Message
+app.post('/api/messages/:userId', auth, async (req, res) => {
+    try {
+        const currentUserId = req.user.id;
+        const receiverId = req.params.userId;
+        const { content } = req.body;
+
+        if (!content || !content.trim()) {
+            return res.status(400).json({ msg: 'Message content cannot be empty' });
+        }
+
+        const newMessage = new Message({
+            sender: currentUserId,
+            receiver: receiverId,
+            content
+        });
+
+        await newMessage.save();
+        res.json(newMessage);
+
+    } catch (err) {
+        console.error("Error sending message:", err);
         res.status(500).send('Server Error');
     }
 });

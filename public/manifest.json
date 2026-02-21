@@ -1,0 +1,16 @@
+{
+    "name": "Luminary Studio",
+    "short_name": "Luminary",
+    "start_url": "/main.html",
+    "display": "standalone",
+    "background_color": "#f8fafc",
+    "theme_color": "#6366f1",
+    "icons": [
+        {
+            "src": "/luminary_logo.svg",
+            "sizes": "192x192 512x512",
+            "type": "image/svg+xml",
+            "purpose": "any maskable"
+        }
+    ]
+}
