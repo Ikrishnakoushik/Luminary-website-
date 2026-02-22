@@ -56,6 +56,10 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other']
     }],
+    connections: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
     projects: [{
         title: { type: String, required: true },
         description: { type: String },

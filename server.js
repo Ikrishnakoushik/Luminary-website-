@@ -458,6 +458,53 @@ app.get('/api/users/top', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
+// Toggle Connection (Follow/Unfollow)
+app.post('/api/users/connect/:id', auth, async (req, res) => {
+    try {
+        if (req.user.id === req.params.id) {
+            return res.status(400).json({ msg: 'You cannot connect with yourself' });
+        }
+
+        const targetUser = await User.findById(req.params.id);
+        if (!targetUser) return res.status(404).json({ msg: 'User not found' });
+
+        const currentUser = await User.findById(req.user.id);
+
+        // Toggle connection
+        const connectionIndex = currentUser.connections.indexOf(req.params.id);
+        if (connectionIndex !== -1) {
+            // Unfollow
+            currentUser.connections.splice(connectionIndex, 1);
+        } else {
+            // Follow
+            currentUser.connections.unshift(req.params.id);
+        }
+
+        await currentUser.save();
+        res.json(currentUser.connections);
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
+// Get Current User's Connections List
+app.get('/api/users/connections', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+            .populate('connections', 'username displayName profilePicture role bio projects');
+
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        res.json(user.connections);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 // Get User by ID (Public Profile)
 app.get('/api/users/:id', async (req, res) => {
@@ -644,6 +691,102 @@ app.get('/ping', (req, res) => {
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
     res.status(500).send('Something broke!');
+});
+
+// --- MESSAGES API ---
+
+// Get all recent conversations for the current user
+app.get('/api/messages/conversations', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        // Find all messages where user is sender or receiver
+        const messages = await Message.find({
+            $or: [{ sender: userId }, { receiver: userId }]
+        })
+            .sort({ createdAt: -1 })
+            .populate('sender', 'username profilePicture')
+            .populate('receiver', 'username profilePicture');
+
+        // Extract unique conversations
+        const convosMap = new Map();
+
+        messages.forEach(msg => {
+            const isSentByMe = msg.sender._id.toString() === userId;
+            const otherUser = isSentByMe ? msg.receiver : msg.sender;
+
+            if (!otherUser) return; // In case user was deleted
+
+            const otherUserId = otherUser._id.toString();
+
+            if (!convosMap.has(otherUserId)) {
+                convosMap.set(otherUserId, {
+                    user: otherUser,
+                    lastMessage: msg.content,
+                    timestamp: msg.createdAt,
+                    unread: !isSentByMe && msg.unread
+                });
+            }
+        });
+
+        const convos = Array.from(convosMap.values());
+        res.json(convos);
+
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Get messages with a specific user
+app.get('/api/messages/:userId', auth, async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const otherUserId = req.params.userId;
+
+        const messages = await Message.find({
+            $or: [
+                { sender: userId, receiver: otherUserId },
+                { sender: otherUserId, receiver: userId }
+            ]
+        }).sort({ createdAt: 1 });
+
+        // Mark as read if receiving them
+        await Message.updateMany(
+            { sender: otherUserId, receiver: userId, unread: true },
+            { $set: { unread: false } }
+        );
+
+        res.json(messages);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Send a message
+app.post('/api/messages/:userId', auth, async (req, res) => {
+    try {
+        const sender = req.user.id;
+        const receiver = req.params.userId;
+        const { content } = req.body;
+
+        if (!content) {
+            return res.status(400).json({ msg: 'Message content is required' });
+        }
+
+        const newMessage = new Message({
+            sender,
+            receiver,
+            content
+        });
+
+        const savedMessage = await newMessage.save();
+        res.json(savedMessage);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
 });
 
 // --- PROJECTS API ---
