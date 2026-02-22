@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Profile</title>
+    <script src="theme-loader.js"></script>
     <link rel="manifest" href="/manifest.json">
 
     <!-- Google Fonts: Outfit -->
@@ -18,14 +19,14 @@
         /* --- CSS VARIABLES --- */
         :root {
             /* Deeper, more refined colors */
-            --bg-body: #f8fafc;
-            --card-bg: #ffffff;
-            --primary: #4f46e5;
+            --bg-color: #f1f5f9;
+            --surface: #ffffff;
+            --primary: #6366f1;
             --accent: #6366f1;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border-radius: 16px;
-            --border-color: #e2e8f0;
+            --border: #e2e8f0;
             /* Softer, more elegant shadows */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -40,7 +41,7 @@
 
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: var(--bg-body);
+            background-color: var(--bg-color);
             color: var(--text-main);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
@@ -160,7 +161,7 @@
 
         /* --- LEFT COLUMN: PROFILE HEADER --- */
         .profile-card {
-            background: var(--card-bg);
+            background: var(--surface);
             padding: 35px 25px;
             border-radius: var(--border-radius);
             text-align: center;
@@ -170,7 +171,7 @@
             display: flex;
             flex-direction: column;
             box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
         }
 
         .avatar {
@@ -358,11 +359,11 @@
         }
 
         .project-card {
-            background: var(--card-bg);
+            background: var(--surface);
             border-radius: var(--border-radius);
             overflow: hidden;
             box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             transition: all 0.25s ease;
             text-decoration: none;
             color: inherit;
@@ -413,11 +414,11 @@
 
         /* Create Post Card */
         #create-post-card {
-            background: var(--card-bg);
+            background: var(--surface);
             padding: 24px;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             margin-bottom: 30px;
             display: none;
             /* Hidden by default */
@@ -475,11 +476,11 @@
         }
 
         .blog-card {
-            background: var(--card-bg);
+            background: var(--surface);
             padding: 28px;
             border-radius: var(--border-radius);
             box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 12px;
@@ -738,7 +739,7 @@
 
         /* --- POST CARD & ACTIONS (Ported from Main) --- */
         .post-card {
-            background: var(--card-bg);
+            background: var(--surface);
             border-radius: var(--border-radius);
             padding: 25px;
             margin-bottom: 25px;
@@ -1361,21 +1362,7 @@
             </div>
 
             <script>
-                // Apply Full Theme from LocalStorage immediately
-                (function () {
-                    try {
-                        const themeData = localStorage.getItem('spectra-theme-data');
-                        if (themeData) {
-                            const colors = JSON.parse(themeData);
-                            Object.entries(colors).forEach(([key, value]) => {
-                                document.documentElement.style.setProperty(key, value);
-                            });
-                        }
-                    } catch (e) { console.error(e); }
-                })();
-
                 // --- Profile Logic ---
-                // API_URL is already defined in the script at the bottom
 
                 async function loadProfile() {
                     const urlParams = new URLSearchParams(window.location.search);
@@ -2812,6 +2799,17 @@
                         .catch(err => console.error('SW registration failed:', err));
                 });
             }
+
+            function enforceLogin(e) {
+                if (!localStorage.getItem('token')) {
+                    if (e) e.preventDefault();
+                    alert('Please login to access this feature!');
+                    window.location.href = 'auth.html';
+                    return false;
+                }
+                return true;
+            }
+
             function updateOnlineStatus() {
                 const banner = document.getElementById('offline-banner');
                 if (!navigator.onLine) {

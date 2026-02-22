@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Messages</title>
+    <script src="theme-loader.js"></script>
 
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -24,7 +25,7 @@
             --surface-solid: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
-            --border: rgba(0, 0, 0, 0.06);
+            --border: #e2e8f0;
             --header-height: 75px;
             --sidebar-width: 340px;
             --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.03);
@@ -478,6 +479,16 @@
             } catch (e) {
                 window.location.href = 'auth.html';
             }
+        }
+
+        function enforceLogin(e) {
+            if (!localStorage.getItem('token')) {
+                if (e) e.preventDefault();
+                alert('Please login to access this feature!');
+                window.location.href = 'auth.html';
+                return false;
+            }
+            return true;
         }
 
         async function loadConversations() {

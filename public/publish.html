@@ -63,8 +63,8 @@
 
         /* Sidebar */
         .sidebar {
-            background: #ffffff;
-            border-right: 1px solid #fecdd3;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
             /* Faint pink line */
             padding: 30px;
             display: flex;
@@ -548,19 +548,7 @@
     </div>
 
     <script>
-        // Apply Full Theme from LocalStorage immediately
-        (function () {
-            try {
-                const themeData = localStorage.getItem('spectra-theme-data');
-                if (themeData) {
-                    const colors = JSON.parse(themeData);
-                    Object.entries(colors).forEach(([key, value]) => {
-                        document.documentElement.style.setProperty(key, value);
-                    });
-                }
-            } catch (e) { console.error(e); }
-        })();
-
+        // Core Logic
         const API_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
             ? 'http://localhost:3000/api'
             : '/api';

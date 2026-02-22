@@ -1,6 +1,6 @@
 (function () {
     // Immediate execution to prevent flash of unstyled content
-    const themeData = localStorage.getItem('luminary-theme-data');
+    const themeData = localStorage.getItem('spectra-theme-data');
     if (themeData) {
         try {
             const colors = JSON.parse(themeData);

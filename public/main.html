@@ -21,27 +21,15 @@
             return false;
         };
 
-        // Apply Full Theme from LocalStorage immediately
-        (function () {
-            try {
-                const themeData = localStorage.getItem('spectra-theme-data');
-                if (themeData) {
-                    const colors = JSON.parse(themeData);
-                    Object.entries(colors).forEach(([key, value]) => {
-                        document.documentElement.style.setProperty(key, value);
-                    });
-                } else {
-                    // Fallback for migration
-                    const savedAccent = localStorage.getItem('spectra-theme-accent');
-                    if (savedAccent) {
-                        document.documentElement.style.setProperty('--primary', savedAccent);
-                        document.documentElement.style.setProperty('--accent', savedAccent);
-                    }
-                }
-            } catch (e) {
-                console.error('Error loading theme:', e);
+        function enforceLogin(e) {
+            if (!localStorage.getItem('token')) {
+                if (e) e.preventDefault();
+                alert('Please login to access this feature!');
+                window.location.href = 'auth.html';
+                return false;
             }
-        })();
+            return true;
+        }
     </script>
     <style>
         :root {
@@ -83,7 +71,7 @@
             width: 100%;
             height: var(--header-height);
             /* Glassmorphism Effect */
-            background: color-mix(in srgb, var(--surface), transparent 20%);
+            background: color-mix(in srgb, var(--surface, #ffffff), transparent 20%);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
             box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
@@ -1393,20 +1381,6 @@
 
 
     <script>
-        // Apply Theme from LocalStorage immediately
-        (function () {
-            const savedAccent = localStorage.getItem('spectra-theme-accent');
-            const savedHover = localStorage.getItem('spectra-theme-hover');
-            if (savedAccent) {
-                document.documentElement.style.setProperty('--accent', savedAccent);
-                // Also update primary for compatibility
-                document.documentElement.style.setProperty('--primary', savedAccent);
-            }
-            if (savedHover) {
-                document.documentElement.style.setProperty('--accent-hover', savedHover);
-            }
-        })();
-
         // --- Reader Mode Logic ---
         function openReader(title, author, time, content) {
             const overlay = document.getElementById('reader-overlay');
