@@ -1514,6 +1514,9 @@
                                 if (user.role !== 'reader') {
                                     const addProjBtn = document.getElementById('add-project-btn');
                                     if (addProjBtn) addProjBtn.style.display = 'inline-block';
+
+                                    const createPostCard = document.getElementById('create-post-card');
+                                    if (createPostCard) createPostCard.style.display = 'block';
                                 }
                             }
                         } catch (e) { }
@@ -2305,16 +2308,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('role');
             const token = localStorage.getItem('token');
-            const createPostCard = document.getElementById('create-post-card');
-
-            if (createPostCard) {
-                if (token && role === 'publisher') {
-                    createPostCard.style.display = 'block';
-                } else {
-                    createPostCard.style.display = 'none';
-                }
-            }
-
+            // Visibility handled in loadProfile/renderProfile
             fetchPosts(); // Load posts regardless of login
         });
 
