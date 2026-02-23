@@ -1458,14 +1458,12 @@
                         // Publisher Logic (Default)
                         const spreadTitle = document.getElementById('spreads-title');
                         if (spreadTitle) spreadTitle.innerText = 'Recent Spreads';
-                        // Fetch standard posts (handled by default fetchPosts call on load, or we can trigger it)
-                        // But wait, if we are loading profile *after* load, the initial fetchPosts might have run with default logic.
-                        // If we are a publisher, the default logic (user=ID) is correct.
-                        // So we don't need to do anything extra here unless we want to be explicit.
+                        // Explicitly fetch own posts
+                        const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
+                        if (targetId) {
+                            fetchPosts({ user: targetId });
+                        }
                     }
-
-
-                    // Show Settings Button if Me
                     const token = localStorage.getItem('token');
                     if (token && (user._id || user.isMe)) {
                         try {
@@ -2262,10 +2260,7 @@
 
         // Check login status on load
         document.addEventListener('DOMContentLoaded', () => {
-            const role = localStorage.getItem('role');
-            const token = localStorage.getItem('token');
             // Visibility handled in loadProfile/renderProfile
-            fetchPosts(); // Load posts regardless of login
         });
 
         function logout() {
