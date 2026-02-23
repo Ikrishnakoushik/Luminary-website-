@@ -412,40 +412,7 @@
             flex-grow: 1;
         }
 
-        /* Create Post Card */
-        #create-post-card {
-            background: var(--surface);
-            padding: 24px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            border: 1px solid var(--border);
-            margin-bottom: 30px;
-            display: none;
-            /* Hidden by default */
-            transition: box-shadow 0.2s;
-        }
 
-        #create-post-card:focus-within {
-            box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
-            border-color: var(--accent);
-        }
-
-        .post-textarea {
-            width: 100%;
-            border: none;
-            resize: none;
-            font-family: inherit;
-            font-size: 1.05rem;
-            color: var(--text-main);
-            background: transparent;
-            outline: none;
-            margin-bottom: 12px;
-            min-height: 80px;
-        }
-
-        .post-textarea::placeholder {
-            color: #94a3b8;
-        }
 
         .post-actions {
             display: flex;
@@ -1514,9 +1481,6 @@
                                 if (user.role !== 'reader') {
                                     const addProjBtn = document.getElementById('add-project-btn');
                                     if (addProjBtn) addProjBtn.style.display = 'inline-block';
-
-                                    const createPostCard = document.getElementById('create-post-card');
-                                    if (createPostCard) createPostCard.style.display = 'block';
                                 }
                             }
                         } catch (e) { }
@@ -2149,20 +2113,7 @@
                     <!-- Projects injected via JS -->
             </section>
 
-            <!-- CREATE POST (Only visible when logged in) -->
-            <div id="create-post-card" class="fade-in" style="animation-delay: 0.25s;">
-                <textarea id="postContent" class="post-textarea"
-                    placeholder="What's on your mind? Share an update, idea, or news..."></textarea>
-                <div class="post-actions">
-                    <select id="postTag" class="post-tag-select">
-                        <option value="General">General</option>
-                        <option value="Update">Update</option>
-                        <option value="Idea">Idea</option>
-                        <option value="News">News</option>
-                    </select>
-                    <button class="auth-btn btn-sm" style="width: auto;" onclick="createPost()">Post</button>
-                </div>
-            </div>
+
 
             <!-- PERSONAL FEED SECTION -->
             <section class="fade-in" style="animation-delay: 0.3s;">
