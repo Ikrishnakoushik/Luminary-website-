@@ -26,7 +26,7 @@
             --text-main: #0f172a;
             --text-muted: #64748b;
             --border-radius: 16px;
-            --border: #e2e8f0;
+            --border: var(--border);
             /* Softer, more elegant shadows */
             --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
             --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
@@ -228,7 +228,7 @@
         }
 
         .tag {
-            background: #f1f5f9;
+            background: var(--bg-color);
             color: #475569;
             padding: 6px 14px;
             border-radius: 20px;
@@ -239,7 +239,7 @@
         }
 
         .tag:hover {
-            background: #e2e8f0;
+            background: var(--border);
             color: #0f172a;
         }
 
@@ -253,7 +253,7 @@
         .social-btn {
             text-decoration: none;
             color: var(--text-main);
-            background: #f1f5f9;
+            background: var(--bg-color);
             width: 40px;
             height: 40px;
             border-radius: 50%;
@@ -272,7 +272,7 @@
 
         /* Auth Buttons */
         .auth-buttons {
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border);
             padding-top: 20px;
             display: flex;
             flex-direction: column;
@@ -296,7 +296,7 @@
         .auth-btn.secondary {
             background: transparent;
             color: var(--text-light);
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
         }
 
         .auth-btn:hover {
@@ -304,7 +304,7 @@
         }
 
         .auth-btn.secondary:hover {
-            background: #f8f9fa;
+            background: var(--bg-color);
             color: var(--text-main);
         }
 
@@ -328,7 +328,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
-            border-bottom: 2px solid #f1f5f9;
+            border-bottom: 2px solid var(--border);
             padding-bottom: 10px;
         }
 
@@ -380,13 +380,13 @@
 
         .project-img {
             height: 160px;
-            background: #f1f5f9;
+            background: var(--bg-color);
             display: flex;
             align-items: center;
             justify-content: center;
             font-size: 2.5rem;
             color: #94a3b8;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
         }
 
         .project-content {
@@ -437,6 +437,7 @@
             font-family: inherit;
             font-size: 1.05rem;
             color: var(--text-main);
+            background: transparent;
             outline: none;
             margin-bottom: 12px;
             min-height: 80px;
@@ -450,7 +451,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border-top: 1px solid #f0f0f0;
+            border-top: 1px solid var(--border);
             padding-top: 15px;
         }
 
@@ -552,7 +553,7 @@
             padding: 15px 20px;
             color: var(--text-light);
             font-style: italic;
-            background: #f8fafc;
+            background: var(--bg-color);
             border-radius: 0 8px 8px 0;
         }
 
@@ -569,8 +570,9 @@
 
         /* Newsletter */
         .newsletter {
-            background: linear-gradient(135deg, #2d3436 0%, #000000 100%);
-            color: white;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             padding: 40px;
             border-radius: var(--border-radius);
             text-align: center;
@@ -598,7 +600,9 @@
             flex: 1;
             padding: 12px 15px;
             border-radius: 8px;
-            border: none;
+            border: 1px solid var(--border);
+            background: var(--bg-color);
+            color: var(--text-main);
             outline: none;
             font-family: inherit;
         }
@@ -624,7 +628,7 @@
             margin-top: 40px;
             font-size: 0.85rem;
             color: var(--text-light);
-            border-top: 1px solid #e2e8f0;
+            border-top: 1px solid var(--border);
             padding-top: 20px;
         }
 
@@ -648,7 +652,7 @@
         }
 
         .modal-content {
-            background-color: #fefefe;
+            background-color: var(--surface);
             padding: 30px;
             border: 1px solid #888;
             border-radius: var(--border-radius);
@@ -703,7 +707,7 @@
         .form-group input {
             width: 100%;
             padding: 10px;
-            border: 1px solid #e2e8f0;
+            border: 1px solid var(--border);
             border-radius: 8px;
             outline: none;
         }
@@ -777,7 +781,7 @@
 
         .post-tag {
             font-size: 0.75rem;
-            background: #e2e8f0;
+            background: var(--border);
             padding: 4px 10px;
             border-radius: 12px;
             color: #475569;
@@ -786,7 +790,7 @@
         .post-actions {
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-around;
             color: #64748b;
@@ -823,7 +827,7 @@
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #f1f5f9;
+            background: var(--bg-color);
             border: none;
             width: 40px;
             height: 40px;
@@ -837,7 +841,7 @@
         }
 
         .reader-close:hover {
-            background: #e2e8f0;
+            background: var(--border);
             transform: rotate(90deg);
         }
 
@@ -853,7 +857,7 @@
             font-size: 1rem;
             margin-bottom: 40px;
             padding-bottom: 20px;
-            border-bottom: 1px solid #e2e8f0;
+            border-bottom: 1px solid var(--border);
             display: flex;
             gap: 20px;
         }
@@ -881,7 +885,7 @@
             padding: 15px 25px;
             margin: 2em 0;
             font-style: italic;
-            background: #f8fafc;
+            background: var(--bg-color);
         }
 
         /* Skeleton Loader */
@@ -986,7 +990,7 @@
         .compact-img-container {
             width: 100%;
             height: 160px;
-            background: #f8f9fa;
+            background: var(--bg-color);
             overflow: hidden;
             position: relative;
         }
@@ -1068,7 +1072,7 @@
         }
 
         .logout-btn:hover {
-            background: #fef2f2;
+            background: var(--bg-color);
             border-color: #fca5a5;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
@@ -1123,7 +1127,7 @@
             padding: 10px 20px;
             font-size: 0.9rem;
             border-radius: 10px;
-            background: #f1f5f9;
+            background: var(--bg-color);
             color: var(--text-main);
             border: 1px solid rgba(0, 0, 0, 0.05);
             cursor: pointer;
@@ -1139,7 +1143,7 @@
         }
 
         .social-connect-box.connected .btn-sm {
-            background: #fef2f2;
+            background: var(--bg-color);
             color: #ef4444;
             border-color: rgba(239, 68, 68, 0.1);
         }
@@ -1185,7 +1189,7 @@
         .oauth-loader {
             width: 45px;
             height: 45px;
-            border: 3px solid #f1f5f9;
+            border: 3px solid var(--border);
             border-top: 3px solid var(--primary);
             border-right: 3px solid #8b5cf6;
             border-radius: 50%;
@@ -1289,7 +1293,7 @@
                         <div class="form-group">
                             <label>Bio</label>
                             <textarea id="setBio" rows="3"
-                                style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px;"
+                                style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;"
                                 placeholder="Tell us about yourself..."></textarea>
                         </div>
                         <div class="form-group">
@@ -1324,7 +1328,7 @@
                         </div>
                         <button type="submit" class="form-btn">Save Profile</button>
                         <button type="button" class="form-btn"
-                            style="margin-top: 10px; background: #f8fafc; color: var(--text-main); border: 1px solid var(--border);"
+                            style="margin-top: 10px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);"
                             onclick="closeModal('settingsModal')">Back</button>
                         <div id="profileMsg" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
                     </form>
@@ -1344,7 +1348,7 @@
                         </div>
                         <button type="submit" class="form-btn">Update Password</button>
                         <button type="button" class="form-btn"
-                            style="margin-top: 10px; background: #f8fafc; color: var(--text-main); border: 1px solid var(--border);"
+                            style="margin-top: 10px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);"
                             onclick="closeModal('settingsModal')">Back</button>
                         <div id="securityMsg" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
                     </form>
@@ -1460,7 +1464,7 @@
                             intrSection.style.display = 'block';
                             if (user.preferences && user.preferences.length > 0) {
                                 intrList.innerHTML = user.preferences.map(pref =>
-                                    `<span class="tag" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;">${pref}</span>`
+                                    `<span class="tag" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);">${pref}</span>`
                                 ).join('');
                             } else {
                                 intrList.innerHTML = '<span style="color:#94a3b8; font-size:0.9rem;">No interests selected yet.</span>';
@@ -2226,7 +2230,7 @@
                 <div class="form-group">
                     <label>I want to:</label>
                     <select id="regRole"
-                        style="width: 100%; padding: 10px; border: 1px solid #e2e8f0; border-radius: 8px; outline: none;">
+                        style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; outline: none;">
                         <option value="reader">Read Posts (Reader)</option>
                         <option value="publisher">Write Posts (Publisher)</option>
                     </select>
@@ -2482,7 +2486,7 @@
 
             if (!posts || posts.length === 0) {
                 container.style.display = 'block';
-                container.innerHTML = '<div style="text-align:center; padding: 40px; color: #94a3b8; background: #f8fafc; border-radius: 12px; border: 2px dashed #e2e8f0;">No spreads found. Start reading and liking!</div>';
+                container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted); background: var(--surface); border-radius: 12px; border: 2px dashed var(--border);">No spreads found. Start reading and liking!</div>`;
                 return;
             }
 
@@ -2574,7 +2578,7 @@
                     let readActionBtn = '';
                     if (isLong) {
                         readActionBtn = `
-                            <div class="action-btn" onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')" style="margin-left:auto; color:var(--accent); background: #eff6ff;">
+                            <div class="action-btn" onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')" style="margin-left:auto; color:var(--accent); background: var(--bg-color);">
                                 <i class="fas fa-book-open"></i> Read Story
                             </div>
                             <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>

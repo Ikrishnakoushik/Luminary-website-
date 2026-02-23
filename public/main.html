@@ -34,15 +34,15 @@
     <style>
         :root {
             /* Defaults - overridden by JS */
-            --bg-color: #f1f5f9;
+            --bg-color: var(--bg-color);
             --surface: #ffffff;
             --text-main: #0f172a;
             --text-muted: #64748b;
             --primary: #6366f1;
             --accent: #6366f1;
             --accent-hover: #4f46e5;
-            --border: #e2e8f0;
-            --input-bg: #f8fafc;
+            --border: var(--border);
+            --input-bg: var(--bg-color);
             --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 
             --header-height: 70px;
@@ -326,7 +326,7 @@
 
         .post-tag {
             font-size: 0.75rem;
-            background: #e2e8f0;
+            background: var(--border);
             padding: 4px 10px;
             border-radius: 12px;
             color: #475569;
@@ -342,7 +342,7 @@
         .post-actions {
             margin-top: 20px;
             padding-top: 15px;
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-around;
             color: #64748b;
@@ -368,7 +368,7 @@
             gap: 15px;
             padding-top: 15px;
             margin-top: 15px;
-            border-top: 1px solid #f1f5f9;
+            border-top: 1px solid var(--bg-color);
         }
 
         .action-btn {
@@ -385,7 +385,7 @@
         }
 
         .action-btn:hover {
-            background: #f1f5f9;
+            background: var(--bg-color);
             color: var(--primary);
             transform: translateY(-2px);
         }
@@ -436,7 +436,7 @@
             align-items: center;
             gap: 12px;
             padding: 10px 0;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--border);
         }
 
         .spreader-item:last-child {
@@ -808,7 +808,7 @@
             font-size: 1rem;
             margin-bottom: 40px;
             padding-bottom: 30px;
-            border-bottom: 1px solid #f1f5f9;
+            border-bottom: 1px solid var(--bg-color);
             display: flex;
             gap: 20px;
             align-items: center;
@@ -873,7 +873,7 @@
             font-size: 1.4rem;
             font-style: italic;
             color: #475569;
-            background: linear-gradient(to right, #f8fafc, transparent);
+            background: linear-gradient(to right, var(--surface), transparent);
             border-radius: 0 12px 12px 0;
             font-family: 'Georgia', serif;
         }
@@ -1126,7 +1126,7 @@
             width: 40px;
             height: 40px;
             font-size: 1.1rem;
-            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            background: linear-gradient(135deg, var(--border) 0%, #cbd5e1 100%);
             color: #64748b;
             box-shadow: none;
         }
@@ -1255,7 +1255,7 @@
             </div>
             <!-- Create Post Trigger (redirects to profile for now) -->
             <div class="create-post-placeholder" onclick="handleCreatePostClick()">
-                <div class="avatar-sm" style="width: 35px; height: 35px; background: #e2e8f0; font-size: 1rem;"><i
+                <div class="avatar-sm" style="width: 35px; height: 35px; background: var(--border); font-size: 1rem;"><i
                         class="fas fa-pen"></i></div>
                 <div class="create-input">Start a new spread...</div>
             </div>
@@ -1683,7 +1683,7 @@
                         postContentHTML += `
                                                                         <a href="${post.attachment}" download class="attachment-btn" style="
                         display: inline-flex; align-items: center; gap: 8px; 
-                        background: #f1f5f9; padding: 10px 16px; border-radius: 8px; 
+                        background: var(--bg-color); padding: 10px 16px; border-radius: 8px; 
                         text-decoration: none; color: var(--text-main); font-weight: 600; margin-bottom: 15px;">
                                                                             <i class="fas fa-file-download" style="color: var(--accent);"></i> Download: ${fileName}
                                                                         </a>`;
@@ -1701,7 +1701,7 @@
                             : `<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">${cInitial}</div>`;
 
                         return `
-                                                                            <div style="display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+                                                                            <div style="display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--bg-color); padding-bottom: 8px;">
                                                                                 ${commentAvatar}
                                                                                 <div>
                                                                                     <div style="font-size: 0.9rem;">
