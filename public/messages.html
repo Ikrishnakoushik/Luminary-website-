@@ -139,10 +139,11 @@
             transition: all 0.2s ease;
             text-decoration: none;
             color: inherit;
+            background: var(--surface);
         }
 
         .conversation-item:hover {
-            background: #f8fafc;
+            background: var(--bg-color);
             transform: translateX(4px);
         }
 
@@ -404,6 +405,25 @@
             .chat-input-container {
                 border-radius: 0 0 15px 15px;
             }
+        }
+
+        /* Custom Scrollbar for Theme Consistency */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-color);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--text-muted);
         }
     </style>
 </head>
