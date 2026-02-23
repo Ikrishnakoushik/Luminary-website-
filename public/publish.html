@@ -152,7 +152,7 @@
             position: relative;
             height: 100%;
             overflow-y: auto;
-            background: #ffffff;
+            background: var(--bg-color);
             /* Completely white background per screenshot */
             display: flex;
             flex-direction: column;
@@ -643,7 +643,7 @@
                         const pdfDataUrl = e.target.result;
                         const pdfHtml = `
                          <div contenteditable="false" style="margin: 20px 0; border: 1px solid #fecdd3; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.02); position: relative; width: 100%;">
-                             <div style="background: #fff1f2; padding: 10px 15px; border-bottom: 1px solid #fecdd3; display: flex; justify-content: space-between; align-items: center;">
+                             <div style="background: var(--surface); padding: 10px 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                                  <span style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.9rem; color: #881337;">
                                      <i class="fas fa-file-pdf" style="color: #be123c; margin-right: 8px;"></i>${file.name}
                                  </span>

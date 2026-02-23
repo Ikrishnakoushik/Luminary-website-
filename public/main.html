@@ -1035,8 +1035,8 @@
             padding: 10px 20px;
             border-radius: 50px;
             cursor: pointer;
-            border: 2px solid #e2e8f0;
-            background: #fff;
+            border: 2px solid var(--border);
+            background: var(--surface);
             color: var(--text-light);
             font-weight: 600;
             font-size: 0.95rem;
@@ -1115,8 +1115,8 @@
         }
 
         .create-post-placeholder:hover .create-input {
-            background: #fff;
-            border-color: #e2e8f0;
+            background: var(--surface);
+            border-color: var(--border);
             box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
             color: var(--text-main);
         }
@@ -1499,7 +1499,7 @@
                 if (err.name === 'AbortError') errorMsg = "Connection timed out. Server is not responding.";
 
                 container.innerHTML = `
-            <div style="text-align: center; color: var(--error); padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;">
+            <div style="text-align: center; color: var(--error); padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;">
                 <i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: 10px;"></i><br>
                     <strong>Failed to load feed.</strong><br>
                         <span style="font-size: 0.9em; opacity: 0.8;">${errorMsg}</span><br>
@@ -1551,7 +1551,7 @@
                 if (err.name === 'AbortError') errorMsg = "Connection timed out. Server is not responding.";
 
                 container.innerHTML = `
-                                    <div style="text-align: center; color: var(--error); padding: 20px; background: #fff1f2; border: 1px solid #fecdd3; border-radius: 12px;">
+                                    <div style="text-align: center; color: var(--error); padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;">
                                         <i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: 10px;"></i><br>
                                             <strong>Failed to load feed.</strong><br>
                                                 <span style="font-size: 0.9em; opacity: 0.8;">${errorMsg}</span><br>
