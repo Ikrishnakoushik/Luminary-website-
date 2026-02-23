@@ -1643,6 +1643,9 @@
                     grid.innerHTML = '';
 
                     if (projects.length === 0) {
+                        const addProjBtnMain = document.getElementById('add-project-btn');
+                        if (addProjBtnMain) addProjBtnMain.style.display = 'none';
+
                         if (isMe) {
                             // Professional Empty State for Owner
                             if (section) section.style.display = 'block';
@@ -1662,8 +1665,10 @@
                         return;
                     }
 
-                    // If we have projects, ensure section is visible
+                    // If we have projects, ensure section is visible and show header button
                     if (section) section.style.display = 'block';
+                    const addProjBtnMain = document.getElementById('add-project-btn');
+                    if (addProjBtnMain && isMe) addProjBtnMain.style.display = 'inline-block';
 
                     projects.forEach(proj => {
                         const div = document.createElement('a');
@@ -2429,11 +2434,15 @@
                 container.className = 'blog-list';
             }
 
+            const section = container.closest('section');
+
             if (!posts || posts.length === 0) {
-                container.style.display = 'block';
-                container.innerHTML = `<div style="text-align:center; padding: 40px; color: var(--text-muted); background: var(--surface); border-radius: 12px; border: 2px dashed var(--border);">No spreads found. Start reading and liking!</div>`;
+                if (section) section.style.display = 'none';
                 return;
             }
+
+            // If we have posts, show section
+            if (section) section.style.display = 'block';
 
             // Logic for "View All"
             // If layout is grid and NOT showAll, we limit to 6.
