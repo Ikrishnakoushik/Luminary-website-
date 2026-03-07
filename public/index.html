@@ -4,7 +4,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luminary | Connect, Share, Grow</title>
+    <meta name="description"
+        content="Luminary is the perfect digital canvas and portfolio platform for creators to showcase their work, share their journey, and connect with a community.">
+    <!-- Open Graph Tags -->
+    <meta property="og:title" content="Luminary | Portfolio & Showcase for Creators">
+    <meta property="og:description"
+        content="Showcase your projects, thoughts, and ideas in one beautifully designed space. Connect with a community of creators.">
+    <meta property="og:image" content="https://luminary-website.vercel.app/uploads/preview-mockup.png">
+    <meta property="og:url" content="https://luminary-website.vercel.app/">
+    <meta property="og:type" content="website">
+    <link rel="canonical" href="https://luminary-website.vercel.app/" />
+    <title>Luminary | Portfolio & Showcase for Creators</title>
     <script src="theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -68,14 +78,14 @@
             }
         }
 
-        /* Glassmorphism Utilities */
+        /* Glassmorphism Utilities - Updated for higher contrast */
         .glass {
-            background: color-mix(in srgb, var(--surface) 60%, transparent);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+            background: color-mix(in srgb, #0f172a 75%, transparent);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
             border-radius: 16px;
-            box-shadow: var(--card-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
+            box-shadow: var(--card-shadow, 0 4px 12px rgba(0, 0, 0, 0.4));
         }
 
         /* Navigation */
@@ -325,11 +335,116 @@
                 padding-top: 100px;
             }
         }
+
+        /* Accessibility Utilities */
+        .skip-to-content {
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: 8px;
+            z-index: 100;
+            transition: top 0.2s;
+        }
+
+        .skip-to-content:focus {
+            top: 0;
+        }
+
+        /* Back to Top */
+        #backToTop {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 50;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        #backToTop.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #backToTop:hover {
+            transform: translateY(-3px);
+            background: var(--accent);
+        }
+
+        /* FAQ Section */
+        .faq-container {
+            max-width: 800px;
+            margin: 4rem auto 2rem;
+            padding: 0 5%;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 0;
+        }
+
+        .faq-question {
+            font-size: 1.25rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-main);
+        }
+
+        .faq-answer {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+            color: var(--text-muted);
+            margin-top: 0;
+            line-height: 1.6;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            margin-top: 1rem;
+        }
+
+        .faq-item.active .faq-question i {
+            transform: rotate(180deg);
+        }
+
+        .faq-question i {
+            transition: transform 0.3s ease;
+        }
+
+        /* Image Mockup */
+        .product-mockup {
+            max-width: 90%;
+            width: 800px;
+            margin: 3rem auto 0;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            display: block;
+        }
     </style>
 </head>
 
 <body>
 
+    <a href="#main-content" class="skip-to-content">Skip to content</a>
     <div class="bg-gradient"></div>
 
     <nav class="glass">
@@ -339,27 +454,36 @@
             Luminary
         </div>
         <div class="nav-links" id="navLinksContainer">
-            <!-- Dynamically populated based on auth status -->
+            <a href="/main.html"><i class="fas fa-home"></i> Feed</a>
+            <a href="/profile.html"><i class="fas fa-user"></i> Profile</a>
+            <a href="/publish.html"><i class="fas fa-pen"></i> Studio</a>
+            <span id="authLinks">
+                <a href="/auth.html" class="btn-login">Log In</a>
+                <a href="/auth.html" class="btn-signup">Sign Up</a>
+            </span>
         </div>
     </nav>
 
-    <header>
+    <header id="main-content">
         <div class="hero-content">
-            <h1>Your Digital Canvas for<br>Everything You Create</h1>
+            <h1>Your Digital Canvas for<br>Everything You Create.</h1>
             <p class="subtitle">Showcase your projects, thoughts, and ideas in one beautifully designed space. Connect
                 with a community of creators.</p>
 
             <div>
-                <a href="auth.html" class="btn btn-primary">Create Your Profile</a>
+                <a href="auth.html" class="btn btn-primary">Showcase Your Work Free</a>
                 <a href="#features" class="btn btn-outline">Learn More</a>
             </div>
+
+            <img src="/uploads/preview-mockup.png" alt="Luminary Platform Preview" class="product-mockup" loading="lazy"
+                onerror="this.style.display='none'">
 
             <!-- Vertical Feature Slides -->
             <div class="features-container" id="features">
 
                 <!-- Feature 1 -->
                 <div class="feature-card glass fade-in">
-                    <div class="icon">🎨</div>
+                    <div class="icon" aria-hidden="true">🎨</div>
                     <h2>Your Personal Portfolio</h2>
                     <p>Create a stunning profile that aggregates your best work. Whether you are a designer, developer,
                         or writer, Luminary gives you the perfect canvas to showcase your projects with premium
@@ -368,7 +492,7 @@
 
                 <!-- Feature 2 -->
                 <div class="feature-card glass fade-in" style="animation-delay: 0.2s;">
-                    <div class="icon">🚀</div>
+                    <div class="icon" aria-hidden="true">🚀</div>
                     <h2>Share Your Journey</h2>
                     <p>Don't just show the end result. Share your process, write detailed case studies, or blog about
                         your latest learnings. Luminary is built for storytelling.</p>
@@ -376,7 +500,7 @@
 
                 <!-- Feature 3 -->
                 <div class="feature-card glass fade-in" style="animation-delay: 0.4s;">
-                    <div class="icon">🤝</div>
+                    <div class="icon" aria-hidden="true">🤝</div>
                     <h2>Connect & Grow</h2>
                     <p>Discover other creators, get feedback on your work, and find inspiration. Our community feed
                         brings the best creative minds together in one place.</p>
@@ -384,7 +508,7 @@
 
                 <!-- Feature 4 -->
                 <div class="feature-card glass fade-in" style="animation-delay: 0.6s;">
-                    <div class="icon">📱</div>
+                    <div class="icon" aria-hidden="true">📱</div>
                     <h2>Everywhere You Are</h2>
                     <p>Fully responsive and optimized for every device. Your portfolio looks just as professional on a
                         phone as it does on a 4k monitor.</p>
@@ -394,22 +518,43 @@
         </div>
     </header>
 
+    <section class="faq-container">
+        <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2.5rem;">Frequently Asked Questions</h2>
+        <div class="faq-item">
+            <div class="faq-question">Is it free? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">Yes, Luminary is completely free to use for creators looking to showcase their work
+                and connect with others.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">Who is it for? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">Luminary is built for writers, developers, designers, artists, and any creator who
+                wants a premium, ad-free portfolio that looks great out of the box.</div>
+        </div>
+        <div class="faq-item">
+            <div class="faq-question">What can I publish? <i class="fas fa-chevron-down"></i></div>
+            <div class="faq-answer">You can publish case studies, blog posts, short-form updates, and links to external
+                projects. Your profile acts as your central hub.</div>
+        </div>
+    </section>
+
     <footer>
-        &copy; 2026 Luminary. All rights reserved. <br>
-        <div style="margin-top:10px;">
-            <a href="legal.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Privacy &
-                Terms</a> |
-            <a href="community.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Community
-                Guidelines</a> |
-            <a href="documentation.html"
-                style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Documentation</a> |
-            <a href="main.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Feed</a> |
-            <a href="profile.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Profile</a> |
-            <a href="publish.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Studio</a> |
-            <a href="creator-kit.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Creator
-                Kit</a>
+        &copy; 2026 Luminary. All rights reserved.
+        <div style="margin-top:15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
+            <a href="legal.html" style="color:var(--text-muted); text-decoration:none;">Privacy & Terms</a>
+            <a href="community.html" style="color:var(--text-muted); text-decoration:none;">Community Guidelines</a>
+            <a href="documentation.html" style="color:var(--text-muted); text-decoration:none;">Documentation</a>
+            <a href="mailto:support@luminary.site" style="color:var(--text-muted); text-decoration:none;">Contact
+                Support</a>
+            <a href="main.html" style="color:var(--text-muted); text-decoration:none;">Feed</a>
+            <a href="profile.html" style="color:var(--text-muted); text-decoration:none;">Profile</a>
+            <a href="publish.html" style="color:var(--text-muted); text-decoration:none;">Studio</a>
+            <a href="creator-kit.html" style="color:var(--text-muted); text-decoration:none;">Creator Kit</a>
         </div>
     </footer>
+
+    <button id="backToTop" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 
     <script>
         // Simple intersection observer to trigger animations on scroll
@@ -429,24 +574,40 @@
             observer.observe(el);
         });
 
-        // Dynamic Auth Navbar
+        // Dynamic Auth Navbar and Interactions
         document.addEventListener('DOMContentLoaded', () => {
             const token = localStorage.getItem('token');
-            const navContainer = document.getElementById('navLinksContainer');
+            const authLinks = document.getElementById('authLinks');
 
-            if (token) {
-                // User is logged in
-                navContainer.innerHTML = `
-                    <a href="/main.html"><i class="fas fa-home"></i> Home</a>
-                    <a href="/books.html"><i class="fas fa-book"></i> Books</a>
-                    <a href="/profile.html"><i class="fas fa-user"></i> Profile</a>
+            // If logged in, show different actions in header
+            if (token && authLinks) {
+                authLinks.innerHTML = `
+                    <a href="/settings.html" class="btn-outline" style="padding: 6px 16px; border-radius: 20px; text-decoration: none;"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
+                    <a href="#" onclick="localStorage.removeItem('token'); location.reload();" class="btn-login" style="margin-left: 1rem;">Log Out</a>
                 `;
-            } else {
-                // User is not logged in
-                navContainer.innerHTML = `
-                    <a href="/auth.html" class="btn-login">Log In</a>
-                    <a href="/auth.html" class="btn-signup">Sign Up</a>
-                `;
+            }
+
+            // FAQ Accordion
+            document.querySelectorAll('.faq-question').forEach(question => {
+                question.addEventListener('click', () => {
+                    const item = question.parentElement;
+                    item.classList.toggle('active');
+                });
+            });
+
+            // Back to Top Button
+            const backToTopBtn = document.getElementById('backToTop');
+            if (backToTopBtn) {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 300) {
+                        backToTopBtn.classList.add('show');
+                    } else {
+                        backToTopBtn.classList.remove('show');
+                    }
+                });
+                backToTopBtn.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
             }
         });
     </script>

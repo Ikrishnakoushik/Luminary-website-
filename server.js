@@ -5,173 +5,215 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
-const fs = require('fs');
-const multer = require('multer');
-const { put } = require('@vercel/blob');
+const fs = require('fs'); // Import fs
 const User = require('./models/User');
 const Post = require('./models/Post');
 const Message = require('./models/Message');
-const Book = require('./models/Book');
+const Book = require('./models/Book'); // Added Book model
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
-
 let resend;
 if (process.env.RESEND_API_KEY) {
     resend = new Resend(process.env.RESEND_API_KEY);
 } else {
     resend = null;
 }
-
 const stripeSecret = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
 const stripe = require('stripe')(stripeSecret);
 
 // Stripe API Mock Interceptor for Local Development
+// If the key is the default placeholder or 'mock', we intercept Stripe calls to prevent 500 errors
 if (stripeSecret === 'sk_test_mock' || stripeSecret.includes('aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0')) {
     console.log('[Stripe Mock] Using mocked Stripe API for local development.');
+
+    // Override methods directly instead of the entire readonly nested object
     stripe.checkout.sessions.create = async (params) => {
         const sessionId = `cs_test_${Math.random().toString(36).substr(2, 24)}`;
+        // Convert the success URL to use the new mock session ID
         const redirectUrl = params.success_url.replace('{CHECKOUT_SESSION_ID}', sessionId);
+
         return {
             id: sessionId,
             url: `/mock-checkout.html?redirect=${encodeURIComponent(redirectUrl)}&amount=${params.line_items[0].price_data.unit_amount}`
         };
     };
+
     stripe.checkout.sessions.retrieve = async (sessionId) => {
         return { payment_status: 'paid', id: sessionId };
     };
 }
 
-// Nodemailer Transporter
+// Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com', port: 465, secure: true,
-    auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS },
-    family: 4, connectionTimeout: 10000
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, // Use SSL
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+    family: 4, // Force IPv4 to prevent ENETUNREACH errors
+    connectionTimeout: 10000, // 10 seconds timeout
+    greetingTimeout: 5000,
+    socketTimeout: 10000
 });
+
+// Verify Transporter Connection
+if (!resend) {
+    transporter.verify(function (error, success) {
+        if (error) {
+            console.error('[Nodemailer Error] Connection failed:', error);
+        } else {
+            console.log('[Nodemailer] Server is ready to take our messages');
+        }
+    });
+}
 
 // Universal Email Sender
 async function sendEmail({ to, subject, text }) {
     if (resend) {
         try {
-            return await resend.emails.send({
+            const data = await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
-                to, subject, html: `<p>${text.replace(/\\n/g, '<br>')}</p>`
+                to,
+                subject,
+                html: `<p>${text.replace(/\\n/g, '<br>')}</p>`
             });
+            console.log('[DEBUG] Resend email sent successfully:', data);
+            return data;
         } catch (error) {
-            console.error('[Resend Error]:', error);
+            console.error('[DEBUG] Resend Error:', error);
             throw error;
         }
     } else {
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@spectra.com',
+            to,
+            subject,
+            text
+        };
         try {
-            const info = await transporter.sendMail({ from: process.env.EMAIL_USER || 'no-reply@spectra.com', to, subject, text });
+            const info = await transporter.sendMail(mailOptions);
+            console.log('[DEBUG] Nodemailer email sent successfully: ' + info.response);
             return info;
         } catch (error) {
-            console.error('[Nodemailer Error]:', error);
+            console.error('[DEBUG] Nodemailer Error:', error);
             throw error;
         }
     }
 }
 
-// --- FILE UPLOAD HELPER (Vercel Blob / Local Storage) ---
+// Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-async function handleFileUpload(file, prefix = 'upload') {
-    if (!file) return null;
-    const filename = `${prefix}-${Date.now()}${path.extname(file.originalname)}`;
-
-    if (process.env.BLOB_READ_WRITE_TOKEN) {
-        try {
-            const blob = await put(filename, file.buffer, { access: 'public', addRandomSuffix: true });
-            return blob.url;
-        } catch (error) {
-            console.error('[Upload] Vercel Blob Error:', error);
-        }
-    }
-
-    // Local fallback for dev
-    const filePath = path.join(uploadDir, filename);
-    fs.writeFileSync(filePath, file.buffer);
-    return `/uploads/${filename}`;
-}
-
-const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: {
-        fileSize: 10 * 1024 * 1024,
-        fieldSize: 25 * 1024 * 1024
-    },
-    fileFilter: (req, file, cb) => {
-        const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
-        const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-        const mimetype = filetypes.test(file.mimetype);
-        if (mimetype && extname) return cb(null, true);
-        cb(new Error('Only images and documents allowed!'));
-    }
-});
-
-// --- MIDDLEWARE ---
-app.use(cors());
+// Middleware
+app.use(cors({
+    origin: '*', // Allow all origins (including file://)
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'x-auth-token']
+}));
 app.use(express.json());
+// Request Logger
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
 app.use(express.static(path.join(__dirname, 'public')));
-
-// Database Connection Middleware
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-let isConnected = false;
-
-app.use(async (req, res, next) => {
-    if (isConnected || mongoose.connection.readyState === 1) {
-        isConnected = true;
-        return next();
-    }
-    try {
-        await mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000, socketTimeoutMS: 45000, family: 4 });
-        isConnected = true;
-        next();
-    } catch (err) {
-        console.error('❌ MongoDB Connection Error:', err.message);
-        res.status(500).json({ msg: 'Database connection failed' });
-    }
-});
-
 const auth = (req, res, next) => {
     const token = req.header('x-auth-token');
-    if (!token) return res.status(401).json({ msg: 'No token' });
+    if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
+
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded.user;
         next();
     } catch (err) {
-        res.status(401).json({ msg: 'Token invalid' });
+        console.log(`[DEBUG AUTH] Token validation failed. Error: ${err.message}. Token snippets: prefix(${token.substring(0, 10)}) length(${token.length}) secretLength(${JWT_SECRET.length})`);
+        res.status(401).json({ msg: 'Token is not valid' });
     }
 };
 
-// --- ROUTES ---
+// Database Connection
+const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
+console.error('[Startup] Checking Mongo connection...');
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
+    .then(() => console.error('[Startup] MongoDB Connected'))
+    .catch(err => console.error('[Startup] MongoDB Error:', err));
+
+// Routes
+const multer = require('multer');
+
+// Configure Multer Storage
+const storage = multer.diskStorage({
+    destination: './public/uploads/',
+    filename: function (req, file, cb) {
+        cb(null, 'avatar-' + Date.now() + path.extname(file.originalname));
+    }
+});
+
+const upload = multer({
+    storage: storage,
+    limits: {
+        fileSize: 5000000, // 5MB limit for files
+        fieldSize: 25 * 1024 * 1024 // 25MB limit for text fields (allows full book manuscripts)
+    },
+    fileFilter: function (req, file, cb) {
+        checkFileType(file, cb);
+    }
+});
+
+// Check File Type
+function checkFileType(file, cb) {
+    // Allowed ext
+    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    // Check ext
+    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+    // Check mime
+    const mimetype = filetypes.test(file.mimetype);
+
+    if (mimetype && extname) {
+        return cb(null, true);
+    } else {
+        cb('Error: Images, PDFs and Documents Only!');
+    }
+}
 
 // Upload Avatar Route
-app.post('/api/users/avatar', auth, upload.single('avatar'), async (req, res) => {
-    try {
-        if (!req.file) return res.status(400).json({ msg: 'No file selected!' });
+app.post('/api/users/avatar', auth, (req, res) => {
+    upload.single('avatar')(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ msg: err });
+        } else {
+            if (req.file == undefined) {
+                return res.status(400).json({ msg: 'No file selected!' });
+            } else {
+                try {
+                    // Update user profile with image path
+                    // Path should be relative to public folder: /uploads/filename
+                    const imagePath = `/uploads/${req.file.filename}`;
 
-        const imagePath = await handleFileUpload(req.file, 'avatar');
-        const user = await User.findById(req.user.id);
-        user.profilePicture = imagePath;
-        await user.save();
+                    const user = await User.findById(req.user.id);
+                    user.profilePicture = imagePath;
+                    await user.save();
 
-        res.json({ msg: 'File Uploaded!', filePath: imagePath });
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Server Error');
-    }
+                    res.json({
+                        msg: 'File Uploaded!',
+                        filePath: imagePath
+                    });
+                } catch (error) {
+                    console.error(error);
+                    res.status(500).send('Server Error');
+                }
+            }
+        }
+    });
 });
 
 // Register
@@ -556,50 +598,53 @@ app.get('/api/users/:id', async (req, res) => {
 
 
 // Create Post (Protected Route)
-app.post('/api/posts', auth, upload.fields([
-    { name: 'image', maxCount: 1 },
-    { name: 'attachment', maxCount: 1 },
-    { name: 'avatar', maxCount: 1 }
-]), async (req, res) => {
-    try {
-        const { title, content, category, videoUrl, type } = req.body;
-
-        let attachment = '';
-        let image = '';
-
-        if (req.files) {
-            if (req.files['attachment']) {
-                attachment = await handleFileUpload(req.files['attachment'][0], 'attachment');
-            }
-            if (req.files['image']) {
-                image = await handleFileUpload(req.files['image'][0], 'image');
-            }
-            // Legacy support (avatar was used for attachment in previous implementation)
-            if (req.files['avatar'] && !attachment) {
-                attachment = await handleFileUpload(req.files['avatar'][0], 'attachment');
-            }
+// Create Post (Protected Route)
+app.post('/api/posts', auth, (req, res) => {
+    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'attachment', maxCount: 1 }, { name: 'avatar', maxCount: 1 }])(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ msg: err });
         }
 
-        // Create new post
-        const newPost = new Post({
-            user: req.user.id,
-            username: req.user.username,
-            title,
-            content,
-            category: category || 'General',
-            tag: category || 'General', // Sync tag
-            videoUrl,
-            attachment,
-            image,
-            type: type || 'quick'
-        });
+        try {
+            const { title, content, category, videoUrl, type } = req.body;
 
-        const post = await newPost.save();
-        res.json(post);
-    } catch (err) {
-        console.error('[Post creation error]:', err);
-        res.status(500).json({ msg: 'Server Error during post creation', error: err.message });
-    }
+            let attachment = '';
+            let image = '';
+
+            if (req.files) {
+                if (req.files['attachment']) {
+                    attachment = `/uploads/${req.files['attachment'][0].filename}`;
+                }
+                if (req.files['image']) {
+                    image = `/uploads/${req.files['image'][0].filename}`;
+                }
+                // Legacy support (avatar was used for attachment in previous implementation)
+                if (req.files['avatar'] && !attachment) {
+                    attachment = `/uploads/${req.files['avatar'][0].filename}`;
+                }
+            }
+
+            // Create new post
+            const newPost = new Post({
+                user: req.user.id,
+                username: req.user.username,
+                title,
+                content,
+                category: category || 'General',
+                tag: category || 'General', // Sync tag
+                videoUrl,
+                attachment,
+                image,
+                type: type || 'quick'
+            });
+
+            const post = await newPost.save();
+            res.json(post);
+        } catch (err) {
+            console.error(err.message);
+            res.status(500).send('Server Error');
+        }
+    });
 });
 
 
@@ -881,62 +926,86 @@ app.get('/api/books/:id', auth, async (req, res) => {
 });
 
 // Publish a Book
-app.post('/api/books', auth, upload.single('coverImageFile'), async (req, res) => {
-    try {
-        const { title, description, price, coverImage, content, penName } = req.body;
-
-        if (req.user.role !== 'publisher') {
-            return res.status(403).json({ msg: 'Only publishers can create books' });
+app.post('/api/books', auth, (req, res) => {
+    upload.single('coverImageFile')(req, res, async (err) => {
+        if (err) {
+            console.error("Multer error in book publish:", err);
+            return res.status(400).json({ msg: err.message || err });
         }
+        try {
+            const { title, description, price, coverImage, content, penName } = req.body;
 
-        const finalCoverImage = await handleFileUpload(req.file, 'book-cover') || coverImage || '';
+            // Check if publisher
+            if (req.user.role !== 'publisher') {
+                return res.status(403).json({ msg: 'Only publishers can create books' });
+            }
 
-        const newBook = new Book({
-            title,
-            description,
-            price: price || 0,
-            coverImage: finalCoverImage,
-            content,
-            penName: penName || '',
-            author: req.user.id
-        });
+            let finalCoverImage = coverImage || '';
+            if (req.file) {
+                finalCoverImage = `/uploads/${req.file.filename}`;
+            }
 
-        const savedBook = await newBook.save();
-        await User.findByIdAndUpdate(req.user.id, { $push: { publishedBooks: savedBook._id } });
-        res.json(savedBook);
-    } catch (err) {
-        console.error('Error creating book:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
+            const newBook = new Book({
+                title,
+                description,
+                price: price || 0,
+                coverImage: finalCoverImage,
+                content,
+                penName: penName || '',
+                author: req.user.id
+            });
+
+            const savedBook = await newBook.save();
+
+            // Add to author's published books
+            await User.findByIdAndUpdate(req.user.id, { $push: { publishedBooks: savedBook._id } });
+
+            res.json(savedBook);
+        } catch (err) {
+            console.error('Error creating book:', err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    });
 });
 
 // Update a Book
-app.put('/api/books/:id', auth, upload.single('coverImageFile'), async (req, res) => {
-    try {
-        const { title, description, price, coverImage, content, penName } = req.body;
-
-        let book = await Book.findById(req.params.id);
-        if (!book) return res.status(404).json({ msg: 'Book not found' });
-
-        if (book.author.toString() !== req.user.id) {
-            return res.status(401).json({ msg: 'Not authorized to edit this book' });
+app.put('/api/books/:id', auth, (req, res) => {
+    upload.single('coverImageFile')(req, res, async (err) => {
+        if (err) {
+            console.error("Multer error in book update:", err);
+            return res.status(400).json({ msg: err.message || err });
         }
+        try {
+            const { title, description, price, coverImage, content, penName } = req.body;
 
-        const finalCoverImage = await handleFileUpload(req.file, 'book-cover') || coverImage;
+            let book = await Book.findById(req.params.id);
+            if (!book) return res.status(404).json({ msg: 'Book not found' });
 
-        if (title) book.title = title;
-        if (description) book.description = description;
-        if (price !== undefined) book.price = price;
-        if (finalCoverImage !== undefined) book.coverImage = finalCoverImage;
-        if (content) book.content = content;
-        if (penName !== undefined) book.penName = penName;
+            // Ensure user is author
+            if (book.author.toString() !== req.user.id) {
+                return res.status(401).json({ msg: 'Not authorized to edit this book' });
+            }
 
-        await book.save();
-        res.json(book);
-    } catch (err) {
-        console.error('Error updating book:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
+            let finalCoverImage = coverImage;
+            if (req.file) {
+                finalCoverImage = `/uploads/${req.file.filename}`;
+            }
+
+            // Update fields
+            if (title) book.title = title;
+            if (description) book.description = description;
+            if (price !== undefined) book.price = price;
+            if (finalCoverImage !== undefined) book.coverImage = finalCoverImage;
+            if (content) book.content = content;
+            if (penName !== undefined) book.penName = penName;
+
+            await book.save();
+            res.json(book);
+        } catch (err) {
+            console.error('Error updating book:', err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    });
 });
 
 // Toggle Publish Status of a Book
@@ -1397,9 +1466,4 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Start Server
-if (require.main === module) {
-    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT}`));
-}
-
-// Export for Vercel
-module.exports = app;
+app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));

@@ -8,7 +8,10 @@ const PRECACHE_URLS = [
     '/profile.html',
     '/publish.html',
     '/messages.html',
-    '/ui-common.css',
+    '/style.css',
+    '/mobile-main.css',
+    '/mobile-index.css',
+    '/mobile-messages.css',
     '/luminary_logo.svg',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap'
