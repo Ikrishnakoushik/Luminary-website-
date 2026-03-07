@@ -140,12 +140,46 @@ const auth = (req, res, next) => {
     }
 };
 
-// Database Connection
+// Database Connection Middleware for Serverless (Vercel)
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-console.error('[Startup] Checking Mongo connection...');
-mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => console.error('[Startup] MongoDB Connected'))
-    .catch(err => console.error('[Startup] MongoDB Error:', err));
+
+// Detect if running on Vercel without a proper Mongo URI
+if (MONGO_URI.includes('localhost')) {
+    console.error('⚠️ [CRITICAL] App is trying to connect to localhost MongoDB. If this is on Vercel, IT WILL FAIL. Please add MONGO_URI to Vercel Environment Variables.');
+}
+
+// Global cached connection for serverless
+let isConnected = false;
+
+app.use(async (req, res, next) => {
+    // If already connected in this instance, proceed immediately
+    if (isConnected || mongoose.connection.readyState === 1) {
+        isConnected = true;
+        return next();
+    }
+
+    // Otherwise, establish the connection and await it BEFORE handling the route
+    try {
+        const redactedURI = MONGO_URI.replace(/:([^:@]{3,})@/, ':***@');
+        console.error(`[Startup] Attempting to connect to MongoDB at: ${redactedURI}`);
+
+        await mongoose.connect(MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+            family: 4 // Use IPv4, skip trying IPv6
+        });
+
+        isConnected = true;
+        console.error('✅ [Startup] MongoDB Connected Successfully');
+        next();
+    } catch (err) {
+        console.error('❌ [Startup] MongoDB Connection Error:', err.message);
+        console.error('If you are on Vercel, ensure your IP is whitelisted (0.0.0.0/0) in MongoDB Atlas.');
+        return res.status(500).json({
+            msg: 'Database connection failed. Please ensure MongoDB Atlas IP is whitelisted.'
+        });
+    }
+});
 
 // Routes
 const multer = require('multer');
