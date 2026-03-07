@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Publisher Studio | Luminary</title>
+    <script src="/theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <style>
+        :root {
+            --primary-btn: var(--primary, #8A2BE2);
+            --bg-base: var(--bg-color, #0f1016);
+            --surface-base: var(--surface, rgba(30, 30, 36, 0.6));
+            --surface-hover: var(--surface-light, rgba(128, 128, 128, 0.1));
+            --text-base: var(--text-main, #ffffff);
+            --text-muted: var(--text-muted, #a1a1aa);
+            --border-base: var(--border, rgba(255, 255, 255, 0.08));
+            --nav-bg: var(--bg-color, rgba(15, 16, 22, 0.85));
+            /* Keep nav theme-aware but can be customized if needed */
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-base);
+            background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
+            color: var(--text-base);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 70px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-base);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-decoration: none;
+            background: linear-gradient(to right, #b366ff, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-base);
+        }
+
+        .main-container {
+            margin-top: 70px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(90deg, var(--primary-btn), var(--text-base));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+        }
+
+        /* Books Table */
+        .table-container {
+            background: var(--surface-base);
+            border-radius: 12px;
+            border: 1px solid var(--border-base);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-base);
+        }
+
+        th {
+            background: rgba(128, 128, 128, 0.08);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: var(--surface-hover);
+        }
+
+        .book-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .book-thumb {
+            width: 40px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+
+        .book-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 0 4px 0;
+            color: var(--text-base);
+        }
+
+        .book-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-unpublished {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border-base);
+            color: var(--text-base);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: rgba(128, 128, 128, 0.15);
+        }
+
+        .action-btn.edit:hover {
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        .action-btn.unpublish:hover {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            display: none;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <a href="/books.html" class="nav-logo">
+            <i class="fas fa-book-open"></i> Luminary Books
+        </a>
+        <div class="nav-links">
+            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/books.html" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/studio.html" class="nav-link active" id="studioLink" style="display:none;"><i
+                    class="fas fa-pen-nib"></i> Studio</a>
+            <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header">
+            <div>
+                <h1>Publisher Studio</h1>
+                <p style="color: var(--text-muted); margin-top: 5px;">Manage your published works and track your
+                    portfolio.</p>
+            </div>
+            <a href="/publish-book.html" class="btn-primary">
+                <i class="fas fa-plus"></i> Create New Book
+            </a>
+        </div>
+
+        <div id="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading your studio...</div>
+
+        <div class="table-container">
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>Book</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="booksList">
+                    <!-- Books will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+
+        async function init() {
+            if (!token) {
+                window.location.href = '/auth.html';
+                return;
+            }
+
+            await fetchUserProfile();
+
+            if (currentUser && currentUser.role === 'publisher') {
+                document.getElementById('studioLink').style.display = 'flex';
+                fetchMyBooks();
+            } else {
+                alert("Only Publishers can access the Studio.");
+                window.location.href = '/books.html';
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = '/auth.html';
+            });
+        }
+
+        async function fetchUserProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    currentUser = await res.json();
+                } else if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/auth.html';
+                }
+            } catch (err) {
+                console.error("Error fetching user profile:", err);
+            }
+        }
+
+        async function fetchMyBooks() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('booksTable').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_URL}/books`, {
+                    headers: { 'x-auth-token': token } // Needed to see unpublished books
+                });
+
+                if (res.ok) {
+                    const allBooks = await res.json();
+                    const myBooks = allBooks.filter(b => b.author._id === currentUser._id);
+                    renderBooksList(myBooks);
+                }
+            } catch (err) {
+                console.error("Error fetching books:", err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('booksTable').style.display = 'table';
+            }
+        }
+
+        function renderBooksList(books) {
+            const list = document.getElementById('booksList');
+            list.innerHTML = '';
+
+            if (books.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-book-open"></i>
+                                <h3>No books published yet</h3>
+                                <p>Start your journey as a publisher by creating your first masterpiece.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            books.forEach(book => {
+                const isPublished = book.isPublished !== false;
+                const statusHtml = isPublished
+                    ? `<span class="status-badge status-published">Published</span>`
+                    : `<span class="status-badge status-unpublished">Unpublished</span>`;
+
+                const coverUrl = book.coverImage || '';
+                const coverImg = coverUrl ? `<img src="${coverUrl}" class="book-thumb" onerror="this.src=''; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
+
+                const date = new Date(book.createdAt).toLocaleDateString();
+
+                const unpubText = isPublished ? 'Unpublish' : 'Publish';
+                const unpubIcon = isPublished ? 'fa-eye-slash' : 'fa-eye';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="book-cell">
+                            ${coverImg}
+                            <div>
+                                <h4 class="book-title">${book.title}</h4>
+                                <p class="book-meta">Published under: <strong>${book.penName || 'Real Name'}</strong><br>Created on ${date}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${statusHtml}</td>
+                    <td>${book.price > 0 ? '$' + book.price : 'Free'}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="action-btn edit" onclick="window.location.href='/publish-book.html?editId=${book._id}'" title="Edit Book">
+                                <i class="fas fa-pen"></i> Edit
+                            </button>
+                            <button class="action-btn unpublish" onclick="togglePublishStatus('${book._id}', ${isPublished})" title="${unpubText}">
+                                <i class="fas ${unpubIcon}"></i> ${unpubText}
+                            </button>
+                            <button class="action-btn delete" onclick="deleteBook('${book._id}')" title="Hard Delete">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        async function togglePublishStatus(bookId, currentStatus) {
+            const msg = currentStatus
+                ? 'Unpublishing will hide this book from the public store. People who already bought it can still read it. Continuue?'
+                : 'Publishing will make this book available in the public store again. Continue?';
+
+            if (confirm(msg)) {
+                try {
+                    const res = await fetch(`${API_URL}/books/${bookId}/unpublish`, {
+                        method: 'PUT',
+                        headers: { 'x-auth-token': token }
+                    });
+                    if (res.ok) {
+                        fetchMyBooks();
+                    } else {
+                        const data = await res.json();
+                        alert(data.msg || 'Error updating status');
+                    }
+                } catch (err) {
+                    alert('Network error');
+                }
+            }
+        }
+
+        async function deleteBook(bookId) {
+            if (confirm('WARNING: Hard Deletion!\n\nThis will permanently delete the book AND automatically refund all purchasers from your Publisher Balance! If you just want to hide it from the store, use Unpublish instead.\n\nProceed?')) {
+                try {
+                    const res = await fetch(`${API_URL}/books/${bookId}`, {
+                        method: 'DELETE',
+                        headers: { 'x-auth-token': token }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert(data.msg || 'Book completely deleted and purchasers refunded.');
+                        fetchMyBooks();
+                    } else {
+                        alert(data.msg || 'Error deleting book');
+                    }
+                } catch (err) {
+                    alert('Network error while deleting book');
+                }
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

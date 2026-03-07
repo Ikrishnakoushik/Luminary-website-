@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Luminary</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <script>
         if (!localStorage.getItem('token')) {
             window.location.href = '/auth.html';
@@ -418,40 +420,6 @@
             background: #f0fdf4;
         }
 
-        /* Toast */
-        .toast {
-            position: fixed;
-            bottom: 24px;
-            right: 24px;
-            background: #111827;
-            color: white;
-            padding: 12px 20px;
-            border-radius: var(--radius-md);
-            box-shadow: var(--shadow);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transform: translateY(100px);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-            z-index: 2000;
-            font-size: 0.95rem;
-            font-weight: 500;
-        }
-
-        .toast.show {
-            transform: translateY(0);
-            opacity: 1;
-        }
-
-        .toast.error {
-            background: var(--danger);
-        }
-
-        .toast i {
-            font-size: 1.1rem;
-        }
-
         .status-badge {
             display: inline-block;
             padding: 4px 10px;
@@ -542,89 +510,190 @@
                 margin-bottom: 8px;
             }
         }
+
+        .payout-card {
+            padding: 15px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: var(--surface);
+        }
+
+        .payout-card:hover {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.02);
+            transform: translateY(-2px);
+        }
+
+        .payout-card.selected {
+            border-color: var(--primary);
+            background: rgba(79, 70, 229, 0.05);
+            box-shadow: 0 0 0 4px var(--ring);
+        }
+
+        .payout-card i {
+            font-size: 1.5rem;
+            color: var(--text-muted);
+            transition: color 0.2s;
+        }
+
+        .payout-card.selected i {
+            color: var(--primary);
+        }
+
+        .payout-card span {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .payout-card.selected span {
+            color: var(--text-main);
+        }
+
+        /* Custom Payment Modal Styles */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .custom-modal-overlay.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .custom-modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            width: 90%;
+            max-width: 500px;
+            box-shadow: var(--shadow);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .custom-modal-overlay.show .custom-modal {
+            transform: translateY(0);
+        }
+
+        .custom-modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .custom-modal-header h2 {
+            margin: 0;
+            font-size: 1.25rem;
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+        }
+
+        .custom-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            max-height: 70vh;
+        }
+
+        .custom-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.02);
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 3px var(--ring);
+        }
     </style>
 </head>
 
 <body>
-
     <nav class="top-nav">
-        <a href="main.html" class="logo"><i class="fas fa-layer-group"></i> Luminary</a>
+        <a href="main.html" class="logo"><i class="fas fa-layer-group"></i>Luminary</a>
         <div class="nav-links">
             <a href="profile.html">Profile</a>
             <a href="main.html">Feed</a>
         </div>
     </nav>
-
     <div class="settings-layout">
         <aside>
             <nav class="sidebar-nav">
-                <h3>Settings</h3>
-                <button class="tab-btn active" data-target="profile-tab"><i class="far fa-user"></i> Public
-                    Profile</button>
-                <button class="tab-btn" data-target="socials-tab"><i class="fas fa-link"></i> Social Accounts</button>
-                <button class="tab-btn" data-target="account-tab"><i class="fas fa-shield-alt"></i> Account
-                    Security</button>
-                <button class="tab-btn" data-target="billing-tab"><i class="fas fa-credit-card"></i> Billing &
-                    Payments</button>
-                <button class="tab-btn" data-target="preferences-tab"><i class="fas fa-sliders-h"></i>
-                    Preferences</button>
-                <button class="tab-btn" id="publisher-menu" style="display: none;" data-target="publisher-tab"><i
-                        class="fas fa-book-open"></i> Publisher Tools</button>
+                <h3>Settings</h3><button class="tab-btn active" data-target="profile-tab"><i
+                        class="far fa-user"></i>Public Profile</button><button class="tab-btn"
+                    data-target="socials-tab"><i class="fas fa-link"></i>Social Accounts</button><button class="tab-btn"
+                    data-target="account-tab"><i class="fas fa-shield-alt"></i>Account Security</button><button
+                    class="tab-btn" data-target="billing-tab"><i class="fas fa-credit-card"></i>Billing &
+                    Payments</button><button class="tab-btn" data-target="preferences-tab"><i
+                        class="fas fa-sliders-h"></i>Preferences</button><button class="tab-btn" id="publisher-menu"
+                    style="display: none;" data-target="publisher-tab"><i class="fas fa-book-open"></i>Publisher
+                    Tools</button>
             </nav>
         </aside>
-
         <main class="settings-content">
-
             <!-- 1. Public Profile Tab -->
             <div id="profile-tab" class="tab-content active">
                 <div class="page-header">
                     <h2>Public Profile</h2>
                     <p>This information will be displayed publicly so be careful what you share.</p>
                 </div>
-
                 <div class="settings-card">
                     <form id="profileForm">
                         <div class="card-body">
                             <div class="avatar-upload-group">
                                 <div class="avatar-preview" id="avatarPreview"></div>
-                                <div class="avatar-actions">
-                                    <input type="file" id="avatarUpload" hidden accept="image/*">
-                                    <button type="button" class="btn btn-secondary"
-                                        onclick="document.getElementById('avatarUpload').click()">Change avatar</button>
-                                    <span class="help-text">JPG, GIF or PNG. Max size of 800K.</span>
-                                </div>
+                                <div class="avatar-actions"><input type="file" id="avatarUpload" hidden
+                                        accept="image/*"><button type="button" class="btn btn-secondary"
+                                        onclick="document.getElementById('avatarUpload').click()">Change
+                                        avatar</button><span class="help-text">JPG,
+                                        GIF or PNG. Max size of 800K.</span></div>
                             </div>
-                            <div class="form-group">
-                                <label>Display Name</label>
-                                <input type="text" class="form-control" id="displayName"
-                                    placeholder="Enter your full name">
-                            </div>
-                            <div class="form-group">
-                                <label>Username</label>
-                                <input type="text" class="form-control" id="username" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Bio</label>
-                                <textarea class="form-control" id="bio"
-                                    placeholder="Write a short introduction..."></textarea>
-                                <span class="help-text">Maximum 160 characters.</span>
-                            </div>
+                            <div class="form-group"><label>Display Name</label><input type="text" class="form-control"
+                                    id="displayName" placeholder="Enter your full name"></div>
+                            <div class="form-group"><label>Username</label><input type="text" class="form-control"
+                                    id="username" required></div>
+                            <div class="form-group"><label>Bio</label><textarea class="form-control" id="bio"
+                                    placeholder="Write a short introduction..."></textarea><span
+                                    class="help-text">Maximum 160 characters.</span></div>
                         </div>
-                        <div class="card-footer">
-                            <span class="footer-text">Please use 32 characters at maximum.</span>
-                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        <div class="card-footer"><span class="footer-text">Please use 32 characters at
+                                maximum.</span><button type="submit" class="btn btn-primary">Save changes</button>
                         </div>
                     </form>
                 </div>
             </div>
-
             <!-- 2. Social Connections Tab -->
             <div id="socials-tab" class="tab-content">
                 <div class="page-header">
                     <h2>Social Accounts</h2>
                     <p>Connect your social media to verify your identity and help users find you.</p>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
                         <div class="connection-item" id="twitterBox">
@@ -634,12 +703,10 @@
                                     <h4>X (Twitter)</h4>
                                     <p id="twitterStatus">Not connected</p>
                                 </div>
-                            </div>
-                            <button class="btn btn-secondary btn-connect"
-                                onclick="toggleSocial('twitter')">Connect</button>
-                            <input type="hidden" id="twitterInput">
+                            </div><button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('twitter')">Connect</button><input type="hidden"
+                                id="twitterInput">
                         </div>
-
                         <div class="connection-item" id="githubBox">
                             <div class="connection-info">
                                 <div class="connection-icon"><i class="fab fa-github"></i></div>
@@ -647,12 +714,9 @@
                                     <h4>GitHub</h4>
                                     <p id="githubStatus">Not connected</p>
                                 </div>
-                            </div>
-                            <button class="btn btn-secondary btn-connect"
-                                onclick="toggleSocial('github')">Connect</button>
-                            <input type="hidden" id="githubInput">
+                            </div><button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('github')">Connect</button><input type="hidden" id="githubInput">
                         </div>
-
                         <div class="connection-item" id="linkedinBox">
                             <div class="connection-info">
                                 <div class="connection-icon" style="color: #0a66c2;"><i class="fab fa-linkedin"></i>
@@ -661,67 +725,53 @@
                                     <h4>LinkedIn</h4>
                                     <p id="linkedinStatus">Not connected</p>
                                 </div>
-                            </div>
-                            <button class="btn btn-secondary btn-connect"
-                                onclick="toggleSocial('linkedin')">Connect</button>
-                            <input type="hidden" id="linkedinInput">
+                            </div><button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('linkedin')">Connect</button><input type="hidden"
+                                id="linkedinInput">
                         </div>
                     </div>
-                    <div class="card-footer">
-                        <span class="footer-text">URLs are auto-generated upon connection.</span>
-                        <button class="btn btn-primary" onclick="saveSocials()">Save connections</button>
-                    </div>
+                    <div class="card-footer"><span class="footer-text">URLs are auto-generated upon
+                            connection.</span><button class="btn btn-primary" onclick="saveSocials()">Save
+                            connections</button></div>
                 </div>
             </div>
-
             <!-- 3. Account Tab -->
             <div id="account-tab" class="tab-content">
                 <div class="page-header">
                     <h2>Account Security</h2>
-                    <p>Manage your account settings, password, and security preferences.</p>
+                    <p>Manage your account settings,
+                        password,
+                        and security preferences.</p>
                 </div>
-
                 <div class="settings-card">
                     <form id="accountForm">
                         <div class="card-body">
-                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Email
-                                Settings</h3>
-                            <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" class="form-control" id="email" required>
-                                <span class="help-text">This email will be used for all account notifications.</span>
-                            </div>
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">
+                                Email Settings</h3>
+                            <div class="form-group"><label>Email Address</label><input type="email" class="form-control"
+                                    id="email" required><span class="help-text">This
+                                    email will be used for all account notifications.</span></div>
                         </div>
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">Update email</button>
-                        </div>
+                        <div class="card-footer"><button type="submit" class="btn btn-primary">Update
+                                email</button></div>
                     </form>
                 </div>
-
                 <div class="settings-card">
                     <form id="passwordForm">
                         <div class="card-body">
-                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Change
-                                Password</h3>
-                            <div class="form-group">
-                                <label>Current Password</label>
-                                <input type="password" class="form-control" id="currentPassword" required>
-                            </div>
-                            <div class="form-group">
-                                <label>New Password</label>
-                                <input type="password" class="form-control" id="newPassword" required minlength="6">
-                            </div>
-                            <div class="form-group">
-                                <label>Confirm New Password</label>
-                                <input type="password" class="form-control" id="confirmPassword" required minlength="6">
-                            </div>
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">
+                                Change Password</h3>
+                            <div class="form-group"><label>Current Password</label><input type="password"
+                                    class="form-control" id="currentPassword" required></div>
+                            <div class="form-group"><label>New Password</label><input type="password"
+                                    class="form-control" id="newPassword" required minlength="6"></div>
+                            <div class="form-group"><label>Confirm New Password</label><input type="password"
+                                    class="form-control" id="confirmPassword" required minlength="6"></div>
                         </div>
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary" id="pwdBtn">Update password</button>
-                        </div>
+                        <div class="card-footer"><button type="submit" class="btn btn-primary" id="pwdBtn">Update
+                                password</button></div>
                     </form>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
                         <div
@@ -729,27 +779,26 @@
                             <div>
                                 <h3 style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif;">
                                     Two-Factor Authentication (2FA)</h3>
-                                <p style="font-size: 0.9rem; color: var(--text-muted);">Add an extra layer of security
-                                    to your account using an authenticator app.</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" id="twofactorToggle"
-                                    onchange="showToast(this.checked ? '2FA Enabled!' : '2FA Disabled');">
-                                <span class="slider"></span>
-                            </label>
+                                <p style="font-size: 0.9rem; color: var(--text-muted);">Add an extra layer
+                                    of security to your account using an authenticator app.</p>
+                            </div><label class="switch"><input type="checkbox" id="twofactorToggle"
+                                    onchange="LuminaryUI.showToast(this.checked ? '2FA Enabled!' : '2FA Disabled', 'success');"><span
+                                    class="slider"></span></label>
                         </div>
                         <hr style="border:none; border-top:1px solid var(--border); margin: 0 -24px 24px;">
                         <div>
-                            <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: 'Inter', sans-serif;">Active
-                                Sessions</h3>
-                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">These are
-                                device that have logged into your account. Revoke any you do not recognize.</p>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: 'Inter', sans-serif;">
+                                Active Sessions</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
+                                These are device that have logged into your account. Revoke any you do not
+                                recognize.</p>
                             <div class="connection-item">
                                 <div class="connection-info">
                                     <div class="connection-icon"><i class="fas fa-desktop"></i></div>
                                     <div class="connection-details">
                                         <h4>Windows PC - Chrome</h4>
-                                        <p>Active now • Los Angeles, CA</p>
+                                        <p>Active now • Los Angeles,
+                                            CA</p>
                                     </div>
                                 </div>
                             </div>
@@ -758,65 +807,58 @@
                                     <div class="connection-icon"><i class="fas fa-mobile-alt"></i></div>
                                     <div class="connection-details">
                                         <h4>iPhone 14 - Safari</h4>
-                                        <p>Last active 2 hours ago • Los Angeles, CA</p>
+                                        <p>Last active 2 hours ago • Los Angeles,
+                                            CA</p>
                                     </div>
-                                </div>
-                                <button class="btn btn-secondary" onclick="showToast('Session revoked')">Revoke</button>
+                                </div><button class="btn btn-secondary"
+                                    onclick="LuminaryUI.showToast('Session revoked', 'success')">Revoke</button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-
             <!-- 4. Preferences Tab -->
             <div id="preferences-tab" class="tab-content">
                 <div class="page-header">
                     <h2>Feed Preferences</h2>
-                    <p>Customize the content you see on your main feed. The categories selected here will prioritize
-                        matching posts in your global Luminary feed.</p>
+                    <p>Customize the content you see on your main feed. The categories selected here
+                        will prioritize matching posts in your global Luminary feed.</p>
                 </div>
-
                 <div class="settings-card">
                     <form id="prefsForm">
                         <div class="card-body">
-                            <div class="preferences-grid" id="preferencesGrid">
-                                <label class="pref-label"><input type="checkbox" name="preference" value="World News">
-                                    World News</label>
-                                <label class="pref-label"><input type="checkbox" name="preference" value="Sports">
-                                    Sports</label>
-                                <label class="pref-label"><input type="checkbox" name="preference" value="Study">
-                                    Study</label>
-                                <label class="pref-label"><input type="checkbox" name="preference" value="Animals">
-                                    Animals</label>
-                                <label class="pref-label"><input type="checkbox" name="preference" value="Coding">
-                                    Coding</label>
-                                <label class="pref-label"><input type="checkbox" name="preference" value="Other">
-                                    Other</label>
+                            <div class="preferences-grid" id="preferencesGrid"><label class="pref-label"><input
+                                        type="checkbox" name="preference" value="World News">World News</label><label
+                                    class="pref-label"><input type="checkbox" name="preference"
+                                        value="Sports">Sports</label><label class="pref-label"><input type="checkbox"
+                                        name="preference" value="Study">Study</label><label class="pref-label"><input
+                                        type="checkbox" name="preference" value="Animals">Animals</label><label
+                                    class="pref-label"><input type="checkbox" name="preference"
+                                        value="Coding">Coding</label><label class="pref-label"><input type="checkbox"
+                                        name="preference" value="Other">Other</label>
                             </div>
                         </div>
-                        <div class="card-footer">
-                            <button type="submit" class="btn btn-primary">Update preferences</button>
-                        </div>
+                        <div class="card-footer"><button type="submit" class="btn btn-primary">Update
+                                preferences</button></div>
                     </form>
                 </div>
             </div>
-
             <!-- Billing & Payments Tab -->
             <div id="billing-tab" class="tab-content">
                 <div class="page-header">
                     <h2>Billing & Payments</h2>
-                    <p>Manage your saved payment methods and view your transaction history for purchased books.</p>
+                    <p>Manage your saved payment methods and view your transaction history for
+                        purchased books.</p>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
                         <div
                             style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                            <h3 style="font-size: 1.1rem; font-family: 'Inter', sans-serif;">Saved Payment Methods</h3>
-                            <button class="btn btn-secondary" onclick="showToast('Add new card dialog opened')">Add
-                                Payment Method</button>
+                            <h3 style="font-size: 1.1rem; font-family: 'Inter', sans-serif;">Saved
+                                Payment Methods</h3><button class="btn btn-secondary" onclick="openPaymentModal()">Add
+                                Payment
+                                Method</button>
                         </div>
-
                         <div class="connection-item">
                             <div class="connection-info">
                                 <div class="connection-icon" style="background:#1e3a8a; color:white;"><i
@@ -825,28 +867,26 @@
                                     <h4>Visa ending in 4242</h4>
                                     <p>Expires 12/26 • Default</p>
                                 </div>
-                            </div>
-                            <button class="btn btn-secondary" style="color:var(--danger); border-color:var(--danger);"
-                                onclick="showToast('Card removed')">Remove</button>
+                            </div><button class="btn btn-secondary"
+                                style="color:var(--danger); border-color:var(--danger);"
+                                onclick="LuminaryUI.showToast('Card removed', 'success')">Remove</button>
                         </div>
                     </div>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
-                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Billing
-                            History</h3>
-                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">Past purchases and
-                            invoices will appear here.</p>
-
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">
+                            Billing History</h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">
+                            Past purchases and invoices will appear here.</p>
                         <div
                             style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; overflow-x: auto;">
                             <table
                                 style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem; min-width: 500px;">
                                 <thead>
                                     <tr style="background: #f9fafb; border-bottom: 1px solid var(--border);">
-                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">Date
-                                        </th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">
+                                            Date </th>
                                         <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">
                                             Description</th>
                                         <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">
@@ -858,23 +898,29 @@
                                 </thead>
                                 <tbody>
                                     <tr style="border-bottom: 1px solid var(--border);">
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Mar 04, 2026</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Book Purchase -
-                                            Advanced Patterns</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">$14.99</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Mar
+                                            04,
+                                            2026</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">
+                                            Book Purchase - Advanced Patterns</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">
+                                            $14.99</td>
                                         <td style="padding: 12px 16px; text-align: right;"><a href="#"
                                                 style="color: var(--primary); text-decoration: none;"
-                                                onclick="showToast('Downloading invoice...')"><i
+                                                onclick="LuminaryUI.showToast('Downloading invoice...', 'success')"><i
                                                     class="fas fa-download"></i></a></td>
                                     </tr>
                                     <tr>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Feb 28, 2026</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Book Purchase - Getting
-                                            Started</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">$9.99</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Feb
+                                            28,
+                                            2026</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">
+                                            Book Purchase - Getting Started</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">
+                                            $9.99</td>
                                         <td style="padding: 12px 16px; text-align: right;"><a href="#"
                                                 style="color: var(--primary); text-decoration: none;"
-                                                onclick="showToast('Downloading invoice...')"><i
+                                                onclick="LuminaryUI.showToast('Downloading invoice...', 'success')"><i
                                                     class="fas fa-download"></i></a></td>
                                     </tr>
                                 </tbody>
@@ -883,116 +929,171 @@
                     </div>
                 </div>
             </div>
-
             <!-- 5. Publisher Tab -->
             <div id="publisher-tab" class="tab-content">
                 <div class="page-header">
                     <h2>Publisher Tools</h2>
-                    <p>Manage your analytics, earnings, and publisher settings.</p>
+                    <p>Manage your analytics,
+                        earnings,
+                        and publisher settings.</p>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
-                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Overview &
-                            Analytics</h3>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 24px; font-family: 'Inter', sans-serif;">
+                            Overview & Analytics</h3>
                         <div
-                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px;">
                             <div
-                                style="padding: 16px; background: #f3f4f6; border-radius: var(--radius-md); text-align: center;">
+                                style="padding: 20px; background: rgba(243, 244, 246, 0.5); border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border);">
                                 <div
-                                    style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit';">
+                                    style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit'; margin-bottom: 4px;">
                                     12</div>
-                                <div style="font-size: 0.85rem; color: var(--text-muted);">Books Published</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                    Books Published</div>
                             </div>
                             <div
-                                style="padding: 16px; background: #f3f4f6; border-radius: var(--radius-md); text-align: center;">
+                                style="padding: 20px; background: rgba(243, 244, 246, 0.5); border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border);">
                                 <div
-                                    style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit';">
-                                    3,492</div>
-                                <div style="font-size: 0.85rem; color: var(--text-muted);">Total Reads</div>
+                                    style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit'; margin-bottom: 4px;">
+                                    3,
+                                    492</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
+                                    Total Reads</div>
                             </div>
                             <div
-                                style="padding: 16px; background: #f0fdf4; border-radius: var(--radius-md); text-align: center; border: 1px solid #bbf7d0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                style="padding: 20px; background: rgba(16, 185, 129, 0.05); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                 <div
-                                    style="font-size: 1.5rem; font-weight: 700; color: #166534; font-family: 'Outfit';">
+                                    style="font-size: 1.75rem; font-weight: 700; color: #065f46; font-family: 'Outfit'; margin-bottom: 4px;">
                                     <span id="publisherBalance">$0.00</span>
                                 </div>
-                                <div style="font-size: 0.85rem; color: #166534; margin-bottom: 8px;">Available Payout
-                                </div>
-                                <button class="btn btn-primary"
-                                    style="background-color: #166534; border-color: #166534; font-size: 0.8rem; padding: 4px 12px; width: 100%; border-radius: 4px;"
+                                <div style="font-size: 0.85rem; color: #064e3b; margin-bottom: 12px; font-weight: 500;">
+                                    Available Payout</div><button class="btn btn-primary"
+                                    style="background: #059669; border: none; font-size: 0.85rem; padding: 8px 16px; width: 100%; border-radius: 8px; font-weight: 600;"
                                     onclick="requestWithdrawal()">Withdraw</button>
                             </div>
                         </div>
                     </div>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
-                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Payout
-                            Configuration</h3>
-
-                        <div class="connection-item" id="stripeBox">
-                            <div class="connection-info">
-                                <div class="connection-icon"><i class="fab fa-stripe" style="color: #6366f1;"></i></div>
-                                <div class="connection-details">
-                                    <h4>Stripe Connect</h4>
-                                    <p id="stripeStatus">Not connected</p>
-                                </div>
-                            </div>
-                            <button class="btn btn-secondary" id="stripeBtn" onclick="toggleStripe()">Connect
-                                Bank</button>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 20px; font-family: 'Inter', sans-serif;">
+                            Payout Configuration</h3>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 12px; margin-bottom: 24px;"
+                            id="payoutMethodCards">
+                            <div class="payout-card" data-method="upi" onclick="selectPayoutMethod('upi')"><i
+                                    class="fas fa-qrcode"></i><span>UPI ID</span></div>
+                            <div class="payout-card" data-method="paypal" onclick="selectPayoutMethod('paypal')"><i
+                                    class="fab fa-paypal"></i><span>PayPal</span></div>
+                            <div class="payout-card" data-method="stripe" onclick="selectPayoutMethod('stripe')"><i
+                                    class="fab fa-stripe"></i><span>Stripe</span></div>
+                            <div class="payout-card" data-method="manual" onclick="selectPayoutMethod('manual')"><i
+                                    class="fas fa-wallet"></i><span>Wallet</span></div>
                         </div>
-
-                        <div class="connection-item">
-                            <div class="connection-info">
-                                <div class="connection-icon"><i class="fas fa-file-invoice-dollar"
-                                        style="color: var(--text-muted);"></i></div>
-                                <div class="connection-details">
-                                    <h4>Tax Identity (W-9 / W-8BEN)</h4>
-                                    <p>Required before receiving payouts.</p>
-                                </div>
+                        <div id="payoutHandleGroup" style="display: none; margin-bottom: 24px;">
+                            <label id="handleLabel"
+                                style="font-size: 0.85rem; color: var(--text-muted); display: block; margin-bottom: 8px; font-weight: 500;">Handle
+                                / Account ID</label>
+                            <div style="position: relative;"><input type="text" id="payoutHandle" class="form-control"
+                                    placeholder="e.g. user@okaxis"
+                                    style="padding: 12px 12px 12px 42px; border-radius: 10px; width: 100%; border: 1px solid var(--border); transition: all 0.2s; font-family: 'Inter';"><i
+                                    id="handleIcon" class="fas fa-at"
+                                    style="position: absolute; left: 16px; top: 15px; color: var(--text-muted);"></i>
                             </div>
-                            <button class="btn btn-secondary" onclick="showToast('Tax form portal opened')">Submit
-                                Form</button>
                         </div>
+                        <div id="payoutStatusBox"
+                            style="padding: 14px; background: rgba(79, 70, 229, 0.05); border-radius: 10px; margin-bottom: 24px; border: 1px solid rgba(79, 70, 229, 0.1); display: none;">
+                            <p id="payoutStatus" style="font-size: 0.85rem; color: var(--primary); font-weight: 500;">
+                            </p>
+                        </div><button class="btn btn-primary" id="savePayoutBtn" onclick="savePayoutConfig()"
+                            style="width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; background: linear-gradient(135deg, var(--primary), #6366f1); border: none; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3); letter-spacing: 0.5px;">SAVE
+                            PAYOUT CONFIGURATION </button>
                     </div>
                 </div>
-
                 <div class="settings-card">
                     <div class="card-body">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div>
                                 <h3 style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif;">
                                     Sales Notifications</h3>
-                                <p style="font-size: 0.9rem; color: var(--text-muted);">Receive an email every time a
-                                    user purchases one of your books.</p>
-                            </div>
-                            <label class="switch">
-                                <input type="checkbox" checked onchange="showToast('Sales notifications updated');">
-                                <span class="slider"></span>
-                            </label>
+                                <p style="font-size: 0.9rem; color: var(--text-muted);">Receive
+                                    an email every time a user purchases one of your books.</p>
+                            </div><label class="switch"><input type="checkbox" checked
+                                    onchange="LuminaryUI.showToast('Sales notifications updated', 'success');"><span
+                                    class="slider"></span></label>
                         </div>
                     </div>
+                </div>
+            </div>
+            <!-- Add Payment Method Modal -->
+            <div id="paymentModalOverlay" class="custom-modal-overlay">
+                <div class="custom-modal" style="max-width: 450px;">
+                    <div class="custom-modal-header">
+                        <h2>Add Payment Method</h2>
+                    </div>
+                    <form id="addPaymentForm" onsubmit="submitPaymentMethod(event)">
+                        <div class="custom-modal-body">
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label
+                                    style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); font-weight: 500;">Cardholder
+                                    Name</label>
+                                <input type="text" class="form-control" placeholder="John Doe" required
+                                    style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-color); color: var(--text-main);">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label
+                                    style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); font-weight: 500;">Card
+                                    Number</label>
+                                <div style="position: relative;">
+                                    <i class="fas fa-credit-card"
+                                        style="position: absolute; left: 12px; top: 12px; color: var(--text-muted);"></i>
+                                    <input type="text" id="newCardNumber" class="form-control"
+                                        placeholder="0000 0000 0000 0000" maxlength="19" required pattern="[0-9 ]+"
+                                        style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px 10px 10px 40px; background: var(--bg-color); color: var(--text-main);">
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 15px;">
+                                <div class="form-group" style="flex: 1;">
+                                    <label
+                                        style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); font-weight: 500;">Expiry
+                                        Date</label>
+                                    <input type="text" id="newCardExpiry" class="form-control" placeholder="MM/YY"
+                                        maxlength="5" required
+                                        style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-color); color: var(--text-main);">
+                                </div>
+                                <div class="form-group" style="flex: 1;">
+                                    <label
+                                        style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); font-weight: 500;">CVC</label>
+                                    <input type="text" class="form-control" placeholder="123" maxlength="4" required
+                                        style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-color); color: var(--text-main);">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="custom-modal-footer">
+                            <button type="button" class="btn btn-secondary"
+                                onclick="closePaymentModal()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Save Card</button>
+                        </div>
+                    </form>
                 </div>
             </div>
 
         </main>
     </div>
-
-    <div id="toast" class="toast">
-        <i class="fas fa-check-circle" id="toastIcon"></i>
-        <span id="toastMsg">Settings saved successfully</span>
-    </div>
-
-    <script>
-        const API_URL = 'http://localhost:3000/api';
+    <script>const API_URL = 'http://localhost:3000/api';
         let currentUser = null;
 
         async function init() {
             setupTabs();
             setupPreferencesUI();
             await fetchProfile();
+
+            // Handle URL fragment for direct tab access
+            const hash = window.location.hash;
+
+            if (hash === '#publisher-tools') {
+                const pubTab = document.querySelector('[data-target="publisher-tab"]');
+                if (pubTab) pubTab.click();
+            }
         }
 
         function setupTabs() {
@@ -1011,57 +1112,47 @@
 
         function setupPreferencesUI() {
             const checkboxes = document.querySelectorAll('input[name="preference"]');
+
             checkboxes.forEach(cb => {
                 cb.addEventListener('change', (e) => {
                     if (e.target.checked) {
                         e.target.parentElement.classList.add('checked');
-                    } else {
+                    }
+
+                    else {
                         e.target.parentElement.classList.remove('checked');
                     }
                 });
             });
         }
 
-        function showToast(message, isError = false) {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastMsg').innerText = message;
-            toast.className = 'toast';
-
-            if (isError) {
-                toast.classList.add('error');
-                document.getElementById('toastIcon').className = 'fas fa-exclamation-circle';
-            } else {
-                document.getElementById('toastIcon').className = 'fas fa-check-circle';
-            }
-
-            // Force reflow
-            void toast.offsetWidth;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        }
-
         async function fetchProfile() {
             try {
                 const token = localStorage.getItem('token');
+
                 const res = await fetch(`${API_URL}/users/profile`, {
-                    headers: { 'x-auth-token': token }
+                    headers: {
+                        'x-auth-token': token
+                    }
                 });
 
                 if (res.ok) {
                     const data = await res.json();
                     currentUser = data.user || data;
                     populateForms(currentUser);
-                } else {
-                    const payload = JSON.parse(atob(token.split('.')[1]));
-                    const res2 = await fetch(`${API_URL}/users/${payload.user.id}`);
-                    if (res2.ok) {
-                        currentUser = await res2.json();
-                        populateForms(currentUser);
-                    }
+                } else if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/auth.html';
                 }
-            } catch (e) {
+            }
+
+            catch (e) {
                 console.error('Error fetching profile:', e);
             }
+        }
+
+        function showToast(message, isError = false) {
+            LuminaryUI.showToast(message, isError ? 'error' : 'success');
         }
 
         function populateForms(user) {
@@ -1077,8 +1168,9 @@
 
             document.getElementById('email').value = user.email || '';
 
-            if (user.preferences && user.preferences.length > 0) {
+            if (user.preferences) {
                 const checkboxes = document.querySelectorAll('input[name="preference"]');
+
                 checkboxes.forEach(cb => {
                     if (user.preferences.includes(cb.value)) {
                         cb.checked = true;
@@ -1095,129 +1187,111 @@
 
             if (user.role === 'publisher') {
                 document.getElementById('publisher-menu').style.display = 'flex';
+
                 document.getElementById('publisherBalance').innerText = `$${(user.balance || 0).toFixed(2)}`;
 
-                if (user.stripeAccountId) {
-                    const status = document.getElementById('stripeStatus');
-                    status.innerHTML = `<span class="status-badge connected">Connected</span>`;
-                    const btn = document.getElementById('stripeBtn');
-                    btn.innerText = 'Connected';
-                    btn.disabled = true;
+                if (user.preferredPaymentMethod) {
+                    selectPayoutMethod(user.preferredPaymentMethod);
+                    document.getElementById('payoutHandle').value = user.paymentHandle || '';
+
+                    const status = document.getElementById('payoutStatus');
+                    const statusBox = document.getElementById('payoutStatusBox');
+                    statusBox.style.display = 'block';
+
+                    status.innerHTML = `<i class="fas fa-check-circle"></i>Currently connected via ${user.preferredPaymentMethod.toUpperCase()}`;
                 }
             }
         }
 
-        document.getElementById('avatarUpload').addEventListener('change', async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
+        function selectPayoutMethod(method) {
 
-            const formData = new FormData();
-            formData.append('avatar', file);
+            // Update Cards UI
+            document.querySelectorAll('.payout-card').forEach(card => {
+                card.classList.remove('selected');
+
+                if (card.dataset.method === method) {
+                    card.classList.add('selected');
+                }
+            });
+
+            // Update Input UI
+            const handleGroup = document.getElementById('payoutHandleGroup');
+            const label = document.getElementById('handleLabel');
+            const placeholder = document.getElementById('payoutHandle');
+            const icon = document.getElementById('handleIcon');
+
+            handleGroup.style.display = 'block';
+
+            if (method === 'upi') {
+                label.innerText = 'UPI ID (Virtual Payment Address)';
+                placeholder.placeholder = 'e.g. username@okaxis';
+                icon.className = 'fas fa-at';
+            }
+
+            else if (method === 'paypal') {
+                label.innerText = 'PayPal Email Address';
+                placeholder.placeholder = 'e.g. email@example.com';
+                icon.className = 'fas fa-envelope';
+            }
+
+            else if (method === 'stripe') {
+                label.innerText = 'Stripe Account Email';
+                placeholder.placeholder = 'e.g. stripe-user@example.com';
+                icon.className = 'fab fa-stripe-s';
+            }
+
+            else {
+                handleGroup.style.display = 'none'; // Manual just unlocks withdraw
+            }
+
+            // Store selected method on a temporary attribute
+            document.getElementById('payoutMethodCards').dataset.selected = method;
+        }
+
+        async function savePayoutConfig() {
+            const method = document.getElementById('payoutMethodCards').dataset.selected;
+            const handle = document.getElementById('payoutHandle').value;
+            const token = localStorage.getItem('token');
+            const btn = document.getElementById('savePayoutBtn');
+
+            if (!method) return showToast('Please select a payout method', true);
+
+            btn.disabled = true;
+            btn.innerText = 'SAVING...';
 
             try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API_URL}/users/avatar`, {
+                const res = await fetch(`${API_URL}/publisher/onboard`, {
                     method: 'POST',
-                    headers: { 'x-auth-token': token },
-                    body: formData
-                });
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    }
 
-                const data = await res.json();
-                if (res.ok) {
-                    document.getElementById('avatarPreview').style.backgroundImage = `url('${data.filePath}')`;
-                    showToast('Profile picture updated!');
-                } else {
-                    showToast(data.msg || 'Upload failed', true);
-                }
-            } catch (err) {
-                showToast('Error uploading image', true);
-            }
-        });
-
-        async function updateProfileCore(payload) {
-            try {
-                const btn = document.activeElement;
-                if (btn && btn.tagName === 'BUTTON') {
-                    const originalText = btn.innerText;
-                    btn.innerText = 'Saving...';
-                    btn.disabled = true;
-                    setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 800);
-                }
-
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API_URL}/users/profile`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                    body: JSON.stringify(payload)
+                    ,
+                    body: JSON.stringify({
+                        method, handle
+                    })
                 });
 
                 if (res.ok) {
-                    showToast('Settings saved successfully');
-                } else {
+                    showToast('Payout method updated successfully!');
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+
+                else {
                     const data = await res.json();
-                    showToast(data.msg || 'Failed to save', true);
+                    showToast(data.msg || 'Update failed', true);
+                    btn.disabled = false;
+                    btn.innerText = 'SAVE PAYOUT CONFIGURATION';
                 }
-            } catch (err) {
-                showToast('Network error', true);
+            }
+
+            catch (err) {
+                showToast('Connection error', true);
+                btn.disabled = false;
+                btn.innerText = 'SAVE PAYOUT CONFIGURATION';
             }
         }
-
-        document.getElementById('profileForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const displayName = document.getElementById('displayName').value;
-            const username = document.getElementById('username').value;
-            const bio = document.getElementById('bio').value;
-            updateProfileCore({ displayName, username, bio, email: document.getElementById('email').value });
-        });
-
-        document.getElementById('accountForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            updateProfileCore({ email: document.getElementById('email').value });
-        });
-
-        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const currentPassword = document.getElementById('currentPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-
-            if (newPassword !== confirmPassword) {
-                return showToast('New passwords do not match', true);
-            }
-
-            try {
-                const btn = document.getElementById('pwdBtn');
-                btn.innerText = 'Saving...';
-                btn.disabled = true;
-
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API_URL}/users/password`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
-                    body: JSON.stringify({ currentPassword, newPassword })
-                });
-
-                btn.innerText = 'Update password';
-                btn.disabled = false;
-
-                if (res.ok) {
-                    showToast('Password updated successfully');
-                    document.getElementById('passwordForm').reset();
-                } else {
-                    const data = await res.json();
-                    showToast(data.msg || 'Failed to update password', true);
-                }
-            } catch (err) {
-                showToast('Network error', true);
-            }
-        });
-
-        document.getElementById('prefsForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const checkboxes = document.querySelectorAll('input[name="preference"]:checked');
-            const preferences = Array.from(checkboxes).map(cb => cb.value);
-            updateProfileCore({ preferences });
-        });
 
         function setSocialUI(platform, url) {
             const input = document.getElementById(`${platform}Input`);
@@ -1225,10 +1299,13 @@
             const btn = document.getElementById(`${platform}Box`).querySelector('.btn-connect');
 
             input.value = url || '';
+
             if (url) {
-                status.innerHTML = `<span class="status-badge connected">Connected</span> <span style="font-size: 0.8rem; margin-left:8px;">${url.split('/').pop()}</span>`;
+                status.innerHTML = `<span class="status-badge connected">Connected</span><span style="font-size: 0.8rem; margin-left:8px;">${url.split('/').pop()}</span>`;
                 btn.innerText = 'Disconnect';
-            } else {
+            }
+
+            else {
                 status.innerHTML = `<span class="status-badge">Not connected</span>`;
                 btn.innerText = 'Connect';
             }
@@ -1236,56 +1313,238 @@
 
         function toggleSocial(platform) {
             const input = document.getElementById(`${platform}Input`);
+
             if (input.value) {
                 setSocialUI(platform, '');
-            } else {
+            }
+
+            else {
                 const username = document.getElementById('username').value || 'user';
-                const formatMap = { 'twitter': 'https://x.com/', 'github': 'https://github.com/', 'linkedin': 'https://linkedin.com/in/' };
+
+                const formatMap = {
+                    'twitter': 'https://x.com/',
+                    'github': 'https://github.com/',
+                    'linkedin': 'https://linkedin.com/in/'
+                }
+
+                    ;
+
                 setSocialUI(platform, `${formatMap[platform]}${username}`);
             }
         }
 
         function saveSocials() {
-            const socials = {
+            const sociales = {
                 twitter: document.getElementById('twitterInput').value,
                 github: document.getElementById('githubInput').value,
                 linkedin: document.getElementById('linkedinInput').value
-            };
-            updateProfileCore({ socials });
+            }
+
+                ;
+
+            updateProfileCore({
+                socials: sociales
+            });
+        }
+
+        async function updateProfileCore(payload) {
+            try {
+                const token = localStorage.getItem('token');
+
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json', 'x-auth-token': token
+                    }
+
+                    ,
+                    body: JSON.stringify(payload)
+                });
+                if (res.ok) showToast('Settings saved successfully');
+                else showToast('Failed to save', true);
+            }
+
+            catch (err) {
+                showToast('Network error', true);
+            }
         }
 
         function requestWithdrawal() {
             const balanceText = document.getElementById('publisherBalance').innerText;
+
             if (balanceText === '$0.00' || balanceText === '$0') {
-                return showToast('No funds available to withdraw.', true);
+                return showToast('No funds available for withdrawal.', true);
             }
-            const stripeStatus = document.getElementById('stripeStatus').innerText;
-            if (stripeStatus === 'Not connected') {
-                return showToast('Please connect your payout account first.', true);
-            }
-            showToast('Withdrawal request processing...', false);
-            setTimeout(() => {
-                showToast('Funds transferred to your bank account!', false);
-                document.getElementById('publisherBalance').innerText = '$0.00';
-            }, 1500);
+
+            LuminaryUI.showConfirm({
+                title: 'Confirm Withdrawal',
+                message: `Request withdrawal of <strong>${balanceText}</strong> to your preferred payout method?`,
+                confirmText: 'Submit Request',
+                onConfirm: () => {
+                    showToast('Withdrawal request submitted for review.', false);
+                    setTimeout(() => {
+                        showToast('Request received! Our team will process this within 2-3 business days.', false);
+                    }, 1500);
+                }
+            });
         }
 
-        async function toggleStripe() {
-            const token = localStorage.getItem('token');
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            updateProfileCore({
+                displayName: document.getElementById('displayName').value,
+                username: document.getElementById('username').value,
+                bio: document.getElementById('bio').value
+            });
+        });
+
+        document.getElementById('accountForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+
+            updateProfileCore({
+                email: document.getElementById('email').value
+            });
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            if (newPassword !== confirmPassword) return showToast('Passwords do not match', true);
+
             try {
-                const res = await fetch(`${API_URL}/publisher/onboard`, {
-                    method: 'POST',
-                    headers: { 'x-auth-token': token }
+                const token = localStorage.getItem('token');
+
+                const res = await fetch(`${API_URL}/users/password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json', 'x-auth-token': token
+                    }
+
+                    ,
+                    body: JSON.stringify({
+                        currentPassword: document.getElementById('currentPassword').value, newPassword
+                    })
                 });
+
                 if (res.ok) {
-                    showToast('Stripe account connected!');
-                    setTimeout(() => window.location.reload(), 1500);
-                } else {
-                    showToast('Failed to connect Stripe', true);
+                    showToast('Password updated');
+                    e.target.reset();
                 }
-            } catch (err) {
-                showToast('Error connecting Stripe', true);
+
+                else {
+                    const data = await res.json();
+                    showToast(data.msg || 'Update failed', true);
+                }
             }
+
+            catch (err) {
+                showToast('Network error', true);
+            }
+        });
+
+        document.getElementById('prefsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const preferences = Array.from(document.querySelectorAll('input[name="preference"]:checked')).map(cb => cb.value);
+
+            updateProfileCore({
+                preferences
+            });
+        });
+
+        // Format Card Number (adds spaces)
+        document.getElementById('newCardNumber')?.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
+            let matches = value.match(/\d{4,16}/g);
+            let match = matches && matches[0] || '';
+            let parts = [];
+
+            for (let i = 0; i < match.length; i += 4) {
+                parts.push(match.substring(i, i + 4));
+            }
+
+            if (parts.length) {
+                e.target.value = parts.join(' ');
+            } else {
+                e.target.value = value;
+            }
+        });
+
+        // Format Expiry Date (MM/YY)
+        document.getElementById('newCardExpiry')?.addEventListener('input', function (e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 2) {
+                value = value.substring(0, 2) + '/' + value.substring(2, 4);
+            }
+            e.target.value = value;
+        });
+
+        function openPaymentModal() {
+            document.getElementById('paymentModalOverlay').classList.add('show');
+            document.getElementById('addPaymentForm').reset();
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModalOverlay').classList.remove('show');
+        }
+
+        function submitPaymentMethod(e) {
+            e.preventDefault();
+
+            const cardInput = document.getElementById('newCardNumber').value.replace(/\s/g, '');
+            const expiry = document.getElementById('newCardExpiry').value;
+
+            if (cardInput.length < 15) {
+                return LuminaryUI.showToast('Please enter a valid card number', 'error');
+            }
+
+            // Get last 4 digits
+            const last4 = cardInput.slice(-4);
+
+            // Determine card brand (basic logic for mock UI)
+            let brand = 'visa';
+            let iconClass = 'fab fa-cc-visa';
+            let bg = '#1e3a8a';
+
+            if (cardInput.startsWith('5')) {
+                brand = 'mastercard';
+                iconClass = 'fab fa-cc-mastercard';
+                bg = '#ea580c';
+            } else if (cardInput.startsWith('3')) {
+                brand = 'amex';
+                iconClass = 'fab fa-cc-amex';
+                bg = '#0284c7';
+            }
+
+            const brandName = brand.charAt(0).toUpperCase() + brand.slice(1);
+
+            // Inject new card into UI
+            const newCardHTML = `
+                <div class="connection-item">
+                    <div class="connection-info">
+                        <div class="connection-icon" style="background:${bg}; color:white;"><i
+                                class="${iconClass}"></i></div>
+                        <div class="connection-details">
+                            <h4>${brandName} ending in ${last4}</h4>
+                            <p>Expires ${expiry} • Added Just Now</p>
+                        </div>
+                    </div><button class="btn btn-secondary"
+                        style="color:var(--danger); border-color:var(--danger);"
+                        onclick="this.closest('.connection-item').remove(); LuminaryUI.showToast('Card removed', 'success')">Remove</button>
+                </div>
+            `;
+
+            // Find the container (the saved payment methods section)
+            // It's the wrapper div around the first .connection-item
+            const connectionList = document.querySelector('#billing-tab .settings-card .card-body');
+
+            // Insert after the header row but before the first connection item
+            const headerDiv = connectionList.querySelector('div[style*="justify-content: space-between"]');
+            headerDiv.insertAdjacentHTML('afterend', newCardHTML);
+
+            closePaymentModal();
+            LuminaryUI.showToast('Payment method saved successfully', 'success');
         }
 
         init();

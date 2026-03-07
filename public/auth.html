@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Authentication</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <script>
         if (localStorage.getItem('token')) {
             window.location.href = '/main.html';
@@ -91,11 +93,7 @@
             /* IE/Edge */
         }
 
-        .auth-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        /* 
+        /*
         @keyframes slideUp {
             from { opacity: 0; transform: translateY(30px); }
             to { opacity: 1; transform: translateY(0); }
@@ -106,7 +104,7 @@
             position: absolute;
             top: 20px;
             left: 20px;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted, rgba(128, 128, 128, 0.8));
             text-decoration: none;
             font-size: 0.9rem;
             transition: 0.3s;
@@ -116,13 +114,13 @@
         }
 
         .back-link:hover {
-            color: var(--light);
+            color: var(--text-main, #fff);
         }
 
         .tabs {
             display: flex;
             margin-bottom: 30px;
-            border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 2px solid rgba(128, 128, 128, 0.2);
             position: relative;
         }
 
@@ -132,12 +130,12 @@
             padding: 15px;
             cursor: pointer;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted, rgba(128, 128, 128, 0.8));
             transition: 0.3s;
         }
 
         .tab.active {
-            color: var(--white);
+            color: var(--text-main, #fff);
         }
 
         .indicator {
@@ -177,16 +175,13 @@
         h2 {
             font-size: 2rem;
             margin-bottom: 10px;
-            background: linear-gradient(to right, #fff, #cbd5e1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main, #fff);
             text-align: center;
         }
 
         .subtitle {
             text-align: center;
-            color: rgba(255, 255, 255, 0.6);
+            color: var(--text-muted, rgba(128, 128, 128, 0.8));
             margin-bottom: 30px;
             font-size: 0.95rem;
         }
@@ -199,7 +194,7 @@
             display: block;
             margin-bottom: 8px;
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.8);
+            color: var(--text-main, #fff);
         }
 
         .input-wrapper {
@@ -211,17 +206,17 @@
             left: 15px;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255, 255, 255, 0.4);
+            color: var(--text-muted, rgba(128, 128, 128, 0.8));
         }
 
         input,
         select {
             width: 100%;
             padding: 12px 15px 12px 45px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: var(--surface, rgba(0, 0, 0, 0.05));
+            border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
             border-radius: 12px;
-            color: white;
+            color: var(--text-main, #fff);
             font-family: inherit;
             font-size: 1rem;
             outline: none;
@@ -236,7 +231,7 @@
         input:focus,
         select:focus {
             border-color: var(--primary);
-            background: rgba(0, 0, 0, 0.4);
+            background: var(--surface, rgba(0, 0, 0, 0.08));
             box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
         }
 
@@ -389,7 +384,7 @@
                     <div class="input-group" style="margin-bottom: 25px;">
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                             <input type="checkbox" id="regConsent" required style="width:auto; transform:scale(1.2);">
-                            <span style="font-size:0.85rem; color:rgba(255,255,255,0.7);">
+                            <span style="font-size:0.85rem; color:var(--text-muted, rgba(128,128,128,0.8));">
                                 I agree to the <a href="legal.html" target="_blank" style="color:var(--accent);">Terms &
                                     Privacy Policy</a>
                             </span>

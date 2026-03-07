@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Profile</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <link rel="manifest" href="/manifest.json">
 
     <!-- Google Fonts: Outfit -->
@@ -69,10 +71,6 @@
         }
 
         /* Hide scrollbar for Chrome, Safari and Opera */
-        ::-webkit-scrollbar {
-            display: none;
-        }
-
         /* Hide scrollbar for IE, Edge and Firefox */
         html {
             -ms-overflow-style: none;
@@ -820,7 +818,7 @@
         }
 
         .reader-meta {
-            color: #64748b;
+            color: var(--text-muted);
             font-size: 1rem;
             margin-bottom: 40px;
             padding-bottom: 20px;
@@ -833,7 +831,7 @@
             font-family: 'Georgia', serif;
             font-size: 1.25rem;
             line-height: 1.8;
-            color: #334155;
+            color: var(--text-main);
         }
 
         .reader-body p {
@@ -879,7 +877,7 @@
             width: 40px;
             height: 40px;
             border-radius: 50%;
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%);
             background-size: 200% 100%;
             animation: pulse 1.5s infinite ease-in-out;
         }
@@ -890,7 +888,7 @@
 
         .skeleton-line {
             height: 10px;
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background: linear-gradient(90deg, var(--border) 25%, var(--surface) 50%, var(--border) 75%);
             background-size: 200% 100%;
             border-radius: 4px;
             margin-bottom: 8px;

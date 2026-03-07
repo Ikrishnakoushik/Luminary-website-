@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Legal & Privacy</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <!-- Google Fonts -->
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link
@@ -13,14 +15,14 @@
         rel="stylesheet">
     <style>
         :root {
-            --bg-body: #f8fafc;
-            --bg-surface: #ffffff;
+            --bg-body: var(--bg-color, #f8fafc);
+            --bg-surface: var(--surface, #ffffff);
             --bg-color: var(--bg-body);
             --surface: var(--bg-surface);
-            --text-primary: #0f172a;
-            --text-secondary: #475569;
-            --accent: #6366f1;
-            --border: #e2e8f0;
+            --text-primary: var(--text-main, #0f172a);
+            --text-secondary: var(--text-muted, #475569);
+            --accent: var(--primary, #6366f1);
+            --border: var(--border, #e2e8f0);
             --sidebar-width: 280px;
         }
 
@@ -175,14 +177,14 @@
         li {
             font-family: 'Merriweather', serif;
             /* Enterprise standard for text */
-            color: #334155;
+            color: var(--text-primary);
             font-size: 1.05rem;
             line-height: 1.8;
             margin-bottom: 20px;
         }
 
         .legal-box {
-            background: #f8fafc;
+            background: var(--bg-body);
             border: 1px solid var(--border);
             border-radius: 8px;
             padding: 20px;
@@ -295,7 +297,7 @@
                 </ul>
             </section>
 
-            <p style="margin-top: 60px; font-size: 0.9rem; color: #94a3b8; font-style: italic;">
+            <p style="margin-top: 60px; font-size: 0.9rem; color: var(--text-secondary); font-style: italic;">
                 Disclaimer: The information on this page is for informational purposes only and does not constitute
                 legal advice.
             </p>

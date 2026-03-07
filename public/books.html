@@ -7,18 +7,20 @@
     <title>Books | Luminary</title>
     <!-- Use same theme-loader as the rest of the app -->
     <script src="/theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <style>
         /* Premium Bookstore Theme */
         :root {
-            --primary: #8A2BE2;
-            --primary-light: #9d4edd;
-            --bg: #0f1016;
-            --surface: rgba(30, 30, 36, 0.6);
-            --surface-hover: rgba(45, 45, 55, 0.8);
-            --text: #ffffff;
-            --text-secondary: #a1a1aa;
-            --border: rgba(255, 255, 255, 0.08);
-            --nav-bg: rgba(15, 16, 22, 0.85);
+            --primary: var(--primary, #8A2BE2);
+            --primary-light: var(--primary-hover, #9d4edd);
+            --bg: var(--bg-color, #0f1016);
+            --surface: var(--surface, rgba(30, 30, 36, 0.6));
+            --surface-hover: var(--surface-light, rgba(45, 45, 55, 0.8));
+            --text: var(--text-main, #ffffff);
+            --text-secondary: var(--text-muted, #a1a1aa);
+            --border: var(--border, rgba(255, 255, 255, 0.08));
+            --nav-bg: var(--bg-color, rgba(15, 16, 22, 0.85));
         }
 
         body {
@@ -58,6 +60,7 @@
             text-decoration: none;
             background: linear-gradient(to right, #b366ff, #ec4899);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
@@ -297,6 +300,11 @@
             padding: 80px 10%;
             position: relative;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            color: transparent;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            -webkit-background-clip: text;
+            background-clip: text;
+            background-clip: text;
             font-family: 'Merriweather', 'Georgia', serif;
             line-height: 1.9;
             font-size: 1.15rem;
@@ -382,10 +390,12 @@
             <i class="fas fa-book-open"></i> Luminary Books
         </a>
         <div class="nav-links">
-            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> App Home</a>
-            <a href="/publish-book.html" class="publish-cta" id="publishBtn">
-                <i class="fas fa-pen-nib"></i> Publish a Book
-            </a>
+            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/books.html" class="nav-link active"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/studio.html" class="nav-link" id="studioLink" style="display:none;"><i class="fas fa-pen-nib"></i>
+                Studio</a>
+            <a href="/publish-book.html" class="publish-cta" id="publishBtn"><i class="fas fa-plus"></i> Publish a
+                Book</a>
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </nav>
@@ -424,6 +434,22 @@
         </div>
     </div>
 
+
+
+    <style>
+        @keyframes modalSlideUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+
     <script>
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUser = null;
@@ -440,6 +466,23 @@
         async function init() {
             checkUserRole();
             await fetchUserProfile();
+
+            // Check for Stripe redirect
+            const urlParams = new URLSearchParams(window.location.search);
+            let paymentVerified = false;
+            if (urlParams.get('success') && urlParams.get('session_id') && urlParams.get('book_id')) {
+                await verifyPurchase(urlParams.get('session_id'), urlParams.get('book_id'));
+                paymentVerified = true;
+            } else if (urlParams.get('canceled')) {
+                LuminaryUI.showToast("Payment was canceled.", "info");
+                window.history.replaceState({}, document.title, "/books.html");
+            }
+
+            // Re-fetch profile if payment was verified so we have the updated library array
+            if (paymentVerified) {
+                await fetchUserProfile();
+            }
+
             await fetchBooks();
             renderBooks();
 
@@ -460,6 +503,9 @@
                 });
                 if (res.ok) {
                     currentUser = await res.json();
+                } else if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/auth.html';
                 } else {
                     console.error("Failed to fetch user profile");
                 }
@@ -473,6 +519,7 @@
             const role = localStorage.getItem('role');
             if (role === 'publisher') {
                 document.getElementById('publishBtn').style.display = 'flex';
+                document.getElementById('studioLink').style.display = 'flex';
             }
         }
 
@@ -541,14 +588,16 @@
                 if (canRead) {
                     actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>`;
                 } else {
-                    actionHtml = `<button class="book-action-btn" onclick="purchaseBook('${book._id}', ${book.price})">Buy for $${book.price}</button>`;
+                    actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy for $${book.price}</button>`;
                 }
+
+                const authorNameDisplay = book.penName ? `${book.penName} (Pen Name)` : (book.author.displayName || book.author.username);
 
                 card.innerHTML = `
                     ${cover}
                     <div class="book-info">
-                        <h3 class="book-title">${book.title}</h3>
-                        <p class="book-author">By ${book.author.displayName || book.author.username}</p>
+                        <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
+                        <p class="book-author">By ${authorNameDisplay}</p>
                         <p class="book-price">${book.price === 0 ? 'Free' : '$' + book.price}</p>
                     </div>
                     ${actionHtml}
@@ -557,31 +606,90 @@
             });
         }
 
-        // Purchase Book
-        async function purchaseBook(bookId, price) {
-            if (confirm(`Purchase this book for $${price}?`)) {
-                try {
-                    const res = await fetch(`${API_URL}/books/${bookId}/purchase`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'x-auth-token': token
-                        }
-                    });
+        let selectedBook = null;
 
-                    const data = await res.json();
-                    if (res.ok) {
-                        alert("Purchase successful! It is now in 'My Library'.");
-                        // Refresh local data
-                        currentUser.purchasedBooks.push(bookId);
-                        renderBooks();
-                    } else {
-                        alert(data.msg);
-                    }
-                } catch (err) {
-                    alert('Error purchasing book');
-                }
+        // Open Payment Modal (REMOVED - Direct to Stripe)
+        function openPaymentModal(bookId) {
+            // Deprecated: We now route directly to Stripe Checkout
+            buyBook(bookId);
+        }
+
+        // Close Payment Modal
+        function closePaymentModal() {
+            document.getElementById('paymentModalOverlay').style.display = 'none';
+        }
+
+        // Process actual payment (Stripe Checkout Redirect)
+        async function buyBook(bookId) {
+            if (!token) {
+                LuminaryUI.showToast('Please log in to purchase books', 'error');
+                return;
             }
+
+            const book = allBooks.find(b => b._id === bookId);
+            if (!book) return;
+
+            try {
+                LuminaryUI.showToast('Preparing secure checkout...', 'info');
+
+                const res = await fetch(`${API_URL}/books/${book._id}/purchase-intent`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ gateway: 'stripe' })
+                });
+
+                const data = await res.json();
+
+                if (res.ok && data.type === 'redirect') {
+                    // Redirect to real Stripe Checkout Hosted Page
+                    window.location.href = data.url;
+                } else {
+                    LuminaryUI.showToast(data.msg || 'Checkout failed to initialize.', 'error');
+                }
+            } catch (err) {
+                console.error('Checkout error:', err);
+                LuminaryUI.showToast('Connection error. Please try again.', 'error');
+            }
+        }
+
+
+        // JS Functions removed, moved to Publisher Studio
+
+        // Verify Purchase after redirect
+        async function verifyPurchase(sessionId, bookId) {
+            try {
+                const currentToken = localStorage.getItem('token');
+                if (!currentToken) {
+                    LuminaryUI.showToast('Session expired. Please log in to verify your purchase.', 'error');
+                    window.location.href = '/auth.html';
+                    return;
+                }
+                const res = await fetch(`${API_URL}/books/verify-purchase`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': currentToken
+                    },
+                    body: JSON.stringify({ session_id: sessionId, book_id: bookId })
+                });
+
+                if (res.ok) {
+                    LuminaryUI.showToast("Payment successful! The book is now in your Library.");
+                    if (currentUser && !currentUser.purchasedBooks.includes(bookId)) {
+                        currentUser.purchasedBooks.push(bookId);
+                    }
+                } else {
+                    const data = await res.json();
+                    LuminaryUI.showToast("Payment verification failed: " + (data.msg || 'Unknown error.'), 'error');
+                }
+            } catch (err) {
+                LuminaryUI.showToast("Network error while verifying payment.", 'error');
+            }
+            // Clean up URL
+            window.history.replaceState({}, document.title, "/books.html");
         }
 
         // Open Reader
@@ -598,10 +706,10 @@
                     document.getElementById('readerModal').style.display = 'flex';
                     document.body.style.overflow = 'hidden'; // Prevent background scrolling
                 } else {
-                    alert('Error loading book content. Ensure you have purchased it.');
+                    LuminaryUI.showToast('Error loading book content. Ensure you have purchased it.', 'error');
                 }
             } catch (err) {
-                alert('Error fetching book content');
+                LuminaryUI.showToast('Error fetching book content', 'error');
             }
         }
 

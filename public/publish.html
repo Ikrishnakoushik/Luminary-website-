@@ -7,6 +7,8 @@
     <title>Publisher Studio | Luminary</title>
     <link rel="manifest" href="/manifest.json">
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
@@ -53,6 +55,104 @@
             display: block;
         }
 
+        /* Custom Prompt Modal */
+        .prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .prompt-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .prompt-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .prompt-overlay.active .prompt-box {
+            transform: translateY(0);
+        }
+
+        .prompt-title {
+            margin: 0 0 15px 0;
+            font-size: 1.25rem;
+            color: var(--text-main);
+        }
+
+        .prompt-input {
+            margin-bottom: 25px;
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-color);
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .prompt-input:focus {
+            border-color: var(--primary);
+        }
+
+        .prompt-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .prompt-actions .btn-cancel {
+            background: rgba(100, 116, 139, 0.1);
+            border: none;
+            color: var(--text-main);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-actions .btn-cancel:hover {
+            background: rgba(100, 116, 139, 0.2);
+        }
+
+        .prompt-actions .btn-confirm {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .prompt-actions .btn-confirm:hover {
+            background: var(--primary-hover);
+        }
+
         /* Layout Grid */
         .app-container {
             display: grid;
@@ -76,8 +176,7 @@
         .logo {
             font-size: 2rem;
             font-weight: 800;
-            color: #d946ef;
-            /* Bright pink/purple from screenshot */
+            color: var(--primary, #d946ef);
             cursor: pointer;
             display: flex;
             align-items: center;
@@ -87,8 +186,7 @@
 
         .back-link {
             text-decoration: none;
-            color: #be123c;
-            /* Darker pink/red */
+            color: var(--text-muted, #be123c);
             font-weight: 600;
             font-size: 0.95rem;
             display: flex;
@@ -153,23 +251,18 @@
             height: 100%;
             overflow-y: auto;
             background: var(--bg-color);
-            /* Completely white background per screenshot */
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
 
-        /* Removed overlay since background is solid white */
-
         .writing-area {
             position: relative;
-            /* Above overlay */
             width: 100%;
             max-width: 900px;
             padding: 40px 60px;
             margin-left: 20px;
-            border-left: 1px solid #fecdd3;
-            /* Faint pink line from screenshot */
+            border-left: 1px solid var(--border);
         }
 
         /* Title Input */
@@ -177,10 +270,8 @@
             width: 100%;
             border: none;
             font-size: 4.5rem;
-            /* Massive size from screenshot */
             font-family: 'Outfit', sans-serif;
             font-weight: 900;
-            /* Extra bold */
             color: var(--text-main);
             background: transparent;
             outline: none;
@@ -189,39 +280,33 @@
         }
 
         .title-input::placeholder {
-            color: #cbd5e1;
+            color: var(--text-muted, #cbd5e1);
         }
 
         /* Toolbar Sticky */
         .toolbar-sticky {
             position: sticky;
             top: 20px;
-            background: rgba(255, 255, 255, 0.9);
+            background: var(--surface, rgba(255, 255, 255, 0.9));
             backdrop-filter: blur(10px);
-            border: 1px solid #fecdd3;
-            /* Pink border from screenshot */
+            border: 1px solid var(--border, #fecdd3);
             border-radius: 50px;
-            /* Pill shape */
             padding: 6px 16px;
             display: inline-flex;
-            /* Hug content */
             gap: 4px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
             margin-bottom: 40px;
             z-index: 50;
             transition: all 0.3s;
         }
 
-        /* Hide toolbar border when not stuck? tricky with sticky. kept simple. */
-
         .tool-btn {
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            /* Circular */
             border: none;
             background: transparent;
-            color: #64748b;
+            color: var(--text-muted, #64748b);
             cursor: pointer;
             transition: 0.2s;
             display: flex;
@@ -231,14 +316,14 @@
         }
 
         .tool-btn:hover {
-            background: #f1f5f9;
+            background: var(--hover-scale, rgba(128, 128, 128, 0.1));
             color: var(--primary);
         }
 
         .divider {
             width: 1px;
             height: 24px;
-            background: #cbd5e1;
+            background: var(--border, #cbd5e1);
             margin: 0 5px;
         }
 
@@ -248,7 +333,7 @@
             outline: none;
             font-size: 1.25rem;
             line-height: 1.8;
-            color: #334155;
+            color: var(--text-main, #334155);
             font-family: 'Merriweather', 'Georgia', serif;
             padding-bottom: 60px;
         }
@@ -256,9 +341,8 @@
         /* Editor Placeholder */
         [contenteditable]:empty:before {
             content: attr(data-placeholder);
-            color: #cbd5e1;
+            color: var(--text-muted, #cbd5e1);
             font-family: 'Merriweather', 'Georgia', serif;
-            /* Match screenshot font */
             cursor: text;
         }
 
@@ -389,23 +473,6 @@
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #cbd5e1;
-            border-radius: 4px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #94a3b8;
-        }
-
         /* Floating Controls */
         .float-controls {
             position: absolute;
@@ -460,13 +527,13 @@
                     Earnings</label>
                 <div id="balanceDisplay"
                     style="font-size: 1.5rem; font-weight: 800; color: #be123c; margin-bottom: 10px;">$0.00</div>
-                <button type="button" id="stripeConnectBtn"
-                    style="width: 100%; padding: 10px; background: #8A2BE2; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: none;">
-                    Connect to Stripe
+                <button type="button" id="payoutConfigBtn"
+                    style="width: 100%; padding: 10px; background: #8A2BE2; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                    Configure Payouts
                 </button>
-                <div id="stripeConnectedMsg"
-                    style="font-size: 0.8rem; color: #10b981; font-weight: 600; display: none;">
-                    <i class="fas fa-check-circle"></i> Stripe Connected
+                <div id="payoutStatusMsg"
+                    style="font-size: 0.8rem; color: #10b981; font-weight: 600; display: none; margin-top: 5px;">
+                    <i class="fas fa-check-circle"></i> Payout Configured
                 </div>
             </div>
 
@@ -562,6 +629,18 @@
                 class="fas fa-align-right"></i></button>
         <button class="float-btn delete" onclick="deleteImage()" title="Remove Image"><i
                 class="fas fa-trash-alt"></i></button>
+    </div>
+
+    <!-- Custom Prompt Modal -->
+    <div id="customPromptOverlay" class="prompt-overlay">
+        <div class="prompt-box">
+            <h3 id="promptTitle" class="prompt-title">Enter URL</h3>
+            <input type="text" id="promptInput" class="form-control prompt-input" placeholder="https://...">
+            <div class="prompt-actions">
+                <button type="button" class="btn-cancel" id="promptCancel">Cancel</button>
+                <button type="button" class="btn-confirm" id="promptConfirm">Confirm</button>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -748,10 +827,54 @@
             input.value = ''; // Reset
         }
 
+        // Custom Prompt Logic
+        let currentPromptCallback = null;
+
+        function showPrompt(title, placeholder, callback) {
+            const overlay = document.getElementById('customPromptOverlay');
+            const titleEl = document.getElementById('promptTitle');
+            const inputEl = document.getElementById('promptInput');
+
+            titleEl.textContent = title;
+            inputEl.placeholder = placeholder;
+            inputEl.value = '';
+            currentPromptCallback = callback;
+
+            overlay.style.display = 'flex';
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+            inputEl.focus();
+        }
+
+        function closePrompt() {
+            const overlay = document.getElementById('customPromptOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+            currentPromptCallback = null;
+        }
+
+        document.getElementById('promptCancel').addEventListener('click', closePrompt);
+
+        document.getElementById('promptConfirm').addEventListener('click', () => {
+            const val = document.getElementById('promptInput').value.trim();
+            if (currentPromptCallback && val) {
+                currentPromptCallback(val);
+            }
+            closePrompt();
+        });
+
+        document.getElementById('promptInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('promptConfirm').click();
+            }
+        });
+
         // Video Handling
         function triggerVideoInsert() {
-            const url = prompt("Enter YouTube URL:");
-            if (url) {
+            showPrompt("Insert YouTube Video", "Enter YouTube URL", (url) => {
                 const videoId = getYouTubeID(url);
                 if (videoId) {
                     const iframe = `<br><div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 15px 0;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div><br>`;
@@ -759,7 +882,7 @@
                 } else {
                     alert("Invalid YouTube URL");
                 }
-            }
+            });
         }
 
         function getYouTubeID(url) {
@@ -924,11 +1047,12 @@
                     const data = await res.json();
                     document.getElementById('balanceDisplay').innerText = `$${(data.balance || 0).toFixed(2)}`;
 
-                    if (data.stripeAccountId) {
-                        document.getElementById('stripeConnectedMsg').style.display = 'block';
-                        document.getElementById('stripeConnectBtn').style.display = 'none';
+                    if (data.preferredPaymentMethod && data.preferredPaymentMethod !== 'manual') {
+                        document.getElementById('payoutStatusMsg').style.display = 'block';
+                        document.getElementById('payoutStatusMsg').innerHTML = `<i class="fas fa-check-circle"></i> ${data.preferredPaymentMethod.toUpperCase()} Connected`;
+                        document.getElementById('payoutConfigBtn').innerText = 'Change Payout Method';
                     } else {
-                        document.getElementById('stripeConnectBtn').style.display = 'block';
+                        document.getElementById('payoutConfigBtn').style.display = 'block';
                     }
                 }
             } catch (err) {
@@ -936,34 +1060,9 @@
             }
         }
 
-        // Handle Stripe Connect
-        document.getElementById('stripeConnectBtn').addEventListener('click', async () => {
-            const btn = document.getElementById('stripeConnectBtn');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
-            btn.disabled = true;
-
-            try {
-                const token = localStorage.getItem('token');
-                const res = await fetch(`${API_URL}/publisher/onboard`, {
-                    method: 'POST',
-                    headers: { 'x-auth-token': token }
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    alert(data.msg); // Mock success Message
-                    fetchBalance(); // Refresh UI
-                } else {
-                    alert(data.msg || 'Error connecting to Stripe');
-                    btn.innerHTML = 'Connect to Stripe';
-                    btn.disabled = false;
-                }
-            } catch (err) {
-                console.error("Error connecting to Stripe:", err);
-                alert('Connection failed');
-                btn.innerHTML = 'Connect to Stripe';
-                btn.disabled = false;
-            }
+        // Handle Payout Config Redirect
+        document.getElementById('payoutConfigBtn').addEventListener('click', () => {
+            window.location.href = 'settings.html#publisher-tools';
         });
 
         // Initialize Call

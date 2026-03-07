@@ -1,0 +1,18 @@
+[dotenv@17.3.1] injecting env (6) from .env -- tip: ⚙️  load multiple .env files with { path: ['.env.local', '.env'] }
+[Stripe Mock] Using mocked Stripe API for local development.
+C:\Users\Illuri\OneDrive\Desktop\project3\server.js:63
+if (!resend) {
+^
+
+ReferenceError: resend is not defined
+    at Object.<anonymous> (C:\Users\Illuri\OneDrive\Desktop\project3\server.js:63:1)
+    at Module._compile (node:internal/modules/cjs/loader:1761:14)
+    at Object..js (node:internal/modules/cjs/loader:1893:10)
+    at Module.load (node:internal/modules/cjs/loader:1481:32)
+    at Module._load (node:internal/modules/cjs/loader:1300:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:245:24)
+    at Module.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:154:5)
+    at node:internal/main/run_main_module:33:47
+
+Node.js v24.13.0

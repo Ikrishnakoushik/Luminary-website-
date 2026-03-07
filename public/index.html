@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary | Connect, Share, Grow</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <script>
         if (localStorage.getItem('token')) {
             window.location.href = '/main.html';
@@ -15,13 +17,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
+            /* Fallback variables in case theme-loader hasn't run or localstorage is empty */
             --primary: #6366f1;
-            --secondary: #a855f7;
-            --accent: #ec4899;
+            --accent: #a855f7;
             --dark: #0f172a;
             --light: #f8fafc;
             --bg-color: #0f172a;
             --text-main: #f8fafc;
+            --text-muted: #94a3b8;
             --surface: rgba(255, 255, 255, 0.1);
             --border: rgba(255, 255, 255, 0.2);
         }
@@ -50,8 +53,8 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.15), transparent 25%);
+            background: radial-gradient(circle at 15% 50%, color-mix(in srgb, var(--primary) 15%, transparent), transparent 25%),
+                radial-gradient(circle at 85% 30%, color-mix(in srgb, var(--accent) 15%, transparent), transparent 25%);
             animation: pulse 10s ease-in-out infinite alternate;
         }
 
@@ -67,11 +70,12 @@
 
         /* Glassmorphism Utilities */
         .glass {
-            background: var(--surface);
+            background: color-mix(in srgb, var(--surface) 60%, transparent);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--border);
+            border: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
             border-radius: 16px;
+            box-shadow: var(--card-shadow, 0 4px 6px -1px rgba(0, 0, 0, 0.1));
         }
 
         /* Navigation */
@@ -89,11 +93,12 @@
             background: linear-gradient(to right, var(--primary), var(--accent));
             background-clip: text;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .nav-links a {
-            color: var(--light);
+            color: var(--text-main);
             text-decoration: none;
             margin-left: 2rem;
             font-weight: 500;
@@ -102,6 +107,10 @@
 
         .nav-links a:hover {
             color: var(--primary);
+        }
+
+        .nav-links a i {
+            margin-right: 6px;
         }
 
         .btn {
@@ -114,25 +123,59 @@
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #ffffff;
+            /* Explicitly white text for primary button */
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+            color: #ffffff;
         }
 
         .btn-outline {
-            border: 2px solid var(--glass-border);
-            color: var(--light);
+            border: 2px solid var(--border);
+            color: var(--text-main);
             margin-left: 1rem;
+            background: transparent;
         }
 
         .btn-outline:hover {
-            background: var(--glass);
+            background: var(--surface);
             border-color: var(--primary);
+        }
+
+        /* Navbar Auth Buttons */
+        .btn-login {
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 2rem;
+            transition: color 0.3s;
+        }
+
+        .btn-login:hover {
+            color: var(--primary);
+        }
+
+        .btn-signup {
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-left: 1rem;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-signup:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(99, 102, 241, 0.4);
+            color: #ffffff;
         }
 
         /* Hero Section */
@@ -155,15 +198,13 @@
             font-size: 3.5rem;
             line-height: 1.2;
             margin-bottom: 1.5rem;
-            background: linear-gradient(to bottom right, #fff, #cbd5e1);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--text-main);
+            font-weight: 800;
         }
 
         p.subtitle {
             font-size: 1.25rem;
-            color: #94a3b8;
+            color: var(--text-muted);
             margin-bottom: 2.5rem;
             margin-left: auto;
             margin-right: auto;
@@ -189,7 +230,8 @@
 
         .feature-card:hover {
             transform: translateY(-5px);
-            background: rgba(255, 255, 255, 0.15);
+            background: color-mix(in srgb, var(--surface) 80%, transparent);
+            box-shadow: var(--card-shadow, 0 10px 25px rgba(0, 0, 0, 0.15));
         }
 
         .feature-card .icon {
@@ -200,16 +242,17 @@
         .feature-card h2 {
             font-size: 1.8rem;
             margin-bottom: 0.5rem;
-            color: var(--secondary);
-            background: linear-gradient(to right, var(--primary), var(--secondary));
+            color: var(--accent);
+            background: linear-gradient(to right, var(--primary), var(--accent));
             background-clip: text;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
         }
 
         .feature-card p {
             font-size: 1.1rem;
-            color: #e2e8f0;
+            color: var(--text-muted);
             line-height: 1.7;
         }
 
@@ -217,7 +260,7 @@
         footer {
             text-align: center;
             padding: 2rem;
-            color: #64748b;
+            color: var(--text-muted);
             font-size: 0.9rem;
         }
 
@@ -225,15 +268,26 @@
         @media (max-width: 768px) {
             nav {
                 padding: 15px 20px;
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
             }
 
-            /* Hide links except auth buttons on mobile for a clean look */
-            .nav-links a:not(.btn-login):not(.btn-signup) {
-                display: none;
+            .logo {
+                width: 100%;
+                text-align: center;
             }
 
             .nav-links {
-                gap: 10px;
+                gap: 15px;
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .nav-links a {
+                margin-left: 0;
+                font-size: 0.95rem;
             }
 
             .btn-login,
@@ -284,16 +338,8 @@
                 style="height: 40px; vertical-align: middle; margin-right: 10px;">
             Luminary
         </div>
-        <div class="nav-links">
-            <a href="/main.html">
-                <i class="fas fa-home"></i> Home
-            </a>
-            <a href="/books.html">
-                <i class="fas fa-book"></i> Books
-            </a>
-            <a href="/profile.html" id="goToProfile">
-                <i class="fas fa-user"></i> Profile
-            </a>
+        <div class="nav-links" id="navLinksContainer">
+            <!-- Dynamically populated based on auth status -->
         </div>
     </nav>
 
@@ -351,14 +397,17 @@
     <footer>
         &copy; 2026 Luminary. All rights reserved. <br>
         <div style="margin-top:10px;">
-            <a href="legal.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Privacy & Terms</a> |
-            <a href="community.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Community
+            <a href="legal.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Privacy &
+                Terms</a> |
+            <a href="community.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Community
                 Guidelines</a> |
-            <a href="documentation.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Documentation</a> |
-            <a href="main.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Feed</a> |
-            <a href="profile.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Profile</a> |
-            <a href="publish.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Studio</a> |
-            <a href="creator-kit.html" style="color:#64748b; margin:0 10px; text-decoration:none;">Creator Kit</a>
+            <a href="documentation.html"
+                style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Documentation</a> |
+            <a href="main.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Feed</a> |
+            <a href="profile.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Profile</a> |
+            <a href="publish.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Studio</a> |
+            <a href="creator-kit.html" style="color:var(--text-muted); margin:0 10px; text-decoration:none;">Creator
+                Kit</a>
         </div>
     </footer>
 
@@ -378,6 +427,27 @@
             el.style.transform = 'translateY(20px)';
             el.style.transition = 'all 0.6s ease-out';
             observer.observe(el);
+        });
+
+        // Dynamic Auth Navbar
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('token');
+            const navContainer = document.getElementById('navLinksContainer');
+
+            if (token) {
+                // User is logged in
+                navContainer.innerHTML = `
+                    <a href="/main.html"><i class="fas fa-home"></i> Home</a>
+                    <a href="/books.html"><i class="fas fa-book"></i> Books</a>
+                    <a href="/profile.html"><i class="fas fa-user"></i> Profile</a>
+                `;
+            } else {
+                // User is not logged in
+                navContainer.innerHTML = `
+                    <a href="/auth.html" class="btn-login">Log In</a>
+                    <a href="/auth.html" class="btn-signup">Sign Up</a>
+                `;
+            }
         });
     </script>
 </body>

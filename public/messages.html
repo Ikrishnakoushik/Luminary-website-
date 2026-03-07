@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Messages</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
 
     <!-- Google Fonts: Outfit -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -408,24 +410,7 @@
         }
 
         /* Custom Scrollbar for Theme Consistency */
-        ::-webkit-scrollbar {
-            width: 8px;
-            height: 8px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: var(--bg-color);
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: var(--border);
-            border-radius: 10px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: var(--text-muted);
-        }
-    </style>
+        </style>
 </head>
 
 <body>
@@ -504,7 +489,7 @@
         function enforceLogin(e) {
             if (!localStorage.getItem('token')) {
                 if (e) e.preventDefault();
-                alert('Please login to access this feature!');
+                LuminaryUI.showToast('Please login to access this feature!', 'error');
                 window.location.href = 'auth.html';
                 return false;
             }
@@ -708,7 +693,7 @@
                     // Update sidebar internally without reloading chat
                     loadConversations();
                 } else {
-                    alert("Failed to send message!");
+                    LuminaryUI.showToast("Failed to send message!", 'error');
                 }
             } catch (e) {
                 console.error(e);

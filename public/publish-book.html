@@ -7,25 +7,26 @@
     <title>Publish a Book | Luminary</title>
     <!-- Use same theme-loader as the rest of the app -->
     <script src="/theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <style>
         :root {
-            --primary: #8A2BE2;
-            --primary-light: #9d4edd;
-            --bg: #0f1016;
-            --surface: rgba(30, 30, 36, 0.6);
-            --surface-hover: rgba(45, 45, 55, 0.8);
-            --text: #ffffff;
-            --text-secondary: #a1a1aa;
-            --border: rgba(255, 255, 255, 0.08);
-            --nav-bg: rgba(15, 16, 22, 0.85);
+            --primary-btn: var(--primary, #8A2BE2);
+            --bg-base: var(--bg-color, #0f1016);
+            --surface-base: var(--surface, rgba(30, 30, 36, 0.6));
+            --surface-hover: var(--surface-light, rgba(128, 128, 128, 0.1));
+            --text-base: var(--text-main, #ffffff);
+            --text-muted: var(--text-muted, #a1a1aa);
+            --border-base: var(--border, rgba(255, 255, 255, 0.08));
+            --nav-bg: var(--bg-color, rgba(15, 16, 22, 0.85));
         }
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg);
+            background-color: var(--bg-base);
             background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
-            color: var(--text);
+            color: var(--text-base);
             margin: 0;
             padding: 0;
             display: flex;
@@ -42,7 +43,7 @@
             background: var(--nav-bg);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
+            border-bottom: 1px solid var(--border-base);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -57,6 +58,7 @@
             text-decoration: none;
             background: linear-gradient(to right, #b366ff, #ec4899);
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
@@ -71,7 +73,7 @@
 
         .nav-link {
             text-decoration: none;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-size: 0.95rem;
             font-weight: 500;
             transition: color 0.3s;
@@ -81,7 +83,7 @@
         }
 
         .nav-link:hover {
-            color: var(--text);
+            color: var(--text-base);
         }
 
         .main-container {
@@ -103,35 +105,39 @@
         }
 
         .header h2 {
-            font-size: 2rem;
+            font-size: 2.2rem;
             margin: 0;
+            background: linear-gradient(90deg, var(--primary-btn), var(--text-base));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
         }
 
         .back-btn {
-            background: transparent;
-            color: var(--text-secondary);
-            border: 1px solid var(--border);
-            padding: 10px 20px;
-            border-radius: 20px;
-            cursor: pointer;
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border-base);
+            color: var(--text-base);
+            padding: 10px 16px;
+            border-radius: 8px;
             text-decoration: none;
-            display: inline-flex;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s;
+            display: flex;
             align-items: center;
             gap: 8px;
-            transition: all 0.3s;
         }
 
         .back-btn:hover {
-            color: var(--text);
-            border-color: var(--text);
+            background: var(--surface-hover);
         }
 
         /* Form Styling - Premium Look */
         .form-container {
-            background: var(--surface);
-            border-radius: 16px;
+            background: var(--surface-base);
+            border-radius: 12px;
+            border: 1px solid var(--border-base);
             padding: 40px;
-            border: 1px solid var(--border);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 30px;
         }
@@ -142,9 +148,9 @@
 
         .form-group label {
             display: block;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-weight: 600;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-size: 0.95rem;
             letter-spacing: 0.5px;
         }
@@ -152,9 +158,9 @@
         .form-control {
             width: 100%;
             padding: 16px 20px;
-            background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border);
-            color: var(--text);
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border-base);
+            color: var(--text-base);
             border-radius: 12px;
             font-family: inherit;
             font-size: 1rem;
@@ -164,30 +170,30 @@
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary);
+            border-color: var(--primary-btn);
             box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(128, 128, 128, 0.12);
         }
 
         /* Content Editor Customization */
         .editor-container {
-            border: 1px solid var(--border);
+            border: 1px solid var(--border-base);
             border-radius: 12px;
             overflow: hidden;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(128, 128, 128, 0.08);
             margin-top: 10px;
             transition: border-color 0.3s;
         }
 
         .editor-container:focus-within {
-            border-color: var(--primary);
+            border-color: var(--primary-btn);
             box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
         }
 
         .editor-toolbar {
             padding: 12px 15px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid var(--border-base);
+            background: rgba(128, 128, 128, 0.05);
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
@@ -197,7 +203,7 @@
         .editor-btn {
             background: transparent;
             border: none;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             cursor: pointer;
             width: 36px;
             height: 36px;
@@ -209,8 +215,8 @@
         }
 
         .editor-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--text);
+            background: var(--surface-hover);
+            color: var(--text-base);
         }
 
         .editor-area {
@@ -222,33 +228,43 @@
             font-size: 1.15rem;
             overflow-y: auto;
             max-height: 60vh;
-            color: #f1f5f9;
+            color: var(--text-base);
         }
 
         .editor-area h1 {
             font-size: 2.2rem;
-            color: #fff;
+            color: var(--text-base);
             margin-bottom: 20px;
         }
 
         .editor-area h2 {
             font-size: 1.8rem;
-            color: #fff;
+            color: var(--text-base);
             margin-bottom: 15px;
         }
 
         .editor-area blockquote {
-            border-left: 4px solid var(--primary);
+            border-left: 4px solid var(--primary-btn);
             margin: 20px 0;
             padding: 10px 20px;
             font-style: italic;
-            color: #cbd5e1;
-            background: rgba(138, 43, 226, 0.05);
+            color: var(--text-muted);
+            background: rgba(128, 128, 128, 0.08);
             border-radius: 0 8px 8px 0;
         }
 
+        .editor-area a {
+            color: var(--primary-btn);
+            text-decoration: underline;
+            transition: color 0.2s;
+        }
+
+        .editor-area a:hover {
+            color: #b366ff;
+        }
+
         .submit-btn {
-            background: linear-gradient(135deg, var(--primary), #b366ff);
+            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
             color: white;
             border: none;
             padding: 18px 30px;
@@ -279,6 +295,93 @@
             display: none;
             font-weight: 500;
         }
+
+        /* Custom Prompt Modal */
+        .prompt-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .prompt-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .prompt-box {
+            background: var(--surface-base);
+            border: 1px solid var(--border-base);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 450px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .prompt-overlay.active .prompt-box {
+            transform: translateY(0);
+        }
+
+        .prompt-title {
+            margin: 0 0 15px 0;
+            font-size: 1.25rem;
+            color: var(--text-base);
+        }
+
+        .prompt-input {
+            margin-bottom: 25px;
+        }
+
+        .prompt-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 15px;
+        }
+
+        .prompt-actions .btn-cancel {
+            background: rgba(128, 128, 128, 0.1);
+            border: none;
+            color: var(--text-base);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .prompt-actions .btn-cancel:hover {
+            background: rgba(128, 128, 128, 0.2);
+        }
+
+        .prompt-actions .btn-confirm {
+            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .prompt-actions .btn-confirm:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -293,6 +396,8 @@
         <div class="nav-links">
             <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> App Home</a>
             <a href="/books.html" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/studio.html" class="nav-link active" id="studioLink" style="display:none;"><i
+                    class="fas fa-pen-nib"></i> Studio</a>
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </nav>
@@ -308,10 +413,18 @@
 
         <div class="form-container">
             <form id="publishForm">
-                <div class="form-group">
-                    <label for="bookTitle">Book Title</label>
-                    <input type="text" id="bookTitle" class="form-control" placeholder="e.g. The Winds of Change"
-                        required>
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="bookTitle">Book Title</label>
+                        <input type="text" id="bookTitle" class="form-control" placeholder="e.g. The Winds of Change"
+                            required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="penName">Pen Name (Optional)</label>
+                        <input type="text" id="penName" class="form-control" placeholder="e.g. J.K. Rowling">
+                        <small style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px; display: block;">If
+                            left blank, your profile name will be used.</small>
+                    </div>
                 </div>
 
                 <div class="form-group">
@@ -368,6 +481,14 @@
                                 title="Bullet List"><i class="fas fa-list-ul"></i></button>
                             <button type="button" class="editor-btn" onclick="formatDoc('insertOrderedList')"
                                 title="Numbered List"><i class="fas fa-list-ol"></i></button>
+                            <div style="width: 1px; height: 24px; background: var(--border-base); margin: 0 5px;">
+                            </div>
+                            <button type="button" class="editor-btn" onclick="insertLink()" title="Insert Link"><i
+                                    class="fas fa-link"></i></button>
+                            <button type="button" class="editor-btn" onclick="formatDoc('unlink')"
+                                title="Remove Link"><i class="fas fa-unlink"></i></button>
+                            <button type="button" class="editor-btn" onclick="insertImage()" title="Insert Image"><i
+                                    class="fas fa-image"></i></button>
                         </div>
                         <!-- The editable area for book content -->
                         <div id="bookContent" class="editor-area" contenteditable="true"
@@ -384,6 +505,18 @@
         </div>
     </div>
 
+    <!-- Custom Prompt Modal -->
+    <div id="customPromptOverlay" class="prompt-overlay">
+        <div class="prompt-box">
+            <h3 id="promptTitle" class="prompt-title">Enter URL</h3>
+            <input type="text" id="promptInput" class="form-control prompt-input" placeholder="https://...">
+            <div class="prompt-actions">
+                <button type="button" class="btn-cancel" id="promptCancel">Cancel</button>
+                <button type="button" class="btn-confirm" id="promptConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         const token = localStorage.getItem('token');
@@ -395,15 +528,21 @@
         // Check if user is publisher
         async function checkRole() {
             try {
+                const currentToken = localStorage.getItem('token');
                 const res = await fetch(`${API_URL}/users/profile`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'x-auth-token': currentToken }
                 });
                 if (res.ok) {
                     const user = await res.json();
                     if (user.role !== 'publisher') {
-                        alert('Only publishers can create books.');
+                        LuminaryUI.showToast('Only publishers can create books.', 'error');
                         window.location.href = '/books.html';
+                    } else {
+                        document.getElementById('studioLink').style.display = 'flex';
                     }
+                } else if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/auth.html';
                 }
             } catch (err) {
                 console.error("Error fetching user:", err);
@@ -418,6 +557,112 @@
             document.getElementById('bookContent').focus();
         }
 
+        // Custom Prompt Logic
+        let currentPromptCallback = null;
+
+        function showPrompt(title, placeholder, callback) {
+            const overlay = document.getElementById('customPromptOverlay');
+            const titleEl = document.getElementById('promptTitle');
+            const inputEl = document.getElementById('promptInput');
+
+            titleEl.textContent = title;
+            inputEl.placeholder = placeholder;
+            inputEl.value = '';
+            currentPromptCallback = callback;
+
+            overlay.style.display = 'flex';
+            // Force reflow
+            void overlay.offsetWidth;
+            overlay.classList.add('active');
+            inputEl.focus();
+        }
+
+        function closePrompt() {
+            const overlay = document.getElementById('customPromptOverlay');
+            overlay.classList.remove('active');
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 300);
+            currentPromptCallback = null;
+        }
+
+        document.getElementById('promptCancel').addEventListener('click', closePrompt);
+
+        document.getElementById('promptConfirm').addEventListener('click', () => {
+            const val = document.getElementById('promptInput').value.trim();
+            if (currentPromptCallback && val) {
+                currentPromptCallback(val);
+            }
+            closePrompt();
+        });
+
+        document.getElementById('promptInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('promptConfirm').click();
+            }
+        });
+
+        function insertImage() {
+            showPrompt("Insert Image", "Enter the image URL (e.g. https://...)", (url) => {
+                if (url) {
+                    // Ensure image is responsive and visually appealing with standard HTML insertion
+                    const imgHtml = `<img src="${url}" alt="Embedded Image" style="max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">`;
+                    document.execCommand('insertHTML', false, imgHtml);
+                    document.getElementById('bookContent').focus();
+                }
+            });
+        }
+
+        function insertLink() {
+            showPrompt("Insert Link", "Enter the link URL (e.g. https://luminary.com)", (url) => {
+                if (url) {
+                    document.execCommand('createLink', false, url);
+                    document.getElementById('bookContent').focus();
+                }
+            });
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const editId = urlParams.get('editId');
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            if (editId) {
+                document.querySelector('.header h2').innerText = 'Edit Book';
+                document.getElementById('submitBtn').innerHTML = '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book';
+
+                try {
+                    const res = await fetch(`${API_URL}/books/${editId}`, {
+                        headers: { 'x-auth-token': token || localStorage.getItem('token') }
+                    });
+                    if (res.ok) {
+                        const book = await res.json();
+                        document.getElementById('bookTitle').value = book.title;
+                        document.getElementById('penName').value = book.penName || '';
+                        document.getElementById('bookDescription').value = book.description;
+                        document.getElementById('bookCover').value = book.coverImage || '';
+                        document.getElementById('bookPrice').value = book.price || 0;
+                        document.getElementById('bookContent').innerHTML = book.content;
+                    } else {
+                        alert('Could not load book for editing. Are you the author?');
+                        window.location.href = '/books.html';
+                    }
+                } catch (err) {
+                    console.error("Error loading book to edit:", err);
+                }
+            } else {
+                // Restore draft if available
+                const draftTitle = localStorage.getItem('draftTitle');
+                const draftPenName = localStorage.getItem('draftPenName');
+                const draftContent = localStorage.getItem('draftContent');
+                const draftDesc = localStorage.getItem('draftDescription');
+                if (draftTitle) document.getElementById('bookTitle').value = draftTitle;
+                if (draftPenName) document.getElementById('penName').value = draftPenName;
+                if (draftDesc) document.getElementById('bookDescription').value = draftDesc;
+                if (draftContent) document.getElementById('bookContent').innerHTML = draftContent;
+            }
+        });
+
         // Submit form
         document.getElementById('publishForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -426,10 +671,17 @@
             const errorMsg = document.getElementById('errorMsg');
 
             const title = document.getElementById('bookTitle').value;
+            const penName = document.getElementById('penName').value;
             const description = document.getElementById('bookDescription').value;
             const coverImage = document.getElementById('bookCover').value;
             const price = parseFloat(document.getElementById('bookPrice').value) || 0;
             const content = document.getElementById('bookContent').innerHTML;
+
+            // Save draft automatically on submit attempt
+            localStorage.setItem('draftTitle', title);
+            localStorage.setItem('draftPenName', penName);
+            localStorage.setItem('draftContent', content);
+            localStorage.setItem('draftDescription', description);
 
             if (!content || content.trim() === '') {
                 errorMsg.textContent = 'Book content cannot be empty.';
@@ -442,38 +694,67 @@
             errorMsg.style.display = 'none';
 
             try {
-                const res = await fetch(`${API_URL}/books`, {
-                    method: 'POST',
+                const currentToken = localStorage.getItem('token');
+
+                let method = 'POST';
+                let endpoint = `${API_URL}/books`;
+
+                if (editId) {
+                    method = 'PUT';
+                    endpoint = `${API_URL}/books/${editId}`;
+                }
+
+                const res = await fetch(endpoint, {
+                    method: method,
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
+                        'x-auth-token': currentToken
                     },
                     body: JSON.stringify({
                         title,
                         description,
                         coverImage,
                         price,
-                        content
+                        content,
+                        penName
                     })
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert('Book published successfully!');
+                    if (editId) {
+                        alert('Book updated successfully!');
+                    } else {
+                        alert('Book published successfully!');
+                    }
+                    localStorage.removeItem('draftTitle');
+                    localStorage.removeItem('draftPenName');
+                    localStorage.removeItem('draftContent');
+                    localStorage.removeItem('draftDescription');
                     window.location.href = '/books.html';
                 } else {
-                    errorMsg.querySelector('span').textContent = data.msg || 'Error publishing book.';
+                    if (res.status === 401 && (data.msg === 'Token is not valid' || data.msg.includes('No token'))) {
+                        alert("Your login session has expired! We've saved your draft. Please log back in to continue.");
+                        localStorage.setItem('draftTitle', title);
+                        localStorage.setItem('draftPenName', penName);
+                        localStorage.setItem('draftContent', content);
+                        localStorage.setItem('draftDescription', description);
+                        localStorage.removeItem('token');
+                        window.location.href = '/auth.html';
+                        return;
+                    }
+                    errorMsg.querySelector('span').textContent = data.msg || 'Error publishing/updating book.';
                     errorMsg.style.display = 'block';
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
+                    btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
                 }
             } catch (err) {
                 console.error('Error:', err);
                 errorMsg.querySelector('span').textContent = 'Network error. Please try again.';
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
+                btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
             }
         });
 

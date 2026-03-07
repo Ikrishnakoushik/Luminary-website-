@@ -64,6 +64,15 @@ const UserSchema = new mongoose.Schema({
         type: String,
         default: null
     },
+    preferredPaymentMethod: {
+        type: String,
+        enum: ['stripe', 'paypal', 'upi', 'manual'],
+        default: 'manual'
+    },
+    paymentHandle: {
+        type: String, // email for paypal, id for upi, etc
+        default: ''
+    },
     balance: {
         type: Number,
         default: 0

@@ -10,6 +10,10 @@ const BookSchema = new mongoose.Schema({
         ref: 'User',
         required: true
     },
+    penName: {
+        type: String,
+        default: ''
+    },
     description: {
         type: String,
         required: true
@@ -25,6 +29,10 @@ const BookSchema = new mongoose.Schema({
     content: {
         type: String, // Storing HTML or structured JSON depending on editor
         required: true
+    },
+    isPublished: {
+        type: Boolean,
+        default: true
     },
     createdAt: {
         type: Date,

@@ -10,15 +10,42 @@ const User = require('./models/User');
 const Post = require('./models/Post');
 const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
-const seedData = require('./seed'); // Import seed script
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
+let resend;
+if (process.env.RESEND_API_KEY) {
+    resend = new Resend(process.env.RESEND_API_KEY);
+} else {
+    resend = null;
+}
+const stripeSecret = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
+const stripe = require('stripe')(stripeSecret);
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+// Stripe API Mock Interceptor for Local Development
+// If the key is the default placeholder or 'mock', we intercept Stripe calls to prevent 500 errors
+if (stripeSecret === 'sk_test_mock' || stripeSecret.includes('aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0')) {
+    console.log('[Stripe Mock] Using mocked Stripe API for local development.');
+
+    // Override methods directly instead of the entire readonly nested object
+    stripe.checkout.sessions.create = async (params) => {
+        const sessionId = `cs_test_${Math.random().toString(36).substr(2, 24)}`;
+        // Convert the success URL to use the new mock session ID
+        const redirectUrl = params.success_url.replace('{CHECKOUT_SESSION_ID}', sessionId);
+
+        return {
+            id: sessionId,
+            url: `/mock-checkout.html?redirect=${encodeURIComponent(redirectUrl)}&amount=${params.line_items[0].price_data.unit_amount}`
+        };
+    };
+
+    stripe.checkout.sessions.retrieve = async (sessionId) => {
+        return { payment_status: 'paid', id: sessionId };
+    };
+}
 
 // Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
@@ -108,6 +135,7 @@ const auth = (req, res, next) => {
         req.user = decoded.user;
         next();
     } catch (err) {
+        console.log(`[DEBUG AUTH] Token validation failed. Error: ${err.message}. Token snippets: prefix(${token.substring(0, 10)}) length(${token.length}) secretLength(${JWT_SECRET.length})`);
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };
@@ -714,18 +742,6 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// Seeding Route (Protected by simple query param or removed after use)
-app.get('/api/seed_db', async (req, res) => {
-    try {
-        console.log('Starting remote seeding...');
-        await seedData();
-        res.send('Seeding Complete! Database populated.');
-    } catch (err) {
-        console.error('Seeding Failed:', err);
-        res.status(500).send('Seeding Failed: ' + err.message);
-    }
-});
-
 // Health Check
 app.get('/ping', (req, res) => {
     console.log('Ping received');
@@ -852,7 +868,26 @@ app.get('/api/search', async (req, res) => {
 app.get('/api/books', async (req, res) => {
     try {
         const books = await Book.find().populate('author', 'username displayName profilePicture').sort({ createdAt: -1 });
-        res.json(books);
+
+        let currentUser = null;
+        const token = req.header('x-auth-token');
+        if (token) {
+            try {
+                const decoded = jwt.verify(token, JWT_SECRET);
+                currentUser = await User.findById(decoded.user.id);
+            } catch (err) { }
+        }
+
+        const filteredBooks = books.filter(book => {
+            if (book.isPublished !== false) return true; // Show if published or undefined
+            if (!currentUser) return false;
+            // Show unpublished only to author or someone who purchased it
+            if (book.author._id.toString() === currentUser._id.toString()) return true;
+            if (currentUser.purchasedBooks.includes(book._id)) return true;
+            return false;
+        });
+
+        res.json(filteredBooks);
     } catch (err) {
         console.error('Error fetching books:', err);
         res.status(500).json({ msg: 'Server Error' });
@@ -870,6 +905,10 @@ app.get('/api/books/:id', auth, async (req, res) => {
         const isAuthor = book.author._id.toString() === req.user.id;
         const hasPurchased = user.purchasedBooks.includes(book._id);
 
+        if (book.isPublished === false && !isAuthor && !hasPurchased) {
+            return res.status(404).json({ msg: 'Book not found or unpublished' });
+        }
+
         if (!isAuthor && !hasPurchased && book.price > 0) {
             const restrictedBook = book.toObject();
             restrictedBook.content = "Please purchase the book to read the full content.";
@@ -886,7 +925,7 @@ app.get('/api/books/:id', auth, async (req, res) => {
 // Publish a Book
 app.post('/api/books', auth, async (req, res) => {
     try {
-        const { title, description, price, coverImage, content } = req.body;
+        const { title, description, price, coverImage, content, penName } = req.body;
 
         // Check if publisher
         if (req.user.role !== 'publisher') {
@@ -899,6 +938,7 @@ app.post('/api/books', auth, async (req, res) => {
             price: price || 0,
             coverImage: coverImage || '',
             content,
+            penName: penName || '',
             author: req.user.id
         });
 
@@ -914,55 +954,313 @@ app.post('/api/books', auth, async (req, res) => {
     }
 });
 
-// Purchase a Book
-app.post('/api/books/:id/purchase', auth, async (req, res) => {
+// Update a Book
+app.put('/api/books/:id', auth, async (req, res) => {
+    try {
+        const { title, description, price, coverImage, content, penName } = req.body;
+
+        let book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        // Ensure user is author
+        if (book.author.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to edit this book' });
+        }
+
+        // Update fields
+        if (title) book.title = title;
+        if (description) book.description = description;
+        if (price !== undefined) book.price = price;
+        if (coverImage !== undefined) book.coverImage = coverImage;
+        if (content) book.content = content;
+        if (penName !== undefined) book.penName = penName;
+
+        await book.save();
+        res.json(book);
+    } catch (err) {
+        console.error('Error updating book:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Toggle Publish Status of a Book
+app.put('/api/books/:id/unpublish', auth, async (req, res) => {
+    try {
+        let book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        if (book.author.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to toggle publish status' });
+        }
+
+        // Default is true if undefined, so toggle the opposite
+        book.isPublished = book.isPublished === false ? true : false;
+        await book.save();
+        res.json({ msg: book.isPublished ? 'Book published successfully!' : 'Book unpublished successfully', book });
+    } catch (err) {
+        console.error('Error unpublishing book:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Delete a Book (Hard delete + refund)
+app.delete('/api/books/:id', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        // Ensure user is author
+        if (book.author.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'Not authorized to delete this book' });
+        }
+
+        // Calculate refunds
+        const purchasers = await User.find({ purchasedBooks: book._id });
+        const refundAmount = (book.price || 0) * purchasers.length;
+
+        // Verify author has enough balance
+        const author = await User.findById(req.user.id);
+        if (author.balance < refundAmount) {
+            return res.status(400).json({ msg: `Insufficient balance for refunds. Required: $${refundAmount}, Available: $${author.balance}` });
+        }
+
+        // Deduct balance from author
+        if (refundAmount > 0) {
+            author.balance -= refundAmount;
+            await author.save();
+        }
+
+        // Remove from purchasers' libraries
+        await User.updateMany(
+            { purchasedBooks: book._id },
+            { $pull: { purchasedBooks: book._id } }
+        );
+
+        await book.deleteOne();
+
+        // Remove from author's publishedBooks array
+        await User.findByIdAndUpdate(req.user.id, { $pull: { publishedBooks: req.params.id } });
+
+        res.json({ msg: refundAmount > 0 ? `Book deleted and $${refundAmount} automatically refunded from your balance.` : 'Free Book completely deleted.' });
+    } catch (err) {
+        console.error('Error deleting book:', err);
+        if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Unified Purchase Intent (Multi-Gateway)
+app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const { gateway } = req.body;
+        const user = await User.findById(req.user.id);
+
+        if (user.purchasedBooks.includes(book._id)) {
+            return res.status(400).json({ msg: 'Already purchased' });
+        }
+
+        // For MVP, all payment intents route through Stripe Checkout
+        // This gives us a single, secure, production-ready payment flow
+
+        // Convert price to cents (Stripe requires smallest currency unit)
+        const priceInCents = Math.round((book.price || 0) * 100);
+
+        // Define success and cancel URLs
+        const domainURL = req.headers.origin || `http://${req.headers.host}`;
+        const successUrl = `${domainURL}/books.html?success=true&session_id={CHECKOUT_SESSION_ID}&book_id=${book._id}`;
+        const cancelUrl = `${domainURL}/books.html?canceled=true`;
+
+        // Create a real Stripe Checkout Session
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            mode: 'payment',
+            line_items: [{
+                price_data: {
+                    currency: 'usd',
+                    product_data: {
+                        name: book.title,
+                        description: `By ${book.author.displayName || book.author.username}`,
+                        images: book.coverImage ? [book.coverImage] : [],
+                    },
+                    unit_amount: priceInCents,
+                },
+                quantity: 1,
+            }],
+            metadata: {
+                bookId: book._id.toString(),
+                userId: user._id.toString()
+            },
+            success_url: successUrl,
+            cancel_url: cancelUrl,
+        });
+
+        // Redirect the client to the Stripe-hosted checkout page
+        return res.json({
+            type: 'redirect',
+            url: session.url
+        });
+
+    } catch (err) {
+        console.error('Purchase Intent Error:', err);
+        res.status(500).json({ msg: 'Payment initialization failed: ' + err.message });
+    }
+});
+
+// Create Stripe Checkout Session for a Book (Legacy - keep for backward compat or refactor)
+app.post('/api/books/:id/create-checkout-session', auth, async (req, res) => {
     try {
         const book = await Book.findById(req.params.id);
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
         const user = await User.findById(req.user.id);
-
         if (user.purchasedBooks.includes(book._id)) {
             return res.status(400).json({ msg: 'You have already purchased this book' });
         }
 
-        // Mock Stripe Payment Split
-        // If the book costs $10, 80% goes to the publisher.
+        // Create Checkout Session
+        const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
+            line_items: [
+                {
+                    price_data: {
+                        currency: 'usd',
+                        product_data: {
+                            name: book.title,
+                            description: book.description || 'A great book on Luminary.',
+                            images: book.coverImage ? [book.coverImage.startsWith('http') ? book.coverImage : `http://localhost:3000${book.coverImage}`] : [],
+                        },
+                        unit_amount: Math.round((book.price || 0) * 100), // Stripe expects cents
+                    },
+                    quantity: 1,
+                },
+            ],
+            mode: 'payment',
+            success_url: `http://localhost:3000/books.html?session_id={CHECKOUT_SESSION_ID}&book_id=${book._id}&success=true`,
+            cancel_url: `http://localhost:3000/books.html?canceled=true`,
+            client_reference_id: req.user.id,
+            metadata: {
+                bookId: book._id.toString(),
+                userId: req.user.id.toString(),
+                publisherId: book.author.toString()
+            }
+        });
+
+        res.json({ id: session.id, url: session.url });
+    } catch (err) {
+        console.error('Stripe Session Error:', err);
+        res.status(500).json({ msg: 'Payment Service Error: ' + err.message });
+    }
+});
+
+// Create Mock/Manual Purchase (Alternative to Stripe)
+app.post('/api/books/:id/purchase-mock', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const user = await User.findById(req.user.id);
+        if (user.purchasedBooks.includes(book._id)) {
+            return res.status(400).json({ msg: 'You have already purchased this book' });
+        }
+
+        // Fulfill order immediately (Mock success)
+        user.purchasedBooks.push(book._id);
+        await user.save();
+
+        // Pay publisher (Update their mock balance)
         const publisher = await User.findById(book.author);
-        if (publisher && publisher.stripeAccountId) {
+        if (publisher) {
             const publisherCut = (book.price || 0) * 0.8;
             publisher.balance = (publisher.balance || 0) + publisherCut;
             await publisher.save();
         }
 
-        user.purchasedBooks.push(book._id);
-        await user.save();
-
-        res.json({ msg: 'Book purchased successfully', bookId: book._id });
+        res.json({ msg: 'Success! Book added to your library.', bookId: book._id });
     } catch (err) {
-        console.error('Error purchasing book:', err);
+        console.error('Mock Purchase Error:', err);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Verify Purchase after redirect
+app.post('/api/books/verify-purchase', auth, async (req, res) => {
+    try {
+        const { session_id, book_id } = req.body;
+        let isPaid = false;
+
+        if (session_id.startsWith('mock_') || session_id.startsWith('cs_test_')) {
+            // Simulated Success for local testing
+            isPaid = true;
+        } else {
+            // Real Stripe Verification
+            const session = await stripe.checkout.sessions.retrieve(session_id);
+            if (session.payment_status === 'paid') {
+                isPaid = true;
+            }
+        }
+
+        if (isPaid) {
+            const user = await User.findById(req.user.id);
+            if (!user.purchasedBooks.includes(book_id)) {
+                // Fulfill order
+                user.purchasedBooks.push(book_id);
+                await user.save();
+
+                // Credit publisher's internal balance
+                const book = await Book.findById(book_id);
+                if (book) {
+                    const publisher = await User.findById(book.author);
+                    if (publisher) {
+                        const publisherCut = (book.price || 0) * 0.8;
+                        publisher.balance = (publisher.balance || 0) + publisherCut;
+                        await publisher.save();
+                    }
+                }
+            }
+            res.json({ msg: 'Purchase verified successfully' });
+        } else {
+            res.status(400).json({ msg: 'Payment not successful' });
+        }
+    } catch (err) {
+        console.error('Verify Purchase Error:', err);
         res.status(500).json({ msg: 'Server Error' });
     }
 });
 
 
-// Onboard Publisher (Mock Stripe Connect)
+
+// Onboard Publisher (Multi-Method Support)
 app.post('/api/publisher/onboard', auth, async (req, res) => {
     try {
+        const { method, handle } = req.body;
         const user = await User.findById(req.user.id);
+
         if (user.role !== 'publisher') {
             return res.status(403).json({ msg: 'Only publishers can onboard' });
         }
 
-        if (user.stripeAccountId) {
-            return res.status(400).json({ msg: 'Already connected to Stripe' });
+        if (method === 'stripe') {
+            // Legacy/Mock Stripe logic
+            if (!user.stripeAccountId) {
+                user.stripeAccountId = `acct_mock_${Math.random().toString(36).substr(2, 10)}`;
+            }
+            user.preferredPaymentMethod = 'stripe';
+        } else if (['paypal', 'upi', 'manual'].includes(method)) {
+            user.preferredPaymentMethod = method;
+            user.paymentHandle = handle || '';
+        } else {
+            return res.status(400).json({ msg: 'Invalid payment method' });
         }
 
-        // Generate a mock Stripe account ID
-        user.stripeAccountId = `acct_mock_${Math.random().toString(36).substr(2, 10)}`;
         await user.save();
-
-        res.json({ msg: 'Successfully connected bank account!', stripeAccountId: user.stripeAccountId });
+        res.json({
+            msg: `Successfully connected ${method}!`,
+            preferredPaymentMethod: user.preferredPaymentMethod,
+            paymentHandle: user.paymentHandle
+        });
     } catch (err) {
         console.error('Error onboarding publisher:', err);
         res.status(500).json({ msg: 'Server Error' });
@@ -1143,4 +1441,8 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+}
+
+module.exports = app;

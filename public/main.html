@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Luminary - Home</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -24,7 +26,7 @@
         function enforceLogin(e) {
             if (!localStorage.getItem('token')) {
                 if (e) e.preventDefault();
-                alert('Please login to access this feature!');
+                LuminaryUI.showToast('Please login to access this feature!', 'error');
                 window.location.href = 'auth.html';
                 return false;
             }
@@ -95,6 +97,7 @@
             background: linear-gradient(to right, var(--primary), var(--accent));
             background-clip: text;
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             text-decoration: none;
         }
@@ -206,11 +209,6 @@
             /* Firefox */
             -ms-overflow-style: none;
             /* IE/Edge */
-        }
-
-        .sidebar-left::-webkit-scrollbar {
-            display: none;
-            /* Chrome/Safari */
         }
 
         .nav-item {
@@ -335,7 +333,7 @@
         .post-content {
             font-size: 1rem;
             line-height: 1.6;
-            color: #334155;
+            color: var(--text-main);
             white-space: pre-wrap;
         }
 
@@ -409,11 +407,6 @@
             /* Firefox */
             -ms-overflow-style: none;
             /* IE/Edge */
-        }
-
-        .sidebar-right::-webkit-scrollbar {
-            display: none;
-            /* Chrome/Safari */
         }
 
         .widget {
@@ -518,10 +511,6 @@
                 position: sticky;
                 top: var(--header-height);
                 z-index: 95;
-            }
-
-            .mobile-categories::-webkit-scrollbar {
-                display: none;
             }
 
             .category-pill {
@@ -798,13 +787,13 @@
             font-size: 3rem;
             font-weight: 800;
             line-height: 1.2;
-            color: #0f172a;
+            color: var(--text-main);
             margin-bottom: 20px;
             letter-spacing: -0.02em;
         }
 
         .reader-meta {
-            color: #64748b;
+            color: var(--text-muted);
             font-size: 1rem;
             margin-bottom: 40px;
             padding-bottom: 30px;
@@ -822,7 +811,7 @@
             /* Classic serif for reading */
             font-size: 1.25rem;
             line-height: 1.8;
-            color: #334155;
+            color: var(--text-main);
         }
 
         .reader-body p {
@@ -834,7 +823,7 @@
             font-size: 2rem;
             margin-top: 2em;
             margin-bottom: 0.8em;
-            color: #1e293b;
+            color: var(--text-main);
             font-weight: 700;
         }
 
@@ -843,7 +832,7 @@
             font-size: 1.5rem;
             margin-top: 1.5em;
             margin-bottom: 0.6em;
-            color: #334155;
+            color: var(--text-main);
             font-weight: 600;
         }
 
@@ -872,7 +861,7 @@
             margin: 2.5em 0;
             font-size: 1.4rem;
             font-style: italic;
-            color: #475569;
+            color: var(--text-muted);
             background: linear-gradient(to right, var(--surface), transparent);
             border-radius: 0 12px 12px 0;
             font-family: 'Georgia', serif;
@@ -1642,7 +1631,7 @@
                     } else if (fullContent.length > 300) {
                         // Medium length: Use inline expand (keep as text link in content)
                         const displayContent = formattedFull.substring(0, 300) + '...';
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: #334155;">
+                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
                                                                             <span class="post-text-body">${displayContent}</span>
                                                                             <span class="read-more-btn" onclick="toggleReadMore(this)"
                                                                                 data-full="${encodeURIComponent(formattedFull)}"
@@ -1651,7 +1640,7 @@
                                                                         </div>`;
                     } else {
                         // Short content
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: #334155;">
+                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
                         <span class="post-text-body">${formattedFull}</span>
                     </div>`;
                     }
@@ -1664,7 +1653,7 @@
                         // Show teaser text for long posts too? Yes, usually good.
                         // Let's show the first 300 chars then the button is in action bar.
                         const displayTeaser = formattedFull.substring(0, 300) + '...';
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: #334155;">
+                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
                                                                             <span class="post-text-body">${displayTeaser}</span>
                                                                         </div>`;
                     }

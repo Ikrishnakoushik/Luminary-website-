@@ -6,17 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Guidelines | Luminary</title>
     <script src="theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-color: #f8fafc;
-            --surface: #ffffff;
-            --primary: #8b5cf6;
+            --bg-color: var(--bg-color, #f8fafc);
+            --surface: var(--surface, #ffffff);
+            --primary: var(--primary, #8b5cf6);
             /* Purple for Community */
-            --text-main: #1e293b;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
+            --text-main: var(--text-main, #1e293b);
+            --text-muted: var(--text-muted, #64748b);
+            --border: var(--border, #e2e8f0);
         }
 
         body {
@@ -87,7 +89,7 @@
 
         .card-content p {
             margin: 0;
-            color: #475569;
+            color: var(--text-muted);
             line-height: 1.6;
         }
 
