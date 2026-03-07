@@ -1397,4 +1397,9 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+if (require.main === module) {
+    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT}`));
+}
+
+// Export for Vercel
+module.exports = app;
