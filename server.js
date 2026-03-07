@@ -142,10 +142,45 @@ const auth = (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-console.error('[Startup] Checking Mongo connection...');
-mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => console.error('[Startup] MongoDB Connected'))
-    .catch(err => console.error('[Startup] MongoDB Error:', err));
+console.error(`[Startup] Target MongoDB: ${MONGO_URI.substring(0, 20)}...`);
+
+let cachedDb = null;
+
+async function connectToDatabase() {
+    if (cachedDb && mongoose.connection.readyState === 1) {
+        return cachedDb;
+    }
+
+    console.error('[Startup] Establishing new MongoDB connection...');
+    try {
+        const db = await mongoose.connect(MONGO_URI, {
+            serverSelectionTimeoutMS: 10000,
+            socketTimeoutMS: 45000,
+        });
+        cachedDb = db;
+        console.error('[Startup] MongoDB Connected Successfully');
+        return db;
+    } catch (err) {
+        console.error('[Startup] MongoDB Connection Error:', err.message);
+        throw err;
+    }
+}
+
+// Initial connection attempt
+connectToDatabase().catch(err => console.error('[Startup] Initial connection failed. Handled by middleware.'));
+
+// Middleware to ensure DB is connected before handling requests
+app.use(async (req, res, next) => {
+    try {
+        await connectToDatabase();
+        next();
+    } catch (err) {
+        res.status(503).json({
+            msg: 'Database connection error',
+            details: 'The server is unable to connect to the database. Please check your MONGO_URI and IP whitelist.'
+        });
+    }
+});
 
 // Routes
 const multer = require('multer');
