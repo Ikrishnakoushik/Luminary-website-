@@ -107,8 +107,11 @@ async function sendEmail({ to, subject, text }) {
     }
 }
 
-// uploads directory check skipped for Vercel/production
-
+// Ensure uploads directory exists
+const uploadDir = path.join(__dirname, 'public/uploads');
+if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Middleware
 app.use(cors({
@@ -179,17 +182,21 @@ app.use(async (req, res, next) => {
 });
 
 // Routes
-const { put } = require('@vercel/blob');
 const multer = require('multer');
 
-// Configure Multer Storage (Using MemoryStorage for serverless/cloud compatibility)
-const storage = multer.memoryStorage();
+// Configure Multer Storage
+const storage = multer.diskStorage({
+    destination: './public/uploads/',
+    filename: function (req, file, cb) {
+        cb(null, 'avatar-' + Date.now() + path.extname(file.originalname));
+    }
+});
 
 const upload = multer({
     storage: storage,
     limits: {
         fileSize: 5000000, // 5MB limit for files
-        fieldSize: 25 * 1024 * 1024 // 25MB limit for text fields
+        fieldSize: 25 * 1024 * 1024 // 25MB limit for text fields (allows full book manuscripts)
     },
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
@@ -217,28 +224,28 @@ app.post('/api/users/avatar', auth, (req, res) => {
     upload.single('avatar')(req, res, async (err) => {
         if (err) {
             return res.status(400).json({ msg: err });
-        }
-        if (!req.file) {
-            return res.status(400).json({ msg: 'No file selected!' });
-        }
+        } else {
+            if (req.file == undefined) {
+                return res.status(400).json({ msg: 'No file selected!' });
+            } else {
+                try {
+                    // Update user profile with image path
+                    // Path should be relative to public folder: /uploads/filename
+                    const imagePath = `/uploads/${req.file.filename}`;
 
-        try {
-            // Upload to Vercel Blob
-            const blob = await put(`avatars/${Date.now()}-${req.file.originalname}`, req.file.buffer, {
-                access: 'public',
-            });
+                    const user = await User.findById(req.user.id);
+                    user.profilePicture = imagePath;
+                    await user.save();
 
-            const user = await User.findById(req.user.id);
-            user.profilePicture = blob.url;
-            await user.save();
-
-            res.json({
-                msg: 'File Uploaded!',
-                filePath: blob.url
-            });
-        } catch (error) {
-            console.error('[Vercel Blob Error]', error);
-            res.status(500).json({ msg: 'Upload failed. Ensure BLOB_READ_WRITE_TOKEN is set.' });
+                    res.json({
+                        msg: 'File Uploaded!',
+                        filePath: imagePath
+                    });
+                } catch (error) {
+                    console.error(error);
+                    res.status(500).send('Server Error');
+                }
+            }
         }
     });
 });
@@ -625,59 +632,50 @@ app.get('/api/users/:id', async (req, res) => {
 
 
 // Create Post (Protected Route)
-// Create Post (Protected Route)
-app.post('/api/posts', auth, (req, res) => {
-    upload.fields([{ name: 'image', maxCount: 1 }, { name: 'attachment', maxCount: 1 }, { name: 'avatar', maxCount: 1 }])(req, res, async (err) => {
-        if (err) {
-            return res.status(400).json({ msg: err });
-        }
+app.post('/api/posts', auth, upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'attachment', maxCount: 1 },
+    { name: 'avatar', maxCount: 1 }
+]), async (req, res) => {
+    try {
+        const { title, content, category, videoUrl, type } = req.body;
 
-        try {
-            const { title, content, category, videoUrl, type } = req.body;
+        let attachment = '';
+        let image = '';
 
-            let attachmentUrl = '';
-            let imageUrl = '';
-
-            if (req.files) {
-                if (req.files['attachment']) {
-                    const file = req.files['attachment'][0];
-                    const blob = await put(`attachments/${Date.now()}-${file.originalname}`, file.buffer, { access: 'public' });
-                    attachmentUrl = blob.url;
-                }
-                if (req.files['image']) {
-                    const file = req.files['image'][0];
-                    const blob = await put(`posts/${Date.now()}-${file.originalname}`, file.buffer, { access: 'public' });
-                    imageUrl = blob.url;
-                }
-                // Legacy support (avatar was used for attachment in previous implementation)
-                if (req.files['avatar'] && !attachmentUrl) {
-                    const file = req.files['avatar'][0];
-                    const blob = await put(`attachments/${Date.now()}-${file.originalname}`, file.buffer, { access: 'public' });
-                    attachmentUrl = blob.url;
-                }
+        if (req.files) {
+            if (req.files['attachment']) {
+                attachment = await handleFileUpload(req.files['attachment'][0], 'attachment');
             }
-
-            // Create new post
-            const newPost = new Post({
-                user: req.user.id,
-                username: req.user.username,
-                title,
-                content,
-                category: category || 'General',
-                tag: category || 'General', // Sync tag
-                videoUrl,
-                attachment: attachmentUrl,
-                image: imageUrl,
-                type: type || 'quick'
-            });
-
-            const post = await newPost.save();
-            res.json(post);
-        } catch (err) {
-            console.error('[Vercel Blob Error]', err.message);
-            res.status(500).send('Server Error during upload');
+            if (req.files['image']) {
+                image = await handleFileUpload(req.files['image'][0], 'image');
+            }
+            // Legacy support (avatar was used for attachment in previous implementation)
+            if (req.files['avatar'] && !attachment) {
+                attachment = await handleFileUpload(req.files['avatar'][0], 'attachment');
+            }
         }
-    });
+
+        // Create new post
+        const newPost = new Post({
+            user: req.user.id,
+            username: req.user.username,
+            title,
+            content,
+            category: category || 'General',
+            tag: category || 'General', // Sync tag
+            videoUrl,
+            attachment,
+            image,
+            type: type || 'quick'
+        });
+
+        const post = await newPost.save();
+        res.json(post);
+    } catch (err) {
+        console.error('[Post creation error]:', err);
+        res.status(500).json({ msg: 'Server Error during post creation', error: err.message });
+    }
 });
 
 
