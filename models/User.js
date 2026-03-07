@@ -60,6 +60,22 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
+    stripeAccountId: {
+        type: String,
+        default: null
+    },
+    balance: {
+        type: Number,
+        default: 0
+    },
+    purchasedBooks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Book'
+    }],
+    publishedBooks: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Book'
+    }],
     projects: [{
         title: { type: String, required: true },
         description: { type: String },

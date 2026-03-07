@@ -1185,6 +1185,11 @@
                     <span>Profile</span>
                 </a>
 
+                <a href="/books.html" class="nav-item" data-type="core">
+                    <i class="fas fa-book-open"></i>
+                    <span>Books</span>
+                </a>
+
                 <a href="publish.html" class="nav-item" id="publisher-link" data-type="core" style="display: none;">
                     <i class="fas fa-pen-nib"></i>
                     <span>Publisher Studio</span>
@@ -2271,8 +2276,11 @@
         // Initialize Publisher Link visibility
         const role = localStorage.getItem('role');
         const pubLink = document.getElementById('publisher-link');
-        if (role === 'publisher' && pubLink) {
-            pubLink.style.display = 'flex'; // Use flex to match nav-item display
+        const pubBookLink = document.getElementById('publish-book-link');
+
+        if (role === 'publisher') {
+            if (pubLink) pubLink.style.display = 'flex';
+            if (pubBookLink) pubBookLink.style.display = 'flex';
         }
     </script>
     <script>

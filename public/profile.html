@@ -1232,95 +1232,7 @@
         <!-- RIGHT CONTENT -->
         <main class="feed">
 
-            <!-- SETTINGS MODAL -->
-            <div id="settingsModal" class="modal">
-                <div class="modal-content">
-                    <span class="close" onclick="closeModal('settingsModal')">&times;</span>
-                    <h2>Account Settings</h2>
-
-                    <div class="tabs"
-                        style="display: flex; gap: 15px; margin-bottom: 20px; border-bottom: 1px solid #eee;">
-                        <div class="tab active" onclick="switchSettingsTab('profile')" id="tab-profile"
-                            style="cursor: pointer; padding-bottom: 10px; border-bottom: 2px solid var(--accent);">
-                            Profile</div>
-                        <div class="tab" onclick="switchSettingsTab('security')" id="tab-security"
-                            style="cursor: pointer; padding-bottom: 10px; border-bottom: 2px solid transparent;">
-                            Security</div>
-                    </div>
-
-                    <form id="settingsProfileForm">
-                        <div class="form-group">
-                            <label>Display Name</label>
-                            <input type="text" id="setDisplayName" placeholder="Your Name">
-                        </div>
-                        <div class="form-group">
-                            <label>Username (@handle)</label>
-                            <input type="text" id="setUsername" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Bio</label>
-                            <textarea id="setBio" rows="3"
-                                style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;"
-                                placeholder="Tell us about yourself..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" id="setEmail" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Social Connections</label>
-
-                            <!-- Hidden inputs to store the generated URLs -->
-                            <input type="hidden" id="setTwitter" value="">
-                            <input type="hidden" id="setGithub" value="">
-                            <input type="hidden" id="setLinkedin" value="">
-
-                            <!-- Automated Connect Buttons -->
-                            <div class="social-connect-box" id="twitterConnectBox">
-                                <div><i class="fa-brands fa-x-twitter"></i> <span>Not connected</span></div>
-                                <button type="button" class="btn-sm" onclick="simulateOAuth('twitter')">Connect</button>
-                            </div>
-
-                            <div class="social-connect-box" id="githubConnectBox">
-                                <div><i class="fab fa-github"></i> <span>Not connected</span></div>
-                                <button type="button" class="btn-sm" onclick="simulateOAuth('github')">Connect</button>
-                            </div>
-
-                            <div class="social-connect-box" id="linkedinConnectBox">
-                                <div><i class="fab fa-linkedin"></i> <span>Not connected</span></div>
-                                <button type="button" class="btn-sm"
-                                    onclick="simulateOAuth('linkedin')">Connect</button>
-                            </div>
-
-                        </div>
-                        <button type="submit" class="form-btn">Save Profile</button>
-                        <button type="button" class="form-btn"
-                            style="margin-top: 10px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);"
-                            onclick="closeModal('settingsModal')">Back</button>
-                        <div id="profileMsg" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
-                    </form>
-
-                    <form id="settingsSecurityForm" style="display: none;">
-                        <div class="form-group">
-                            <label>Current Password</label>
-                            <input type="password" id="currentPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label>New Password</label>
-                            <input type="password" id="newPassword" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Confirm New Password</label>
-                            <input type="password" id="confirmNewPassword" required>
-                        </div>
-                        <button type="submit" class="form-btn">Update Password</button>
-                        <button type="button" class="form-btn"
-                            style="margin-top: 10px; background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);"
-                            onclick="closeModal('settingsModal')">Back</button>
-                        <div id="securityMsg" style="margin-top: 10px; text-align: center; font-size: 0.9rem;"></div>
-                    </form>
-                </div>
-            </div>
+            <!-- SETTINGS MODAL REMOVED - NOW A DEDICATED PAGE -->
 
             <!-- Simulated OAuth Overlay -->
             <div id="oauthOverlay"></div>
@@ -1727,14 +1639,17 @@
                     // Avoid duplicates
                     if (document.getElementById('settings-btn')) return;
 
-                    const btn = document.createElement('button');
+                    const btn = document.createElement('a');
                     btn.id = 'settings-btn';
+                    btn.href = 'settings.html';
                     btn.className = 'auth-btn secondary';
                     btn.style.marginTop = '20px';
                     btn.style.marginBottom = '20px';
                     btn.style.width = '100%';
+                    btn.style.display = 'inline-block';
+                    btn.style.textAlign = 'center';
+                    btn.style.textDecoration = 'none';
                     btn.innerHTML = '<i class="fas fa-cog"></i> Edit Profile';
-                    btn.onclick = () => openSettings(user);
 
                     const card = document.querySelector('.profile-card');
                     const links = document.querySelector('.social-links');
@@ -1838,226 +1753,8 @@
                 }
 
                 function openSettings(user) {
-                    document.getElementById('setDisplayName').value = user.displayName || '';
-                    document.getElementById('setUsername').value = user.username || '';
-                    document.getElementById('setBio').value = user.bio || '';
-                    document.getElementById('setEmail').value = user.email || '';
-
-                    // Initialize the visible OAuth Connection UI boxes
-                    if (user.socials) {
-                        document.getElementById('setTwitter').value = user.socials.twitter || '';
-                        document.getElementById('setGithub').value = user.socials.github || '';
-                        document.getElementById('setLinkedin').value = user.socials.linkedin || '';
-                    } else {
-                        document.getElementById('setTwitter').value = '';
-                        document.getElementById('setGithub').value = '';
-                        document.getElementById('setLinkedin').value = '';
-                    }
-
-                    updateSocialConnectUI('twitter', document.getElementById('setTwitter').value);
-                    updateSocialConnectUI('github', document.getElementById('setGithub').value);
-                    updateSocialConnectUI('linkedin', document.getElementById('setLinkedin').value);
-
-                    openModal('settingsModal');
-                }
-
-                function updateSocialConnectUI(platform, url) {
-                    const box = document.getElementById(`${platform}ConnectBox`);
-                    const statusSpan = box.querySelector('span');
-                    const btn = box.querySelector('button');
-
-                    if (url && url.trim() !== '') {
-                        box.classList.add('connected');
-                        statusSpan.innerText = 'Connected';
-                        btn.innerText = 'Disconnect';
-                        btn.onclick = () => disconnectSocial(platform);
-                    } else {
-                        var isConnected = box.classList.contains('connected');
-                        if (isConnected) {
-                            box.classList.remove('connected');
-                        }
-                        statusSpan.innerText = 'Not connected';
-                        btn.innerText = 'Connect';
-                        btn.onclick = () => simulateOAuth(platform);
-                    }
-                }
-
-                function disconnectSocial(platform) {
-                    document.getElementById(`set${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value = '';
-                    updateSocialConnectUI(platform, '');
-                }
-
-                function simulateOAuth(platform) {
-                    const overlay = document.getElementById('oauthOverlay');
-                    const popup = document.getElementById('oauthPopup');
-                    const loader = document.getElementById('oauthLoader');
-                    const icon = document.getElementById('oauthIcon');
-                    const title = document.getElementById('oauthTitle');
-                    const status = document.getElementById('oauthStatus');
-
-                    let platformName, platformIcon, urlFormat;
-                    if (platform === 'twitter') {
-                        platformName = 'X (Twitter)';
-                        platformIcon = 'fa-brands fa-x-twitter';
-                        urlFormat = 'https://x.com/';
-                    } else if (platform === 'github') {
-                        platformName = 'GitHub';
-                        platformIcon = 'fab fa-github';
-                        urlFormat = 'https://github.com/';
-                    } else if (platform === 'linkedin') {
-                        platformName = 'LinkedIn';
-                        platformIcon = 'fab fa-linkedin';
-                        urlFormat = 'https://linkedin.com/in/';
-                    }
-
-                    // Reset Popup UI
-                    loader.style.display = 'block';
-                    icon.style.display = 'none';
-                    icon.className = platformIcon;
-                    title.innerText = `Connecting to ${platformName}...`;
-                    status.innerText = 'Waiting for authorization...';
-
-                    overlay.classList.add('active');
-                    popup.classList.add('active');
-
-                    // Simulate network delay and OAuth flow
-                    setTimeout(() => {
-                        loader.style.display = 'none';
-                        icon.style.display = 'block';
-                        title.innerText = 'Connection Successful!';
-                        status.innerText = `Your ${platformName} account is now linked.`;
-                        status.style.color = 'green';
-
-                        // Auto-fill hidden input with a mock smart-URL based on their username
-                        const username = document.getElementById('setUsername').value || 'user';
-                        const mockUrl = `${urlFormat}${username.toLowerCase()}`;
-                        document.getElementById(`set${platform.charAt(0).toUpperCase() + platform.slice(1)}`).value = mockUrl;
-
-                        updateSocialConnectUI(platform, mockUrl);
-
-                        // Auto-close popup
-                        setTimeout(() => {
-                            overlay.classList.remove('active');
-                            popup.classList.remove('active');
-                            status.style.color = 'var(--text-muted)';
-                        }, 1500);
-
-                    }, 2000);
-                }
-
-                function switchSettingsTab(tab) {
-                    const profileForm = document.getElementById('settingsProfileForm');
-                    const securityForm = document.getElementById('settingsSecurityForm');
-                    const tabProfile = document.getElementById('tab-profile');
-                    const tabSecurity = document.getElementById('tab-security');
-
-                    if (tab === 'profile') {
-                        profileForm.style.display = 'block';
-                        securityForm.style.display = 'none';
-                        tabProfile.classList.add('active');
-                        tabProfile.style.borderBottom = '2px solid var(--accent)';
-                        tabSecurity.classList.remove('active');
-                        tabSecurity.style.borderBottom = '2px solid transparent';
-                    } else {
-                        profileForm.style.display = 'none';
-                        securityForm.style.display = 'block';
-                        tabProfile.classList.remove('active');
-                        tabProfile.style.borderBottom = '2px solid transparent';
-                        tabSecurity.classList.add('active');
-                        tabSecurity.style.borderBottom = '2px solid var(--accent)';
-                    }
-                }
-
-                // Settings Form Submissions
-                const profileForm = document.getElementById('settingsProfileForm');
-                if (profileForm) {
-                    profileForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const displayName = document.getElementById('setDisplayName').value;
-                        const username = document.getElementById('setUsername').value;
-                        const bio = document.getElementById('setBio').value;
-                        const email = document.getElementById('setEmail').value;
-
-                        const socials = {
-                            twitter: document.getElementById('setTwitter').value,
-                            github: document.getElementById('setGithub').value,
-                            linkedin: document.getElementById('setLinkedin').value
-                        };
-
-                        const msg = document.getElementById('profileMsg');
-
-                        try {
-                            const token = localStorage.getItem('token');
-                            const res = await fetch(`${API_URL}/users/profile`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-auth-token': token
-                                },
-                                body: JSON.stringify({ displayName, username, bio, email, socials })
-                            });
-                            const data = await res.json();
-
-                            if (res.ok) {
-                                msg.style.color = 'green';
-                                msg.innerText = 'Profile updated!';
-                                renderProfile({ ...data, isMe: true });
-                                localStorage.setItem('username', data.username);
-                                setTimeout(() => {
-                                    closeModal('settingsModal');
-                                    msg.innerText = '';
-                                }, 1000);
-                            } else {
-                                msg.style.color = 'red';
-                                msg.innerText = data.msg || 'Update failed';
-                            }
-                        } catch (err) {
-                            msg.style.color = 'red';
-                            msg.innerText = 'Server error';
-                        }
-                    });
-                }
-
-                const securityForm = document.getElementById('settingsSecurityForm');
-                if (securityForm) {
-                    securityForm.addEventListener('submit', async (e) => {
-                        e.preventDefault();
-                        const currentPassword = document.getElementById('currentPassword').value;
-                        const newPassword = document.getElementById('newPassword').value;
-                        const confirmNewPassword = document.getElementById('confirmNewPassword').value;
-                        const msg = document.getElementById('securityMsg');
-
-                        if (newPassword !== confirmNewPassword) {
-                            msg.style.color = 'red';
-                            msg.innerText = "New passwords don't match";
-                            return;
-                        }
-
-                        try {
-                            const token = localStorage.getItem('token');
-                            const res = await fetch(`${API_URL}/users/password`, {
-                                method: 'PUT',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-auth-token': token
-                                },
-                                body: JSON.stringify({ currentPassword, newPassword })
-                            });
-                            const data = await res.json();
-
-                            if (res.ok) {
-                                msg.style.color = 'green';
-                                msg.innerText = 'Password updated!';
-                                securityForm.reset();
-                            } else {
-                                msg.style.color = 'red';
-                                msg.innerText = data.msg || 'Update failed';
-                            }
-                        } catch (err) {
-                            msg.style.color = 'red';
-                            msg.innerText = 'Server error';
-                        }
-                    });
+                    // Settings have been moved to settings.html
+                    window.location.href = 'settings.html';
                 }
                 function updateAuthUI() {
                     const token = localStorage.getItem('token');

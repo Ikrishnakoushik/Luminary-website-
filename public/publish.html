@@ -453,6 +453,23 @@
             </div>
             <a href="main.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
 
+            <!-- Earnings Section -->
+            <div class="earnings-group"
+                style="margin-top: 20px; background: rgba(236, 72, 153, 0.05); padding: 15px; border-radius: 12px; border: 1px solid #fecdd3;">
+                <label class="label" style="display: block; margin-bottom: 5px;"><i class="fas fa-wallet"></i>
+                    Earnings</label>
+                <div id="balanceDisplay"
+                    style="font-size: 1.5rem; font-weight: 800; color: #be123c; margin-bottom: 10px;">$0.00</div>
+                <button type="button" id="stripeConnectBtn"
+                    style="width: 100%; padding: 10px; background: #8A2BE2; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: none;">
+                    Connect to Stripe
+                </button>
+                <div id="stripeConnectedMsg"
+                    style="font-size: 0.8rem; color: #10b981; font-weight: 600; display: none;">
+                    <i class="fas fa-check-circle"></i> Stripe Connected
+                </div>
+            </div>
+
             <div class="settings-group" style="margin-top: 20px;">
                 <label class="label">Settings</label>
 
@@ -895,6 +912,64 @@
         if (!localStorage.getItem('token')) {
             window.location.href = 'auth.html';
         }
+
+        // Fetch Publisher Balance
+        async function fetchBalance() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/publisher/balance`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    document.getElementById('balanceDisplay').innerText = `$${(data.balance || 0).toFixed(2)}`;
+
+                    if (data.stripeAccountId) {
+                        document.getElementById('stripeConnectedMsg').style.display = 'block';
+                        document.getElementById('stripeConnectBtn').style.display = 'none';
+                    } else {
+                        document.getElementById('stripeConnectBtn').style.display = 'block';
+                    }
+                }
+            } catch (err) {
+                console.error("Error fetching balance:", err);
+            }
+        }
+
+        // Handle Stripe Connect
+        document.getElementById('stripeConnectBtn').addEventListener('click', async () => {
+            const btn = document.getElementById('stripeConnectBtn');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Connecting...';
+            btn.disabled = true;
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/publisher/onboard`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    alert(data.msg); // Mock success Message
+                    fetchBalance(); // Refresh UI
+                } else {
+                    alert(data.msg || 'Error connecting to Stripe');
+                    btn.innerHTML = 'Connect to Stripe';
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error("Error connecting to Stripe:", err);
+                alert('Connection failed');
+                btn.innerHTML = 'Connect to Stripe';
+                btn.disabled = false;
+            }
+        });
+
+        // Initialize Call
+        window.addEventListener('DOMContentLoaded', () => {
+            fetchBalance();
+        });
     </script>
 
     <!-- Offline Indicator & SW Registration -->

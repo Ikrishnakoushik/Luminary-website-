@@ -1,0 +1,1295 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Luminary</title>
+    <script src="theme-loader.js"></script>
+    <script>
+        if (!localStorage.getItem('token')) {
+            window.location.href = '/auth.html';
+        }
+    </script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --surface: #ffffff;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --ring: rgba(79, 70, 229, 0.2);
+            --danger: #dc2626;
+            --success: #10b981;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-main);
+        }
+
+        /* Top Nav */
+        .top-nav {
+            background-color: var(--surface);
+            padding: 12px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.15s ease;
+        }
+
+        .nav-links a:hover {
+            color: var(--text-main);
+        }
+
+        /* Layout */
+        .settings-layout {
+            max-width: 1024px;
+            margin: 40px auto;
+            padding: 0 24px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 48px;
+            width: 100%;
+        }
+
+        /* Sidebar */
+        .sidebar-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            position: sticky;
+            top: 88px;
+        }
+
+        .sidebar-nav h3 {
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 12px;
+        }
+
+        .tab-btn {
+            text-align: left;
+            background: transparent;
+            border: none;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            color: var(--text-muted);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+        }
+
+        .tab-btn i {
+            width: 16px;
+            text-align: center;
+        }
+
+        .tab-btn:hover {
+            background-color: #f3f4f6;
+            color: var(--text-main);
+        }
+
+        .tab-btn.active {
+            background-color: #e0e7ff;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        /* Content */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .page-header p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        /* Cards */
+        .settings-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 24px;
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 24px;
+        }
+
+        .card-footer {
+            padding: 16px 24px;
+            background-color: #f9fafb;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        .card-footer .footer-text {
+            margin-right: auto;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--text-main);
+            font-size: 0.9rem;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--ring);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .help-text {
+            display: block;
+            margin-top: 6px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background: var(--text-main);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+        }
+
+        .btn-secondary {
+            background: var(--surface);
+            border-color: var(--border);
+            color: var(--text-main);
+        }
+
+        .btn-secondary:hover {
+            background: #f3f4f6;
+        }
+
+        /* Avatar */
+        .avatar-upload-group {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: #f3f4f6;
+            border: 1px solid var(--border);
+            background-size: cover;
+            background-position: center;
+        }
+
+        .avatar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        /* Tiles / Socials */
+        .connection-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .connection-item:first-child {
+            padding-top: 0;
+        }
+
+        .connection-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .connection-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .connection-icon {
+            width: 40px;
+            height: 40px;
+            background: #f3f4f6;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            color: var(--text-main);
+        }
+
+        .connection-details h4 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .connection-details p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        /* Preferences Grid */
+        .preferences-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .pref-label {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all 0.2s;
+            user-select: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .pref-label:hover {
+            border-color: #c1c7d0;
+            background: #f9fafb;
+        }
+
+        .pref-label input {
+            margin-right: 12px;
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary);
+        }
+
+        .pref-label.checked {
+            border-color: var(--primary);
+            background: #f0fdf4;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #111827;
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            z-index: 2000;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast i {
+            font-size: 1.1rem;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: #f3f4f6;
+            color: var(--text-muted);
+        }
+
+        .status-badge.connected {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--border);
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: var(--success);
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(20px);
+        }
+
+        @media (max-width: 768px) {
+            .settings-layout {
+                grid-template-columns: 1fr;
+                gap: 32px;
+                padding: 0 16px;
+                margin: 24px auto;
+            }
+
+            .sidebar-nav {
+                position: static;
+                flex-direction: row;
+                overflow-x: auto;
+                padding-bottom: 8px;
+            }
+
+            .tab-btn {
+                white-space: nowrap;
+            }
+
+            .card-footer {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .card-footer .footer-text {
+                margin-bottom: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <a href="main.html" class="logo"><i class="fas fa-layer-group"></i> Luminary</a>
+        <div class="nav-links">
+            <a href="profile.html">Profile</a>
+            <a href="main.html">Feed</a>
+        </div>
+    </nav>
+
+    <div class="settings-layout">
+        <aside>
+            <nav class="sidebar-nav">
+                <h3>Settings</h3>
+                <button class="tab-btn active" data-target="profile-tab"><i class="far fa-user"></i> Public
+                    Profile</button>
+                <button class="tab-btn" data-target="socials-tab"><i class="fas fa-link"></i> Social Accounts</button>
+                <button class="tab-btn" data-target="account-tab"><i class="fas fa-shield-alt"></i> Account
+                    Security</button>
+                <button class="tab-btn" data-target="billing-tab"><i class="fas fa-credit-card"></i> Billing &
+                    Payments</button>
+                <button class="tab-btn" data-target="preferences-tab"><i class="fas fa-sliders-h"></i>
+                    Preferences</button>
+                <button class="tab-btn" id="publisher-menu" style="display: none;" data-target="publisher-tab"><i
+                        class="fas fa-book-open"></i> Publisher Tools</button>
+            </nav>
+        </aside>
+
+        <main class="settings-content">
+
+            <!-- 1. Public Profile Tab -->
+            <div id="profile-tab" class="tab-content active">
+                <div class="page-header">
+                    <h2>Public Profile</h2>
+                    <p>This information will be displayed publicly so be careful what you share.</p>
+                </div>
+
+                <div class="settings-card">
+                    <form id="profileForm">
+                        <div class="card-body">
+                            <div class="avatar-upload-group">
+                                <div class="avatar-preview" id="avatarPreview"></div>
+                                <div class="avatar-actions">
+                                    <input type="file" id="avatarUpload" hidden accept="image/*">
+                                    <button type="button" class="btn btn-secondary"
+                                        onclick="document.getElementById('avatarUpload').click()">Change avatar</button>
+                                    <span class="help-text">JPG, GIF or PNG. Max size of 800K.</span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" class="form-control" id="displayName"
+                                    placeholder="Enter your full name">
+                            </div>
+                            <div class="form-group">
+                                <label>Username</label>
+                                <input type="text" class="form-control" id="username" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Bio</label>
+                                <textarea class="form-control" id="bio"
+                                    placeholder="Write a short introduction..."></textarea>
+                                <span class="help-text">Maximum 160 characters.</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <span class="footer-text">Please use 32 characters at maximum.</span>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- 2. Social Connections Tab -->
+            <div id="socials-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Social Accounts</h2>
+                    <p>Connect your social media to verify your identity and help users find you.</p>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <div class="connection-item" id="twitterBox">
+                            <div class="connection-info">
+                                <div class="connection-icon"><i class="fab fa-x-twitter"></i></div>
+                                <div class="connection-details">
+                                    <h4>X (Twitter)</h4>
+                                    <p id="twitterStatus">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('twitter')">Connect</button>
+                            <input type="hidden" id="twitterInput">
+                        </div>
+
+                        <div class="connection-item" id="githubBox">
+                            <div class="connection-info">
+                                <div class="connection-icon"><i class="fab fa-github"></i></div>
+                                <div class="connection-details">
+                                    <h4>GitHub</h4>
+                                    <p id="githubStatus">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('github')">Connect</button>
+                            <input type="hidden" id="githubInput">
+                        </div>
+
+                        <div class="connection-item" id="linkedinBox">
+                            <div class="connection-info">
+                                <div class="connection-icon" style="color: #0a66c2;"><i class="fab fa-linkedin"></i>
+                                </div>
+                                <div class="connection-details">
+                                    <h4>LinkedIn</h4>
+                                    <p id="linkedinStatus">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary btn-connect"
+                                onclick="toggleSocial('linkedin')">Connect</button>
+                            <input type="hidden" id="linkedinInput">
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <span class="footer-text">URLs are auto-generated upon connection.</span>
+                        <button class="btn btn-primary" onclick="saveSocials()">Save connections</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Account Tab -->
+            <div id="account-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Account Security</h2>
+                    <p>Manage your account settings, password, and security preferences.</p>
+                </div>
+
+                <div class="settings-card">
+                    <form id="accountForm">
+                        <div class="card-body">
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Email
+                                Settings</h3>
+                            <div class="form-group">
+                                <label>Email Address</label>
+                                <input type="email" class="form-control" id="email" required>
+                                <span class="help-text">This email will be used for all account notifications.</span>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Update email</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <form id="passwordForm">
+                        <div class="card-body">
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Change
+                                Password</h3>
+                            <div class="form-group">
+                                <label>Current Password</label>
+                                <input type="password" class="form-control" id="currentPassword" required>
+                            </div>
+                            <div class="form-group">
+                                <label>New Password</label>
+                                <input type="password" class="form-control" id="newPassword" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label>Confirm New Password</label>
+                                <input type="password" class="form-control" id="confirmPassword" required minlength="6">
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" id="pwdBtn">Update password</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif;">
+                                    Two-Factor Authentication (2FA)</h3>
+                                <p style="font-size: 0.9rem; color: var(--text-muted);">Add an extra layer of security
+                                    to your account using an authenticator app.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" id="twofactorToggle"
+                                    onchange="showToast(this.checked ? '2FA Enabled!' : '2FA Disabled');">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <hr style="border:none; border-top:1px solid var(--border); margin: 0 -24px 24px;">
+                        <div>
+                            <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: 'Inter', sans-serif;">Active
+                                Sessions</h3>
+                            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">These are
+                                device that have logged into your account. Revoke any you do not recognize.</p>
+                            <div class="connection-item">
+                                <div class="connection-info">
+                                    <div class="connection-icon"><i class="fas fa-desktop"></i></div>
+                                    <div class="connection-details">
+                                        <h4>Windows PC - Chrome</h4>
+                                        <p>Active now • Los Angeles, CA</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="connection-item">
+                                <div class="connection-info">
+                                    <div class="connection-icon"><i class="fas fa-mobile-alt"></i></div>
+                                    <div class="connection-details">
+                                        <h4>iPhone 14 - Safari</h4>
+                                        <p>Last active 2 hours ago • Los Angeles, CA</p>
+                                    </div>
+                                </div>
+                                <button class="btn btn-secondary" onclick="showToast('Session revoked')">Revoke</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Preferences Tab -->
+            <div id="preferences-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Feed Preferences</h2>
+                    <p>Customize the content you see on your main feed. The categories selected here will prioritize
+                        matching posts in your global Luminary feed.</p>
+                </div>
+
+                <div class="settings-card">
+                    <form id="prefsForm">
+                        <div class="card-body">
+                            <div class="preferences-grid" id="preferencesGrid">
+                                <label class="pref-label"><input type="checkbox" name="preference" value="World News">
+                                    World News</label>
+                                <label class="pref-label"><input type="checkbox" name="preference" value="Sports">
+                                    Sports</label>
+                                <label class="pref-label"><input type="checkbox" name="preference" value="Study">
+                                    Study</label>
+                                <label class="pref-label"><input type="checkbox" name="preference" value="Animals">
+                                    Animals</label>
+                                <label class="pref-label"><input type="checkbox" name="preference" value="Coding">
+                                    Coding</label>
+                                <label class="pref-label"><input type="checkbox" name="preference" value="Other">
+                                    Other</label>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary">Update preferences</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Billing & Payments Tab -->
+            <div id="billing-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Billing & Payments</h2>
+                    <p>Manage your saved payment methods and view your transaction history for purchased books.</p>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                            <h3 style="font-size: 1.1rem; font-family: 'Inter', sans-serif;">Saved Payment Methods</h3>
+                            <button class="btn btn-secondary" onclick="showToast('Add new card dialog opened')">Add
+                                Payment Method</button>
+                        </div>
+
+                        <div class="connection-item">
+                            <div class="connection-info">
+                                <div class="connection-icon" style="background:#1e3a8a; color:white;"><i
+                                        class="fab fa-cc-visa"></i></div>
+                                <div class="connection-details">
+                                    <h4>Visa ending in 4242</h4>
+                                    <p>Expires 12/26 • Default</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" style="color:var(--danger); border-color:var(--danger);"
+                                onclick="showToast('Card removed')">Remove</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Billing
+                            History</h3>
+                        <p style="color: var(--text-muted); font-size: 0.95rem; margin-bottom: 16px;">Past purchases and
+                            invoices will appear here.</p>
+
+                        <div
+                            style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; overflow-x: auto;">
+                            <table
+                                style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem; min-width: 500px;">
+                                <thead>
+                                    <tr style="background: #f9fafb; border-bottom: 1px solid var(--border);">
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">Date
+                                        </th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">
+                                            Description</th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">
+                                            Amount</th>
+                                        <th
+                                            style="padding: 12px 16px; font-weight: 500; color: var(--text-muted); text-align: right;">
+                                            Invoice</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr style="border-bottom: 1px solid var(--border);">
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Mar 04, 2026</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Book Purchase -
+                                            Advanced Patterns</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">$14.99</td>
+                                        <td style="padding: 12px 16px; text-align: right;"><a href="#"
+                                                style="color: var(--primary); text-decoration: none;"
+                                                onclick="showToast('Downloading invoice...')"><i
+                                                    class="fas fa-download"></i></a></td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Feb 28, 2026</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">Book Purchase - Getting
+                                            Started</td>
+                                        <td style="padding: 12px 16px; color: var(--text-main);">$9.99</td>
+                                        <td style="padding: 12px 16px; text-align: right;"><a href="#"
+                                                style="color: var(--primary); text-decoration: none;"
+                                                onclick="showToast('Downloading invoice...')"><i
+                                                    class="fas fa-download"></i></a></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. Publisher Tab -->
+            <div id="publisher-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Publisher Tools</h2>
+                    <p>Manage your analytics, earnings, and publisher settings.</p>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Overview &
+                            Analytics</h3>
+                        <div
+                            style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                            <div
+                                style="padding: 16px; background: #f3f4f6; border-radius: var(--radius-md); text-align: center;">
+                                <div
+                                    style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit';">
+                                    12</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Books Published</div>
+                            </div>
+                            <div
+                                style="padding: 16px; background: #f3f4f6; border-radius: var(--radius-md); text-align: center;">
+                                <div
+                                    style="font-size: 1.5rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit';">
+                                    3,492</div>
+                                <div style="font-size: 0.85rem; color: var(--text-muted);">Total Reads</div>
+                            </div>
+                            <div
+                                style="padding: 16px; background: #f0fdf4; border-radius: var(--radius-md); text-align: center; border: 1px solid #bbf7d0; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <div
+                                    style="font-size: 1.5rem; font-weight: 700; color: #166534; font-family: 'Outfit';">
+                                    <span id="publisherBalance">$0.00</span>
+                                </div>
+                                <div style="font-size: 0.85rem; color: #166534; margin-bottom: 8px;">Available Payout
+                                </div>
+                                <button class="btn btn-primary"
+                                    style="background-color: #166534; border-color: #166534; font-size: 0.8rem; padding: 4px 12px; width: 100%; border-radius: 4px;"
+                                    onclick="requestWithdrawal()">Withdraw</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Payout
+                            Configuration</h3>
+
+                        <div class="connection-item" id="stripeBox">
+                            <div class="connection-info">
+                                <div class="connection-icon"><i class="fab fa-stripe" style="color: #6366f1;"></i></div>
+                                <div class="connection-details">
+                                    <h4>Stripe Connect</h4>
+                                    <p id="stripeStatus">Not connected</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" id="stripeBtn" onclick="toggleStripe()">Connect
+                                Bank</button>
+                        </div>
+
+                        <div class="connection-item">
+                            <div class="connection-info">
+                                <div class="connection-icon"><i class="fas fa-file-invoice-dollar"
+                                        style="color: var(--text-muted);"></i></div>
+                                <div class="connection-details">
+                                    <h4>Tax Identity (W-9 / W-8BEN)</h4>
+                                    <p>Required before receiving payouts.</p>
+                                </div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="showToast('Tax form portal opened')">Submit
+                                Form</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-card">
+                    <div class="card-body">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif;">
+                                    Sales Notifications</h3>
+                                <p style="font-size: 0.9rem; color: var(--text-muted);">Receive an email every time a
+                                    user purchases one of your books.</p>
+                            </div>
+                            <label class="switch">
+                                <input type="checkbox" checked onchange="showToast('Sales notifications updated');">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle" id="toastIcon"></i>
+        <span id="toastMsg">Settings saved successfully</span>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3000/api';
+        let currentUser = null;
+
+        async function init() {
+            setupTabs();
+            setupPreferencesUI();
+            await fetchProfile();
+        }
+
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    contents.forEach(c => c.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.getElementById(tab.dataset.target).classList.add('active');
+                });
+            });
+        }
+
+        function setupPreferencesUI() {
+            const checkboxes = document.querySelectorAll('input[name="preference"]');
+            checkboxes.forEach(cb => {
+                cb.addEventListener('change', (e) => {
+                    if (e.target.checked) {
+                        e.target.parentElement.classList.add('checked');
+                    } else {
+                        e.target.parentElement.classList.remove('checked');
+                    }
+                });
+            });
+        }
+
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMsg').innerText = message;
+            toast.className = 'toast';
+
+            if (isError) {
+                toast.classList.add('error');
+                document.getElementById('toastIcon').className = 'fas fa-exclamation-circle';
+            } else {
+                document.getElementById('toastIcon').className = 'fas fa-check-circle';
+            }
+
+            // Force reflow
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        async function fetchProfile() {
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    currentUser = data.user || data;
+                    populateForms(currentUser);
+                } else {
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const res2 = await fetch(`${API_URL}/users/${payload.user.id}`);
+                    if (res2.ok) {
+                        currentUser = await res2.json();
+                        populateForms(currentUser);
+                    }
+                }
+            } catch (e) {
+                console.error('Error fetching profile:', e);
+            }
+        }
+
+        function populateForms(user) {
+            if (!user) return;
+
+            document.getElementById('displayName').value = user.displayName || '';
+            document.getElementById('username').value = user.username || '';
+            document.getElementById('bio').value = user.bio || '';
+
+            if (user.profilePicture) {
+                document.getElementById('avatarPreview').style.backgroundImage = `url('${user.profilePicture}')`;
+            }
+
+            document.getElementById('email').value = user.email || '';
+
+            if (user.preferences && user.preferences.length > 0) {
+                const checkboxes = document.querySelectorAll('input[name="preference"]');
+                checkboxes.forEach(cb => {
+                    if (user.preferences.includes(cb.value)) {
+                        cb.checked = true;
+                        cb.parentElement.classList.add('checked');
+                    }
+                });
+            }
+
+            if (user.socials) {
+                setSocialUI('twitter', user.socials.twitter);
+                setSocialUI('github', user.socials.github);
+                setSocialUI('linkedin', user.socials.linkedin);
+            }
+
+            if (user.role === 'publisher') {
+                document.getElementById('publisher-menu').style.display = 'flex';
+                document.getElementById('publisherBalance').innerText = `$${(user.balance || 0).toFixed(2)}`;
+
+                if (user.stripeAccountId) {
+                    const status = document.getElementById('stripeStatus');
+                    status.innerHTML = `<span class="status-badge connected">Connected</span>`;
+                    const btn = document.getElementById('stripeBtn');
+                    btn.innerText = 'Connected';
+                    btn.disabled = true;
+                }
+            }
+        }
+
+        document.getElementById('avatarUpload').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('avatar', file);
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/users/avatar`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token },
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('avatarPreview').style.backgroundImage = `url('${data.filePath}')`;
+                    showToast('Profile picture updated!');
+                } else {
+                    showToast(data.msg || 'Upload failed', true);
+                }
+            } catch (err) {
+                showToast('Error uploading image', true);
+            }
+        });
+
+        async function updateProfileCore(payload) {
+            try {
+                const btn = document.activeElement;
+                if (btn && btn.tagName === 'BUTTON') {
+                    const originalText = btn.innerText;
+                    btn.innerText = 'Saving...';
+                    btn.disabled = true;
+                    setTimeout(() => { btn.innerText = originalText; btn.disabled = false; }, 800);
+                }
+
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify(payload)
+                });
+
+                if (res.ok) {
+                    showToast('Settings saved successfully');
+                } else {
+                    const data = await res.json();
+                    showToast(data.msg || 'Failed to save', true);
+                }
+            } catch (err) {
+                showToast('Network error', true);
+            }
+        }
+
+        document.getElementById('profileForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const displayName = document.getElementById('displayName').value;
+            const username = document.getElementById('username').value;
+            const bio = document.getElementById('bio').value;
+            updateProfileCore({ displayName, username, bio, email: document.getElementById('email').value });
+        });
+
+        document.getElementById('accountForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            updateProfileCore({ email: document.getElementById('email').value });
+        });
+
+        document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                return showToast('New passwords do not match', true);
+            }
+
+            try {
+                const btn = document.getElementById('pwdBtn');
+                btn.innerText = 'Saving...';
+                btn.disabled = true;
+
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/users/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ currentPassword, newPassword })
+                });
+
+                btn.innerText = 'Update password';
+                btn.disabled = false;
+
+                if (res.ok) {
+                    showToast('Password updated successfully');
+                    document.getElementById('passwordForm').reset();
+                } else {
+                    const data = await res.json();
+                    showToast(data.msg || 'Failed to update password', true);
+                }
+            } catch (err) {
+                showToast('Network error', true);
+            }
+        });
+
+        document.getElementById('prefsForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const checkboxes = document.querySelectorAll('input[name="preference"]:checked');
+            const preferences = Array.from(checkboxes).map(cb => cb.value);
+            updateProfileCore({ preferences });
+        });
+
+        function setSocialUI(platform, url) {
+            const input = document.getElementById(`${platform}Input`);
+            const status = document.getElementById(`${platform}Status`);
+            const btn = document.getElementById(`${platform}Box`).querySelector('.btn-connect');
+
+            input.value = url || '';
+            if (url) {
+                status.innerHTML = `<span class="status-badge connected">Connected</span> <span style="font-size: 0.8rem; margin-left:8px;">${url.split('/').pop()}</span>`;
+                btn.innerText = 'Disconnect';
+            } else {
+                status.innerHTML = `<span class="status-badge">Not connected</span>`;
+                btn.innerText = 'Connect';
+            }
+        }
+
+        function toggleSocial(platform) {
+            const input = document.getElementById(`${platform}Input`);
+            if (input.value) {
+                setSocialUI(platform, '');
+            } else {
+                const username = document.getElementById('username').value || 'user';
+                const formatMap = { 'twitter': 'https://x.com/', 'github': 'https://github.com/', 'linkedin': 'https://linkedin.com/in/' };
+                setSocialUI(platform, `${formatMap[platform]}${username}`);
+            }
+        }
+
+        function saveSocials() {
+            const socials = {
+                twitter: document.getElementById('twitterInput').value,
+                github: document.getElementById('githubInput').value,
+                linkedin: document.getElementById('linkedinInput').value
+            };
+            updateProfileCore({ socials });
+        }
+
+        function requestWithdrawal() {
+            const balanceText = document.getElementById('publisherBalance').innerText;
+            if (balanceText === '$0.00' || balanceText === '$0') {
+                return showToast('No funds available to withdraw.', true);
+            }
+            const stripeStatus = document.getElementById('stripeStatus').innerText;
+            if (stripeStatus === 'Not connected') {
+                return showToast('Please connect your payout account first.', true);
+            }
+            showToast('Withdrawal request processing...', false);
+            setTimeout(() => {
+                showToast('Funds transferred to your bank account!', false);
+                document.getElementById('publisherBalance').innerText = '$0.00';
+            }, 1500);
+        }
+
+        async function toggleStripe() {
+            const token = localStorage.getItem('token');
+            try {
+                const res = await fetch(`${API_URL}/publisher/onboard`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    showToast('Stripe account connected!');
+                    setTimeout(() => window.location.reload(), 1500);
+                } else {
+                    showToast('Failed to connect Stripe', true);
+                }
+            } catch (err) {
+                showToast('Error connecting Stripe', true);
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

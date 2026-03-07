@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Books | Luminary</title>
+    <!-- Use same theme-loader as the rest of the app -->
+    <script src="/theme-loader.js"></script>
+    <style>
+        /* Premium Bookstore Theme */
+        :root {
+            --primary: #8A2BE2;
+            --primary-light: #9d4edd;
+            --bg: #0f1016;
+            --surface: rgba(30, 30, 36, 0.6);
+            --surface-hover: rgba(45, 45, 55, 0.8);
+            --text: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(15, 16, 22, 0.85);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg);
+            background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
+            color: var(--text);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 70px;
+            background: var(--nav-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-decoration: none;
+            background: linear-gradient(to right, #b366ff, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover {
+            color: var(--text);
+        }
+
+        .publish-cta {
+            background: linear-gradient(135deg, var(--primary), #ec4899);
+            color: white !important;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: none;
+            /* Hidden by default, shown via JS if publisher */
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .publish-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+        }
+
+        /* Main Content Container */
+        .main-container {
+            margin-top: 70px;
+            /* offset for nav */
+            flex: 1;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            padding: 80px 40px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at center, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
+            z-index: -1;
+        }
+
+        .hero-section h1 {
+            font-size: 3.5rem;
+            margin: 0 0 15px 0;
+            letter-spacing: -1px;
+            font-weight: 800;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 30px auto;
+            line-height: 1.6;
+        }
+
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .tab {
+            padding: 10px 25px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-weight: 500;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab:hover {
+            background: var(--surface-hover);
+            color: var(--text);
+        }
+
+        .tab.active {
+            color: white;
+            background: var(--primary);
+            border-color: var(--primary);
+            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+        }
+
+        /* Content Area */
+        .content-area {
+            padding: 50px 40px;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+
+        /* Books Grid */
+        .books-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 40px 30px;
+        }
+
+        .book-card {
+            background: rgba(30, 30, 36, 0.4);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .book-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            border-color: rgba(138, 43, 226, 0.4);
+        }
+
+        .book-cover {
+            width: 100%;
+            height: 320px;
+            background-color: #1a1a24;
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .book-info {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .book-title {
+            font-size: 1.15rem;
+            margin: 0 0 8px 0;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .book-author {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin: 0 0 15px 0;
+        }
+
+        .book-price {
+            font-weight: 700;
+            color: #10b981;
+            /* Premium Green */
+            margin-top: auto;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .book-action-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-top: 1px solid var(--border);
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+        }
+
+        .book-card:hover .book-action-btn {
+            background: var(--primary);
+            color: white;
+            border-top-color: var(--primary);
+        }
+
+        /* Reader Modal */
+        .reader-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(10, 10, 15, 0.98);
+            z-index: 1000;
+            overflow-y: auto;
+            align-items: flex-start;
+            justify-content: center;
+        }
+
+        .reader-content-wrapper {
+            background: #ffffff;
+            color: #1a1a1a;
+            width: 100%;
+            max-width: 750px;
+            min-height: 100vh;
+            padding: 80px 10%;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+            font-family: 'Merriweather', 'Georgia', serif;
+            line-height: 1.9;
+            font-size: 1.15rem;
+            box-sizing: border-box;
+        }
+
+        .close-reader {
+            position: fixed;
+            top: 25px;
+            right: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-size: 1.2rem;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 1001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .close-reader:hover {
+            background: white;
+            color: #1a1a1a;
+            transform: rotate(90deg);
+        }
+
+        .reader-title {
+            text-align: center;
+            font-size: 2.8rem;
+            margin-bottom: 60px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #111;
+        }
+
+        .reader-title::after {
+            content: '';
+            display: block;
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            margin: 30px auto 0;
+        }
+
+        /* Loading Spinner */
+        .loader {
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 80px auto;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Font for reading -->
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <a href="/main.html" class="nav-logo">
+            <i class="fas fa-book-open"></i> Luminary Books
+        </a>
+        <div class="nav-links">
+            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> App Home</a>
+            <a href="/publish-book.html" class="publish-cta" id="publishBtn">
+                <i class="fas fa-pen-nib"></i> Publish a Book
+            </a>
+            <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <!-- Main Content Container -->
+    <div class="main-container">
+
+        <!-- Hero Section -->
+        <section class="hero-section">
+            <h1>Discover Infinite Worlds.</h1>
+            <p>Explore premium manuscripts, stories, and educational content created by independent publishers of the
+                Luminary platform.</p>
+
+            <div class="tabs-container">
+                <div class="tab active" onclick="switchTab('store')">Book Store</div>
+                <div class="tab" onclick="switchTab('my-books')">My Library</div>
+            </div>
+        </section>
+
+        <!-- Content Area -->
+        <section class="content-area">
+            <div id="loading" class="loader"></div>
+            <div id="booksGrid" class="books-grid"></div>
+        </section>
+
+    </div>
+
+    <!-- Reader Modal -->
+    <div id="readerModal" class="reader-modal">
+        <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
+        <div class="reader-content-wrapper">
+            <h1 class="reader-title" id="readerTitle">Book Title</h1>
+            <div id="readerContent">
+                <!-- Book content injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        let currentUser = null;
+        let allBooks = [];
+        let currentTab = 'store';
+
+        // Check authentication
+        const token = localStorage.getItem('token');
+        if (!token) {
+            window.location.href = '/auth.html';
+        }
+
+        // Initialize Page
+        async function init() {
+            checkUserRole();
+            await fetchUserProfile();
+            await fetchBooks();
+            renderBooks();
+
+            // Setup Logout
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = '/auth.html';
+            });
+        }
+
+        // Fetch User Profile
+        async function fetchUserProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    currentUser = await res.json();
+                } else {
+                    console.error("Failed to fetch user profile");
+                }
+            } catch (err) {
+                console.error("Error fetching user profile:", err);
+            }
+        }
+
+        // Check User Role from localStorage
+        function checkUserRole() {
+            const role = localStorage.getItem('role');
+            if (role === 'publisher') {
+                document.getElementById('publishBtn').style.display = 'flex';
+            }
+        }
+
+        // Fetch Books
+        async function fetchBooks() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('booksGrid').innerHTML = '';
+
+            try {
+                const res = await fetch(`${API_URL}/books`);
+                if (res.ok) {
+                    allBooks = await res.json();
+                }
+            } catch (err) {
+                console.error("Error fetching books:", err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        }
+
+        // Switch Tabs
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            renderBooks();
+        }
+
+        // Render Books based on Tab
+        function renderBooks() {
+            const grid = document.getElementById('booksGrid');
+            grid.innerHTML = '';
+
+            if (!currentUser) return;
+
+            let booksToShow = [];
+
+            if (currentTab === 'store') {
+                booksToShow = allBooks;
+            } else if (currentTab === 'my-books') {
+                // Show purchased books OR authored books
+                booksToShow = allBooks.filter(b =>
+                    currentUser.purchasedBooks.includes(b._id) ||
+                    b.author._id === currentUser._id
+                );
+            }
+
+            if (booksToShow.length === 0) {
+                grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1 / -1;">No books found.</p>';
+                return;
+            }
+
+            booksToShow.forEach(book => {
+                const isAuthor = book.author._id === currentUser._id;
+                const isPurchased = currentUser.purchasedBooks.includes(book._id);
+                const canRead = isAuthor || isPurchased || book.price === 0;
+
+                const card = document.createElement('div');
+                card.className = 'book-card';
+
+                const cover = book.coverImage
+                    ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#2a2a2a';">`
+                    : `<div class="book-cover"><i class="fas fa-book fa-3x"></i></div>`;
+
+                let actionHtml = '';
+                if (canRead) {
+                    actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>`;
+                } else {
+                    actionHtml = `<button class="book-action-btn" onclick="purchaseBook('${book._id}', ${book.price})">Buy for $${book.price}</button>`;
+                }
+
+                card.innerHTML = `
+                    ${cover}
+                    <div class="book-info">
+                        <h3 class="book-title">${book.title}</h3>
+                        <p class="book-author">By ${book.author.displayName || book.author.username}</p>
+                        <p class="book-price">${book.price === 0 ? 'Free' : '$' + book.price}</p>
+                    </div>
+                    ${actionHtml}
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Purchase Book
+        async function purchaseBook(bookId, price) {
+            if (confirm(`Purchase this book for $${price}?`)) {
+                try {
+                    const res = await fetch(`${API_URL}/books/${bookId}/purchase`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': token
+                        }
+                    });
+
+                    const data = await res.json();
+                    if (res.ok) {
+                        alert("Purchase successful! It is now in 'My Library'.");
+                        // Refresh local data
+                        currentUser.purchasedBooks.push(bookId);
+                        renderBooks();
+                    } else {
+                        alert(data.msg);
+                    }
+                } catch (err) {
+                    alert('Error purchasing book');
+                }
+            }
+        }
+
+        // Open Reader
+        async function openReader(bookId) {
+            try {
+                const res = await fetch(`${API_URL}/books/${bookId}`, {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (res.ok) {
+                    const book = await res.json();
+                    document.getElementById('readerTitle').innerText = book.title;
+                    document.getElementById('readerContent').innerHTML = book.content;
+                    document.getElementById('readerModal').style.display = 'flex';
+                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+                } else {
+                    alert('Error loading book content. Ensure you have purchased it.');
+                }
+            } catch (err) {
+                alert('Error fetching book content');
+            }
+        }
+
+        // Close Reader
+        function closeReader() {
+            document.getElementById('readerModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+            document.getElementById('readerContent').innerHTML = '';
+        }
+
+        // Close reader on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeReader();
+        });
+
+        // Run
+        init();
+    </script>
+</body>
+
+</html>

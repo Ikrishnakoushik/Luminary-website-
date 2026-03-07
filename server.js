@@ -9,12 +9,16 @@ const fs = require('fs'); // Import fs
 const User = require('./models/User');
 const Post = require('./models/Post');
 const Message = require('./models/Message');
+const Book = require('./models/Book'); // Added Book model
 const seedData = require('./seed'); // Import seed script
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
+
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 // Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
@@ -32,13 +36,49 @@ const transporter = nodemailer.createTransport({
 });
 
 // Verify Transporter Connection
-transporter.verify(function (error, success) {
-    if (error) {
-        console.error('[Nodemailer Error] Connection failed:', error);
+if (!resend) {
+    transporter.verify(function (error, success) {
+        if (error) {
+            console.error('[Nodemailer Error] Connection failed:', error);
+        } else {
+            console.log('[Nodemailer] Server is ready to take our messages');
+        }
+    });
+}
+
+// Universal Email Sender
+async function sendEmail({ to, subject, text }) {
+    if (resend) {
+        try {
+            const data = await resend.emails.send({
+                from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
+                to,
+                subject,
+                html: `<p>${text.replace(/\\n/g, '<br>')}</p>`
+            });
+            console.log('[DEBUG] Resend email sent successfully:', data);
+            return data;
+        } catch (error) {
+            console.error('[DEBUG] Resend Error:', error);
+            throw error;
+        }
     } else {
-        console.log('[Nodemailer] Server is ready to take our messages');
+        const mailOptions = {
+            from: process.env.EMAIL_USER || 'no-reply@spectra.com',
+            to,
+            subject,
+            text
+        };
+        try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log('[DEBUG] Nodemailer email sent successfully: ' + info.response);
+            return info;
+        } catch (error) {
+            console.error('[DEBUG] Nodemailer Error:', error);
+            throw error;
+        }
     }
-});
+}
 
 // Ensure uploads directory exists
 const uploadDir = path.join(__dirname, 'public/uploads');
@@ -185,15 +225,12 @@ app.post('/api/register', async (req, res) => {
         await user.save();
 
         // Send Verification Email
-        const mailOptions = {
-            from: process.env.EMAIL_USER || 'no-reply@spectra.com',
-            to: user.email,
-            subject: 'Spectra - Verify Your Email',
-            text: `Welcome to Spectra! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
-        };
-
         try {
-            await transporter.sendMail(mailOptions);
+            await sendEmail({
+                to: user.email,
+                subject: 'Spectra - Verify Your Email',
+                text: `Welcome to Spectra! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
+            });
         } catch (emailError) {
             console.error('[Warning] Email sending failed, but continuing registration:', emailError);
             // Non-blocking in dev mode since we log OTP
@@ -245,23 +282,17 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         user.resetPasswordExpires = Date.now() + 10 * 60 * 1000; // 10 mins
         await user.save();
 
-        const mailOptions = {
-            from: 'Luminary <' + (process.env.EMAIL_USER || 'no-reply@luminary.com') + '>',
-            to: email,
-            subject: 'Luminary - Password Reset OTP',
-            text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.error('[DEBUG] Nodemailer Error:', error);
-                // Return actual error to client for debugging
-                return res.status(500).json({ msg: 'Email failed: ' + error.message });
-            } else {
-                console.log('[DEBUG] Email sent successfully: ' + info.response);
-                res.json({ msg: 'OTP sent to email', email: user.email });
-            }
-        });
+        try {
+            await sendEmail({
+                to: email,
+                subject: 'Luminary - Password Reset OTP',
+                text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
+            });
+            res.json({ msg: 'OTP sent to email', email: user.email });
+        } catch (error) {
+            console.error('[DEBUG] Email Error in Forgot Password:', error);
+            return res.status(500).json({ msg: 'Email failed: ' + error.message });
+        }
 
     } catch (err) {
         console.error('[DEBUG] Server Error in Forgot Password:', err);
@@ -352,6 +383,20 @@ app.post('/api/login', async (req, res) => {
                 res.json({ token, username: user.username, role: user.role });
             }
         );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Get Profile Info
+app.get('/api/users/profile', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('-password');
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json(user);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
@@ -764,6 +809,180 @@ app.get('/api/messages/:userId', auth, async (req, res) => {
     }
 });
 
+// Global Search
+app.get('/api/search', async (req, res) => {
+    try {
+        const query = req.query.q;
+        if (!query) {
+            return res.json({ users: [], posts: [], books: [] });
+        }
+
+        const users = await User.find({
+            $or: [
+                { username: { $regex: query, $options: 'i' } },
+                { displayName: { $regex: query, $options: 'i' } }
+            ]
+        }).select('username displayName profilePicture role').limit(5);
+
+        const posts = await Post.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { author: { $in: users.map(u => u._id) } }
+            ]
+        }).populate('author', 'username displayName').limit(5);
+
+        const books = await Book.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } }
+            ]
+        }).populate('author', 'username displayName').limit(5);
+
+        res.json({ users, posts, books });
+    } catch (err) {
+        console.error('Search error:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// ==========================================
+// BOOKS ROUTES
+// ==========================================
+
+// Get All Books
+app.get('/api/books', async (req, res) => {
+    try {
+        const books = await Book.find().populate('author', 'username displayName profilePicture').sort({ createdAt: -1 });
+        res.json(books);
+    } catch (err) {
+        console.error('Error fetching books:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Get Single Book
+app.get('/api/books/:id', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id).populate('author', 'username displayName profilePicture');
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        // Strip out content if not purchased and not the author
+        const user = await User.findById(req.user.id);
+        const isAuthor = book.author._id.toString() === req.user.id;
+        const hasPurchased = user.purchasedBooks.includes(book._id);
+
+        if (!isAuthor && !hasPurchased && book.price > 0) {
+            const restrictedBook = book.toObject();
+            restrictedBook.content = "Please purchase the book to read the full content.";
+            return res.json(restrictedBook);
+        }
+
+        res.json(book);
+    } catch (err) {
+        console.error('Error fetching book:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Publish a Book
+app.post('/api/books', auth, async (req, res) => {
+    try {
+        const { title, description, price, coverImage, content } = req.body;
+
+        // Check if publisher
+        if (req.user.role !== 'publisher') {
+            return res.status(403).json({ msg: 'Only publishers can create books' });
+        }
+
+        const newBook = new Book({
+            title,
+            description,
+            price: price || 0,
+            coverImage: coverImage || '',
+            content,
+            author: req.user.id
+        });
+
+        const savedBook = await newBook.save();
+
+        // Add to author's published books
+        await User.findByIdAndUpdate(req.user.id, { $push: { publishedBooks: savedBook._id } });
+
+        res.json(savedBook);
+    } catch (err) {
+        console.error('Error creating book:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Purchase a Book
+app.post('/api/books/:id/purchase', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const user = await User.findById(req.user.id);
+
+        if (user.purchasedBooks.includes(book._id)) {
+            return res.status(400).json({ msg: 'You have already purchased this book' });
+        }
+
+        // Mock Stripe Payment Split
+        // If the book costs $10, 80% goes to the publisher.
+        const publisher = await User.findById(book.author);
+        if (publisher && publisher.stripeAccountId) {
+            const publisherCut = (book.price || 0) * 0.8;
+            publisher.balance = (publisher.balance || 0) + publisherCut;
+            await publisher.save();
+        }
+
+        user.purchasedBooks.push(book._id);
+        await user.save();
+
+        res.json({ msg: 'Book purchased successfully', bookId: book._id });
+    } catch (err) {
+        console.error('Error purchasing book:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+
+// Onboard Publisher (Mock Stripe Connect)
+app.post('/api/publisher/onboard', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (user.role !== 'publisher') {
+            return res.status(403).json({ msg: 'Only publishers can onboard' });
+        }
+
+        if (user.stripeAccountId) {
+            return res.status(400).json({ msg: 'Already connected to Stripe' });
+        }
+
+        // Generate a mock Stripe account ID
+        user.stripeAccountId = `acct_mock_${Math.random().toString(36).substr(2, 10)}`;
+        await user.save();
+
+        res.json({ msg: 'Successfully connected bank account!', stripeAccountId: user.stripeAccountId });
+    } catch (err) {
+        console.error('Error onboarding publisher:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Get Publisher Balance
+app.get('/api/publisher/balance', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (user.role !== 'publisher') {
+            return res.status(403).json({ msg: 'Only publishers can view balance' });
+        }
+        res.json({ balance: user.balance || 0, stripeAccountId: user.stripeAccountId });
+    } catch (err) {
+        console.error('Error fetching balance:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
 // Send a message
 app.post('/api/messages/:userId', auth, async (req, res) => {
     try {
@@ -924,4 +1143,4 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Start Server
-app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT}`));
+app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
