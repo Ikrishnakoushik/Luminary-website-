@@ -142,45 +142,10 @@ const auth = (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-console.error(`[Startup] Target MongoDB: ${MONGO_URI.substring(0, 20)}...`);
-
-let cachedDb = null;
-
-async function connectToDatabase() {
-    if (cachedDb && mongoose.connection.readyState === 1) {
-        return cachedDb;
-    }
-
-    console.error('[Startup] Establishing new MongoDB connection...');
-    try {
-        const db = await mongoose.connect(MONGO_URI, {
-            serverSelectionTimeoutMS: 10000,
-            socketTimeoutMS: 45000,
-        });
-        cachedDb = db;
-        console.error('[Startup] MongoDB Connected Successfully');
-        return db;
-    } catch (err) {
-        console.error('[Startup] MongoDB Connection Error:', err.message);
-        throw err;
-    }
-}
-
-// Initial connection attempt
-connectToDatabase().catch(err => console.error('[Startup] Initial connection failed. Handled by middleware.'));
-
-// Middleware to ensure DB is connected before handling requests
-app.use(async (req, res, next) => {
-    try {
-        await connectToDatabase();
-        next();
-    } catch (err) {
-        res.status(503).json({
-            msg: 'Database connection error',
-            details: 'The server is unable to connect to the database. Please check your MONGO_URI and IP whitelist.'
-        });
-    }
-});
+console.error('[Startup] Checking Mongo connection...');
+mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
+    .then(() => console.error('[Startup] MongoDB Connected'))
+    .catch(err => console.error('[Startup] MongoDB Error:', err));
 
 // Routes
 const multer = require('multer');
@@ -195,7 +160,10 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage: storage,
-    limits: { fileSize: 5000000 }, // 5MB limit
+    limits: {
+        fileSize: 5000000, // 5MB limit for files
+        fieldSize: 25 * 1024 * 1024 // 25MB limit for text fields (allows full book manuscripts)
+    },
     fileFilter: function (req, file, cb) {
         checkFileType(file, cb);
     }
@@ -958,64 +926,86 @@ app.get('/api/books/:id', auth, async (req, res) => {
 });
 
 // Publish a Book
-app.post('/api/books', auth, async (req, res) => {
-    try {
-        const { title, description, price, coverImage, content, penName } = req.body;
-
-        // Check if publisher
-        if (req.user.role !== 'publisher') {
-            return res.status(403).json({ msg: 'Only publishers can create books' });
+app.post('/api/books', auth, (req, res) => {
+    upload.single('coverImageFile')(req, res, async (err) => {
+        if (err) {
+            console.error("Multer error in book publish:", err);
+            return res.status(400).json({ msg: err.message || err });
         }
+        try {
+            const { title, description, price, coverImage, content, penName } = req.body;
 
-        const newBook = new Book({
-            title,
-            description,
-            price: price || 0,
-            coverImage: coverImage || '',
-            content,
-            penName: penName || '',
-            author: req.user.id
-        });
+            // Check if publisher
+            if (req.user.role !== 'publisher') {
+                return res.status(403).json({ msg: 'Only publishers can create books' });
+            }
 
-        const savedBook = await newBook.save();
+            let finalCoverImage = coverImage || '';
+            if (req.file) {
+                finalCoverImage = `/uploads/${req.file.filename}`;
+            }
 
-        // Add to author's published books
-        await User.findByIdAndUpdate(req.user.id, { $push: { publishedBooks: savedBook._id } });
+            const newBook = new Book({
+                title,
+                description,
+                price: price || 0,
+                coverImage: finalCoverImage,
+                content,
+                penName: penName || '',
+                author: req.user.id
+            });
 
-        res.json(savedBook);
-    } catch (err) {
-        console.error('Error creating book:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
+            const savedBook = await newBook.save();
+
+            // Add to author's published books
+            await User.findByIdAndUpdate(req.user.id, { $push: { publishedBooks: savedBook._id } });
+
+            res.json(savedBook);
+        } catch (err) {
+            console.error('Error creating book:', err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    });
 });
 
 // Update a Book
-app.put('/api/books/:id', auth, async (req, res) => {
-    try {
-        const { title, description, price, coverImage, content, penName } = req.body;
-
-        let book = await Book.findById(req.params.id);
-        if (!book) return res.status(404).json({ msg: 'Book not found' });
-
-        // Ensure user is author
-        if (book.author.toString() !== req.user.id) {
-            return res.status(401).json({ msg: 'Not authorized to edit this book' });
+app.put('/api/books/:id', auth, (req, res) => {
+    upload.single('coverImageFile')(req, res, async (err) => {
+        if (err) {
+            console.error("Multer error in book update:", err);
+            return res.status(400).json({ msg: err.message || err });
         }
+        try {
+            const { title, description, price, coverImage, content, penName } = req.body;
 
-        // Update fields
-        if (title) book.title = title;
-        if (description) book.description = description;
-        if (price !== undefined) book.price = price;
-        if (coverImage !== undefined) book.coverImage = coverImage;
-        if (content) book.content = content;
-        if (penName !== undefined) book.penName = penName;
+            let book = await Book.findById(req.params.id);
+            if (!book) return res.status(404).json({ msg: 'Book not found' });
 
-        await book.save();
-        res.json(book);
-    } catch (err) {
-        console.error('Error updating book:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
+            // Ensure user is author
+            if (book.author.toString() !== req.user.id) {
+                return res.status(401).json({ msg: 'Not authorized to edit this book' });
+            }
+
+            let finalCoverImage = coverImage;
+            if (req.file) {
+                finalCoverImage = `/uploads/${req.file.filename}`;
+            }
+
+            // Update fields
+            if (title) book.title = title;
+            if (description) book.description = description;
+            if (price !== undefined) book.price = price;
+            if (finalCoverImage !== undefined) book.coverImage = finalCoverImage;
+            if (content) book.content = content;
+            if (penName !== undefined) book.penName = penName;
+
+            await book.save();
+            res.json(book);
+        } catch (err) {
+            console.error('Error updating book:', err);
+            res.status(500).json({ msg: 'Server Error' });
+        }
+    });
 });
 
 // Toggle Publish Status of a Book
@@ -1476,8 +1466,4 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Start Server
-if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
-}
-
-module.exports = app;
+app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));

@@ -91,3 +91,8 @@ const LuminaryUI = (function () {
 // Global Aliases (Optional, for easier migration)
 window.lToast = LuminaryUI.showToast;
 window.lConfirm = LuminaryUI.showConfirm;
+
+// Override Native Alert Site-Wide
+window.alert = function (message) {
+    LuminaryUI.showToast(message, 'info');
+};

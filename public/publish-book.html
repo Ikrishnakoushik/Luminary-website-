@@ -436,9 +436,14 @@
 
                 <div style="display: flex; gap: 20px;">
                     <div class="form-group" style="flex: 2;">
-                        <label for="bookCover">Cover Image URL (Optional)</label>
-                        <input type="url" id="bookCover" class="form-control"
-                            placeholder="https://example.com/cover.jpg">
+                        <label>Cover Image (Upload or URL)</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="file" id="bookCoverFile" accept="image/*" class="form-control"
+                                style="flex: 1; padding: 12px; cursor: pointer;" title="Upload an image file">
+                            <span style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">OR</span>
+                            <input type="url" id="bookCover" class="form-control" placeholder="Paste Image URL"
+                                style="flex: 1;">
+                        </div>
                     </div>
 
                     <div class="form-group" style="flex: 1; min-width: 150px;">
@@ -704,38 +709,46 @@
                     endpoint = `${API_URL}/books/${editId}`;
                 }
 
+                const formData = new FormData();
+                formData.append('title', title);
+                formData.append('description', description);
+                formData.append('price', price);
+                formData.append('content', content);
+                formData.append('penName', penName);
+
+                const coverImageFile = document.getElementById('bookCoverFile').files[0];
+                if (coverImageFile) {
+                    formData.append('coverImageFile', coverImageFile);
+                } else if (coverImage) {
+                    formData.append('coverImage', coverImage);
+                }
+
                 const res = await fetch(endpoint, {
                     method: method,
                     headers: {
-                        'Content-Type': 'application/json',
                         'x-auth-token': currentToken
                     },
-                    body: JSON.stringify({
-                        title,
-                        description,
-                        coverImage,
-                        price,
-                        content,
-                        penName
-                    })
+                    body: formData
                 });
 
                 const data = await res.json();
 
                 if (res.ok) {
                     if (editId) {
-                        alert('Book updated successfully!');
+                        showToast('Book updated successfully!', 'success');
                     } else {
-                        alert('Book published successfully!');
+                        showToast('Book published successfully!', 'success');
                     }
                     localStorage.removeItem('draftTitle');
                     localStorage.removeItem('draftPenName');
                     localStorage.removeItem('draftContent');
                     localStorage.removeItem('draftDescription');
-                    window.location.href = '/books.html';
+                    setTimeout(() => {
+                        window.location.href = '/books.html';
+                    }, 1500);
                 } else {
                     if (res.status === 401 && (data.msg === 'Token is not valid' || data.msg.includes('No token'))) {
-                        alert("Your login session has expired! We've saved your draft. Please log back in to continue.");
+                        showToast("Your login session has expired! We've saved your draft.", 'error');
                         localStorage.setItem('draftTitle', title);
                         localStorage.setItem('draftPenName', penName);
                         localStorage.setItem('draftContent', content);
