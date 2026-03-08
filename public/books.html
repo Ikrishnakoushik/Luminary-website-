@@ -12,28 +12,37 @@
     <style>
         /* Premium Bookstore Theme */
         :root {
-            --primary: var(--primary, #8A2BE2);
-            --primary-light: var(--primary-hover, #9d4edd);
-            --bg: var(--bg-color, #0f1016);
-            --surface: var(--surface, rgba(30, 30, 36, 0.6));
-            --surface-hover: var(--surface-light, rgba(45, 45, 55, 0.8));
-            --text: var(--text-main, #ffffff);
-            --text-secondary: var(--text-muted, #a1a1aa);
-            --border: var(--border, rgba(255, 255, 255, 0.08));
-            --nav-bg: var(--bg-color, rgba(15, 16, 22, 0.85));
+            --primary: #6366f1;
+            /* Indigo */
+            --secondary: #a855f7;
+            /* Purple */
+            --accent: #ec4899;
+            /* Pink */
+            --bg: #0b0f19;
+            /* Deep modern dark */
+            --surface: rgba(255, 255, 255, 0.03);
+            --surface-hover: rgba(255, 255, 255, 0.08);
+            --text: #f8fafc;
+            --text-secondary: #94a3b8;
+            --border: rgba(255, 255, 255, 0.1);
+            --nav-bg: rgba(11, 15, 25, 0.7);
         }
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
             background-color: var(--bg);
-            background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
             color: var(--text);
             margin: 0;
             padding: 0;
             display: flex;
             flex-direction: column;
             min-height: 100vh;
+            /* Enhance background with a beautiful dynamic glow */
+            background-image:
+                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.05) 0%, transparent 60%);
+            background-attachment: fixed;
         }
 
         /* Top Navigation */
@@ -43,33 +52,35 @@
             width: 100%;
             height: 70px;
             background: var(--nav-bg);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 40px;
+            padding: 0 5%;
             box-sizing: border-box;
             z-index: 100;
+            transition: all 0.3s ease;
         }
 
         .nav-logo {
             font-size: 1.5rem;
             font-weight: 800;
             text-decoration: none;
-            background: linear-gradient(to right, #b366ff, #ec4899);
+            background: linear-gradient(135deg, var(--primary), var(--accent));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.5px;
         }
 
         .nav-links {
             display: flex;
-            gap: 30px;
+            gap: 35px;
             align-items: center;
         }
 
@@ -78,202 +89,318 @@
             color: var(--text-secondary);
             font-size: 0.95rem;
             font-weight: 500;
-            transition: color 0.3s;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 8px;
+            position: relative;
         }
 
-        .nav-link:hover {
+        .nav-link:hover,
+        .nav-link.active {
             color: var(--text);
         }
 
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -24px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 3px 3px 0 0;
+        }
+
         .publish-cta {
-            background: linear-gradient(135deg, var(--primary), #ec4899);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white !important;
-            padding: 8px 20px;
-            border-radius: 20px;
+            padding: 10px 24px;
+            border-radius: 30px;
             font-weight: 600;
             text-decoration: none;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             display: none;
-            /* Hidden by default, shown via JS if publisher */
-            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         .publish-cta:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+            border-color: rgba(255, 255, 255, 0.2);
         }
 
         /* Main Content Container */
         .main-container {
             margin-top: 70px;
-            /* offset for nav */
             flex: 1;
         }
 
-        /* Hero Section */
+        /* Premium Hero Section */
         .hero-section {
-            padding: 80px 40px;
+            padding: 100px 5% 60px;
             text-align: center;
-            border-bottom: 1px solid var(--border);
             position: relative;
-            overflow: hidden;
-        }
-
-        .hero-section::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at center, rgba(138, 43, 226, 0.1) 0%, transparent 70%);
-            z-index: -1;
+            z-index: 1;
         }
 
         .hero-section h1 {
-            font-size: 3.5rem;
-            margin: 0 0 15px 0;
-            letter-spacing: -1px;
-            font-weight: 800;
+            font-size: 4rem;
+            margin: 0 0 20px 0;
+            letter-spacing: -2px;
+            font-weight: 900;
+            background: linear-gradient(to right, #ffffff, #a5b4fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1.1;
         }
 
         .hero-section p {
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             color: var(--text-secondary);
-            max-width: 600px;
-            margin: 0 auto 30px auto;
+            max-width: 650px;
+            margin: 0 auto 40px auto;
             line-height: 1.6;
+            font-weight: 300;
         }
 
+        /* Modern Toggle Pills */
         .tabs-container {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 20px;
+            display: inline-flex;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            border-radius: 40px;
+            padding: 6px;
+            gap: 5px;
+            backdrop-filter: blur(10px);
+            position: relative;
         }
 
         .tab {
-            padding: 10px 25px;
+            padding: 12px 30px;
             cursor: pointer;
             color: var(--text-secondary);
-            background: var(--surface);
-            border: 1px solid var(--border);
             border-radius: 30px;
-            font-weight: 500;
-            transition: all 0.3s;
+            font-weight: 600;
             font-size: 0.95rem;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            position: relative;
+            z-index: 2;
         }
 
         .tab:hover {
-            background: var(--surface-hover);
             color: var(--text);
         }
 
         .tab.active {
             color: white;
-            background: var(--primary);
-            border-color: var(--primary);
-            box-shadow: 0 4px 12px rgba(138, 43, 226, 0.3);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
 
         /* Content Area */
         .content-area {
-            padding: 50px 40px;
-            max-width: 1300px;
+            padding: 40px 5% 80px;
+            max-width: 1400px;
             margin: 0 auto;
         }
 
-        /* Books Grid */
+        /* Interactive Search/Filter Bar */
+        .collection-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        .collection-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text);
+            margin: 0;
+        }
+
+        .search-bar {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 300px;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .search-bar input {
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-size: 0.95rem;
+            width: 100%;
+            outline: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .search-bar i {
+            color: var(--text-secondary);
+        }
+
+        /* 3D Books Grid */
         .books-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 40px 30px;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 50px 35px;
         }
 
         .book-card {
-            background: rgba(30, 30, 36, 0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px;
-            overflow: hidden;
+            background: var(--surface);
+            border-radius: 20px;
+            padding: 20px;
             border: 1px solid var(--border);
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
             cursor: pointer;
             position: relative;
+            backdrop-filter: blur(10px);
         }
 
         .book-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
-            border-color: rgba(138, 43, 226, 0.4);
+            transform: translateY(-10px);
+            background: var(--surface-hover);
+            border-color: rgba(168, 85, 247, 0.3);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                0 0 20px rgba(99, 102, 241, 0.1);
+        }
+
+        /* 3D Book Cover Effect */
+        .cover-wrapper {
+            position: relative;
+            width: 100%;
+            height: 340px;
+            margin-bottom: 25px;
+            perspective: 1000px;
+            transform-style: preserve-3d;
         }
 
         .book-cover {
             width: 100%;
-            height: 320px;
-            background-color: #1a1a24;
+            height: 100%;
             object-fit: cover;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow:
+                -5px 0 15px rgba(0, 0, 0, 0.5),
+                inset 4px 0 10px rgba(255, 255, 255, 0.2),
+                /* Highlight on spine edge */
+                inset -1px 0 2px rgba(0, 0, 0, 0.1);
+            /* Shadow on pages edge */
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            transform-origin: left center;
+            background-color: #1e2235;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
-            border-bottom: 1px solid var(--border);
+        }
+
+        /* Book pages depth effect on right edge */
+        .book-cover::after {
+            content: '';
+            position: absolute;
+            top: 2%;
+            right: -6px;
+            width: 6px;
+            height: 96%;
+            background: linear-gradient(to right, #ddd, #f8f8f8);
+            border-radius: 0 4px 4px 0;
+            box-shadow: inset 1px 0 2px rgba(0, 0, 0, 0.1);
+            transform: translateZ(-3px);
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .book-card:hover .book-cover {
+            transform: rotateY(-15deg) scale(1.03) translateX(5px);
+            box-shadow:
+                -15px 10px 25px rgba(0, 0, 0, 0.6),
+                inset 6px 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .book-card:hover .book-cover::after {
+            opacity: 1;
+            /* Show pages depth when rotated */
         }
 
         .book-info {
-            padding: 20px;
             flex: 1;
             display: flex;
             flex-direction: column;
+            text-align: center;
         }
 
         .book-title {
-            font-size: 1.15rem;
-            margin: 0 0 8px 0;
-            font-weight: 700;
+            font-size: 1.25rem;
+            margin: 0 0 6px 0;
+            font-weight: 800;
             line-height: 1.3;
+            letter-spacing: -0.2px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
 
         .book-author {
-            font-size: 0.9rem;
+            font-size: 0.95rem;
             color: var(--text-secondary);
-            margin: 0 0 15px 0;
+            margin: 0 0 20px 0;
+            font-weight: 400;
         }
 
-        .book-price {
-            font-weight: 700;
-            color: #10b981;
-            /* Premium Green */
-            margin-top: auto;
-            font-size: 1.05rem;
+        .price-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
+            margin-top: auto;
+            border-top: 1px solid var(--border);
+            padding-top: 15px;
+        }
+
+        .book-price {
+            font-weight: 800;
+            color: #10b981;
+            font-size: 1.15rem;
+            margin: 0;
         }
 
         .book-action-btn {
-            width: 100%;
-            padding: 12px;
+            padding: 8px 16px;
             border: none;
-            border-top: 1px solid var(--border);
-            background: transparent;
-            color: var(--text-secondary);
+            border-radius: 20px;
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
             cursor: pointer;
             transition: all 0.3s;
             font-weight: 600;
-            font-size: 0.95rem;
-            letter-spacing: 0.5px;
+            font-size: 0.9rem;
         }
 
         .book-card:hover .book-action-btn {
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            border-top-color: var(--primary);
+            box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3);
         }
 
         /* Reader Modal */
@@ -300,11 +427,7 @@
             padding: 80px 10%;
             position: relative;
             box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            color: transparent;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-            -webkit-background-clip: text;
-            background-clip: text;
-            background-clip: text;
+            text-shadow: none;
             font-family: 'Merriweather', 'Georgia', serif;
             line-height: 1.9;
             font-size: 1.15rem;
@@ -417,6 +540,14 @@
 
         <!-- Content Area -->
         <section class="content-area">
+            <div class="collection-header">
+                <h2 class="collection-title">Explore Library</h2>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search books, authors, genres...">
+                </div>
+            </div>
+
             <div id="loading" class="loader"></div>
             <div id="booksGrid" class="books-grid"></div>
         </section>
@@ -545,11 +676,22 @@
             currentTab = tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             event.target.classList.add('active');
+
+            // Clear search when switching tabs
+            const searchInput = document.querySelector('.search-bar input');
+            if (searchInput) searchInput.value = '';
+
             renderBooks();
         }
 
-        // Render Books based on Tab
-        function renderBooks() {
+        // Handle Search Filtering
+        document.querySelector('.search-bar input').addEventListener('input', (e) => {
+            const searchTerm = e.target.value.toLowerCase();
+            renderBooks(searchTerm);
+        });
+
+        // Render Books based on Tab and Search Filter
+        function renderBooks(searchTerm = '') {
             const grid = document.getElementById('booksGrid');
             grid.innerHTML = '';
 
@@ -567,8 +709,17 @@
                 );
             }
 
+            // Apply search filter if present
+            if (searchTerm) {
+                booksToShow = booksToShow.filter(b => {
+                    const authorName = b.penName ? b.penName : (b.author.displayName || b.author.username);
+                    return b.title.toLowerCase().includes(searchTerm) ||
+                        authorName.toLowerCase().includes(searchTerm);
+                });
+            }
+
             if (booksToShow.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1 / -1;">No books found.</p>';
+                grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1 / -1; font-size: 1.1rem;">No books found matching your criteria.</p>';
                 return;
             }
 
@@ -581,26 +732,30 @@
                 card.className = 'book-card';
 
                 const cover = book.coverImage
-                    ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#2a2a2a';">`
+                    ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#1e2235';">`
                     : `<div class="book-cover"><i class="fas fa-book fa-3x"></i></div>`;
 
                 let actionHtml = '';
                 if (canRead) {
-                    actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>`;
+                    actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read</button>`;
                 } else {
-                    actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy for $${book.price}</button>`;
+                    actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy</button>`;
                 }
 
-                const authorNameDisplay = book.penName ? `${book.penName} (Pen Name)` : (book.author.displayName || book.author.username);
+                const authorNameDisplay = book.penName ? `${book.penName}` : (book.author.displayName || book.author.username);
 
                 card.innerHTML = `
-                    ${cover}
+                    <div class="cover-wrapper">
+                        ${cover}
+                    </div>
                     <div class="book-info">
                         <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
-                        <p class="book-author">By ${authorNameDisplay}</p>
-                        <p class="book-price">${book.price === 0 ? 'Free' : '$' + book.price}</p>
+                        <p class="book-author">${authorNameDisplay}</p>
+                        <div class="price-row">
+                            <p class="book-price">${book.price === 0 ? 'Free' : '$' + book.price}</p>
+                            ${actionHtml}
+                        </div>
                     </div>
-                    ${actionHtml}
                 `;
                 grid.appendChild(card);
             });

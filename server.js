@@ -392,6 +392,11 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
+        // Check if user is verified
+        if (user.isVerified === false) {
+            return res.status(403).json({ msg: 'Please verify your email before logging in.', requiresVerification: true });
+        }
+
         // Log visit
         user.loginHistory.push(new Date());
         await user.save();
