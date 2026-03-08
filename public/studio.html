@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publisher Studio | Luminary</title>
+    <title>Publisher Studio | Vylithra</title>
     <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -289,7 +289,7 @@
 
     <nav class="top-nav">
         <a href="/books.html" class="nav-logo">
-            <i class="fas fa-book-open"></i> Luminary Books
+            <i class="fas fa-book-open"></i> Vylithra Books
         </a>
         <div class="nav-links">
             <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
@@ -443,7 +443,7 @@
                         </div>
                     </td>
                     <td>${statusHtml}</td>
-                    <td>${book.price > 0 ? '$' + book.price : 'Free'}</td>
+                    <td>${book.price > 0 ? '₹' + book.price : 'Free'}</td>
                     <td>
                         <div class="actions-cell">
                             <button class="action-btn edit" onclick="window.location.href='/publish-book.html?editId=${book._id}'" title="Edit Book">

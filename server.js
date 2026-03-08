@@ -25,27 +25,12 @@ if (process.env.RESEND_API_KEY) {
 const stripeSecret = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
 const stripe = require('stripe')(stripeSecret);
 
-// Stripe API Mock Interceptor for Local Development
-// If the key is the default placeholder or 'mock', we intercept Stripe calls to prevent 500 errors
-if (stripeSecret === 'sk_test_mock' || stripeSecret.includes('aB1cD2eF3gH4iJ5kL6mN7oP8qR9sT0')) {
-    console.log('[Stripe Mock] Using mocked Stripe API for local development.');
+const Razorpay = require('razorpay');
+const razorpay = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
+});
 
-    // Override methods directly instead of the entire readonly nested object
-    stripe.checkout.sessions.create = async (params) => {
-        const sessionId = `cs_test_${Math.random().toString(36).substr(2, 24)}`;
-        // Convert the success URL to use the new mock session ID
-        const redirectUrl = params.success_url.replace('{CHECKOUT_SESSION_ID}', sessionId);
-
-        return {
-            id: sessionId,
-            url: `/mock-checkout.html?redirect=${encodeURIComponent(redirectUrl)}&amount=${params.line_items[0].price_data.unit_amount}`
-        };
-    };
-
-    stripe.checkout.sessions.retrieve = async (sessionId) => {
-        return { payment_status: 'paid', id: sessionId };
-    };
-}
 
 // Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
@@ -316,7 +301,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         try {
             await sendEmail({
                 to: email,
-                subject: 'Luminary - Password Reset OTP',
+                subject: 'Vylithra - Password Reset OTP',
                 text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
             });
             res.json({ msg: 'OTP sent to email', email: user.email });
@@ -1139,6 +1124,77 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
     }
 });
 
+// Razorpay: Create Order
+app.post('/api/razorpay/create-order', auth, async (req, res) => {
+    try {
+        const { bookId } = req.body;
+        const book = await Book.findById(bookId);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const amount = Math.round(book.price * 100); // Amount in paise
+
+        const options = {
+            amount: amount,
+            currency: "INR",
+            receipt: `rcpt_${req.user.id.toString().slice(-10)}_${Date.now().toString().slice(-10)}`,
+            notes: {
+                bookId: bookId.toString(),
+                userId: req.user.id.toString()
+            }
+        };
+
+        const order = await razorpay.orders.create(options);
+        res.json(order);
+    } catch (err) {
+        console.error('Razorpay Order Error:', err);
+        res.status(500).json({ msg: 'Order creation failed' });
+    }
+});
+
+// Razorpay: Verify Payment
+app.post('/api/razorpay/verify-payment', auth, async (req, res) => {
+    try {
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            bookId
+        } = req.body;
+
+        const crypto = require('crypto');
+        const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
+        shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
+        const digest = shasum.digest('hex');
+
+        if (digest !== razorpay_signature) {
+            return res.status(400).json({ msg: 'Transaction not legitimate!' });
+        }
+
+        // Fulfill the order
+        const user = await User.findById(req.user.id);
+        if (!user.purchasedBooks.includes(bookId)) {
+            user.purchasedBooks.push(bookId);
+            await user.save();
+
+            // Credit publisher
+            const book = await Book.findById(bookId);
+            if (book) {
+                const publisher = await User.findById(book.author);
+                if (publisher) {
+                    const publisherCut = (book.price || 0) * 0.8;
+                    publisher.balance = (publisher.balance || 0) + publisherCut;
+                    await publisher.save();
+                }
+            }
+        }
+
+        res.json({ msg: 'Payment verified successfully', success: true });
+    } catch (err) {
+        console.error('Razorpay Verification Error:', err);
+        res.status(500).json({ msg: 'Verification failed' });
+    }
+});
+
 // Create Stripe Checkout Session for a Book (Legacy - keep for backward compat or refactor)
 app.post('/api/books/:id/create-checkout-session', auth, async (req, res) => {
     try {
@@ -1159,7 +1215,7 @@ app.post('/api/books/:id/create-checkout-session', auth, async (req, res) => {
                         currency: 'usd',
                         product_data: {
                             name: book.title,
-                            description: book.description || 'A great book on Luminary.',
+                            description: book.description || 'A great book on Vylithra.',
                             images: book.coverImage ? [book.coverImage.startsWith('http') ? book.coverImage : `http://localhost:3000${book.coverImage}`] : [],
                         },
                         unit_amount: Math.round((book.price || 0) * 100), // Stripe expects cents
@@ -1273,10 +1329,7 @@ app.post('/api/publisher/onboard', auth, async (req, res) => {
         }
 
         if (method === 'stripe') {
-            // Legacy/Mock Stripe logic
-            if (!user.stripeAccountId) {
-                user.stripeAccountId = `acct_mock_${Math.random().toString(36).substr(2, 10)}`;
-            }
+            // Stripe onboarding is currently handled externally or pending real integration
             user.preferredPaymentMethod = 'stripe';
         } else if (['paypal', 'upi', 'manual'].includes(method)) {
             user.preferredPaymentMethod = method;

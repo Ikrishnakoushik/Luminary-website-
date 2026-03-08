@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luminary - Messages</title>
+    <title>Vylithra - Messages</title>
     <script src="theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -416,7 +416,7 @@
 <body>
 
     <header>
-        <a href="main.html" class="logo"><i class="fa-solid fa-compass"></i> Luminary</a>
+        <a href="main.html" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
         <div class="header-actions">
             <a href="main.html">Back to Home</a>
         </div>
@@ -489,7 +489,7 @@
         function enforceLogin(e) {
             if (!localStorage.getItem('token')) {
                 if (e) e.preventDefault();
-                LuminaryUI.showToast('Please login to access this feature!', 'error');
+                VylithraUI.showToast('Please login to access this feature!', 'error');
                 window.location.href = 'auth.html';
                 return false;
             }
@@ -693,7 +693,7 @@
                     // Update sidebar internally without reloading chat
                     loadConversations();
                 } else {
-                    LuminaryUI.showToast("Failed to send message!", 'error');
+                    VylithraUI.showToast("Failed to send message!", 'error');
                 }
             } catch (e) {
                 console.error(e);

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Publish a Book | Luminary</title>
+    <title>Publish a Book | Vylithra</title>
     <!-- Use same theme-loader as the rest of the app -->
     <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
@@ -391,7 +391,7 @@
     <!-- Top Navigation -->
     <nav class="top-nav">
         <a href="/books.html" class="nav-logo">
-            <i class="fas fa-book-open"></i> Luminary Books
+            <i class="fas fa-book-open"></i> Vylithra Books
         </a>
         <div class="nav-links">
             <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> App Home</a>
@@ -447,7 +447,7 @@
                     </div>
 
                     <div class="form-group" style="flex: 1; min-width: 150px;">
-                        <label for="bookPrice">Sale Price ($)</label>
+                        <label for="bookPrice">Sale Price (₹)</label>
                         <input type="number" id="bookPrice" class="form-control" min="0" step="0.01" value="0" required>
                     </div>
                 </div>
@@ -505,7 +505,7 @@
                         style="margin-right:8px;"></i><span></span></div>
 
                 <button type="submit" class="submit-btn" id="submitBtn"><i class="fas fa-rocket"
-                        style="margin-right: 10px;"></i> Publish to Luminary</button>
+                        style="margin-right: 10px;"></i> Publish to Vylithra</button>
             </form>
         </div>
     </div>
@@ -540,7 +540,7 @@
                 if (res.ok) {
                     const user = await res.json();
                     if (user.role !== 'publisher') {
-                        LuminaryUI.showToast('Only publishers can create books.', 'error');
+                        VylithraUI.showToast('Only publishers can create books.', 'error');
                         window.location.href = '/books.html';
                     } else {
                         document.getElementById('studioLink').style.display = 'flex';
@@ -620,7 +620,7 @@
         }
 
         function insertLink() {
-            showPrompt("Insert Link", "Enter the link URL (e.g. https://luminary.com)", (url) => {
+            showPrompt("Insert Link", "Enter the link URL (e.g. https://vylithra.com)", (url) => {
                 if (url) {
                     document.execCommand('createLink', false, url);
                     document.getElementById('bookContent').focus();
@@ -760,14 +760,14 @@
                     errorMsg.querySelector('span').textContent = data.msg || 'Error publishing/updating book.';
                     errorMsg.style.display = 'block';
                     btn.disabled = false;
-                    btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
+                    btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Vylithra';
                 }
             } catch (err) {
                 console.error('Error:', err);
                 errorMsg.querySelector('span').textContent = 'Network error. Please try again.';
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
-                btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Luminary';
+                btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Vylithra';
             }
         });
 

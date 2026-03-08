@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Luminary - Home</title>
+    <title>Vylithra - Home</title>
     <script src="theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -26,7 +26,7 @@
         function enforceLogin(e) {
             if (!localStorage.getItem('token')) {
                 if (e) e.preventDefault();
-                LuminaryUI.showToast('Please login to access this feature!', 'error');
+                VylithraUI.showToast('Please login to access this feature!', 'error');
                 window.location.href = 'auth.html';
                 return false;
             }
@@ -1143,7 +1143,7 @@
 
     <!-- Header -->
     <header id="main-header">
-        <a href="main.html" class="logo"><i class="fa-solid fa-compass"></i> Luminary</a>
+        <a href="main.html" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
 
         <div class="search-bar">
             <i class="fa-solid fa-search"></i>
@@ -1232,7 +1232,7 @@
                         <!-- Slide 1 -->
                         <div class="slide active">
                             <div class="slide-content">
-                                <h2>Welcome to Luminary</h2>
+                                <h2>Welcome to Vylithra</h2>
                                 <p>An all-in-one platform designed for modern creators.</p>
                             </div>
                         </div>
@@ -1315,7 +1315,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 0.95rem;">Documentation</div>
-                                <div style="font-size: 0.8rem; color: #94a3b8;">Learn how to use Luminary</div>
+                                <div style="font-size: 0.8rem; color: #94a3b8;">Learn how to use Vylithra</div>
                             </div>
                         </a>
                     </li>
@@ -1390,7 +1390,7 @@
         // --- Reader Mode Logic ---
         function openReader(title, author, time, content) {
             const overlay = document.getElementById('reader-overlay');
-            document.getElementById('reader-title').innerText = title || "Luminary Post";
+            document.getElementById('reader-title').innerText = title || "Vylithra Post";
             document.getElementById('reader-author').innerText = author;
             document.getElementById('reader-time').innerText = time;
 
@@ -2041,7 +2041,7 @@
 
         function openReaderFormatted(title, author, time, contentHTML) {
             const overlay = document.getElementById('reader-overlay');
-            document.getElementById('reader-title').innerText = title || "Luminary Post";
+            document.getElementById('reader-title').innerText = title || "Vylithra Post";
             document.getElementById('reader-author').innerText = author;
             document.getElementById('reader-time').innerText = time;
             document.getElementById('reader-body').innerHTML = contentHTML;

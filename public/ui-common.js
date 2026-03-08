@@ -1,15 +1,15 @@
 /**
- * Luminary UI Notification System
+ * Vylithra UI Notification System
  * Replaces native alert() and confirm()
  */
 
-const LuminaryUI = (function () {
+const VylithraUI = (function () {
     // Helper to ensure containers exist
     function ensureContainers() {
-        if (!document.getElementById('luminary-toast-container')) {
+        if (!document.getElementById('vylithra-toast-container')) {
             const container = document.createElement('div');
-            container.id = 'luminary-toast-container';
-            container.className = 'luminary-toast-container';
+            container.id = 'vylithra-toast-container';
+            container.className = 'vylithra-toast-container';
             document.body.appendChild(container);
         }
     }
@@ -17,10 +17,10 @@ const LuminaryUI = (function () {
     return {
         showToast: function (message, type = 'success', duration = 4000) {
             ensureContainers();
-            const container = document.getElementById('luminary-toast-container');
+            const container = document.getElementById('vylithra-toast-container');
 
             const toast = document.createElement('div');
-            toast.className = `luminary-toast ${type}`;
+            toast.className = `vylithra-toast ${type}`;
 
             let iconClass = 'fa-check-circle';
             if (type === 'error') iconClass = 'fa-exclamation-circle';
@@ -42,20 +42,20 @@ const LuminaryUI = (function () {
 
         showConfirm: function ({ title, message, onConfirm, onCancel, confirmText = 'Confirm', cancelText = 'Cancel' }) {
             const backdrop = document.createElement('div');
-            backdrop.className = 'luminary-modal-backdrop';
+            backdrop.className = 'vylithra-modal-backdrop';
 
             backdrop.innerHTML = `
-                <div class="luminary-modal">
-                    <div class="luminary-modal-header">
+                <div class="vylithra-modal">
+                    <div class="vylithra-modal-header">
                         <i class="fas fa-question-circle" style="color: var(--primary); font-size: 1.5rem;"></i>
                         <h3>${title || 'Confirm Action'}</h3>
                     </div>
-                    <div class="luminary-modal-body">
+                    <div class="vylithra-modal-body">
                         ${message || 'Are you sure you want to proceed?'}
                     </div>
-                    <div class="luminary-modal-footer">
-                        <button class="luminary-btn luminary-btn-outline" id="luminary-cancel-btn">${cancelText}</button>
-                        <button class="luminary-btn luminary-btn-primary" id="luminary-confirm-btn">${confirmText}</button>
+                    <div class="vylithra-modal-footer">
+                        <button class="vylithra-btn vylithra-btn-outline" id="vylithra-cancel-btn">${cancelText}</button>
+                        <button class="vylithra-btn vylithra-btn-primary" id="vylithra-confirm-btn">${confirmText}</button>
                     </div>
                 </div>
             `;
@@ -70,12 +70,12 @@ const LuminaryUI = (function () {
                 setTimeout(() => backdrop.remove(), 300);
             };
 
-            backdrop.querySelector('#luminary-confirm-btn').onclick = () => {
+            backdrop.querySelector('#vylithra-confirm-btn').onclick = () => {
                 if (onConfirm) onConfirm();
                 close();
             };
 
-            backdrop.querySelector('#luminary-cancel-btn').onclick = () => {
+            backdrop.querySelector('#vylithra-cancel-btn').onclick = () => {
                 if (onCancel) onCancel();
                 close();
             };
@@ -89,10 +89,10 @@ const LuminaryUI = (function () {
 })();
 
 // Global Aliases (Optional, for easier migration)
-window.lToast = LuminaryUI.showToast;
-window.lConfirm = LuminaryUI.showConfirm;
+window.lToast = VylithraUI.showToast;
+window.lConfirm = VylithraUI.showConfirm;
 
 // Override Native Alert Site-Wide
 window.alert = function (message) {
-    LuminaryUI.showToast(message, 'info');
+    VylithraUI.showToast(message, 'info');
 };

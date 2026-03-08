@@ -1,5 +1,5 @@
-const CACHE_NAME = 'luminary-cache-v1';
-const API_CACHE_NAME = 'luminary-api-cache-v1';
+const CACHE_NAME = 'vylithra-cache-v1';
+const API_CACHE_NAME = 'vylithra-api-cache-v1';
 
 // URLs to cache immediately upon installation
 const PRECACHE_URLS = [
@@ -12,7 +12,7 @@ const PRECACHE_URLS = [
     '/mobile-main.css',
     '/mobile-index.css',
     '/mobile-messages.css',
-    '/luminary_logo.svg',
+    '/vylithra_logo.svg',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap'
 ];

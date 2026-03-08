@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books | Luminary</title>
+    <title>Books | Vylithra</title>
     <!-- Use same theme-loader as the rest of the app -->
     <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
@@ -503,6 +503,8 @@
     <!-- Google Font for reading -->
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap"
         rel="stylesheet">
+    <!-- Razorpay Checkout script -->
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -510,7 +512,7 @@
     <!-- Top Navigation -->
     <nav class="top-nav">
         <a href="/main.html" class="nav-logo">
-            <i class="fas fa-book-open"></i> Luminary Books
+            <i class="fas fa-book-open"></i> Vylithra Books
         </a>
         <div class="nav-links">
             <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
@@ -530,7 +532,7 @@
         <section class="hero-section">
             <h1>Discover Infinite Worlds.</h1>
             <p>Explore premium manuscripts, stories, and educational content created by independent publishers of the
-                Luminary platform.</p>
+                Vylithra platform.</p>
 
             <div class="tabs-container">
                 <div class="tab active" onclick="switchTab('store')">Book Store</div>
@@ -605,7 +607,7 @@
                 await verifyPurchase(urlParams.get('session_id'), urlParams.get('book_id'));
                 paymentVerified = true;
             } else if (urlParams.get('canceled')) {
-                LuminaryUI.showToast("Payment was canceled.", "info");
+                VylithraUI.showToast("Payment was canceled.", "info");
                 window.history.replaceState({}, document.title, "/books.html");
             }
 
@@ -752,7 +754,7 @@
                         <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
                         <p class="book-author">${authorNameDisplay}</p>
                         <div class="price-row">
-                            <p class="book-price">${book.price === 0 ? 'Free' : '$' + book.price}</p>
+                            <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
                             ${actionHtml}
                         </div>
                     </div>
@@ -777,7 +779,7 @@
         // Process actual payment (Stripe Checkout Redirect)
         async function buyBook(bookId) {
             if (!token) {
-                LuminaryUI.showToast('Please log in to purchase books', 'error');
+                VylithraUI.showToast('Please log in to purchase books', 'error');
                 return;
             }
 
@@ -785,28 +787,74 @@
             if (!book) return;
 
             try {
-                LuminaryUI.showToast('Preparing secure checkout...', 'info');
+                VylithraUI.showToast('Preparing secure checkout...', 'info');
 
-                const res = await fetch(`${API_URL}/books/${book._id}/purchase-intent`, {
+                // Razorpay Order Creation
+                const orderRes = await fetch(`${API_URL}/razorpay/create-order`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'x-auth-token': token
                     },
-                    body: JSON.stringify({ gateway: 'stripe' })
+                    body: JSON.stringify({ bookId: book._id })
                 });
 
-                const data = await res.json();
+                const orderData = await orderRes.json();
+                if (!orderRes.ok) throw new Error(orderData.msg || 'Order creation failed');
 
-                if (res.ok && data.type === 'redirect') {
-                    // Redirect to real Stripe Checkout Hosted Page
-                    window.location.href = data.url;
-                } else {
-                    LuminaryUI.showToast(data.msg || 'Checkout failed to initialize.', 'error');
-                }
+                const options = {
+                    "key": "rzp_live_SOiT2MVdo99LkM", // Using the provided live key
+                    "amount": orderData.amount,
+                    "currency": "INR",
+                    "name": "Vylithra Books",
+                    "description": `Purchase of "${book.title}"`,
+                    "order_id": orderData.id,
+                    "handler": async function (response) {
+                        try {
+                            VylithraUI.showToast('Verifying payment...', 'info');
+                            const verifyRes = await fetch(`${API_URL}/razorpay/verify-payment`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'x-auth-token': token
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    bookId: book._id
+                                })
+                            });
+
+                            const verifyData = await verifyRes.json();
+                            if (verifyRes.ok && verifyData.success) {
+                                VylithraUI.showToast('Success! Book added to your library.', 'success');
+                                await fetchUserProfile();
+                                await fetchBooks();
+                                renderBooks();
+                            } else {
+                                throw new Error(verifyData.msg || 'Verification failed');
+                            }
+                        } catch (err) {
+                            console.error('Verification Error:', err);
+                            VylithraUI.showToast('Payment verification failed. Please contact support.', 'error');
+                        }
+                    },
+                    "prefill": {
+                        "name": currentUser.displayName || currentUser.username,
+                        "email": currentUser.email
+                    },
+                    "theme": {
+                        "color": "#6366f1"
+                    }
+                };
+
+                const rzp = new Razorpay(options);
+                rzp.open();
+
             } catch (err) {
-                console.error('Checkout error:', err);
-                LuminaryUI.showToast('Connection error. Please try again.', 'error');
+                console.error('Purchase Error:', err);
+                VylithraUI.showToast(err.message || 'Payment initialization failed', 'error');
             }
         }
 
@@ -818,7 +866,7 @@
             try {
                 const currentToken = localStorage.getItem('token');
                 if (!currentToken) {
-                    LuminaryUI.showToast('Session expired. Please log in to verify your purchase.', 'error');
+                    VylithraUI.showToast('Session expired. Please log in to verify your purchase.', 'error');
                     window.location.href = '/auth.html';
                     return;
                 }
@@ -832,16 +880,16 @@
                 });
 
                 if (res.ok) {
-                    LuminaryUI.showToast("Payment successful! The book is now in your Library.");
+                    VylithraUI.showToast("Payment successful! The book is now in your Library.");
                     if (currentUser && !currentUser.purchasedBooks.includes(bookId)) {
                         currentUser.purchasedBooks.push(bookId);
                     }
                 } else {
                     const data = await res.json();
-                    LuminaryUI.showToast("Payment verification failed: " + (data.msg || 'Unknown error.'), 'error');
+                    VylithraUI.showToast("Payment verification failed: " + (data.msg || 'Unknown error.'), 'error');
                 }
             } catch (err) {
-                LuminaryUI.showToast("Network error while verifying payment.", 'error');
+                VylithraUI.showToast("Network error while verifying payment.", 'error');
             }
             // Clean up URL
             window.history.replaceState({}, document.title, "/books.html");
@@ -861,10 +909,10 @@
                     document.getElementById('readerModal').style.display = 'flex';
                     document.body.style.overflow = 'hidden'; // Prevent background scrolling
                 } else {
-                    LuminaryUI.showToast('Error loading book content. Ensure you have purchased it.', 'error');
+                    VylithraUI.showToast('Error loading book content. Ensure you have purchased it.', 'error');
                 }
             } catch (err) {
-                LuminaryUI.showToast('Error fetching book content', 'error');
+                VylithraUI.showToast('Error fetching book content', 'error');
             }
         }
 
