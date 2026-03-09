@@ -82,7 +82,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 5%;
+            padding: 0 20px;
             transition: transform 0.3s ease, background-color 0.3s, border-color 0.3s;
         }
 
@@ -162,15 +162,14 @@
 
         /* Layout */
         .container {
-            max-width: 1400px;
-            /* Increased from 1200px */
+            max-width: 1800px;
             margin: 0 auto;
             display: grid;
             grid-template-columns: 220px 1fr 280px;
             /* Reduced sidebars slightly for more mid space */
             gap: 20px;
             /* Reduced gap */
-            padding: 20px 10px;
+            padding: 20px 0;
             /* Reduced padding to move items to edge */
         }
 
@@ -1780,7 +1779,7 @@
                                                                                     </div>
                                                                                     <div style="display: flex; gap: 10px;">
                                                                                         <input type="text" id="input-${post._id}" placeholder="Write a comment..." style="flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none;">
-                                                                                            <button onclick="submitComment('${post._id}')" class="btn btn-primary" style="padding: 8px 20px; border-radius: 20px; background: var(--accent); color: white; border: none; cursor: pointer; font-weight: 600;">Post</button>
+                                                                                            <button onclick="submitComment('${post._id}')" class="btn btn-primary" style="padding: 8px 20px; border-radius: 20px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; cursor: pointer; font-weight: 600;">Post</button>
                                                                                     </div>
                                                                                 </div>
                                                                             </div>`;
@@ -1976,7 +1975,7 @@
                             <i class="fas fa-sliders-h fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
                             <h3>Personalize Your Feed</h3>
                             <p>Select your interests to see a curated feed just for you.</p>
-                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); color: white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
                                 Select Interests
                             </button>
                         </div>
@@ -1996,7 +1995,7 @@
                             <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
                             <h3>No matches found</h3>
                             <p>We couldn't find any posts matching your interests yet.</p>
-                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); white; border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
+                            <button class="btn btn-primary" onclick="openPreferences()" style="margin-top: 15px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; padding: 8px 20px; border-radius: 20px; cursor: pointer;">
                                 Update Interests
                             </button>
                         </div>
@@ -2173,7 +2172,7 @@
             </div>
 
             <button class="btn btn-primary" onclick="savePreferences()"
-                style="width: 100%; padding: 10px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer;">Save
+                style="width: 100%; padding: 10px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; border-radius: 8px; cursor: pointer;">Save
                 Preferences</button>
         </div>
     </div>

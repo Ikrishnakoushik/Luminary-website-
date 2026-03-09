@@ -22,15 +22,13 @@ if (process.env.RESEND_API_KEY) {
 } else {
     resend = null;
 }
-const stripeSecret = process.env.STRIPE_SECRET_KEY || 'sk_test_mock';
-const stripe = require('stripe')(stripeSecret);
-
+const crypto = require('crypto');
 const Razorpay = require('razorpay');
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
 
+const razorpayInstance = new Razorpay({
+    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
+    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder'
+});
 
 // Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
@@ -923,7 +921,7 @@ app.post('/api/books', auth, (req, res) => {
             return res.status(400).json({ msg: err.message || err });
         }
         try {
-            const { title, description, price, coverImage, content, penName } = req.body;
+            const { title, description, price, coverImage, content, penName, category } = req.body;
 
             // Check if publisher
             if (req.user.role !== 'publisher') {
@@ -942,6 +940,7 @@ app.post('/api/books', auth, (req, res) => {
                 coverImage: finalCoverImage,
                 content,
                 penName: penName || '',
+                category: category || 'General',
                 author: req.user.id
             });
 
@@ -966,7 +965,7 @@ app.put('/api/books/:id', auth, (req, res) => {
             return res.status(400).json({ msg: err.message || err });
         }
         try {
-            const { title, description, price, coverImage, content, penName } = req.body;
+            const { title, description, price, coverImage, content, penName, category } = req.body;
 
             let book = await Book.findById(req.params.id);
             if (!book) return res.status(404).json({ msg: 'Book not found' });
@@ -988,6 +987,7 @@ app.put('/api/books/:id', auth, (req, res) => {
             if (finalCoverImage !== undefined) book.coverImage = finalCoverImage;
             if (content) book.content = content;
             if (penName !== undefined) book.penName = penName;
+            if (category) book.category = category;
 
             await book.save();
             res.json(book);
@@ -1036,7 +1036,7 @@ app.delete('/api/books/:id', auth, async (req, res) => {
         // Verify author has enough balance
         const author = await User.findById(req.user.id);
         if (author.balance < refundAmount) {
-            return res.status(400).json({ msg: `Insufficient balance for refunds. Required: $${refundAmount}, Available: $${author.balance}` });
+            return res.status(400).json({ msg: `Insufficient balance for refunds. Required: ₹${refundAmount}, Available: ₹${author.balance}` });
         }
 
         // Deduct balance from author
@@ -1056,7 +1056,7 @@ app.delete('/api/books/:id', auth, async (req, res) => {
         // Remove from author's publishedBooks array
         await User.findByIdAndUpdate(req.user.id, { $pull: { publishedBooks: req.params.id } });
 
-        res.json({ msg: refundAmount > 0 ? `Book deleted and $${refundAmount} automatically refunded from your balance.` : 'Free Book completely deleted.' });
+        res.json({ msg: refundAmount > 0 ? `Book deleted and ₹${refundAmount} automatically refunded from your balance.` : 'Free Book completely deleted.' });
     } catch (err) {
         console.error('Error deleting book:', err);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
@@ -1064,231 +1064,62 @@ app.delete('/api/books/:id', auth, async (req, res) => {
     }
 });
 
-// Unified Purchase Intent (Multi-Gateway)
+// Unified Purchase Intent (Razorpay Gateway)
 app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
     try {
         const book = await Book.findById(req.params.id);
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
-        const { gateway } = req.body;
-        const user = await User.findById(req.user.id);
-
-        if (user.purchasedBooks.includes(book._id)) {
-            return res.status(400).json({ msg: 'Already purchased' });
-        }
-
-        // For MVP, all payment intents route through Stripe Checkout
-        // This gives us a single, secure, production-ready payment flow
-
-        // Convert price to cents (Stripe requires smallest currency unit)
-        const priceInCents = Math.round((book.price || 0) * 100);
-
-        // Define success and cancel URLs
-        const domainURL = req.headers.origin || `http://${req.headers.host}`;
-        const successUrl = `${domainURL}/books.html?success=true&session_id={CHECKOUT_SESSION_ID}&book_id=${book._id}`;
-        const cancelUrl = `${domainURL}/books.html?canceled=true`;
-
-        // Create a real Stripe Checkout Session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            mode: 'payment',
-            line_items: [{
-                price_data: {
-                    currency: 'usd',
-                    product_data: {
-                        name: book.title,
-                        description: `By ${book.author.displayName || book.author.username}`,
-                        images: book.coverImage ? [book.coverImage] : [],
-                    },
-                    unit_amount: priceInCents,
-                },
-                quantity: 1,
-            }],
-            metadata: {
-                bookId: book._id.toString(),
-                userId: user._id.toString()
-            },
-            success_url: successUrl,
-            cancel_url: cancelUrl,
-        });
-
-        // Redirect the client to the Stripe-hosted checkout page
-        return res.json({
-            type: 'redirect',
-            url: session.url
-        });
-
-    } catch (err) {
-        console.error('Purchase Intent Error:', err);
-        res.status(500).json({ msg: 'Payment initialization failed: ' + err.message });
-    }
-});
-
-// Razorpay: Create Order
-app.post('/api/razorpay/create-order', auth, async (req, res) => {
-    try {
-        const { bookId } = req.body;
-        const book = await Book.findById(bookId);
-        if (!book) return res.status(404).json({ msg: 'Book not found' });
-
-        const amount = Math.round(book.price * 100); // Amount in paise
-
-        const options = {
-            amount: amount,
-            currency: "INR",
-            receipt: `rcpt_${req.user.id.toString().slice(-10)}_${Date.now().toString().slice(-10)}`,
-            notes: {
-                bookId: bookId.toString(),
-                userId: req.user.id.toString()
-            }
-        };
-
-        const order = await razorpay.orders.create(options);
-        res.json(order);
-    } catch (err) {
-        console.error('Razorpay Order Error:', err);
-        res.status(500).json({ msg: 'Order creation failed' });
-    }
-});
-
-// Razorpay: Verify Payment
-app.post('/api/razorpay/verify-payment', auth, async (req, res) => {
-    try {
-        const {
-            razorpay_order_id,
-            razorpay_payment_id,
-            razorpay_signature,
-            bookId
-        } = req.body;
-
-        const crypto = require('crypto');
-        const shasum = crypto.createHmac('sha256', process.env.RAZORPAY_KEY_SECRET);
-        shasum.update(`${razorpay_order_id}|${razorpay_payment_id}`);
-        const digest = shasum.digest('hex');
-
-        if (digest !== razorpay_signature) {
-            return res.status(400).json({ msg: 'Transaction not legitimate!' });
-        }
-
-        // Fulfill the order
-        const user = await User.findById(req.user.id);
-        if (!user.purchasedBooks.includes(bookId)) {
-            user.purchasedBooks.push(bookId);
-            await user.save();
-
-            // Credit publisher
-            const book = await Book.findById(bookId);
-            if (book) {
-                const publisher = await User.findById(book.author);
-                if (publisher) {
-                    const publisherCut = (book.price || 0) * 0.8;
-                    publisher.balance = (publisher.balance || 0) + publisherCut;
-                    await publisher.save();
-                }
-            }
-        }
-
-        res.json({ msg: 'Payment verified successfully', success: true });
-    } catch (err) {
-        console.error('Razorpay Verification Error:', err);
-        res.status(500).json({ msg: 'Verification failed' });
-    }
-});
-
-// Create Stripe Checkout Session for a Book (Legacy - keep for backward compat or refactor)
-app.post('/api/books/:id/create-checkout-session', auth, async (req, res) => {
-    try {
-        const book = await Book.findById(req.params.id);
-        if (!book) return res.status(404).json({ msg: 'Book not found' });
-
         const user = await User.findById(req.user.id);
         if (user.purchasedBooks.includes(book._id)) {
             return res.status(400).json({ msg: 'You have already purchased this book' });
         }
 
-        // Create Checkout Session
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [
-                {
-                    price_data: {
-                        currency: 'usd',
-                        product_data: {
-                            name: book.title,
-                            description: book.description || 'A great book on Vylithra.',
-                            images: book.coverImage ? [book.coverImage.startsWith('http') ? book.coverImage : `http://localhost:3000${book.coverImage}`] : [],
-                        },
-                        unit_amount: Math.round((book.price || 0) * 100), // Stripe expects cents
-                    },
-                    quantity: 1,
-                },
-            ],
-            mode: 'payment',
-            success_url: `http://localhost:3000/books.html?session_id={CHECKOUT_SESSION_ID}&book_id=${book._id}&success=true`,
-            cancel_url: `http://localhost:3000/books.html?canceled=true`,
-            client_reference_id: req.user.id,
-            metadata: {
+        // Create Razorpay Order
+        const amountInPaise = Math.round((book.price || 0) * 100); // Razorpay expects paise (lowest denominator)
+        const options = {
+            amount: amountInPaise,
+            currency: 'INR',
+            receipt: `receipt_order_${Math.random().toString(36).substring(2, 10)}`,
+            notes: {
                 bookId: book._id.toString(),
                 userId: req.user.id.toString(),
                 publisherId: book.author.toString()
             }
-        });
+        };
 
-        res.json({ id: session.id, url: session.url });
+        const order = await razorpayInstance.orders.create(options);
+
+        // Tell frontend to open Razorpay Modal instead of redirecting
+        res.json({
+            type: 'razorpay',
+            order_id: order.id,
+            amount: amountInPaise,
+            currency: 'INR',
+            key_id: process.env.RAZORPAY_KEY_ID
+        });
     } catch (err) {
-        console.error('Stripe Session Error:', err);
+        console.error('Razorpay Order Error:', err);
         res.status(500).json({ msg: 'Payment Service Error: ' + err.message });
     }
 });
 
-// Create Mock/Manual Purchase (Alternative to Stripe)
-app.post('/api/books/:id/purchase-mock', auth, async (req, res) => {
-    try {
-        const book = await Book.findById(req.params.id);
-        if (!book) return res.status(404).json({ msg: 'Book not found' });
 
-        const user = await User.findById(req.user.id);
-        if (user.purchasedBooks.includes(book._id)) {
-            return res.status(400).json({ msg: 'You have already purchased this book' });
-        }
 
-        // Fulfill order immediately (Mock success)
-        user.purchasedBooks.push(book._id);
-        await user.save();
-
-        // Pay publisher (Update their mock balance)
-        const publisher = await User.findById(book.author);
-        if (publisher) {
-            const publisherCut = (book.price || 0) * 0.8;
-            publisher.balance = (publisher.balance || 0) + publisherCut;
-            await publisher.save();
-        }
-
-        res.json({ msg: 'Success! Book added to your library.', bookId: book._id });
-    } catch (err) {
-        console.error('Mock Purchase Error:', err);
-        res.status(500).json({ msg: 'Server error' });
-    }
-});
-
-// Verify Purchase after redirect
+// Verify Purchase after Razorpay modal completion
 app.post('/api/books/verify-purchase', auth, async (req, res) => {
     try {
-        const { session_id, book_id } = req.body;
-        let isPaid = false;
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, book_id } = req.body;
 
-        if (session_id.startsWith('mock_') || session_id.startsWith('cs_test_')) {
-            // Simulated Success for local testing
-            isPaid = true;
-        } else {
-            // Real Stripe Verification
-            const session = await stripe.checkout.sessions.retrieve(session_id);
-            if (session.payment_status === 'paid') {
-                isPaid = true;
-            }
-        }
+        // Verify the signature
+        const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
+        const generated_signature = crypto
+            .createHmac('sha256', secret)
+            .update(razorpay_order_id + "|" + razorpay_payment_id)
+            .digest('hex');
 
-        if (isPaid) {
+        if (generated_signature === razorpay_signature) {
+            // Payment is successful and authentic
             const user = await User.findById(req.user.id);
             if (!user.purchasedBooks.includes(book_id)) {
                 // Fulfill order
@@ -1297,7 +1128,7 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
 
                 // Credit publisher's internal balance
                 const book = await Book.findById(book_id);
-                if (book) {
+                if (book && book.price > 0) {
                     const publisher = await User.findById(book.author);
                     if (publisher) {
                         const publisherCut = (book.price || 0) * 0.8;
@@ -1308,7 +1139,7 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
             }
             res.json({ msg: 'Purchase verified successfully' });
         } else {
-            res.status(400).json({ msg: 'Payment not successful' });
+            res.status(400).json({ msg: 'Payment signature verification failed' });
         }
     } catch (err) {
         console.error('Verify Purchase Error:', err);
@@ -1316,6 +1147,74 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
     }
 });
 
+
+// Upgrade user to publisher role
+app.put('/api/users/upgrade-to-publisher', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        if (user.role === 'publisher') {
+            return res.status(400).json({ msg: 'User is already a publisher' });
+        }
+
+        user.role = 'publisher';
+        await user.save();
+
+        res.json({
+            msg: 'Successfully upgraded to publisher account',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                name: user.name,
+                avatar: user.avatar,
+                bio: user.bio,
+                balance: user.balance
+            }
+        });
+    } catch (err) {
+        console.error('Upgrade Error:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// Downgrade user to reader role
+app.put('/api/users/downgrade-to-reader', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+
+        if (user.role === 'reader') {
+            return res.status(400).json({ msg: 'User is already a reader' });
+        }
+
+        user.role = 'reader';
+        await user.save();
+
+        res.json({
+            msg: 'Successfully downgraded to reader account',
+            user: {
+                id: user._id,
+                username: user.username,
+                email: user.email,
+                role: user.role,
+                name: user.name,
+                avatar: user.avatar,
+                bio: user.bio,
+                balance: user.balance
+            }
+        });
+    } catch (err) {
+        console.error('Downgrade Error:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
 
 
 // Onboard Publisher (Multi-Method Support)
@@ -1328,9 +1227,8 @@ app.post('/api/publisher/onboard', auth, async (req, res) => {
             return res.status(403).json({ msg: 'Only publishers can onboard' });
         }
 
-        if (method === 'stripe') {
-            // Stripe onboarding is currently handled externally or pending real integration
-            user.preferredPaymentMethod = 'stripe';
+        if (method === 'razorpay') {
+            user.preferredPaymentMethod = method;
         } else if (['paypal', 'upi', 'manual'].includes(method)) {
             user.preferredPaymentMethod = method;
             user.paymentHandle = handle || '';
@@ -1357,7 +1255,7 @@ app.get('/api/publisher/balance', auth, async (req, res) => {
         if (user.role !== 'publisher') {
             return res.status(403).json({ msg: 'Only publishers can view balance' });
         }
-        res.json({ balance: user.balance || 0, stripeAccountId: user.stripeAccountId });
+        res.json({ balance: user.balance || 0, razorpayAccountId: user.razorpayAccountId });
     } catch (err) {
         console.error('Error fetching balance:', err);
         res.status(500).json({ msg: 'Server Error' });

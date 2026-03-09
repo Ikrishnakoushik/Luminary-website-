@@ -9,6 +9,7 @@
     <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         /* Premium Bookstore Theme */
         :root {
@@ -58,7 +59,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 5%;
+            padding: 0 20px;
             box-sizing: border-box;
             z-index: 100;
             transition: all 0.3s ease;
@@ -139,7 +140,7 @@
 
         /* Premium Hero Section */
         .hero-section {
-            padding: 100px 5% 60px;
+            padding: 100px 30px 60px;
             text-align: center;
             position: relative;
             z-index: 1;
@@ -202,8 +203,8 @@
 
         /* Content Area */
         .content-area {
-            padding: 40px 5% 80px;
-            max-width: 1400px;
+            padding: 40px 30px 80px;
+            max-width: 1800px;
             margin: 0 auto;
         }
 
@@ -256,11 +257,48 @@
             color: var(--text-secondary);
         }
 
-        /* 3D Books Grid */
+        /* Netflix-style Category Rows */
         .books-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 50px 35px;
+            display: flex;
+            flex-direction: column;
+            gap: 50px;
+        }
+
+        .category-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .category-row-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text);
+            margin-bottom: 20px;
+            padding-left: 5px;
+            letter-spacing: -0.5px;
+        }
+
+        .category-scroll-wrapper {
+            overflow-x: auto;
+            padding-bottom: 25px;
+            margin-bottom: -25px;
+            /* Offset padding */
+            scrollbar-width: none;
+            /* Firefox */
+            -ms-overflow-style: none;
+            /* IE/Edge */
+        }
+
+        .category-scroll-wrapper::-webkit-scrollbar {
+            display: none;
+        }
+
+        .category-row {
+            display: flex;
+            gap: 35px;
+            padding: 15px 5px;
+            /* Prevent box-shadow from clipping on hover */
+            width: max-content;
         }
 
         .book-card {
@@ -503,8 +541,6 @@
     <!-- Google Font for reading -->
     <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap"
         rel="stylesheet">
-    <!-- Razorpay Checkout script -->
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 
 <body>
@@ -600,21 +636,8 @@
             checkUserRole();
             await fetchUserProfile();
 
-            // Check for Stripe redirect
-            const urlParams = new URLSearchParams(window.location.search);
-            let paymentVerified = false;
-            if (urlParams.get('success') && urlParams.get('session_id') && urlParams.get('book_id')) {
-                await verifyPurchase(urlParams.get('session_id'), urlParams.get('book_id'));
-                paymentVerified = true;
-            } else if (urlParams.get('canceled')) {
-                VylithraUI.showToast("Payment was canceled.", "info");
-                window.history.replaceState({}, document.title, "/books.html");
-            }
-
-            // Re-fetch profile if payment was verified so we have the updated library array
-            if (paymentVerified) {
-                await fetchUserProfile();
-            }
+            // Initial fetch
+            await fetchBooks();
 
             await fetchBooks();
             renderBooks();
@@ -713,70 +736,99 @@
 
             // Apply search filter if present
             if (searchTerm) {
+                const query = searchTerm.toLowerCase();
                 booksToShow = booksToShow.filter(b => {
                     const authorName = b.penName ? b.penName : (b.author.displayName || b.author.username);
-                    return b.title.toLowerCase().includes(searchTerm) ||
-                        authorName.toLowerCase().includes(searchTerm);
+                    return b.title.toLowerCase().includes(query) ||
+                        authorName.toLowerCase().includes(query) ||
+                        (b.category && b.category.toLowerCase().includes(query));
                 });
             }
 
             if (booksToShow.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-secondary); grid-column: 1 / -1; font-size: 1.1rem;">No books found matching your criteria.</p>';
+                grid.innerHTML = '<p style="color: var(--text-secondary); width: 100%; font-size: 1.1rem; padding: 0 5%;">No books found matching your criteria.</p>';
                 return;
             }
 
+            // Group by category
+            const categories = {};
             booksToShow.forEach(book => {
-                const isAuthor = book.author._id === currentUser._id;
-                const isPurchased = currentUser.purchasedBooks.includes(book._id);
-                const canRead = isAuthor || isPurchased || book.price === 0;
+                const cat = book.category && book.category.trim() !== '' ? book.category : 'General';
+                if (!categories[cat]) categories[cat] = [];
+                categories[cat].push(book);
+            });
 
-                const card = document.createElement('div');
-                card.className = 'book-card';
+            // For each category, render a horizontal row
+            Object.keys(categories).sort().forEach(categoryName => {
+                const booksInCategory = categories[categoryName];
 
-                const cover = book.coverImage
-                    ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#1e2235';">`
-                    : `<div class="book-cover"><i class="fas fa-book fa-3x"></i></div>`;
+                const section = document.createElement('div');
+                section.className = 'category-section';
 
-                let actionHtml = '';
-                if (canRead) {
-                    actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read</button>`;
-                } else {
-                    actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy</button>`;
-                }
+                const title = document.createElement('h3');
+                title.className = 'category-row-title';
+                title.innerText = categoryName;
+                section.appendChild(title);
 
-                const authorNameDisplay = book.penName ? `${book.penName}` : (book.author.displayName || book.author.username);
+                const scrollWrapper = document.createElement('div');
+                scrollWrapper.className = 'category-scroll-wrapper';
 
-                card.innerHTML = `
-                    <div class="cover-wrapper">
-                        ${cover}
-                    </div>
-                    <div class="book-info">
-                        <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
-                        <p class="book-author">${authorNameDisplay}</p>
-                        <div class="price-row">
-                            <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
-                            ${actionHtml}
+                const rowWrap = document.createElement('div');
+                rowWrap.className = 'category-row';
+
+                booksInCategory.forEach(book => {
+                    const isAuthor = book.author._id === currentUser._id;
+                    const isPurchased = currentUser.purchasedBooks.includes(book._id);
+                    const canRead = isAuthor || isPurchased || book.price === 0;
+
+                    const card = document.createElement('div');
+                    card.className = 'book-card';
+                    card.style.minWidth = '260px'; // Lock width for horizontal scrolling
+                    card.style.maxWidth = '260px';
+
+                    const cover = book.coverImage
+                        ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#1e2235';">`
+                        : `<div class="book-cover"><i class="fas fa-book fa-3x"></i></div>`;
+
+                    let actionHtml = '';
+                    if (canRead) {
+                        actionHtml = `<button class="book-action-btn" onclick="openReader('${book._id}')">Read</button>`;
+                    } else {
+                        actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy</button>`;
+                    }
+
+                    const authorNameDisplay = book.penName ? `${book.penName}` : (book.author.displayName || book.author.username);
+
+                    card.innerHTML = `
+                        <div class="cover-wrapper">
+                            ${cover}
                         </div>
-                    </div>
-                `;
-                grid.appendChild(card);
+                        <div class="book-info">
+                            <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
+                            <p class="book-author">${authorNameDisplay}</p>
+                            <div class="price-row">
+                                <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
+                                ${actionHtml}
+                            </div>
+                        </div>
+                    `;
+                    rowWrap.appendChild(card);
+                });
+
+                scrollWrapper.appendChild(rowWrap);
+                section.appendChild(scrollWrapper);
+                grid.appendChild(section);
             });
         }
 
-        let selectedBook = null;
 
-        // Open Payment Modal (REMOVED - Direct to Stripe)
-        function openPaymentModal(bookId) {
-            // Deprecated: We now route directly to Stripe Checkout
-            buyBook(bookId);
-        }
 
         // Close Payment Modal
         function closePaymentModal() {
             document.getElementById('paymentModalOverlay').style.display = 'none';
         }
 
-        // Process actual payment (Stripe Checkout Redirect)
+        // Process actual payment (Razorpay Checkout)
         async function buyBook(bookId) {
             if (!token) {
                 VylithraUI.showToast('Please log in to purchase books', 'error');
@@ -789,85 +841,74 @@
             try {
                 VylithraUI.showToast('Preparing secure checkout...', 'info');
 
-                // Razorpay Order Creation
-                const orderRes = await fetch(`${API_URL}/razorpay/create-order`, {
+                const res = await fetch(`${API_URL}/books/${book._id}/purchase-intent`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'x-auth-token': token
                     },
-                    body: JSON.stringify({ bookId: book._id })
+                    body: JSON.stringify({ gateway: 'razorpay' })
                 });
 
-                const orderData = await orderRes.json();
-                if (!orderRes.ok) throw new Error(orderData.msg || 'Order creation failed');
+                let data = {};
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    data = { msg: `Server error: ${res.status} ${res.statusText}` };
+                }
 
-                const options = {
-                    "key": "rzp_live_SOiT2MVdo99LkM", // Using the provided live key
-                    "amount": orderData.amount,
-                    "currency": "INR",
-                    "name": "Vylithra Books",
-                    "description": `Purchase of "${book.title}"`,
-                    "order_id": orderData.id,
-                    "handler": async function (response) {
-                        try {
-                            VylithraUI.showToast('Verifying payment...', 'info');
-                            const verifyRes = await fetch(`${API_URL}/razorpay/verify-payment`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'x-auth-token': token
-                                },
-                                body: JSON.stringify({
-                                    razorpay_order_id: response.razorpay_order_id,
-                                    razorpay_payment_id: response.razorpay_payment_id,
-                                    razorpay_signature: response.razorpay_signature,
-                                    bookId: book._id
-                                })
+                if (res.ok && data.type === 'razorpay') {
+                    // Open Razorpay Modal
+                    const options = {
+                        "key": data.key_id || 'rzp_test_placeholder',
+                        "amount": data.amount,
+                        "currency": data.currency,
+                        "name": "Vylithra Library",
+                        "description": `Purchase ${book.title}`,
+                        "image": "/uploads/preview-mockup.png", // Example logo
+                        "order_id": data.order_id,
+                        "handler": async function (response) {
+                            // Handle payment success
+                            VylithraUI.showToast('Payment processing... Please wait.', 'info');
+                            await verifyPurchase({
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_signature: response.razorpay_signature,
+                                book_id: book._id
                             });
-
-                            const verifyData = await verifyRes.json();
-                            if (verifyRes.ok && verifyData.success) {
-                                VylithraUI.showToast('Success! Book added to your library.', 'success');
-                                await fetchUserProfile();
-                                await fetchBooks();
-                                renderBooks();
-                            } else {
-                                throw new Error(verifyData.msg || 'Verification failed');
-                            }
-                        } catch (err) {
-                            console.error('Verification Error:', err);
-                            VylithraUI.showToast('Payment verification failed. Please contact support.', 'error');
+                        },
+                        "prefill": {
+                            "name": currentUser ? currentUser.displayName : "",
+                            "email": currentUser ? currentUser.email : ""
+                        },
+                        "theme": {
+                            "color": "#6366f1"
                         }
-                    },
-                    "prefill": {
-                        "name": currentUser.displayName || currentUser.username,
-                        "email": currentUser.email
-                    },
-                    "theme": {
-                        "color": "#6366f1"
-                    }
-                };
-
-                const rzp = new Razorpay(options);
-                rzp.open();
-
+                    };
+                    const rzp = new window.Razorpay(options);
+                    rzp.on('payment.failed', function (response) {
+                        VylithraUI.showToast('Payment was failed or canceled.', 'error');
+                        console.error(response.error);
+                    });
+                    rzp.open();
+                } else {
+                    VylithraUI.showToast(data.msg || 'Checkout failed to initialize.', 'error');
+                }
             } catch (err) {
-                console.error('Purchase Error:', err);
-                VylithraUI.showToast(err.message || 'Payment initialization failed', 'error');
+                console.error('Checkout error:', err);
+                VylithraUI.showToast('Connection error. Please try again.', 'error');
             }
         }
 
 
         // JS Functions removed, moved to Publisher Studio
 
-        // Verify Purchase after redirect
-        async function verifyPurchase(sessionId, bookId) {
+        // Verify Purchase via Razorpay Signature
+        async function verifyPurchase(paymentData) {
             try {
                 const currentToken = localStorage.getItem('token');
                 if (!currentToken) {
-                    VylithraUI.showToast('Session expired. Please log in to verify your purchase.', 'error');
-                    window.location.href = '/auth.html';
+                    VylithraUI.showToast('Session expired.', 'error');
                     return;
                 }
                 const res = await fetch(`${API_URL}/books/verify-purchase`, {
@@ -876,14 +917,21 @@
                         'Content-Type': 'application/json',
                         'x-auth-token': currentToken
                     },
-                    body: JSON.stringify({ session_id: sessionId, book_id: bookId })
+                    body: JSON.stringify({
+                        razorpay_order_id: paymentData.razorpay_order_id,
+                        razorpay_payment_id: paymentData.razorpay_payment_id,
+                        razorpay_signature: paymentData.razorpay_signature,
+                        book_id: paymentData.book_id
+                    })
                 });
 
                 if (res.ok) {
                     VylithraUI.showToast("Payment successful! The book is now in your Library.");
-                    if (currentUser && !currentUser.purchasedBooks.includes(bookId)) {
-                        currentUser.purchasedBooks.push(bookId);
+                    if (currentUser && !currentUser.purchasedBooks.includes(paymentData.book_id)) {
+                        currentUser.purchasedBooks.push(paymentData.book_id);
                     }
+                    // Refresh the display immediately so button changes to Read
+                    renderBooks();
                 } else {
                     const data = await res.json();
                     VylithraUI.showToast("Payment verification failed: " + (data.msg || 'Unknown error.'), 'error');
@@ -891,8 +939,6 @@
             } catch (err) {
                 VylithraUI.showToast("Network error while verifying payment.", 'error');
             }
-            // Clean up URL
-            window.history.replaceState({}, document.title, "/books.html");
         }
 
         // Open Reader

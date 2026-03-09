@@ -60,13 +60,14 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }],
-    stripeAccountId: {
+    razorpayAccountId: {
         type: String,
-        default: null
+        default: ''
     },
+    // Manual Payment Methods
     preferredPaymentMethod: {
         type: String,
-        enum: ['stripe', 'paypal', 'upi', 'manual'],
+        enum: ['razorpay', 'paypal', 'upi', 'manual'],
         default: 'manual'
     },
     paymentHandle: {

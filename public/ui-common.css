@@ -157,7 +157,7 @@
 
 .vylithra-btn-primary {
     background: var(--primary, #4f46e5);
-    color: white;
+    color: var(--btn-text, #ffffff);
 }
 
 .vylithra-btn-primary:hover {

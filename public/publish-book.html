@@ -90,7 +90,7 @@
             margin-top: 70px;
             flex: 1;
             padding: 40px;
-            max-width: 1200px;
+            max-width: 1800px;
             width: 100%;
             box-sizing: border-box;
             margin-left: auto;
@@ -427,11 +427,26 @@
                     </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="bookDescription">Description / Synopsis</label>
-                    <textarea id="bookDescription" class="form-control" rows="4"
-                        placeholder="What is this book about? Provide a compelling summary to attract readers."
-                        required></textarea>
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="bookCategory">Category</label>
+                        <select id="bookCategory" class="form-control" required
+                            style="appearance: none; background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2394a3b8%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E'); background-repeat: no-repeat; background-position: right 15px top 50%; background-size: 12px auto; padding-right: 40px;">
+                            <option value="General" selected>General</option>
+                            <option value="Fiction & Literature">Fiction & Literature (Story)</option>
+                            <option value="Study Materials & Academic">Study Materials & Academic</option>
+                            <option value="Business & Economics">Business & Economics</option>
+                            <option value="Technology & Science">Technology & Science</option>
+                            <option value="Self-Help & Personal Growth">Self-Help & Personal Growth</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group" style="flex: 2;">
+                        <label for="bookDescription">Description / Synopsis</label>
+                        <textarea id="bookDescription" class="form-control" rows="4"
+                            placeholder="What is this book about? Provide a compelling summary to attract readers."
+                            required></textarea>
+                    </div>
                 </div>
 
                 <div style="display: flex; gap: 20px;">
@@ -447,7 +462,7 @@
                     </div>
 
                     <div class="form-group" style="flex: 1; min-width: 150px;">
-                        <label for="bookPrice">Sale Price (₹)</label>
+                        <label for="bookPrice">Sale Price ($)</label>
                         <input type="number" id="bookPrice" class="form-control" min="0" step="0.01" value="0" required>
                     </div>
                 </div>
@@ -644,6 +659,7 @@
                         const book = await res.json();
                         document.getElementById('bookTitle').value = book.title;
                         document.getElementById('penName').value = book.penName || '';
+                        document.getElementById('bookCategory').value = book.category || 'General';
                         document.getElementById('bookDescription').value = book.description;
                         document.getElementById('bookCover').value = book.coverImage || '';
                         document.getElementById('bookPrice').value = book.price || 0;
@@ -659,10 +675,12 @@
                 // Restore draft if available
                 const draftTitle = localStorage.getItem('draftTitle');
                 const draftPenName = localStorage.getItem('draftPenName');
+                const draftCategory = localStorage.getItem('draftCategory');
                 const draftContent = localStorage.getItem('draftContent');
                 const draftDesc = localStorage.getItem('draftDescription');
                 if (draftTitle) document.getElementById('bookTitle').value = draftTitle;
                 if (draftPenName) document.getElementById('penName').value = draftPenName;
+                if (draftCategory) document.getElementById('bookCategory').value = draftCategory;
                 if (draftDesc) document.getElementById('bookDescription').value = draftDesc;
                 if (draftContent) document.getElementById('bookContent').innerHTML = draftContent;
             }
@@ -677,6 +695,7 @@
 
             const title = document.getElementById('bookTitle').value;
             const penName = document.getElementById('penName').value;
+            const category = document.getElementById('bookCategory').value;
             const description = document.getElementById('bookDescription').value;
             const coverImage = document.getElementById('bookCover').value;
             const price = parseFloat(document.getElementById('bookPrice').value) || 0;
@@ -685,6 +704,7 @@
             // Save draft automatically on submit attempt
             localStorage.setItem('draftTitle', title);
             localStorage.setItem('draftPenName', penName);
+            localStorage.setItem('draftCategory', category);
             localStorage.setItem('draftContent', content);
             localStorage.setItem('draftDescription', description);
 
@@ -715,6 +735,7 @@
                 formData.append('price', price);
                 formData.append('content', content);
                 formData.append('penName', penName);
+                formData.append('category', category);
 
                 const coverImageFile = document.getElementById('bookCoverFile').files[0];
                 if (coverImageFile) {
@@ -731,7 +752,12 @@
                     body: formData
                 });
 
-                const data = await res.json();
+                let data = {};
+                try {
+                    data = await res.json();
+                } catch (e) {
+                    data = { msg: `Server error: ${res.status} ${res.statusText}` };
+                }
 
                 if (res.ok) {
                     if (editId) {
@@ -741,6 +767,7 @@
                     }
                     localStorage.removeItem('draftTitle');
                     localStorage.removeItem('draftPenName');
+                    localStorage.removeItem('draftCategory');
                     localStorage.removeItem('draftContent');
                     localStorage.removeItem('draftDescription');
                     setTimeout(() => {
@@ -751,6 +778,7 @@
                         showToast("Your login session has expired! We've saved your draft.", 'error');
                         localStorage.setItem('draftTitle', title);
                         localStorage.setItem('draftPenName', penName);
+                        localStorage.setItem('draftCategory', category);
                         localStorage.setItem('draftContent', content);
                         localStorage.setItem('draftDescription', description);
                         localStorage.removeItem('token');
@@ -764,7 +792,7 @@
                 }
             } catch (err) {
                 console.error('Error:', err);
-                errorMsg.querySelector('span').textContent = 'Network error. Please try again.';
+                errorMsg.querySelector('span').textContent = `Network error: ${err.message}`;
                 errorMsg.style.display = 'block';
                 btn.disabled = false;
                 btn.innerHTML = editId ? '<i class="fas fa-save" style="margin-right: 10px;"></i> Update Book' : '<i class="fas fa-rocket" style="margin-right: 10px;"></i> Publish to Vylithra';

@@ -106,9 +106,9 @@
 
         /* Layout */
         .settings-layout {
-            max-width: 1024px;
+            max-width: 1800px;
             margin: 40px auto;
-            padding: 0 24px;
+            padding: 0 20px;
             display: grid;
             grid-template-columns: 240px 1fr;
             gap: 48px;
@@ -743,6 +743,47 @@
                         password,
                         and security preferences.</p>
                 </div>
+
+                <!-- Creator Status Card for Readers -->
+                <div class="settings-card" id="readerUpgradeCard"
+                    style="display: none; border: 2px solid rgba(79, 70, 229, 0.3);">
+                    <div class="card-body" style="background: rgba(79, 70, 229, 0.03);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                            <div>
+                                <h3
+                                    style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-gem" style="color: var(--primary);"></i> Upgrade to Publisher
+                                </h3>
+                                <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 0;">Unlock the
+                                    Creator Kit to write stories, publish books, and earn money.</p>
+                            </div>
+                            <button type="button" class="btn btn-primary" onclick="upgradeToPublisher()"
+                                id="upgradePubBtn">Become a Publisher</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Verified Publisher Badge for Publishers -->
+                <div class="settings-card" id="verifiedPublisherCard"
+                    style="display: none; border: 2px solid rgba(16, 185, 129, 0.3);">
+                    <div class="card-body" style="background: rgba(16, 185, 129, 0.05);">
+                        <div
+                            style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                            <div>
+                                <h3
+                                    style="font-size: 1.1rem; margin-bottom: 4px; font-family: 'Inter', sans-serif; display: flex; align-items: center; gap: 8px; color: #065f46;">
+                                    <i class="fas fa-check-circle"></i> Verified Publisher
+                                </h3>
+                                <p style="font-size: 0.9rem; color: #064e3b; margin-bottom: 0;">You have full active
+                                    access to the Creator environment.</p>
+                            </div>
+                            <button type="button" class="btn btn-secondary" onclick="confirmDowngrade()"
+                                id="downgradePubBtn">Switch to Reader</button>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="settings-card">
                     <form id="accountForm">
                         <div class="card-body">
@@ -904,7 +945,7 @@
                                         <td style="padding: 12px 16px; color: var(--text-main);">
                                             Book Purchase - Advanced Patterns</td>
                                         <td style="padding: 12px 16px; color: var(--text-main);">
-                                            $14.99</td>
+                                            ₹14.99</td>
                                         <td style="padding: 12px 16px; text-align: right;"><a href="#"
                                                 style="color: var(--primary); text-decoration: none;"
                                                 onclick="VylithraUI.showToast('Downloading invoice...', 'success')"><i
@@ -917,7 +958,7 @@
                                         <td style="padding: 12px 16px; color: var(--text-main);">
                                             Book Purchase - Getting Started</td>
                                         <td style="padding: 12px 16px; color: var(--text-main);">
-                                            $9.99</td>
+                                            ₹9.99</td>
                                         <td style="padding: 12px 16px; text-align: right;"><a href="#"
                                                 style="color: var(--primary); text-decoration: none;"
                                                 onclick="VylithraUI.showToast('Downloading invoice...', 'success')"><i
@@ -964,7 +1005,7 @@
                                 style="padding: 20px; background: rgba(16, 185, 129, 0.05); border-radius: var(--radius-lg); text-align: center; border: 1px solid rgba(16, 185, 129, 0.2); display: flex; flex-direction: column; align-items: center; justify-content: center;">
                                 <div
                                     style="font-size: 1.75rem; font-weight: 700; color: #065f46; font-family: 'Outfit'; margin-bottom: 4px;">
-                                    <span id="publisherBalance">$0.00</span>
+                                    <span id="publisherBalance">₹0.00</span>
                                 </div>
                                 <div style="font-size: 0.85rem; color: #064e3b; margin-bottom: 12px; font-weight: 500;">
                                     Available Payout</div><button class="btn btn-primary"
@@ -984,8 +1025,8 @@
                                     class="fas fa-qrcode"></i><span>UPI ID</span></div>
                             <div class="payout-card" data-method="paypal" onclick="selectPayoutMethod('paypal')"><i
                                     class="fab fa-paypal"></i><span>PayPal</span></div>
-                            <div class="payout-card" data-method="stripe" onclick="selectPayoutMethod('stripe')"><i
-                                    class="fab fa-stripe"></i><span>Stripe</span></div>
+                            <div class="payout-card" data-method="razorpay" onclick="selectPayoutMethod('razorpay')"><i
+                                    class="fas fa-money-check-dollar"></i><span>Razorpay</span></div>
                             <div class="payout-card" data-method="manual" onclick="selectPayoutMethod('manual')"><i
                                     class="fas fa-wallet"></i><span>Wallet</span></div>
                         </div>
@@ -1187,8 +1228,10 @@
 
             if (user.role === 'publisher') {
                 document.getElementById('publisher-menu').style.display = 'flex';
+                document.getElementById('verifiedPublisherCard').style.display = 'block';
+                document.getElementById('readerUpgradeCard').style.display = 'none';
 
-                document.getElementById('publisherBalance').innerText = `$${(user.balance || 0).toFixed(2)}`;
+                document.getElementById('publisherBalance').innerText = `₹${(user.balance || 0).toFixed(2)}`;
 
                 if (user.preferredPaymentMethod) {
                     selectPayoutMethod(user.preferredPaymentMethod);
@@ -1200,6 +1243,10 @@
 
                     status.innerHTML = `<i class="fas fa-check-circle"></i>Currently connected via ${user.preferredPaymentMethod.toUpperCase()}`;
                 }
+            } else {
+                document.getElementById('publisher-menu').style.display = 'none';
+                document.getElementById('readerUpgradeCard').style.display = 'block';
+                document.getElementById('verifiedPublisherCard').style.display = 'none';
             }
         }
 
@@ -1234,10 +1281,10 @@
                 icon.className = 'fas fa-envelope';
             }
 
-            else if (method === 'stripe') {
-                label.innerText = 'Stripe Account Email';
-                placeholder.placeholder = 'e.g. stripe-user@example.com';
-                icon.className = 'fab fa-stripe-s';
+            else if (method === 'razorpay') {
+                label.innerText = 'Razorpay Account Email or ID';
+                placeholder.placeholder = 'e.g. rzp-user@example.com';
+                icon.className = 'fas fa-money-check-dollar';
             }
 
             else {
@@ -1372,7 +1419,7 @@
         function requestWithdrawal() {
             const balanceText = document.getElementById('publisherBalance').innerText;
 
-            if (balanceText === '$0.00' || balanceText === '$0') {
+            if (balanceText === '₹0.00' || balanceText === '₹0') {
                 return showToast('No funds available for withdrawal.', true);
             }
 
@@ -1387,6 +1434,106 @@
                     }, 1500);
                 }
             });
+        }
+
+        function confirmDowngrade() {
+            VylithraUI.showConfirm({
+                title: 'Switch to Reader Account?',
+                message: 'Are you sure you want to stop being a publisher? You will lose access to the Creator Kit, your analytics, and book publishing tools. Your public books will remain, but you cannot edit them.',
+                confirmText: 'Yes, Downgrade me',
+                cancelText: 'Keep Publisher Status',
+                onConfirm: () => {
+                    downgradeToReader();
+                }
+            });
+        }
+
+        async function downgradeToReader() {
+            const token = localStorage.getItem('token');
+            const btn = document.getElementById('downgradePubBtn');
+            btn.disabled = true;
+            btn.innerText = 'Switching...';
+
+            try {
+                const res = await fetch(`${API_URL}/users/downgrade-to-reader`, {
+                    method: 'PUT',
+                    headers: {
+                        'x-auth-token': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Update user session cache
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    showToast('Successfully switched to Reader account.', false);
+
+                    // Force refresh UI without full page reload
+                    populateForms(data.user);
+
+                    setTimeout(() => {
+                        window.location.hash = '#account-tab';
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const error = await res.json();
+                    showToast(error.msg || 'Downgrade failed', true);
+                    btn.disabled = false;
+                    btn.innerText = 'Switch to Reader';
+                }
+            } catch (err) {
+                console.error('Downgrade Error:', err);
+                showToast('Network error while downgrading.', true);
+                btn.disabled = false;
+                btn.innerText = 'Switch to Reader';
+            }
+        }
+
+        async function upgradeToPublisher() {
+            const token = localStorage.getItem('token');
+            const btn = document.getElementById('upgradePubBtn');
+            btn.disabled = true;
+            btn.innerText = 'Upgrading...';
+
+            try {
+                const res = await fetch(`${API_URL}/users/upgrade-to-publisher`, {
+                    method: 'PUT',
+                    headers: {
+                        'x-auth-token': token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+
+                    // Update user session cache
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    showToast('Welcome to the Creator Kit!', false);
+
+                    // Force refresh UI without full page reload
+                    populateForms(data.user);
+
+                    setTimeout(() => {
+                        window.location.hash = '#publisher-tools';
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    const error = await res.json();
+                    showToast(error.msg || 'Upgrade failed', true);
+                    btn.disabled = false;
+                    btn.innerText = 'Become a Publisher';
+                }
+            } catch (err) {
+                console.error('Upgrade Error:', err);
+                showToast('Network error while upgrading.', true);
+                btn.disabled = false;
+                btn.innerText = 'Become a Publisher';
+            }
         }
 
         document.getElementById('profileForm').addEventListener('submit', (e) => {

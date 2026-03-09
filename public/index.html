@@ -134,15 +134,15 @@
 
         .btn-primary {
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            color: #ffffff;
-            /* Explicitly white text for primary button */
+            color: var(--btn-text, #ffffff);
+            font-weight: 700;
             box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
         }
 
         .btn-primary:hover {
             transform: translateY(-2px);
             box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
-            color: #ffffff;
+            color: var(--btn-text, #ffffff);
         }
 
         .btn-outline {
@@ -454,9 +454,9 @@
             Vylithra
         </div>
         <div class="nav-links" id="navLinksContainer">
-            <a href="/main.html"><i class="fas fa-home"></i> Feed</a>
-            <a href="/profile.html"><i class="fas fa-user"></i> Profile</a>
-            <a href="/publish.html"><i class="fas fa-pen"></i> Studio</a>
+            <a href="/main.html" class="auth-required" style="display: none;"><i class="fas fa-home"></i> Feed</a>
+            <a href="/profile.html" class="auth-required" style="display: none;"><i class="fas fa-user"></i> Profile</a>
+            <a href="/publish.html" class="auth-required" style="display: none;"><i class="fas fa-pen"></i> Studio</a>
             <span id="authLinks">
                 <a href="/auth.html" class="btn-login">Log In</a>
                 <a href="/auth.html" class="btn-signup">Sign Up</a>
@@ -471,7 +471,7 @@
                 with a community of creators.</p>
 
             <div>
-                <a href="auth.html" class="btn btn-primary">Showcase Your Work Free</a>
+                <a href="auth.html" class="btn btn-primary">Get Started</a>
                 <a href="#features" class="btn btn-outline">Learn More</a>
             </div>
 
@@ -581,6 +581,7 @@
 
             // If logged in, show different actions in header
             if (token && authLinks) {
+                document.querySelectorAll('.auth-required').forEach(el => el.style.display = '');
                 authLinks.innerHTML = `
                     <a href="/settings.html" class="btn-outline" style="padding: 6px 16px; border-radius: 20px; text-decoration: none;"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
                     <a href="#" onclick="localStorage.removeItem('token'); location.reload();" class="btn-login" style="margin-left: 1rem;">Log Out</a>
