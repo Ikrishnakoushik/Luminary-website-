@@ -108,7 +108,16 @@ app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     next();
 });
-app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
+app.use(express.static(path.join(__dirname, 'public'), {
+    extensions: ['html'],
+    setHeaders: function (res, path) {
+        if (path.indexOf('.html') !== -1 || path.indexOf('.js') !== -1) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+            res.setHeader('Pragma', 'no-cache');
+            res.setHeader('Expires', '0');
+        }
+    }
+}));
 const auth = (req, res, next) => {
     const token = req.header('x-auth-token');
     if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
@@ -125,10 +134,33 @@ const auth = (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
-console.error('[Startup] Checking Mongo connection...');
-mongoose.connect(MONGO_URI, { serverSelectionTimeoutMS: 5000 })
-    .then(() => console.error('[Startup] MongoDB Connected'))
-    .catch(err => console.error('[Startup] MongoDB Error:', err));
+let isConnected = false;
+
+const connectDB = async () => {
+    if (isConnected) {
+        return;
+    }
+    try {
+        console.error('[Startup] Checking Mongo connection...');
+        const db = await mongoose.connect(MONGO_URI, {
+            serverSelectionTimeoutMS: 5000,
+            socketTimeoutMS: 45000,
+        });
+        isConnected = db.connections[0].readyState;
+        console.error('[Startup] MongoDB Connected');
+    } catch (err) {
+        console.error('[Startup] MongoDB Error:', err);
+    }
+};
+
+// Connect immediately to start the process
+connectDB();
+
+// Middleware to ensure DB is connected before handling API requests
+app.use('/api', async (req, res, next) => {
+    await connectDB();
+    next();
+});
 
 // Routes
 const multer = require('multer');
@@ -1064,6 +1096,46 @@ app.delete('/api/books/:id', auth, async (req, res) => {
     }
 });
 
+// Rate a Book
+app.post('/api/books/:id/rate', auth, async (req, res) => {
+    try {
+        const { score } = req.body;
+
+        // Validate score
+        if (!score || score < 1 || score > 10) {
+            return res.status(400).json({ msg: 'Please provide a valid score between 1 and 10' });
+        }
+
+        const book = await Book.findById(req.params.id);
+        if (!book) {
+            return res.status(404).json({ msg: 'Book not found' });
+        }
+
+        // Check if user has already rated
+        const existingRating = book.ratings.find(r => r.user.toString() === req.user.id);
+
+        if (existingRating) {
+            // Update existing rating
+            existingRating.score = score;
+        } else {
+            // Add new rating
+            book.ratings.push({ user: req.user.id, score });
+        }
+
+        // Recalculate average rating
+        const totalScore = book.ratings.reduce((acc, curr) => acc + curr.score, 0);
+        book.averageRating = Number((totalScore / book.ratings.length).toFixed(1));
+
+        await book.save();
+        res.json({ msg: 'Rating submitted successfully', averageRating: book.averageRating });
+
+    } catch (err) {
+        console.error('Error rating book:', err);
+        if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
 // Unified Purchase Intent (Razorpay Gateway)
 app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
     try {
@@ -1100,7 +1172,9 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Razorpay Order Error:', err);
-        res.status(500).json({ msg: 'Payment Service Error: ' + err.message });
+        // Razorpay often nests the error message inside err.error.description
+        const errorMsg = (err.error && err.error.description) || err.description || err.message || JSON.stringify(err);
+        res.status(500).json({ msg: 'Payment Service Error: ' + errorMsg });
     }
 });
 
@@ -1126,13 +1200,13 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
                 user.purchasedBooks.push(book_id);
                 await user.save();
 
-                // Credit publisher's internal balance
+                // Credit publisher's internal wallet
                 const book = await Book.findById(book_id);
                 if (book && book.price > 0) {
                     const publisher = await User.findById(book.author);
                     if (publisher) {
-                        const publisherCut = (book.price || 0) * 0.8;
-                        publisher.balance = (publisher.balance || 0) + publisherCut;
+                        publisher.walletBalance = (publisher.walletBalance || 0) + book.price;
+                        publisher.totalEarned = (publisher.totalEarned || 0) + book.price;
                         await publisher.save();
                     }
                 }
@@ -1143,6 +1217,57 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
         }
     } catch (err) {
         console.error('Verify Purchase Error:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// GET Publisher Earnings Dashboard Data
+app.get('/api/publishers/earnings', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('walletBalance totalEarned withdrawalHistory role');
+        if (!user || user.role !== 'publisher') {
+            return res.status(403).json({ msg: 'Access denied' });
+        }
+        res.json({
+            walletBalance: user.walletBalance,
+            totalEarned: user.totalEarned,
+            withdrawalHistory: user.withdrawalHistory || []
+        });
+    } catch (err) {
+        console.error('Error fetching earnings:', err);
+        res.status(500).json({ msg: 'Server Error' });
+    }
+});
+
+// POST Publisher Withdrawal Request
+app.post('/api/publishers/withdraw', auth, async (req, res) => {
+    try {
+        const { amount, method, details } = req.body;
+        if (!amount || amount <= 0) return res.status(400).json({ msg: 'Invalid withdrawal amount' });
+
+        const user = await User.findById(req.user.id);
+        if (!user || user.role !== 'publisher') {
+            return res.status(403).json({ msg: 'Access denied' });
+        }
+
+        if (user.walletBalance < amount) {
+            return res.status(400).json({ msg: 'Insufficient wallet balance' });
+        }
+
+        // Deduct from wallet and log to history
+        user.walletBalance -= amount;
+        user.withdrawalHistory.push({
+            amount: amount,
+            status: 'pending',
+            method: method || 'UPI',
+            details: details || 'Not provided'
+        });
+
+        await user.save();
+        res.json({ msg: 'Withdrawal request submitted successfully', walletBalance: user.walletBalance });
+
+    } catch (err) {
+        console.error('Error processing withdrawal:', err);
         res.status(500).json({ msg: 'Server Error' });
     }
 });
@@ -1324,102 +1449,6 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
     }
 });
 
-// --- MESSAGING API ---
-
-// 1. Get List of Conversations (for inbox sidebar)
-app.get('/api/messages/conversations', auth, async (req, res) => {
-    try {
-        const currentUserId = req.user.id;
-
-        // Find all messages sent or received by the user
-        const messages = await Message.find({
-            $or: [{ sender: currentUserId }, { receiver: currentUserId }]
-        })
-            .sort({ createdAt: -1 })
-            .populate('sender', 'username profilePicture displayName')
-            .populate('receiver', 'username profilePicture displayName');
-
-        const conversationsMap = new Map();
-
-        for (const msg of messages) {
-            // Determine the "other" user
-            const otherUser = msg.sender._id.toString() === currentUserId
-                ? msg.receiver
-                : msg.sender;
-
-            const otherUserIdStr = otherUser._id.toString();
-
-            if (!conversationsMap.has(otherUserIdStr)) {
-                conversationsMap.set(otherUserIdStr, {
-                    user: otherUser,
-                    lastMessage: msg.content,
-                    timestamp: msg.createdAt,
-                    unread: !msg.read && msg.receiver._id.toString() === currentUserId
-                });
-            }
-        }
-
-        const conversationsLineup = Array.from(conversationsMap.values());
-        res.json(conversationsLineup);
-
-    } catch (err) {
-        console.error("Error fetching conversations:", err);
-        res.status(500).send('Server error');
-    }
-});
-
-// 2. Get Chat History with a specific user
-app.get('/api/messages/:userId', auth, async (req, res) => {
-    try {
-        const currentUserId = req.user.id;
-        const otherUserId = req.params.userId;
-
-        const messages = await Message.find({
-            $or: [
-                { sender: currentUserId, receiver: otherUserId },
-                { sender: otherUserId, receiver: currentUserId }
-            ]
-        }).sort({ createdAt: 1 }); // Oldest first for chat timeline
-
-        // Mark unread messages as read when opening conversation
-        await Message.updateMany(
-            { sender: otherUserId, receiver: currentUserId, read: false },
-            { $set: { read: true } }
-        );
-
-        res.json(messages);
-
-    } catch (err) {
-        console.error("Error fetching messages:", err);
-        res.status(500).send('Server Error');
-    }
-});
-
-// 3. Send a Message
-app.post('/api/messages/:userId', auth, async (req, res) => {
-    try {
-        const currentUserId = req.user.id;
-        const receiverId = req.params.userId;
-        const { content } = req.body;
-
-        if (!content || !content.trim()) {
-            return res.status(400).json({ msg: 'Message content cannot be empty' });
-        }
-
-        const newMessage = new Message({
-            sender: currentUserId,
-            receiver: receiverId,
-            content
-        });
-
-        await newMessage.save();
-        res.json(newMessage);
-
-    } catch (err) {
-        console.error("Error sending message:", err);
-        res.status(500).send('Server Error');
-    }
-});
 
 // Start Server
 app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));

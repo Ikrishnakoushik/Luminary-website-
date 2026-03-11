@@ -38,6 +38,22 @@ const BookSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    ratings: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        score: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 10
+        }
+    }],
     createdAt: {
         type: Date,
         default: Date.now

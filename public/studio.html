@@ -282,6 +282,143 @@
             color: var(--text-muted);
             display: none;
         }
+
+        /* Earnings Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface-base);
+            border: 1px solid var(--border-base);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .stat-card-left h3 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 10px 0;
+            font-weight: 500;
+        }
+
+        .stat-card-left .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-base);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-base);
+        }
+
+        .bg-purple {
+            background: linear-gradient(135deg, #8A2BE2, #b366ff);
+        }
+
+        .bg-gold {
+            background: linear-gradient(135deg, #d4af37, #f3e5ab);
+            color: #000;
+        }
+
+        .btn-withdraw {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-base);
+            color: var(--text-base);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-withdraw:hover {
+            background: var(--text-base);
+            color: #000;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: var(--bg-base);
+            border: 1px solid var(--border-base);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border-base);
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-base);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
@@ -313,7 +450,52 @@
             </a>
         </div>
 
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-card-left">
+                    <h3>Available Balance</h3>
+                    <p class="stat-value" id="walletBalance">₹0</p>
+                    <button class="btn-withdraw" onclick="openWithdrawModal()"><i class="fas fa-money-bill-wave"></i>
+                        Withdraw Funds</button>
+                </div>
+                <div class="stat-icon bg-purple"><i class="fas fa-wallet"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-left">
+                    <h3>Lifetime Earnings</h3>
+                    <p class="stat-value" id="lifetimeEarnings">₹0</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">Total revenue generated
+                        from sales</p>
+                </div>
+                <div class="stat-icon bg-gold"><i class="fas fa-chart-line"></i></div>
+            </div>
+        </div>
+
         <div id="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading your studio...</div>
+
+        <!-- Withdraw Modal -->
+        <div class="modal-overlay" id="withdrawModal">
+            <div class="modal">
+                <h2>Withdraw Funds</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Maximum available to
+                    withdraw: <strong style="color:white;" id="maxWithdrawText">₹0</strong></p>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter amount..." min="100">
+                </div>
+                <div class="form-group">
+                    <label>Payout Method (UPI ID)</label>
+                    <input type="text" id="withdrawMethod" placeholder="e.g. yourname@okicici">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeWithdrawModal()">Cancel</button>
+                    <button class="btn-primary" onclick="submitWithdrawal()" id="withdrawSubmitBtn">Request
+                        Payout</button>
+                </div>
+            </div>
+        </div>
 
         <div class="table-container">
             <table id="booksTable">
@@ -347,10 +529,11 @@
 
             if (currentUser && currentUser.role === 'publisher') {
                 document.getElementById('studioLink').style.display = 'flex';
+                fetchEarningsData();
                 fetchMyBooks();
             } else {
-                alert("Only Publishers can access the Studio.");
-                window.location.href = '/books.html';
+                VylithraUI.showToast("Only Publishers can access the Studio.", 'error');
+                setTimeout(() => window.location.href = '/books.html', 1500);
             }
 
             document.getElementById('logoutBtn').addEventListener('click', (e) => {
@@ -468,7 +651,7 @@
                 ? 'Unpublishing will hide this book from the public store. People who already bought it can still read it. Continuue?'
                 : 'Publishing will make this book available in the public store again. Continue?';
 
-            if (confirm(msg)) {
+            VylithraUI.showConfirm(msg, async () => {
                 try {
                     const res = await fetch(`${API_URL}/books/${bookId}/unpublish`, {
                         method: 'PUT',
@@ -478,16 +661,16 @@
                         fetchMyBooks();
                     } else {
                         const data = await res.json();
-                        alert(data.msg || 'Error updating status');
+                        VylithraUI.showToast(data.msg || 'Error updating status', 'error');
                     }
                 } catch (err) {
-                    alert('Network error');
+                    VylithraUI.showToast('Network error', 'error');
                 }
-            }
+            });
         }
 
         async function deleteBook(bookId) {
-            if (confirm('WARNING: Hard Deletion!\n\nThis will permanently delete the book AND automatically refund all purchasers from your Publisher Balance! If you just want to hide it from the store, use Unpublish instead.\n\nProceed?')) {
+            VylithraUI.showConfirm('WARNING: Hard Deletion!\n\nThis will permanently delete the book AND automatically refund all purchasers from your Publisher Balance! If you just want to hide it from the store, use Unpublish instead.\n\nProceed?', async () => {
                 try {
                     const res = await fetch(`${API_URL}/books/${bookId}`, {
                         method: 'DELETE',
@@ -495,14 +678,93 @@
                     });
                     const data = await res.json();
                     if (res.ok) {
-                        alert(data.msg || 'Book completely deleted and purchasers refunded.');
+                        VylithraUI.showToast(data.msg || 'Book completely deleted and purchasers refunded.', 'success');
                         fetchMyBooks();
                     } else {
-                        alert(data.msg || 'Error deleting book');
+                        VylithraUI.showToast(data.msg || 'Error deleting book', 'error');
                     }
                 } catch (err) {
-                    alert('Network error while deleting book');
+                    VylithraUI.showToast('Network error while deleting book', 'error');
                 }
+            });
+        }
+
+        /* --- Earnings & Withdrawals Logic --- */
+        let currentWalletBalance = 0;
+
+        async function fetchEarningsData() {
+            try {
+                const res = await fetch(`${API_URL}/publishers/earnings`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentWalletBalance = data.walletBalance || 0;
+                    document.getElementById('walletBalance').innerText = '₹' + currentWalletBalance;
+                    document.getElementById('lifetimeEarnings').innerText = '₹' + (data.totalEarned || 0);
+                    document.getElementById('maxWithdrawText').innerText = '₹' + currentWalletBalance;
+                }
+            } catch (err) {
+                console.error("Failed to load earnings:", err);
+            }
+        }
+
+        function openWithdrawModal() {
+            if (currentWalletBalance <= 0) {
+                VylithraUI.showToast("You don't have enough funds to withdraw yet.", 'error');
+                return;
+            }
+            document.getElementById('withdrawAmount').max = currentWalletBalance;
+            document.getElementById('withdrawAmount').value = currentWalletBalance;
+            document.getElementById('withdrawModal').style.display = 'flex';
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+
+        async function submitWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const btn = document.getElementById('withdrawSubmitBtn');
+
+            if (!amount || amount <= 0 || amount > currentWalletBalance) {
+                VylithraUI.showToast("Please enter a valid amount within your limits.", 'error');
+                return;
+            }
+            if (!method) {
+                VylithraUI.showToast("Please provide a valid payout tracking method (like a UPI ID).", 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Processing...';
+
+            try {
+                const res = await fetch(`${API_URL}/publishers/withdraw`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ amount, method })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    VylithraUI.showToast("Withdrawal request submitted! It will be reviewed by admins.", "success");
+                    await fetchEarningsData(); // Refresh balances
+                    closeWithdrawModal();
+                } else {
+                    VylithraUI.showToast(data.msg || "Failed to process withdrawal.", 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                VylithraUI.showToast("Network failure.", 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Request Payout';
             }
         }
 

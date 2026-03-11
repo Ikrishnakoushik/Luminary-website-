@@ -666,8 +666,8 @@
                         document.getElementById('bookPrice').value = book.price || 0;
                         document.getElementById('bookContent').innerHTML = book.content;
                     } else {
-                        alert('Could not load book for editing. Are you the author?');
-                        window.location.href = '/books.html';
+                        VylithraUI.showToast('Could not load book for editing. Are you the author?', 'error');
+                        setTimeout(() => window.location.href = '/books.html', 1500);
                     }
                 } catch (err) {
                     console.error("Error loading book to edit:", err);

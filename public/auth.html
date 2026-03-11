@@ -658,8 +658,9 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
-                    alert('Email Verified! Logging you in...');
-                    window.location.href = 'main.html';
+                    errorMsg.style.color = '#10b981'; // Success Green
+                    errorMsg.innerText = 'Email Verified! Logging you in...';
+                    setTimeout(() => window.location.href = 'main.html', 1500);
                 } else {
                     errorMsg.innerText = data.msg || 'Verification failed';
                 }
@@ -726,13 +727,18 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert('Password reset successful! Please login with your new password.');
-                    switchTab('login');
-                    // Reset form state
-                    document.getElementById('forgotFormStep1').reset();
-                    document.getElementById('forgotFormStep2').reset();
-                    document.getElementById('forgotFormStep1').style.display = 'block';
-                    document.getElementById('forgotFormStep2').style.display = 'none';
+                    errorMsg.style.color = '#10b981'; // Success Green
+                    errorMsg.innerText = 'Password reset successful! Please login.';
+                    setTimeout(() => {
+                        switchTab('login');
+                        // Reset form state
+                        document.getElementById('forgotFormStep1').reset();
+                        document.getElementById('forgotFormStep2').reset();
+                        document.getElementById('forgotFormStep1').style.display = 'block';
+                        document.getElementById('forgotFormStep2').style.display = 'none';
+                        errorMsg.innerText = '';
+                        errorMsg.style.color = 'var(--error)';
+                    }, 2000);
                 } else {
                     errorMsg.innerText = data.msg || 'Reset failed';
                 }

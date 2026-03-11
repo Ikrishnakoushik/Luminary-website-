@@ -12,26 +12,26 @@
     <script src="/ui-common.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
-        /* Premium Bookstore Theme */
+        /* Premium Bookstore Theme (Aurora Press Aesthetic) */
         :root {
-            --primary: #6366f1;
-            /* Indigo */
-            --secondary: #a855f7;
-            /* Purple */
-            --accent: #ec4899;
-            /* Pink */
-            --bg: #0b0f19;
-            /* Deep modern dark */
+            --primary: #d4af37;
+            /* Elegant Gold */
+            --secondary: #fcd34d;
+            /* Lighter Gold */
+            --accent: #b45309;
+            /* Bronze/Amber */
+            --bg: #0f0f11;
+            /* Deep, pure cinematic black/dark gray */
             --surface: rgba(255, 255, 255, 0.03);
             --surface-hover: rgba(255, 255, 255, 0.08);
-            --text: #f8fafc;
-            --text-secondary: #94a3b8;
-            --border: rgba(255, 255, 255, 0.1);
-            --nav-bg: rgba(11, 15, 25, 0.7);
+            --text: #ffffff;
+            --text-secondary: #a1a1aa;
+            --border: rgba(255, 255, 255, 0.08);
+            --nav-bg: rgba(15, 15, 17, 0.85);
         }
 
         body {
-            font-family: 'Inter', -apple-system, sans-serif;
+            font-family: 'Outfit', -apple-system, sans-serif;
             background-color: var(--bg);
             color: var(--text);
             margin: 0;
@@ -39,11 +39,10 @@
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            /* Enhance background with a beautiful dynamic glow */
+            /* Dramatic subtle lighting */
             background-image:
-                radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 40%),
-                radial-gradient(circle at 50% 10%, rgba(236, 72, 153, 0.05) 0%, transparent 60%);
+                radial-gradient(circle at 15% 15%, rgba(212, 175, 55, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 85% 70%, rgba(252, 211, 77, 0.03) 0%, transparent 40%);
             background-attachment: fixed;
         }
 
@@ -82,8 +81,11 @@
 
         .nav-links {
             display: flex;
-            gap: 35px;
+            gap: 40px;
             align-items: center;
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
         }
 
         .nav-link {
@@ -92,10 +94,8 @@
             font-size: 0.95rem;
             font-weight: 500;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
             position: relative;
+            padding: 5px 0;
         }
 
         .nav-link:hover,
@@ -106,31 +106,39 @@
         .nav-link.active::after {
             content: '';
             position: absolute;
-            bottom: -24px;
+            bottom: -5px;
             left: 0;
             width: 100%;
-            height: 3px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            border-radius: 3px 3px 0 0;
+            height: 2px;
+            background: var(--primary);
         }
 
-        .publish-cta {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white !important;
-            padding: 10px 24px;
-            border-radius: 30px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            display: none;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 20px;
         }
 
-        .publish-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
-            border-color: rgba(255, 255, 255, 0.2);
+        .search-icon,
+        .user-avatar {
+            color: var(--text);
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .search-icon:hover {
+            color: var(--primary);
+        }
+
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid var(--border);
         }
 
         /* Main Content Container */
@@ -141,31 +149,244 @@
 
         /* Premium Hero Section */
         .hero-section {
-            padding: 100px 30px 60px;
-            text-align: center;
+            padding: 120px 5% 60px;
             position: relative;
             z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: 60vh;
+        }
+
+        .hero-content {
+            flex: 1;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .hero-eyebrow {
+            font-size: 0.95rem;
+            color: var(--primary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: block;
         }
 
         .hero-section h1 {
-            font-size: 4rem;
-            margin: 0 0 20px 0;
+            font-size: 4.5rem;
+            margin: 0 0 25px 0;
             letter-spacing: -2px;
-            font-weight: 900;
-            background: linear-gradient(to right, #ffffff, #a5b4fc);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-weight: 800;
+            color: var(--text);
             line-height: 1.1;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .hero-section h1 .gold-text {
+            color: var(--primary);
         }
 
         .hero-section p {
             font-size: 1.25rem;
             color: var(--text-secondary);
-            max-width: 650px;
-            margin: 0 auto 40px auto;
-            line-height: 1.6;
+            margin: 0 0 40px 0;
+            line-height: 1.7;
             font-weight: 300;
+        }
+
+        .hero-pagination {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .hero-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .hero-dot:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.2);
+        }
+
+        .hero-dot.active {
+            width: 24px;
+            background: #fff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            transform: scale(1);
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: #000 !important;
+            padding: 14px 35px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 10px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .btn-gold:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text) !important;
+            padding: 12px 35px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.05rem;
+            text-decoration: none;
+            transition: all 0.3s;
+            border: 2px solid var(--border);
+            cursor: pointer;
+        }
+
+        .btn-outline:hover {
+            border-color: var(--text-secondary);
+            background: var(--surface);
+        }
+
+        /* 3D Hero Book Showcase */
+        .hero-showcase {
+            flex: 1;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            position: relative;
+            perspective: 1800px;
+            padding-right: 60px;
+            /* Space for the stack */
+            height: 480px;
+        }
+
+        .hero-book {
+            width: 300px;
+            height: 450px;
+            position: absolute;
+            transform-style: preserve-3d;
+            transition: all 0.6s cubic-bezier(0.2, 0.8, 0.2, 1);
+            border-radius: 4px 15px 15px 4px;
+            box-shadow: -20px 20px 40px rgba(0, 0, 0, 0.8), inset 5px 0 20px rgba(255, 255, 255, 0.2);
+            will-change: transform, opacity, filter;
+        }
+
+        /* 3D Stack Positions */
+        .book-pos-1 {
+            transform: rotateY(-25deg) rotateX(5deg) translateZ(50px) translateX(0);
+            z-index: 4;
+            opacity: 1;
+        }
+
+        .book-pos-1:hover {
+            transform: rotateY(-15deg) rotateX(2deg) translateZ(80px) translateX(-10px);
+            box-shadow: -30px 30px 50px rgba(212, 175, 55, 0.15), -20px 20px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .book-pos-2 {
+            transform: rotateY(-25deg) rotateX(5deg) translateZ(-80px) translateX(110px);
+            z-index: 3;
+            opacity: 0.85;
+            filter: brightness(0.6);
+        }
+
+        .book-pos-3 {
+            transform: rotateY(-25deg) rotateX(5deg) translateZ(-210px) translateX(220px);
+            z-index: 2;
+            opacity: 0.5;
+            filter: brightness(0.3);
+        }
+
+        .book-pos-hidden {
+            transform: rotateY(-25deg) rotateX(5deg) translateZ(-340px) translateX(330px);
+            z-index: 1;
+            opacity: 0;
+            filter: brightness(0.1);
+            pointer-events: none;
+        }
+
+        .hero-book-cover {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px 15px 15px 4px;
+            object-fit: cover;
+            position: absolute;
+            z-index: 2;
+        }
+
+        .hero-book::after {
+            content: '';
+            position: absolute;
+            top: 2%;
+            right: -18px;
+            width: 18px;
+            height: 96%;
+            background: linear-gradient(to right, #e2e8f0, #f8fafc, #cbd5e1);
+            transform: translateZ(-9px) rotateY(90deg);
+            transform-origin: left;
+            border-radius: 0 4px 4px 0;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hero Scroll Indicators (Like mockup) */
+        .scroll-indicators {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .scroll-track {
+            width: 2px;
+            height: 100px;
+            background: var(--border);
+            position: relative;
+        }
+
+        .scroll-thumb {
+            position: absolute;
+            width: 4px;
+            height: 30px;
+            background: var(--primary);
+            left: -1px;
+            top: 20%;
+            border-radius: 4px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        .indicator-number {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
         }
 
         /* Modern Toggle Pills */
@@ -183,7 +404,7 @@
         .tab {
             padding: 12px 30px;
             cursor: pointer;
-            color: var(--text-secondary);
+            color: #a1a1aa !important;
             border-radius: 30px;
             font-weight: 600;
             font-size: 0.95rem;
@@ -193,13 +414,13 @@
         }
 
         .tab:hover {
-            color: var(--text);
+            color: #ffffff !important;
         }
 
         .tab.active {
-            color: white;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            color: #1a1a24 !important;
+            background: linear-gradient(135deg, #fcd34d, #d4af37) !important;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4) !important;
         }
 
         /* Content Area */
@@ -303,10 +524,10 @@
         }
 
         .book-card {
-            background: var(--surface);
+            background: #16161e !important;
             border-radius: 20px;
             padding: 20px;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             display: flex;
             flex-direction: column;
@@ -317,8 +538,8 @@
 
         .book-card:hover {
             transform: translateY(-10px);
-            background: var(--surface-hover);
-            border-color: rgba(168, 85, 247, 0.3);
+            background: #1e1e2d !important;
+            border-color: rgba(168, 85, 247, 0.3) !important;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
                 0 0 20px rgba(99, 102, 241, 0.1);
         }
@@ -381,6 +602,28 @@
             /* Show pages depth when rotated */
         }
 
+        .book-rating {
+            position: absolute;
+            top: 10px;
+            right: -5px;
+            /* Pull out slightly past edge for 3D effect */
+            background: rgba(0, 0, 0, 0.8);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            transition: opacity 0.3s, transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .book-card:hover .book-rating {
+            transform: translateX(10px) translateY(-5px);
+        }
+
         .book-info {
             flex: 1;
             display: flex;
@@ -399,11 +642,12 @@
             line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+            color: #ffffff !important;
         }
 
         .book-author {
             font-size: 0.95rem;
-            color: var(--text-secondary);
+            color: #a1a1aa !important;
             margin: 0 0 20px 0;
             font-weight: 400;
         }
@@ -548,17 +792,20 @@
 
     <!-- Top Navigation -->
     <nav class="top-nav">
-        <a href="/main.html" class="nav-logo">
-            <i class="fas fa-book-open"></i> Vylithra Books
+        <a href="/" class="brand" style="text-decoration: none;">
+            Vylithra <span style="font-weight: 300; color: var(--text-secondary);">Library</span>
         </a>
         <div class="nav-links">
-            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
-            <a href="/books.html" class="nav-link active"><i class="fas fa-swatchbook"></i> Library</a>
-            <a href="/studio.html" class="nav-link" id="studioLink" style="display:none;"><i class="fas fa-pen-nib"></i>
-                Studio</a>
-            <a href="/publish-book.html" class="publish-cta" id="publishBtn"><i class="fas fa-plus"></i> Publish a
-                Book</a>
-            <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+            <a href="/books.html" class="nav-link active">Library</a>
+            <a href="#" class="nav-link">Authors</a>
+            <a href="/publish-book.html" class="nav-link" id="publishBtn" style="display: none;">Publish Book</a>
+            <a href="/main.html" class="nav-link">Account</a>
+        </div>
+        <div class="header-right">
+            <div class="search-icon"><i class="fas fa-search"></i></div>
+            <a href="/studio.html" id="studioLink"
+                style="display: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; color: #000; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, var(--secondary), var(--primary));">Studio</a>
+            <div class="user-avatar" id="logoutBtn" title="Logout"><i class="fas fa-user"></i></div>
         </div>
     </nav>
 
@@ -567,18 +814,64 @@
 
         <!-- Hero Section -->
         <section class="hero-section">
-            <h1>Discover Infinite Worlds.</h1>
-            <p>Explore premium manuscripts, stories, and educational content created by independent publishers of the
-                Vylithra platform.</p>
+            <div class="hero-content">
+                <span class="hero-eyebrow" id="heroEyebrow">Premium settings</span>
+                <h1 id="heroTitle"><span class="gold-text">UNVEIL YOUR STORY.</span><br>Digital Publishing Elevated.
+                </h1>
+                <p id="heroDesc">Preview a client facility dedicated entirely to digital publishing, performance, and
+                    intrigue.
+                    Experience the next era of story sharing.</p>
 
-            <div class="tabs-container">
-                <div class="tab active" onclick="switchTab('store')">Book Store</div>
-                <div class="tab" onclick="switchTab('my-books')">My Library</div>
+                <div class="hero-buttons">
+                    <button class="btn-gold" id="heroPrimaryBtn"
+                        onclick="document.getElementById('booksGrid').scrollIntoView({behavior: 'smooth'})">Explore
+                        Library</button>
+                    <button class="btn-outline" id="heroSecondaryBtn" style="display:none;">Get Book</button>
+                </div>
+            </div>
+
+            <!-- Showcase Side -->
+            <div class="hero-showcase">
+                <!-- 3D Stacked Books -->
+                <div class="hero-book book-pos-1" id="heroBook0">
+                    <img src="" class="hero-book-cover" id="heroCover0" alt="Featured Book">
+                </div>
+                <div class="hero-book book-pos-2" id="heroBook1">
+                    <img src="" class="hero-book-cover" id="heroCover1" alt="Next Book">
+                </div>
+                <div class="hero-book book-pos-3" id="heroBook2">
+                    <img src="" class="hero-book-cover" id="heroCover2" alt="Upcoming Book">
+                </div>
+                <div class="hero-book book-pos-hidden" id="heroBook3">
+                    <img src="" class="hero-book-cover" id="heroCover3" alt="Hidden Book">
+                </div>
+
+                <div class="scroll-indicators">
+                    <div class="indicator-number">24</div>
+                    <div class="scroll-track">
+                        <div class="scroll-thumb"></div>
+                    </div>
+                    <div class="indicator-number">03</div>
+                </div>
+            </div>
+
+            <!-- Page Indicators -->
+            <div class="hero-pagination">
+                <div class="hero-dot active" data-index="0" id="heroDot0"></div>
+                <div class="hero-dot" data-index="1" id="heroDot1"></div>
+                <div class="hero-dot" data-index="2" id="heroDot2"></div>
+                <div class="hero-dot" data-index="3" id="heroDot3"></div>
             </div>
         </section>
 
         <!-- Content Area -->
         <section class="content-area">
+            <div style="display: flex; gap: 10px; margin-bottom: 40px; justify-content: center;">
+                <div class="tabs-container">
+                    <div class="tab active" onclick="switchTab('store')">Book Store</div>
+                    <div class="tab" onclick="switchTab('my-books')">My Library</div>
+                </div>
+            </div>
             <div class="collection-header">
                 <h2 class="collection-title">Explore Library</h2>
                 <div class="search-bar">
@@ -595,11 +888,24 @@
 
     <!-- Reader Modal -->
     <div id="readerModal" class="reader-modal">
-        <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
         <div class="reader-content-wrapper">
-            <h1 class="reader-title" id="readerTitle">Book Title</h1>
-            <div id="readerContent">
-                <!-- Book content injected here -->
+            <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
+            <div class="reader-content" id="readerContent">
+                <h1 class="reader-title">Loading...</h1>
+            </div>
+
+            <!-- Book Rating Widget -->
+            <div class="rating-widget" id="ratingWidget"
+                style="display: none; text-align: center; padding: 40px 0; border-top: 1px solid var(--border); margin-top: 50px;">
+                <h3 style="margin-bottom: 20px;">Rate this book</h3>
+                <div class="stars-container"
+                    style="display: flex; justify-content: center; gap: 10px; font-size: 2rem; color: var(--border); cursor: pointer;">
+                    <i class="fas fa-star rating-star" data-rating="2"></i>
+                    <i class="fas fa-star rating-star" data-rating="4"></i>
+                    <i class="fas fa-star rating-star" data-rating="6"></i>
+                    <i class="fas fa-star rating-star" data-rating="8"></i>
+                    <i class="fas fa-star rating-star" data-rating="10"></i>
+                </div>
             </div>
         </div>
     </div>
@@ -625,22 +931,22 @@
         let currentUser = null;
         let allBooks = [];
         let currentTab = 'store';
+        let currentBookId = null; // Added for rating widget
 
         // Check authentication
         const token = localStorage.getItem('token');
-        if (!token) {
-            window.location.href = '/auth.html';
-        }
+        // Removed global redirect to allow public browsing
 
         // Initialize Page
         async function init() {
             checkUserRole();
-            await fetchUserProfile();
+            if (token) {
+                await fetchUserProfile();
+            }
 
             // Initial fetch
             await fetchBooks();
-
-            await fetchBooks();
+            initCarousel();
             renderBooks();
 
             // Setup Logout
@@ -655,16 +961,15 @@
         // Fetch User Profile
         async function fetchUserProfile() {
             try {
+                if (!token) return;
                 const res = await fetch(`${API_URL}/users/profile`, {
                     headers: { 'x-auth-token': token }
                 });
                 if (res.ok) {
                     currentUser = await res.json();
-                } else if (res.status === 401) {
-                    localStorage.removeItem('token');
-                    window.location.href = '/auth.html';
                 } else {
-                    console.error("Failed to fetch user profile");
+                    console.log("Logged out or token expired, browsing as guest.");
+                    localStorage.removeItem('token');
                 }
             } catch (err) {
                 console.error("Error fetching user profile:", err);
@@ -721,18 +1026,21 @@
             const grid = document.getElementById('booksGrid');
             grid.innerHTML = '';
 
-            if (!currentUser) return;
-
             let booksToShow = [];
 
             if (currentTab === 'store') {
                 booksToShow = allBooks;
             } else if (currentTab === 'my-books') {
-                // Show purchased books OR authored books
-                booksToShow = allBooks.filter(b =>
-                    currentUser.purchasedBooks.includes(b._id) ||
-                    b.author._id === currentUser._id
-                );
+                // Show purchased books OR authored books, but only if user exists
+                if (currentUser) {
+                    booksToShow = allBooks.filter(b =>
+                        (currentUser.purchasedBooks && currentUser.purchasedBooks.includes(b._id)) ||
+                        (b.author && b.author._id === currentUser._id)
+                    );
+                } else {
+                    grid.innerHTML = '<div style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth.html" style="color: var(--primary);">log in</a> to view your library.</div>';
+                    return;
+                }
             }
 
             // Apply search filter if present
@@ -778,18 +1086,20 @@
                 rowWrap.className = 'category-row';
 
                 booksInCategory.forEach(book => {
-                    const isAuthor = book.author._id === currentUser._id;
-                    const isPurchased = currentUser.purchasedBooks.includes(book._id);
-                    const canRead = isAuthor || isPurchased || book.price === 0;
+                    const isAuthor = currentUser && book && book.author && book.author._id === currentUser._id;
+                    const isPurchased = currentUser && currentUser.purchasedBooks && currentUser.purchasedBooks.includes(book._id);
+                    const canRead = isAuthor || isPurchased || (book && book.price === 0);
 
                     const card = document.createElement('div');
                     card.className = 'book-card';
                     card.style.minWidth = '260px'; // Lock width for horizontal scrolling
                     card.style.maxWidth = '260px';
 
-                    const cover = book.coverImage
-                        ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.src=''; this.style.backgroundColor='#1e2235';">`
-                        : `<div class="book-cover"><i class="fas fa-book fa-3x"></i></div>`;
+                    const formattedTitle = book.title.split(' ').join('+');
+                    const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
+                    const coverHtml = book.coverImage
+                        ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src='${fallbackImageUrl}'; this.style.backgroundColor='#1e2235';">`
+                        : `<img src="${fallbackImageUrl}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
 
                     let actionHtml = '';
                     if (canRead) {
@@ -798,21 +1108,27 @@
                         actionHtml = `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Buy</button>`;
                     }
 
-                    const authorNameDisplay = book.penName ? `${book.penName}` : (book.author.displayName || book.author.username);
+                    const authorNameDisplay = book.penName ? `${book.penName}` : (book.author ? (book.author.displayName || book.author.username || 'Unknown Author') : 'Unknown Author');
+                    const mockRatingStr = book.averageRating && book.averageRating > 0 ? `★ ${book.averageRating.toFixed(1)}` : 'New';
 
                     card.innerHTML = `
-                        <div class="cover-wrapper">
-                            ${cover}
+                    <div class="cover-wrapper">
+                        <span class="book-rating">${mockRatingStr}</span>
+                        ${coverHtml}
+                    </div>
+                    <div class="book-info">
+                        <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
+                        <p class="book-author">${authorNameDisplay}</p>
+                        
+                        <div class="price-row">
+                            <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
+                            ${(currentUser && currentUser.purchasedBooks && currentUser.purchasedBooks.includes(book._id)) ?
+                            `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>` :
+                            `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
+                        }
                         </div>
-                        <div class="book-info">
-                            <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
-                            <p class="book-author">${authorNameDisplay}</p>
-                            <div class="price-row">
-                                <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
-                                ${actionHtml}
-                            </div>
-                        </div>
-                    `;
+                    </div>
+                `;
                     rowWrap.appendChild(card);
                 });
 
@@ -824,142 +1140,51 @@
 
 
 
-        // Close Payment Modal
-        function closePaymentModal() {
-            document.getElementById('paymentModalOverlay').style.display = 'none';
-        }
-
-        // Process actual payment (Razorpay Checkout)
+        // Redirect to Checkout Page
         async function buyBook(bookId) {
             if (!token) {
                 VylithraUI.showToast('Please log in to purchase books', 'error');
+                setTimeout(() => window.location.href = '/auth.html', 1500);
                 return;
             }
-
-            const book = allBooks.find(b => b._id === bookId);
-            if (!book) return;
-
-            try {
-                VylithraUI.showToast('Preparing secure checkout...', 'info');
-
-                const res = await fetch(`${API_URL}/books/${book._id}/purchase-intent`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-auth-token': token
-                    },
-                    body: JSON.stringify({ gateway: 'razorpay' })
-                });
-
-                let data = {};
-                try {
-                    data = await res.json();
-                } catch (e) {
-                    data = { msg: `Server error: ${res.status} ${res.statusText}` };
-                }
-
-                if (res.ok && data.type === 'razorpay') {
-                    // Open Razorpay Modal
-                    const options = {
-                        "key": data.key_id || 'rzp_test_placeholder',
-                        "amount": data.amount,
-                        "currency": data.currency,
-                        "name": "Vylithra Library",
-                        "description": `Purchase ${book.title}`,
-                        "image": "/uploads/preview-mockup.png", // Example logo
-                        "order_id": data.order_id,
-                        "handler": async function (response) {
-                            // Handle payment success
-                            VylithraUI.showToast('Payment processing... Please wait.', 'info');
-                            await verifyPurchase({
-                                razorpay_payment_id: response.razorpay_payment_id,
-                                razorpay_order_id: response.razorpay_order_id,
-                                razorpay_signature: response.razorpay_signature,
-                                book_id: book._id
-                            });
-                        },
-                        "prefill": {
-                            "name": currentUser ? currentUser.displayName : "",
-                            "email": currentUser ? currentUser.email : ""
-                        },
-                        "theme": {
-                            "color": "#6366f1"
-                        }
-                    };
-                    const rzp = new window.Razorpay(options);
-                    rzp.on('payment.failed', function (response) {
-                        VylithraUI.showToast('Payment was failed or canceled.', 'error');
-                        console.error(response.error);
-                    });
-                    rzp.open();
-                } else {
-                    VylithraUI.showToast(data.msg || 'Checkout failed to initialize.', 'error');
-                }
-            } catch (err) {
-                console.error('Checkout error:', err);
-                VylithraUI.showToast('Connection error. Please try again.', 'error');
-            }
-        }
-
-
-        // JS Functions removed, moved to Publisher Studio
-
-        // Verify Purchase via Razorpay Signature
-        async function verifyPurchase(paymentData) {
-            try {
-                const currentToken = localStorage.getItem('token');
-                if (!currentToken) {
-                    VylithraUI.showToast('Session expired.', 'error');
-                    return;
-                }
-                const res = await fetch(`${API_URL}/books/verify-purchase`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-auth-token': currentToken
-                    },
-                    body: JSON.stringify({
-                        razorpay_order_id: paymentData.razorpay_order_id,
-                        razorpay_payment_id: paymentData.razorpay_payment_id,
-                        razorpay_signature: paymentData.razorpay_signature,
-                        book_id: paymentData.book_id
-                    })
-                });
-
-                if (res.ok) {
-                    VylithraUI.showToast("Payment successful! The book is now in your Library.");
-                    if (currentUser && !currentUser.purchasedBooks.includes(paymentData.book_id)) {
-                        currentUser.purchasedBooks.push(paymentData.book_id);
-                    }
-                    // Refresh the display immediately so button changes to Read
-                    renderBooks();
-                } else {
-                    const data = await res.json();
-                    VylithraUI.showToast("Payment verification failed: " + (data.msg || 'Unknown error.'), 'error');
-                }
-            } catch (err) {
-                VylithraUI.showToast("Network error while verifying payment.", 'error');
-            }
+            window.location.href = `/checkout.html?bookId=${bookId}`;
         }
 
         // Open Reader
         async function openReader(bookId) {
-            try {
-                const res = await fetch(`${API_URL}/books/${bookId}`, {
-                    headers: { 'x-auth-token': token }
-                });
+            if (event) event.stopPropagation(); // Prevent card click from propagating if called from button
+            currentBookId = bookId;
+            const book = allBooks.find(b => b._id === bookId);
+            if (!book) return;
 
-                if (res.ok) {
-                    const book = await res.json();
-                    document.getElementById('readerTitle').innerText = book.title;
-                    document.getElementById('readerContent').innerHTML = book.content;
-                    document.getElementById('readerModal').style.display = 'flex';
-                    document.body.style.overflow = 'hidden'; // Prevent background scrolling
-                } else {
-                    VylithraUI.showToast('Error loading book content. Ensure you have purchased it.', 'error');
-                }
-            } catch (err) {
-                VylithraUI.showToast('Error fetching book content', 'error');
+            const modal = document.getElementById('readerModal');
+            const content = document.getElementById('readerContent');
+            const widget = document.getElementById('ratingWidget');
+
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+
+            content.innerHTML = `
+                < h1 class="reader-title" > ${book.title}</h1 >
+                    <div style="font-size: 1.15rem; line-height: 1.8;">
+                        ${book.content}
+                    </div>
+            `;
+
+            // Reset stars and show widget
+            widget.style.display = 'block';
+            document.querySelectorAll('.rating-star').forEach(s => s.style.color = 'var(--border)');
+
+            // Fetch user's existing rating for this book and highlight stars
+            if (currentUser && currentUser.ratedBooks && currentUser.ratedBooks[bookId]) {
+                const userRating = currentUser.ratedBooks[bookId];
+                document.querySelectorAll('.rating-star').forEach(s => {
+                    if (parseInt(s.dataset.rating) <= userRating) {
+                        s.style.color = 'var(--primary)';
+                    } else {
+                        s.style.color = 'var(--border)';
+                    }
+                });
             }
         }
 
@@ -968,12 +1193,201 @@
             document.getElementById('readerModal').style.display = 'none';
             document.body.style.overflow = 'auto';
             document.getElementById('readerContent').innerHTML = '';
+            document.getElementById('ratingWidget').style.display = 'none'; // Hide widget on close
+            currentBookId = null;
         }
 
         // Close reader on escape key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closeReader();
         });
+
+        // Rating Star Interactions
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.rating-star').forEach(star => {
+                star.addEventListener('click', async (e) => {
+                    const score = parseInt(e.target.dataset.rating);
+
+                    if (!currentBookId) {
+                        VylithraUI.showToast('Error: No active book selected', 'error');
+                        return;
+                    }
+
+                    if (!token) {
+                        VylithraUI.showToast('Please login to rate books.', 'error');
+                        return;
+                    }
+
+                    try {
+                        const res = await fetch(`/ api / books / ${currentBookId}/rate`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-auth-token': token
+                            },
+                            body: JSON.stringify({ score })
+                        });
+
+                        const text = await res.text();
+                        let data;
+                        try { data = JSON.parse(text); } catch (ex) { throw new Error(text) }
+
+                        if (!res.ok) throw new Error(data.msg || 'Error rating book');
+
+                        // Fill stars visually
+                        document.querySelectorAll('.rating-star').forEach(s => {
+                            if (parseInt(s.dataset.rating) <= score) {
+                                s.style.color = 'var(--primary)';
+                            } else {
+                                s.style.color = 'var(--border)';
+                            }
+                        });
+
+                        // Update local user state
+                        if (currentUser) {
+                            if (!currentUser.ratedBooks) currentUser.ratedBooks = {};
+                            currentUser.ratedBooks[currentBookId] = score;
+                        }
+
+                        VylithraUI.showToast('Rating submitted!', 'success');
+                        fetchBooks(); // refresh background grid to show new average
+
+                    } catch (err) {
+                        VylithraUI.showToast(err.message, 'error');
+                        console.error('Rating Error:', err);
+                    }
+                });
+            });
+        });
+
+        // Hero Carousel Logic
+        let currentCarouselIndex = 0;
+        let carouselInterval = null;
+        let carouselBooks = [];
+
+        function initCarousel() {
+            if (carouselInterval) clearInterval(carouselInterval);
+
+            // Get up to 4 books for the carousel
+            carouselBooks = allBooks.slice(0, 4);
+            if (carouselBooks.length === 0) return;
+
+            // Set first book immediately
+            updateCarousel(0);
+
+            // Set up click handlers for dots
+            for (let i = 0; i < 4; i++) {
+                const dot = document.getElementById('heroDot' + i);
+                if (!dot) continue;
+
+                // Remove existing listeners to prevent duplicates if initCarousel runs again
+                const newDot = dot.cloneNode(true);
+                dot.parentNode.replaceChild(newDot, dot);
+
+                newDot.addEventListener('click', () => {
+                    clearInterval(carouselInterval);
+                    updateCarousel(i);
+                    startCarouselTimer();
+                });
+            }
+
+            startCarouselTimer();
+        }
+
+        function updateCarousel(index) {
+            if (index >= carouselBooks.length) index = 0;
+            currentCarouselIndex = index;
+            const book = carouselBooks[index];
+            if (!book) return;
+
+            // Update DOM Text
+            const titleEl = document.getElementById('heroTitle');
+            if (titleEl) titleEl.innerHTML = `<span class="gold-text">${book.title.toUpperCase()}</span><br>Available Now.`;
+
+            const descEl = document.getElementById('heroDesc');
+            if (descEl) descEl.innerText = book.description ? (book.description.substring(0, 150) + '...') : (book.content ? book.content.substring(0, 150) + '...' : 'Preview a client facility dedicated entirely to digital publishing, performance, and intrigue.');
+
+            // Update 3D Stack Classes and Images
+            for (let i = 0; i < 4; i++) {
+                const bookData = carouselBooks[i];
+                if (bookData) {
+                    const coverEl = document.getElementById('heroCover' + i);
+                    const formattedTitle = bookData.title.split(' ').join('+');
+                    const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
+
+                    if (coverEl) {
+                        coverEl.onerror = function () {
+                            this.onerror = null;
+                            this.src = fallbackImageUrl;
+                            this.style.backgroundColor = '#1a1a24';
+                        };
+
+                        if (bookData.coverImage) {
+                            coverEl.src = bookData.coverImage;
+                        } else {
+                            coverEl.src = fallbackImageUrl;
+                            coverEl.style.backgroundColor = '#1a1a24';
+                        }
+                    }
+                }
+
+                const bookEl = document.getElementById('heroBook' + i);
+                if (bookEl) {
+                    let diff = i - index;
+                    if (diff < 0) diff += 4; // Wrap exactly for 4 elements
+
+                    bookEl.className = 'hero-book'; // clear modifying classes
+                    if (diff === 0) bookEl.classList.add('book-pos-1');
+                    else if (diff === 1) bookEl.classList.add('book-pos-2');
+                    else if (diff === 2) bookEl.classList.add('book-pos-3');
+                    else bookEl.classList.add('book-pos-hidden');
+                }
+            }
+
+            // Check if purchased
+            let isPurchased = false;
+            if (currentUser && currentUser.role === 'admin') {
+                isPurchased = true;
+            } else if (currentUser) {
+                const authorId = typeof book.author === 'object' ? book.author._id : book.author;
+                if (authorId === currentUser._id) {
+                    isPurchased = true; // Author owns their book
+                } else if (currentUser.purchasedBooks && currentUser.purchasedBooks.includes(book._id)) {
+                    isPurchased = true; // User bought it
+                }
+            }
+
+            const readBtn = document.getElementById('heroPrimaryBtn');
+            const getBtn = document.getElementById('heroSecondaryBtn');
+
+            if (readBtn && getBtn) {
+                if (isPurchased || book.price === 0) {
+                    readBtn.innerText = 'Read Now';
+                    readBtn.onclick = () => openReader(book._id);
+                    getBtn.style.display = 'none';
+                } else {
+                    readBtn.innerText = 'Explore Library';
+                    readBtn.onclick = () => document.getElementById('booksGrid').scrollIntoView({ behavior: 'smooth' });
+
+                    getBtn.innerText = 'Get Book (₹' + book.price + ')';
+                    getBtn.style.display = 'inline-block';
+                    getBtn.onclick = () => buyBook(book._id, book.price);
+                }
+            }
+
+            // Update dots
+            for (let i = 0; i < 4; i++) {
+                const d = document.getElementById('heroDot' + i);
+                if (d) d.classList.toggle('active', i === index);
+            }
+        }
+
+        function startCarouselTimer() {
+            if (carouselInterval) clearInterval(carouselInterval);
+            carouselInterval = setInterval(() => {
+                updateCarousel(currentCarouselIndex + 1);
+            }, 5000);
+        }
 
         // Run
         init();

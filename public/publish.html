@@ -713,11 +713,11 @@
                         const imgHtml = `<img src="${data.url}" class="editor-image">`;
                         document.execCommand('insertHTML', false, imgHtml);
                     } else {
-                        alert('Upload failed');
+                        VylithraUI.showToast('Upload failed', 'error');
                     }
                 } catch (err) {
                     console.error(err);
-                    alert('Error uploading image');
+                    VylithraUI.showToast('Error uploading image', 'error');
                 }
             }
             input.value = ''; // Reset
@@ -801,7 +801,7 @@
                                 <div style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.9rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
                                 <div style="font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: #64748b;">Attachment</div>
                             </div>
-                            <a href="#" onclick="alert('File download requires completed backend storage configuration.'); return false;" style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
+                            <a href="#" onclick="VylithraUI.showToast('File download requires completed backend storage configuration.', 'info'); return false;" style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
                         </div><br>`;
                         document.execCommand('insertHTML', false, fileHtml);
                     }
@@ -820,7 +820,7 @@
                                 <div style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.9rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
                                 <div style="font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: #64748b;">(Local preview)</div>
                             </div>
-                            <a href="#" onclick="alert('This is a simulated attachment for the UI demo.'); return false;" style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
+                            <a href="#" onclick="VylithraUI.showToast('This is a simulated attachment for the UI demo.', 'info'); return false;" style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
                         </div><br>`;
                     document.execCommand('insertHTML', false, fileHtml);
                 }
@@ -881,7 +881,7 @@
                     const iframe = `<br><div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin: 15px 0;"><iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe></div><br>`;
                     document.execCommand('insertHTML', false, iframe);
                 } else {
-                    alert("Invalid YouTube URL");
+                    VylithraUI.showToast("Invalid YouTube URL", 'error');
                 }
             });
         }

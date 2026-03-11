@@ -74,10 +74,22 @@ const UserSchema = new mongoose.Schema({
         type: String, // email for paypal, id for upi, etc
         default: ''
     },
-    balance: {
+    // Publisher Earnings & Withdrawals
+    walletBalance: {
         type: Number,
         default: 0
     },
+    totalEarned: {
+        type: Number,
+        default: 0
+    },
+    withdrawalHistory: [{
+        amount: { type: Number, required: true },
+        date: { type: Date, default: Date.now },
+        status: { type: String, enum: ['pending', 'completed', 'failed'], default: 'pending' },
+        method: { type: String },
+        details: { type: String }
+    }],
     purchasedBooks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'

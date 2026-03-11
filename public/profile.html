@@ -1425,7 +1425,7 @@
                         actionBtn.onclick = () => {
                             const url = window.location.href.split('?')[0] + '?user=' + (user._id || '');
                             navigator.clipboard.writeText(url).then(() => {
-                                alert('Profile link copied to clipboard!');
+                                VylithraUI.showToast('Profile link copied to clipboard!', 'success');
                             });
                         };
                         actionBtn.style.background = 'var(--surface)';
@@ -1483,8 +1483,8 @@
 
                         actionBtn.onclick = async () => {
                             if (!token) {
-                                alert('Please login to connect with users!');
-                                window.location.href = 'login.html';
+                                VylithraUI.showToast('Please login to connect with users!', 'error');
+                                setTimeout(() => window.location.href = 'login.html', 1500);
                                 return;
                             }
 
@@ -1506,7 +1506,7 @@
                                 // Revert optimistic update on failure
                                 isConnected = !isConnected;
                                 updateBtnUI();
-                                alert('An error occurred. Please try again later.');
+                                VylithraUI.showToast('An error occurred. Please try again later.', 'error');
                             }
                         };
                         actionContainer.appendChild(actionBtn);
@@ -1603,22 +1603,19 @@
 
                 async function deleteProject(e, id) {
                     e.preventDefault();
-                    if (!confirm('Delete this project?')) return;
-
-                    try {
-                        const token = localStorage.getItem('token');
-                        const res = await fetch(`${API_URL}/users/projects/${id}`, {
-                            method: 'DELETE',
-                            headers: { 'x-auth-token': token }
-                        });
-                        if (res.ok) {
-                            const updatedProjects = await res.json();
-                            // We need to re-render. Since we don't have full user obj here, 
-                            // we can just re-load profile or cheat.
-                            // Easiest is to reload profile.
-                            loadProfile();
-                        }
-                    } catch (err) { console.error(err); }
+                    VylithraUI.showConfirm('Delete this project?', async () => {
+                        try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`${API_URL}/users/projects/${id}`, {
+                                method: 'DELETE',
+                                headers: { 'x-auth-token': token }
+                            });
+                            if (res.ok) {
+                                const updatedProjects = await res.json();
+                                loadProfile();
+                            }
+                        } catch (err) { console.error(err); }
+                    });
                 }
 
                 async function fetchMeData() {
@@ -1704,11 +1701,11 @@
                                     document.getElementById('projectForm').reset();
                                     loadProfile(); // Refresh
                                 } else {
-                                    alert('Failed to add project');
+                                    VylithraUI.showToast('Failed to add project', 'error');
                                 }
                             } catch (err) {
                                 console.error(err);
-                                alert('Error adding project');
+                                VylithraUI.showToast('Error adding project', 'error');
                             }
                         });
                     }
@@ -1743,14 +1740,14 @@
                                 avatarEl.style.backgroundSize = 'cover';
                                 avatarEl.style.backgroundPosition = 'center';
                                 avatarEl.innerText = '';
-                                alert('Profile picture updated!');
+                                VylithraUI.showToast('Profile picture updated!', 'success');
                             } else {
-                                alert(data.msg || 'Upload failed');
+                                VylithraUI.showToast(data.msg || 'Upload failed', 'error');
                             }
                         } catch (err) {
                             console.error(err);
                             avatarEl.style.opacity = '1';
-                            alert('Error uploading image');
+                            VylithraUI.showToast('Error uploading image', 'error');
                         }
                     };
                 }
@@ -1993,11 +1990,11 @@
                     showLoggedIn(data.username, data.role);
                     closeModal('loginModal');
                 } else {
-                    alert(data.msg || 'Login failed');
+                    VylithraUI.showToast(data.msg || 'Login failed', 'error');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Server error');
+                VylithraUI.showToast('Server error', 'error');
             }
         });
 
@@ -2018,14 +2015,14 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    alert('Registration successful! Please sign in.');
+                    VylithraUI.showToast('Registration successful! Please sign in.', 'success');
                     switchModal('registerModal', 'loginModal');
                 } else {
-                    alert(data.msg || 'Registration failed');
+                    VylithraUI.showToast(data.msg || 'Registration failed', 'error');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Server error');
+                VylithraUI.showToast('Server error', 'error');
             }
         });
 
@@ -2360,7 +2357,10 @@
             const tag = document.getElementById('postTag').value;
             const token = localStorage.getItem('token');
 
-            if (!content.trim()) return alert("Content cannot be empty");
+            if (!content.trim()) {
+                VylithraUI.showToast("Content cannot be empty", 'error');
+                return;
+            }
 
             try {
                 const res = await fetch(`${API_URL}/posts`, {
@@ -2376,7 +2376,7 @@
                     document.getElementById('postContent').value = ''; // Clear input
                     fetchPosts(); // Refresh list
                 } else {
-                    alert('Failed to post');
+                    VylithraUI.showToast('Failed to post', 'error');
                 }
             } catch (err) {
                 console.error(err);
@@ -2462,8 +2462,8 @@
             function enforceLogin(e) {
                 if (!localStorage.getItem('token')) {
                     if (e) e.preventDefault();
-                    alert('Please login to access this feature!');
-                    window.location.href = 'auth.html';
+                    VylithraUI.showToast('Please login to access this feature!', 'error');
+                    setTimeout(() => window.location.href = 'auth.html', 1500);
                     return false;
                 }
                 return true;
