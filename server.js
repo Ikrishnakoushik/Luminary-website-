@@ -91,9 +91,13 @@ async function sendEmail({ to, subject, text }) {
 }
 
 // Ensure uploads directory exists
-const uploadDir = path.join(__dirname, 'public/uploads');
+const uploadDir = process.env.VERCEL ? '/tmp/uploads' : path.join(__dirname, 'public/uploads');
 if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
+    try {
+        fs.mkdirSync(uploadDir, { recursive: true });
+    } catch (err) {
+        console.error("Could not create upload directory:", err);
+    }
 }
 
 // Middleware
@@ -167,7 +171,7 @@ const multer = require('multer');
 
 // Configure Multer Storage
 const storage = multer.diskStorage({
-    destination: './public/uploads/',
+    destination: process.env.VERCEL ? '/tmp/uploads/' : './public/uploads/',
     filename: function (req, file, cb) {
         cb(null, 'avatar-' + Date.now() + path.extname(file.originalname));
     }
@@ -1451,4 +1455,7 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
 
 
 // Start Server
-app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+if (process.env.NODE_ENV !== 'production') {
+    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+}
+module.exports = app;
