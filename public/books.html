@@ -650,6 +650,16 @@
             color: #a1a1aa !important;
             margin: 0 0 20px 0;
             font-weight: 400;
+            transition: color 0.3s ease, transform 0.2s ease;
+        }
+
+        .book-author.clickable {
+            cursor: pointer;
+        }
+
+        .book-author.clickable:hover {
+            color: var(--primary) !important;
+            transform: translateX(1px);
         }
 
         .price-row {
@@ -1111,6 +1121,12 @@
                     const authorNameDisplay = book.penName ? `${book.penName}` : (book.author ? (book.author.displayName || book.author.username || 'Unknown Author') : 'Unknown Author');
                     const mockRatingStr = book.averageRating && book.averageRating > 0 ? `★ ${book.averageRating.toFixed(1)}` : 'New';
 
+                    // Author Link Logic
+                    const authorId = book.author ? (book.author._id || book.author) : null;
+                    const authorHtml = authorId
+                        ? `<p class="book-author clickable" onclick="event.stopPropagation(); window.location.href='profile.html?user=${authorId}'" title="View Author Profile">${authorNameDisplay} <i class="fas fa-external-link-alt" style="font-size: 0.75rem; margin-left: 5px; opacity: 0.7;"></i></p>`
+                        : `<p class="book-author">${authorNameDisplay}</p>`;
+
                     card.innerHTML = `
                     <div class="cover-wrapper">
                         <span class="book-rating">${mockRatingStr}</span>
@@ -1118,7 +1134,7 @@
                     </div>
                     <div class="book-info">
                         <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
-                        <p class="book-author">${authorNameDisplay}</p>
+                        ${authorHtml}
                         
                         <div class="price-row">
                             <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
