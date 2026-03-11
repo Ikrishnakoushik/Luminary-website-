@@ -244,7 +244,13 @@ app.post('/api/register', async (req, res) => {
         // Check if user exists
         let user = await User.findOne({ email });
         if (user) {
-            return res.status(400).json({ msg: 'User already exists' });
+            return res.status(400).json({ msg: 'Email already registered' });
+        }
+
+        // Check if username exists
+        let existingUsername = await User.findOne({ username });
+        if (existingUsername) {
+            return res.status(400).json({ msg: 'Username already taken' });
         }
 
         // Hash password

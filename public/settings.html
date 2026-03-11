@@ -791,7 +791,7 @@
                             <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">
                                 Email Settings</h3>
                             <div class="form-group"><label>Email Address</label><input type="email" class="form-control"
-                                    id="email" required><span class="help-text">This
+                                    id="email" required placeholder="name@vylithra.in" style="color: var(--text-main, #111827) !important; background-color: var(--surface, #ffffff) !important;"><span class="help-text">This
                                     email will be used for all account notifications.</span></div>
                         </div>
                         <div class="card-footer"><button type="submit" class="btn btn-primary">Update
@@ -1121,7 +1121,7 @@
 
         </main>
     </div>
-    <script>const API_URL = 'http://localhost:3000/api';
+    <script>const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUser = null;
 
         async function init() {
