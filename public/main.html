@@ -247,6 +247,119 @@
             font-weight: 700;
         }
 
+        /* Carousel Styles (Hero Section) */
+        .carousel-section {
+            margin-bottom: 30px;
+            border-radius: var(--border-radius);
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .carousel-container {
+            position: relative;
+            width: 100%;
+            height: clamp(200px, 30vh, 280px);
+            overflow: hidden;
+            border-radius: var(--border-radius);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(135deg, rgba(30, 41, 59, 1), rgba(15, 23, 42, 1));
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .carousel-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        .carousel-track {
+            display: flex;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            height: 100%;
+            position: relative;
+            z-index: 1;
+        }
+
+        .slide {
+            min-width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+            box-sizing: border-box;
+            opacity: 0.2;
+            transition: opacity 0.5s ease;
+        }
+
+        .slide.active {
+            opacity: 1;
+        }
+
+        .slide-content {
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .slide-content h2 {
+            font-size: clamp(2rem, 4vw, 3rem);
+            font-weight: 700;
+            margin-bottom: 15px;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(to right, #ffffff, #e2e8f0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-content p {
+            font-size: clamp(1.1rem, 2vw, 1.25rem);
+            font-weight: 300;
+            opacity: 0.9;
+            color: #f1f5f9;
+            line-height: 1.5;
+        }
+
+        .carousel-nav {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 2;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.2);
+        }
+
+        .dot.active {
+            background: var(--primary);
+            width: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
         /* Mobile Categories Ribbon */
         .mobile-categories {
             display: none;
@@ -2305,6 +2418,48 @@
                 header.classList.remove('nav-hidden');
             }
             lastScroll = currentScroll;
+        });
+
+        // Hero Carousel Logic
+        let currentSlide = 0;
+        let slideInterval;
+        const totalSlides = 3;
+
+        function goToSlide(index) {
+            const track = document.getElementById('track');
+            const dots = document.querySelectorAll('.dot');
+            const slides = document.querySelectorAll('.slide');
+
+            if (!track || slides.length === 0) return;
+
+            currentSlide = index;
+            track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+            // Update dots
+            dots.forEach(d => d.classList.remove('active'));
+            if (dots[currentSlide]) dots[currentSlide].classList.add('active');
+
+            // Update slides opacity
+            slides.forEach(s => s.classList.remove('active'));
+            if (slides[currentSlide]) slides[currentSlide].classList.add('active');
+
+            resetInterval();
+        }
+
+        function nextSlide() {
+            currentSlide = (currentSlide + 1) % totalSlides;
+            goToSlide(currentSlide);
+        }
+
+        function resetInterval() {
+            clearInterval(slideInterval);
+            slideInterval = setInterval(nextSlide, 5000); // 5 seconds per slide
+        }
+
+        // Initialize carousel
+        document.addEventListener('DOMContentLoaded', () => {
+            // Reset interval is deferred until all scripts run.
+            setTimeout(resetInterval, 500);
         });
     </script>
 </body>
