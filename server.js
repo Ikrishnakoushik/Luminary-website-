@@ -187,7 +187,9 @@ app.get('/sitemap.xml', async (req, res) => {
             '/books',
             '/creator-kit',
             '/publish',
-            '/publish-book'
+            '/publish-book',
+            '/documentation',
+            '/legal'
         ];
 
         staticPages.forEach(page => {
