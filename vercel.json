@@ -16,6 +16,10 @@
             "destination": "/server.js"
         },
         {
+            "source": "/sitemap.xml",
+            "destination": "/server.js"
+        },
+        {
             "source": "/(.*)",
             "destination": "/public/$1"
         }
