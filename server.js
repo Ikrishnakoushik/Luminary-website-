@@ -136,42 +136,6 @@ const auth = (req, res, next) => {
     }
 };
 
-// Ironclad Admin Middleware
-const adminAuth = async (req, res, next) => {
-    try {
-        // 1. JWT Check (handled by 'auth' middleware which runs before this)
-        if (!req.user || req.user.role !== 'admin') {
-            console.warn(`[SECURITY] Unauthorized admin access attempt by User ID: ${req.user ? req.user.id : 'Unknown'}`);
-            return res.status(403).json({ msg: 'Forbidden: Admin access required' });
-        }
-
-        // 2. Database Verify (Fetch fresh user data)
-        const user = await User.findById(req.user.id);
-        if (!user || user.role !== 'admin') {
-            return res.status(403).json({ msg: 'Forbidden: Role mismatch' });
-        }
-
-        // 3. Environment/Email Check
-        const allowedEmails = (process.env.ADMIN_EMAILS || '').split(',').map(e => e.trim());
-        if (!allowedEmails.includes(user.email)) {
-             console.error(`[SECURITY] Admin role user ${user.email} not in allowed ADMIN_EMAILS list`);
-             return res.status(403).json({ msg: 'Forbidden: External verification failed' });
-        }
-
-        // 4. Secret Key Check
-        const adminKey = req.header('x-admin-key');
-        if (!process.env.ADMIN_KEY || adminKey !== process.env.ADMIN_KEY) {
-             console.error(`[SECURITY] Admin key mismatch for ${user.email}`);
-             return res.status(403).json({ msg: 'Forbidden: Key verification failed' });
-        }
-
-        next();
-    } catch (err) {
-        console.error('Admin Auth Error:', err);
-        res.status(500).json({ msg: 'Server Error during admin verification' });
-    }
-};
-
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
 let isConnected = false;
@@ -343,7 +307,7 @@ app.post('/api/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Validate and sanitize role (IRONCLAD: Never allow 'admin' from body)
+        // Validate role
         const validRoles = ['publisher', 'reader'];
         const userRole = validRoles.includes(role) ? role : 'reader';
 
@@ -555,7 +519,7 @@ app.put('/api/users/profile', auth, async (req, res) => {
     try {
         const { displayName, bio, username, email, socials } = req.body;
 
-        // Build update object (IRONCLAD: Never allow 'role' update)
+        // Build update object
         const updateFields = {};
         if (displayName) updateFields.displayName = displayName;
         if (bio) updateFields.bio = bio;
@@ -1368,73 +1332,6 @@ app.post('/api/publishers/withdraw', auth, async (req, res) => {
     }
 });
 
-// --- ADMIN MANAGEMENT ROUTES ---
-
-// GET All Pending Withdrawals (Strict Admin Only)
-app.get('/api/admin/withdrawals', [auth, adminAuth], async (req, res) => {
-    try {
-        // Find all users who have at least one pending withdrawal
-        const users = await User.find({
-            "withdrawalHistory.status": "pending"
-        }).select('username email withdrawalHistory');
-
-        // Flatten the results to isolate pending requests
-        const pendingWithdrawals = [];
-        users.forEach(user => {
-            user.withdrawalHistory.forEach(w => {
-                if (w.status === 'pending') {
-                    pendingWithdrawals.push({
-                        userId: user._id,
-                        username: user.username,
-                        email: user.email,
-                        withdrawal: w
-                    });
-                }
-            });
-        });
-
-        res.json(pendingWithdrawals);
-    } catch (err) {
-        console.error('Admin Fetch Withdrawals Error:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
-
-// Process Withdrawal (Strict Admin Only)
-app.put('/api/admin/withdrawals/:userId/:withdrawalId', [auth, adminAuth], async (req, res) => {
-    try {
-        const { status, remarks } = req.body; // status should be 'completed' or 'failed'
-        if (!['completed', 'failed'].includes(status)) {
-            return res.status(400).json({ msg: 'Invalid status update' });
-        }
-
-        const user = await User.findById(req.params.userId);
-        if (!user) return res.status(404).json({ msg: 'User not found' });
-
-        const withdrawal = user.withdrawalHistory.id(req.params.withdrawalId);
-        if (!withdrawal) return res.status(404).json({ msg: 'Withdrawal record not found' });
-
-        if (withdrawal.status !== 'pending') {
-            return res.status(400).json({ msg: 'Withdrawal has already been processed' });
-        }
-
-        // Update status and add remarks
-        withdrawal.status = status;
-        withdrawal.details = `${withdrawal.details || ''} | Admin Remark: ${remarks || 'None'}`;
-        
-        // If failed, refund the wallet balance
-        if (status === 'failed') {
-            user.walletBalance += withdrawal.amount;
-        }
-
-        await user.save();
-        res.json({ msg: `Withdrawal successfully marked as ${status}`, userBalance: user.walletBalance });
-    } catch (err) {
-        console.error('Admin Process Withdrawal Error:', err);
-        res.status(500).json({ msg: 'Server Error' });
-    }
-});
-
 
 // Upgrade user to publisher role
 app.put('/api/users/upgrade-to-publisher', auth, async (req, res) => {
@@ -1446,10 +1343,6 @@ app.put('/api/users/upgrade-to-publisher', auth, async (req, res) => {
 
         if (user.role === 'publisher') {
             return res.status(400).json({ msg: 'User is already a publisher' });
-        }
-
-        if (user.role === 'admin') {
-            return res.status(403).json({ msg: 'Admins cannot change their roles via public API' });
         }
 
         user.role = 'publisher';
@@ -1484,10 +1377,6 @@ app.put('/api/users/downgrade-to-reader', auth, async (req, res) => {
 
         if (user.role === 'reader') {
             return res.status(400).json({ msg: 'User is already a reader' });
-        }
-
-        if (user.role === 'admin') {
-            return res.status(403).json({ msg: 'Admins cannot change their roles via public API' });
         }
 
         user.role = 'reader';
