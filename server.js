@@ -160,6 +160,23 @@ const adminAuth = async (req, res, next) => {
     }
 };
 
+// 2FA Gateway Double-Lock Middleware
+const gatewayAuth = async (req, res, next) => {
+    // This expects a second, short-lived token generated ONLY when the hard credentials are submitting on the frontend
+    const gatewayToken = req.header('x-gateway-token');
+    if (!gatewayToken) return res.status(401).json({ msg: 'Gateway Access Denied' });
+
+    try {
+        const decoded = jwt.verify(gatewayToken, JWT_SECRET);
+        if (!decoded.gatewayVerified) {
+            return res.status(401).json({ msg: 'Invalid Gateway Signature' });
+        }
+        next();
+    } catch (err) {
+        res.status(401).json({ msg: 'Gateway Session Expired - Please re-authenticate' });
+    }
+};
+
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
 let isConnected = false;
@@ -1569,8 +1586,37 @@ app.post('/api/admin/setup-first-admin', auth, async (req, res) => {
     }
 });
 
+// 2.5. 2FA Gateway Unlock Route
+app.post('/api/admin/gateway', adminAuth, (req, res) => {
+    try {
+        const { email, secretKey } = req.body;
+        
+        // Strict verification against environment variables
+        if (!ADMIN_EMAIL || !ADMIN_SECRET_KEY || 
+            email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || 
+            secretKey !== ADMIN_SECRET_KEY) {
+            console.log(`[SECURITY ALERT] Failed gateway challenge for user ${req.user.id}`);
+            return res.status(401).json({ msg: 'Invalid Master Credentials' });
+        }
+        
+        // Generate a fast-expiring (1 hour) Gateway Ticket
+        const payload = {
+            gatewayVerified: true,
+            adminId: req.user.id
+        };
+        
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+            if (err) throw err;
+            res.json({ token, msg: 'Gateway Unlocked' });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // 3. Get Platform Stats
-app.get('/api/admin/stats', adminAuth, async (req, res) => {
+app.get('/api/admin/stats', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
         const totalBooks = await Book.countDocuments();
@@ -1590,7 +1636,7 @@ app.get('/api/admin/stats', adminAuth, async (req, res) => {
 });
 
 // 4. User Management (Get All)
-app.get('/api/admin/users', adminAuth, async (req, res) => {
+app.get('/api/admin/users', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
         res.json(users);
@@ -1601,7 +1647,7 @@ app.get('/api/admin/users', adminAuth, async (req, res) => {
 });
 
 // 5. User Management (Update Role)
-app.put('/api/admin/users/:id/role', adminAuth, async (req, res) => {
+app.put('/api/admin/users/:id/role', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const { role } = req.body;
         if (!['reader', 'publisher', 'admin'].includes(role)) {
@@ -1622,7 +1668,7 @@ app.put('/api/admin/users/:id/role', adminAuth, async (req, res) => {
 });
 
 // 6. User Management (Delete User)
-app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+app.delete('/api/admin/users/:id', adminAuth, gatewayAuth, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
         res.json({ msg: 'User deleted' });
@@ -1633,7 +1679,7 @@ app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
 });
 
 // 7. Content Management (Get All Books)
-app.get('/api/admin/books', adminAuth, async (req, res) => {
+app.get('/api/admin/books', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const books = await Book.find().populate('author', 'username email').sort({ createdAt: -1 });
         res.json(books);
@@ -1644,7 +1690,7 @@ app.get('/api/admin/books', adminAuth, async (req, res) => {
 });
 
 // 8. Content Management (Toggle Book Status)
-app.put('/api/admin/books/:id/status', adminAuth, async (req, res) => {
+app.put('/api/admin/books/:id/status', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const { status } = req.body; // 'published' or 'draft'
         const book = await Book.findById(req.params.id);
@@ -1661,7 +1707,7 @@ app.put('/api/admin/books/:id/status', adminAuth, async (req, res) => {
 });
 
 // 9. Content Management (Delete Book)
-app.delete('/api/admin/books/:id', adminAuth, async (req, res) => {
+app.delete('/api/admin/books/:id', adminAuth, gatewayAuth, async (req, res) => {
     try {
         await Book.findByIdAndDelete(req.params.id);
         res.json({ msg: 'Book deleted' });
@@ -1672,7 +1718,7 @@ app.delete('/api/admin/books/:id', adminAuth, async (req, res) => {
 });
 
 // 10. Financial Oversight (Get Withdrawals/Transactions)
-app.get('/api/admin/transactions', adminAuth, async (req, res) => {
+app.get('/api/admin/transactions', adminAuth, gatewayAuth, async (req, res) => {
     try {
         // Collect all withdrawal histories from all users
         const users = await User.find({ 'withdrawalHistory.0': { $exists: true } }).select('username email withdrawalHistory');
