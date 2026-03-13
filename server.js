@@ -365,7 +365,7 @@ app.post('/api/verify-email', async (req, res) => {
 
         // Login automatically
         const payload = { user: { id: user.id, role: user.role } };
-        jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
             res.json({ token, username: user.username, role: user.role });
         });
@@ -488,7 +488,7 @@ app.post('/api/login', async (req, res) => {
         jwt.sign(
             payload,
             JWT_SECRET,
-            { expiresIn: '1h' },
+            { expiresIn: '30d' },
             (err, token) => {
                 if (err) throw err;
                 res.json({ token, username: user.username, role: user.role });
