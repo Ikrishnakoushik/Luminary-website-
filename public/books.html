@@ -808,14 +808,14 @@
             Vylithra <span style="font-weight: 300; color: var(--text-secondary);">Library</span>
         </a>
         <div class="nav-links">
-            <a href="/books.html" class="nav-link active">Library</a>
+            <a href="/books" class="nav-link active">Library</a>
             <a href="#" class="nav-link" onclick="VylithraUI.showToast('Author directory coming soon!', 'info'); return false;">Authors</a>
-            <a href="/publish-book.html" class="nav-link" id="publishBtn" style="display: none;">Publish Book</a>
-            <a href="/settings.html" class="nav-link">Account</a>
+            <a href="/publish-book" class="nav-link" id="publishBtn" style="display: none;">Publish Book</a>
+            <a href="/settings" class="nav-link">Account</a>
         </div>
         <div class="header-right">
             <div class="search-icon"><i class="fas fa-search"></i></div>
-            <a href="/studio.html" id="studioLink"
+            <a href="/studio" id="studioLink"
                 style="display: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; color: #000; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, var(--secondary), var(--primary));">Studio</a>
             <div class="user-avatar" id="logoutBtn" title="Logout"><i class="fas fa-user"></i></div>
         </div>
@@ -966,7 +966,7 @@
                 e.preventDefault();
                 localStorage.removeItem('token');
                 localStorage.removeItem('role');
-                window.location.href = '/auth.html';
+                window.location.href = '/auth';
             });
         }
 
@@ -1050,7 +1050,7 @@
                         (b.author && b.author._id === currentUser._id)
                     );
                 } else {
-                    grid.innerHTML = '<div style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth.html" style="color: var(--primary);">log in</a> to view your library.</div>';
+                    grid.innerHTML = '<div style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth" style="color: var(--primary);">log in</a> to view your library.</div>';
                     return;
                 }
             }
@@ -1126,7 +1126,7 @@
                     // Author Link Logic
                     const authorId = book.author ? (book.author._id || book.author) : null;
                     const authorHtml = authorId
-                        ? `<p class="book-author clickable" onclick="event.stopPropagation(); window.location.href='profile.html?user=${authorId}'" title="View Author Profile">${authorNameDisplay} <i class="fas fa-external-link-alt" style="font-size: 0.75rem; margin-left: 5px; opacity: 0.7;"></i></p>`
+                        ? `<p class="book-author clickable" onclick="event.stopPropagation(); window.location.href='profile?user=${authorId}'" title="View Author Profile">${authorNameDisplay} <i class="fas fa-external-link-alt" style="font-size: 0.75rem; margin-left: 5px; opacity: 0.7;"></i></p>`
                         : `<p class="book-author">${authorNameDisplay}</p>`;
 
                     card.innerHTML = `
@@ -1162,7 +1162,7 @@
         async function buyBook(bookId) {
             if (!token) {
                 VylithraUI.showToast('Please log in to purchase books', 'error');
-                setTimeout(() => window.location.href = '/auth.html', 1500);
+                setTimeout(() => window.location.href = '/auth', 1500);
                 return;
             }
             window.location.href = `/checkout.html?bookId=${bookId}`;

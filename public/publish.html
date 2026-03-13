@@ -521,7 +521,7 @@
                     style="width: 32px; height: 32px; vertical-align: middle; margin-right: 2px;">
                 <div>Vylithra<br>Studio</div>
             </div>
-            <a href="main.html" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
+            <a href="main" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
 
             <!-- Earnings Section -->
             <div class="earnings-group"
@@ -1003,7 +1003,7 @@
                     msg.style.color = "#f59e0b";
 
                     // We can redirect or stay. Redirecting to feed is standard.
-                    setTimeout(() => window.location.href = 'main.html', 2500);
+                    setTimeout(() => window.location.href = 'main', 2500);
                     return; // Prevent normal fetch
                 }
                 // ---------------------------------
@@ -1021,7 +1021,7 @@
                     // Success Animation
                     btn.innerHTML = '<i class="fas fa-check"></i> Published!';
                     btn.style.background = '#10b981';
-                    setTimeout(() => window.location.href = 'main.html', 1000);
+                    setTimeout(() => window.location.href = 'main', 1000);
                 } else {
                     const data = await res.json();
                     throw new Error(data.msg || 'Failed to publish');
@@ -1036,7 +1036,7 @@
 
         // Auth Check
         if (!localStorage.getItem('token')) {
-            window.location.href = 'auth.html';
+            window.location.href = 'auth';
         }
 
         // Fetch Publisher Balance

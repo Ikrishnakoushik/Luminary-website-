@@ -229,7 +229,7 @@
         const token = localStorage.getItem('token');
         if (!token) {
             console.warn('No token found. Ejecting to main list.');
-            window.location.replace('/main.html'); // Kick out
+            window.location.replace('/main'); // Kick out
         } else {
             verifyAdmin();
         }
@@ -246,11 +246,11 @@
                     buildDashboardUI(data.user);
                 } else {
                     console.warn('Unauthorized. Ejecting.');
-                    window.location.replace('/main.html'); // Kick out
+                    window.location.replace('/main'); // Kick out
                 }
             } catch (error) {
                 console.error('System error:', error);
-                window.location.replace('/main.html'); // Kick out on failure
+                window.location.replace('/main'); // Kick out on failure
             }
         }
 
@@ -268,7 +268,7 @@
                         <p style="margin: 0.5rem 0 0 0; color: var(--text-muted);">Securely authenticated as: <strong>${user.username}</strong></p>
                     </div>
                     <div>
-                        <button onclick="localStorage.removeItem('token'); window.location.href='/index.html';" class="btn-action btn-update" style="margin:0;">Terminate Session</button>
+                        <button onclick="localStorage.removeItem('token'); window.location.href='/index';" class="btn-action btn-update" style="margin:0;">Terminate Session</button>
                     </div>
                 </div>
 
@@ -338,24 +338,24 @@
                 
                 let tbody = '';
                 users.forEach(u => {
-                    tbody += \`
+                    tbody += `
                         <tr>
                             <td>
-                                <div style="font-weight: 500;">\${u.username}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">\${u.email}</div>
+                                <div style="font-weight: 500;">${u.username}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">${u.email}</div>
                             </td>
-                            <td><span class="badge \${u.role}">\${u.role}</span></td>
-                            <td>\${new Date(u.loginHistory?.[u.loginHistory.length-1] || u.createdAt || Date.now()).toLocaleDateString()}</td>
+                            <td><span class="badge ${u.role}">${u.role}</span></td>
+                            <td>${new Date(u.loginHistory?.[u.loginHistory.length-1] || u.createdAt || Date.now()).toLocaleDateString()}</td>
                             <td>
-                                <select onchange="updateUserRole('\${u._id}', this.value)" style="padding: 0.25rem; border-radius: 0.25rem; border: 1px solid var(--border); margin-right: 0.5rem;">
-                                    <option value="reader" \${u.role === 'reader' ? 'selected' : ''}>Reader</option>
-                                    <option value="publisher" \${u.role === 'publisher' ? 'selected' : ''}>Publisher</option>
-                                    <option value="admin" \${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                <select onchange="updateUserRole('${u._id}', this.value)" style="padding: 0.25rem; border-radius: 0.25rem; border: 1px solid var(--border); margin-right: 0.5rem;">
+                                    <option value="reader" ${u.role === 'reader' ? 'selected' : ''}>Reader</option>
+                                    <option value="publisher" ${u.role === 'publisher' ? 'selected' : ''}>Publisher</option>
+                                    <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
                                 </select>
-                                <button class="btn-action btn-danger" onclick="deleteUser('\${u._id}', '\${u.username}')"><i class="fas fa-trash"></i></button>
+                                <button class="btn-action btn-danger" onclick="deleteUser('${u._id}', '${u.username}')"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
-                    \`;
+                    `;
                 });
 
                 document.getElementById('content-area').innerHTML = `
@@ -370,7 +370,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>\${tbody}</tbody>
+                            <tbody>${tbody}</tbody>
                         </table>
                     </div>
                 `;
@@ -386,22 +386,22 @@
                 
                 let tbody = '';
                 books.forEach(b => {
-                    tbody += \`
+                    tbody += `
                         <tr>
                             <td>
-                                <div style="font-weight: 500;">\${b.title}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">by \${b.author?.username || 'Unknown'}</div>
+                                <div style="font-weight: 500;">${b.title}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">by ${b.author?.username || 'Unknown'}</div>
                             </td>
-                            <td><span class="badge \${b.status}">\${b.status}</span></td>
-                            <td>₹\${b.price}</td>
+                            <td><span class="badge ${b.status}">${b.status}</span></td>
+                            <td>₹${b.price}</td>
                             <td>
-                                <button class="btn-action btn-update" onclick="toggleBookStatus('\${b._id}', '\${b.status === 'published' ? 'draft' : 'published'}')">
-                                    \${b.status === 'published' ? 'Hide' : 'Publish'}
+                                <button class="btn-action btn-update" onclick="toggleBookStatus('${b._id}', '${b.status === 'published' ? 'draft' : 'published'}')">
+                                    ${b.status === 'published' ? 'Hide' : 'Publish'}
                                 </button>
-                                <button class="btn-action btn-danger" onclick="deleteBook('\${b._id}', '\${b.title.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                                <button class="btn-action btn-danger" onclick="deleteBook('${b._id}', '${b.title.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
                             </td>
                         </tr>
-                    \`;
+                    `;
                 });
 
                 document.getElementById('content-area').innerHTML = `
@@ -416,7 +416,7 @@
                                     <th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>\${tbody}</tbody>
+                            <tbody>${tbody}</tbody>
                         </table>
                     </div>
                 `;
@@ -432,19 +432,19 @@
                 
                 let tbody = '';
                 txs.forEach(t => {
-                    tbody += \`
+                    tbody += `
                         <tr>
-                            <td>\${new Date(t.date).toLocaleString()}</td>
+                            <td>${new Date(t.date).toLocaleString()}</td>
                             <td>
-                                <div style="font-weight: 500;">\${t.username}</div>
-                                <div style="font-size: 0.875rem; color: var(--text-muted);">\${t.email}</div>
+                                <div style="font-weight: 500;">${t.username}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">${t.email}</div>
                             </td>
                             <td>WITHDRAWAL</td>
-                            <td style="font-weight: 600;">₹\${t.amount}</td>
-                            <td><span class="badge \${t.status}">\${t.status}</span></td>
-                            <td><span style="font-size: 0.875rem; color: var(--text-muted);">\${t.method} - \${t.details || ''}</span></td>
+                            <td style="font-weight: 600;">₹${t.amount}</td>
+                            <td><span class="badge ${t.status}">${t.status}</span></td>
+                            <td><span style="font-size: 0.875rem; color: var(--text-muted);">${t.method} - ${t.details || ''}</span></td>
                         </tr>
-                    \`;
+                    `;
                 });
 
                 if(txs.length === 0) {
@@ -465,7 +465,7 @@
                                     <th>Payment Details</th>
                                 </tr>
                             </thead>
-                            <tbody>\${tbody}</tbody>
+                            <tbody>${tbody}</tbody>
                         </table>
                     </div>
                 `;
@@ -482,7 +482,7 @@
                 return;
             }
             try {
-                const res = await fetch(`/api/admin/users/\${id}/role`, {
+                const res = await fetch(`/api/admin/users/${id}/role`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                     body: JSON.stringify({ role })
@@ -497,7 +497,7 @@
             if (code !== 'DELETE') return;
             
             try {
-                const res = await fetch(`/api/admin/users/\${id}`, {
+                const res = await fetch(`/api/admin/users/${id}`, {
                     method: 'DELETE',
                     headers: { 'x-auth-token': token }
                 });
@@ -510,7 +510,7 @@
 
         async function toggleBookStatus(id, status) {
             try {
-                const res = await fetch(`/api/admin/books/\${id}/status`, {
+                const res = await fetch(`/api/admin/books/${id}/status`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
                     body: JSON.stringify({ status })
@@ -522,7 +522,7 @@
         async function deleteBook(id, title) {
             if (!confirm(`Are you sure you want to PERMANENTLY delete the book: "${title}"?`)) return;
             try {
-                const res = await fetch(`/api/admin/books/\${id}`, {
+                const res = await fetch(`/api/admin/books/${id}`, {
                     method: 'DELETE',
                     headers: { 'x-auth-token': token }
                 });

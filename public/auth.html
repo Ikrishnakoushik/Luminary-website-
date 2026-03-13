@@ -11,7 +11,7 @@
     <script src="/ui-common.js"></script>
     <script>
         if (localStorage.getItem('token')) {
-            window.location.href = '/main.html';
+            window.location.href = '/main';
         }
     </script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -306,7 +306,7 @@
         <div style="text-align: center; margin-bottom: 20px;">
             <img src="vylithra_logo.svg" alt="Vylithra" style="width: 50px; height: 50px;">
         </div>
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> Home</a>
+        <a href="index" class="back-link"><i class="fas fa-arrow-left"></i> Home</a>
 
         <div class="tabs">
             <div class="tab active" onclick="switchTab('login')">Sign In</div>
@@ -392,7 +392,7 @@
                         <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
                             <input type="checkbox" id="regConsent" required style="width:auto; transform:scale(1.2);">
                             <span style="font-size:0.85rem; color:var(--text-muted, rgba(128,128,128,0.8));">
-                                I agree to the <a href="legal.html" target="_blank" style="color:var(--accent);">Terms &
+                                I agree to the <a href="legal" target="_blank" style="color:var(--accent);">Terms &
                                     Privacy Policy</a>
                             </span>
                         </label>
@@ -591,7 +591,7 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
-                    window.location.href = 'main.html';
+                    window.location.href = 'main';
                 } else {
                     errorMsg.innerText = data.msg || 'Login failed';
                 }
@@ -662,7 +662,7 @@
                     localStorage.setItem('role', data.role);
                     errorMsg.style.color = '#10b981'; // Success Green
                     errorMsg.innerText = 'Email Verified! Logging you in...';
-                    setTimeout(() => window.location.href = 'main.html', 1500);
+                    setTimeout(() => window.location.href = 'main', 1500);
                 } else {
                     errorMsg.innerText = data.msg || 'Verification failed';
                 }

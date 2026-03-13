@@ -419,9 +419,9 @@
 <body>
 
     <header>
-        <a href="main.html" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
+        <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
         <div class="header-actions">
-            <a href="main.html">Back to Home</a>
+            <a href="main">Back to Home</a>
         </div>
     </header>
 
@@ -478,14 +478,14 @@
         function checkAuth() {
             const token = localStorage.getItem('token');
             if (!token) {
-                window.location.href = 'auth.html';
+                window.location.href = 'auth';
                 return;
             }
             try {
                 const payload = JSON.parse(atob(token.split('.')[1]));
                 currentUserId = payload.user.id;
             } catch (e) {
-                window.location.href = 'auth.html';
+                window.location.href = 'auth';
             }
         }
 
@@ -493,7 +493,7 @@
             if (!localStorage.getItem('token')) {
                 if (e) e.preventDefault();
                 VylithraUI.showToast('Please login to access this feature!', 'error');
-                window.location.href = 'auth.html';
+                window.location.href = 'auth';
                 return false;
             }
             return true;

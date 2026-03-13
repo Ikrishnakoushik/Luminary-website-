@@ -1206,7 +1206,7 @@
 
         <!-- LEFT SIDEBAR -->
         <aside class="profile-card fade-in" style="animation-delay: 0.1s;">
-            <a href="main.html"
+            <a href="main"
                 style="position: absolute; top: 15px; left: 15px; color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;"><i
                     class="fas fa-arrow-left"></i> Home</a>
             <div class="avatar" id="profile-avatar">👨‍💻</div>
@@ -1486,7 +1486,7 @@
                         actionBtn.onclick = async () => {
                             if (!token) {
                                 VylithraUI.showToast('Please login to connect with users!', 'error');
-                                setTimeout(() => window.location.href = 'login.html', 1500);
+                                setTimeout(() => window.location.href = 'login', 1500);
                                 return;
                             }
 
@@ -1756,7 +1756,7 @@
 
                 function openSettings(user) {
                     // Settings have been moved to settings.html
-                    window.location.href = 'settings.html';
+                    window.location.href = 'settings';
                 }
                 function updateAuthUI() {
                     const token = localStorage.getItem('token');
@@ -2249,7 +2249,7 @@
                     <article class="post-card" id="post-${post._id}">
                         <div class="post-header">
                             <div class="post-user-info">
-                                <a href="profile.html?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                                <a href="profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
                                     ${postAvatar}
                                     <div>
                                         <div class="post-author">@${authorName}</div>
@@ -2465,7 +2465,7 @@
                 if (!localStorage.getItem('token')) {
                     if (e) e.preventDefault();
                     VylithraUI.showToast('Please login to access this feature!', 'error');
-                    setTimeout(() => window.location.href = 'auth.html', 1500);
+                    setTimeout(() => window.location.href = 'auth', 1500);
                     return false;
                 }
                 return true;

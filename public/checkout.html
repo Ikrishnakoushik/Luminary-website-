@@ -320,7 +320,7 @@
         <!-- Top Bar -->
         <div class="header-strip">
             <a href="/" class="brand-logo"><i class="fas fa-feather-alt"></i> Vylithra</a>
-            <a href="/books.html" class="back-link"><i class="fas fa-arrow-left"></i> Cancel</a>
+            <a href="/books" class="back-link"><i class="fas fa-arrow-left"></i> Cancel</a>
         </div>
 
         <div id="loadingState">
@@ -408,12 +408,12 @@
         async function init() {
             if (!token) {
                 VylithraUI.showToast("Please log in to checkout.", 'error');
-                setTimeout(() => window.location.href = '/auth.html', 1500);
+                setTimeout(() => window.location.href = '/auth', 1500);
                 return;
             }
             if (!bookId) {
                 VylithraUI.showToast("Invalid checkout link.", 'error');
-                setTimeout(() => window.location.href = '/books.html', 1500);
+                setTimeout(() => window.location.href = '/books', 1500);
                 return;
             }
 
@@ -432,7 +432,7 @@
 
                     if (!currentBook) {
                         VylithraUI.showToast("Book not found.", 'error');
-                        setTimeout(() => window.location.href = '/books.html', 1500);
+                        setTimeout(() => window.location.href = '/books', 1500);
                         return;
                     }
 
@@ -470,7 +470,7 @@
             } catch (err) {
                 console.error(err);
                 VylithraUI.showToast("Failed to load checkout details.", 'error');
-                setTimeout(() => window.location.href = '/books.html', 1500);
+                setTimeout(() => window.location.href = '/books', 1500);
             }
         }
 
@@ -483,7 +483,7 @@
             if (currentBook.price === 0) {
                 // Handle free book logic directly (if backend supports it, else redirect)
                 VylithraUI.showToast("This book is free and already added to your library! (Backend endpoint required for free bypassing)", 'success');
-                setTimeout(() => window.location.href = '/books.html', 2000);
+                setTimeout(() => window.location.href = '/books', 2000);
                 return;
             }
 
@@ -569,7 +569,7 @@
                     VylithraUI.showToast("Payment successful! Redirecting to library...", "success");
                     document.getElementById('payBtn').innerHTML = `<i class="fas fa-check-circle"></i> Success! Redirecting...`;
                     setTimeout(() => {
-                        window.location.href = '/books.html';
+                        window.location.href = '/books';
                     }, 2000);
                 } else {
                     const data = await res.json();

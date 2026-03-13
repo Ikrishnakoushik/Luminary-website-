@@ -14,6 +14,8 @@ const Book = require('./models/Book'); // Added Book model
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'Xy7@$Lp9!vQ2#mK8*jN5^hB4&cW1%zR3';
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 let resend;
@@ -331,7 +333,13 @@ app.post('/api/register', async (req, res) => {
 
         // Validate role - STRICTLY explicitly prevent 'admin' injection
         let validRoles = ['publisher', 'reader'];
-        const userRole = validRoles.includes(role) ? role : 'reader';
+        let userRole = validRoles.includes(role) ? role : 'reader';
+
+        // --- PRODUCTION SECURITY: Auto-provision Master Admin ---
+        if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+            userRole = 'admin';
+            console.log(`[SECURITY] Auto-provisioned master admin role for ${email}`);
+        }
 
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -1543,8 +1551,8 @@ app.get('/api/admin/verify', adminAuth, (req, res) => {
 app.post('/api/admin/setup-first-admin', auth, async (req, res) => {
     try {
         const { secretKey } = req.body;
-        // The hardcoded brutal secret key
-        if (secretKey !== 'Xy7@$Lp9!vQ2#mK8*jN5^hB4&cW1%zR3') {
+        // Check against the secure environment variable key
+        if (!ADMIN_SECRET_KEY || secretKey !== ADMIN_SECRET_KEY) {
             return res.status(403).json({ msg: 'Invalid Secret Key' });
         }
         

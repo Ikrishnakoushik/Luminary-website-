@@ -428,13 +428,13 @@
 <body>
 
     <nav class="top-nav">
-        <a href="/books.html" class="nav-logo">
+        <a href="/books" class="nav-logo">
             <i class="fas fa-book-open"></i> Vylithra Books
         </a>
         <div class="nav-links">
-            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> Home</a>
-            <a href="/books.html" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
-            <a href="/studio.html" class="nav-link active" id="studioLink" style="display:none;"><i
+            <a href="/main" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/books" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/studio" class="nav-link active" id="studioLink" style="display:none;"><i
                     class="fas fa-pen-nib"></i> Studio</a>
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
         </div>
@@ -447,7 +447,7 @@
                 <p style="color: var(--text-muted); margin-top: 5px;">Manage your published works and track your
                     portfolio.</p>
             </div>
-            <a href="/publish-book.html" class="btn-primary">
+            <a href="/publish-book" class="btn-primary">
                 <i class="fas fa-plus"></i> Create New Book
             </a>
         </div>
@@ -523,7 +523,7 @@
 
         async function init() {
             if (!token) {
-                window.location.href = '/auth.html';
+                window.location.href = '/auth';
                 return;
             }
 
@@ -535,14 +535,14 @@
                 fetchMyBooks();
             } else {
                 VylithraUI.showToast("Only Publishers can access the Studio.", 'error');
-                setTimeout(() => window.location.href = '/books.html', 1500);
+                setTimeout(() => window.location.href = '/books', 1500);
             }
 
             document.getElementById('logoutBtn').addEventListener('click', (e) => {
                 e.preventDefault();
                 localStorage.removeItem('token');
                 localStorage.removeItem('role');
-                window.location.href = '/auth.html';
+                window.location.href = '/auth';
             });
         }
 
@@ -555,7 +555,7 @@
                     currentUser = await res.json();
                 } else if (res.status === 401) {
                     localStorage.removeItem('token');
-                    window.location.href = '/auth.html';
+                    window.location.href = '/auth';
                 }
             } catch (err) {
                 console.error("Error fetching user profile:", err);
@@ -632,7 +632,7 @@
                     <td>${book.price > 0 ? '₹' + book.price : 'Free'}</td>
                     <td>
                         <div class="actions-cell">
-                            <button class="action-btn edit" onclick="window.location.href='/publish-book.html?editId=${book._id}'" title="Edit Book">
+                            <button class="action-btn edit" onclick="window.location.href='/publish-book?editId=${book._id}'" title="Edit Book">
                                 <i class="fas fa-pen"></i> Edit
                             </button>
                             <button class="action-btn unpublish" onclick="togglePublishStatus('${book._id}', ${isPublished})" title="${unpubText}">

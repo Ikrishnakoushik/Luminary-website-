@@ -393,13 +393,13 @@
 
     <!-- Top Navigation -->
     <nav class="top-nav">
-        <a href="/books.html" class="nav-logo">
+        <a href="/books" class="nav-logo">
             <i class="fas fa-book-open"></i> Vylithra Books
         </a>
         <div class="nav-links">
-            <a href="/main.html" class="nav-link"><i class="fas fa-home"></i> App Home</a>
-            <a href="/books.html" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
-            <a href="/studio.html" class="nav-link active" id="studioLink" style="display:none;"><i
+            <a href="/main" class="nav-link"><i class="fas fa-home"></i> App Home</a>
+            <a href="/books" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/studio" class="nav-link active" id="studioLink" style="display:none;"><i
                     class="fas fa-pen-nib"></i> Studio</a>
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
         </div>
@@ -409,7 +409,7 @@
     <div class="main-container">
         <div class="header">
             <h2>Publish a Book</h2>
-            <a href="/books.html" class="back-btn">
+            <a href="/books" class="back-btn">
                 <i class="fas fa-arrow-left"></i> Back to Library
             </a>
         </div>
@@ -545,7 +545,7 @@
         const token = localStorage.getItem('token');
 
         if (!token) {
-            window.location.href = '/auth.html';
+            window.location.href = '/auth';
         }
 
         // Check if user is publisher
@@ -559,13 +559,13 @@
                     const user = await res.json();
                     if (user.role !== 'publisher') {
                         VylithraUI.showToast('Only publishers can create books.', 'error');
-                        window.location.href = '/books.html';
+                        window.location.href = '/books';
                     } else {
                         document.getElementById('studioLink').style.display = 'flex';
                     }
                 } else if (res.status === 401) {
                     localStorage.removeItem('token');
-                    window.location.href = '/auth.html';
+                    window.location.href = '/auth';
                 }
             } catch (err) {
                 console.error("Error fetching user:", err);
@@ -669,7 +669,7 @@
                         document.getElementById('bookContent').innerHTML = book.content;
                     } else {
                         VylithraUI.showToast('Could not load book for editing. Are you the author?', 'error');
-                        setTimeout(() => window.location.href = '/books.html', 1500);
+                        setTimeout(() => window.location.href = '/books', 1500);
                     }
                 } catch (err) {
                     console.error("Error loading book to edit:", err);
@@ -774,7 +774,7 @@
                     localStorage.removeItem('draftContent');
                     localStorage.removeItem('draftDescription');
                     setTimeout(() => {
-                        window.location.href = '/books.html';
+                        window.location.href = '/books';
                     }, 1500);
                 } else {
                     if (res.status === 401 && (data.msg === 'Token is not valid' || data.msg.includes('No token'))) {
@@ -785,7 +785,7 @@
                         localStorage.setItem('draftContent', content);
                         localStorage.setItem('draftDescription', description);
                         localStorage.removeItem('token');
-                        window.location.href = '/auth.html';
+                        window.location.href = '/auth';
                         return;
                     }
                     errorMsg.querySelector('span').textContent = data.msg || 'Error publishing/updating book.';
@@ -806,7 +806,7 @@
         document.getElementById('logoutBtn').addEventListener('click', (e) => {
             e.preventDefault();
             localStorage.removeItem('token');
-            window.location.href = '/auth.html';
+            window.location.href = '/auth';
         });
     </script>
 </body>
