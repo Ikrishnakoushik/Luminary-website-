@@ -92,6 +92,10 @@ const VylithraUI = (function () {
 window.lToast = VylithraUI.showToast;
 window.lConfirm = VylithraUI.showConfirm;
 
+// Essential Global Aliases
+window.showToast = VylithraUI.showToast;
+window.showConfirm = VylithraUI.showConfirm;
+
 // Override Native Alert Site-Wide
 window.alert = function (message) {
     VylithraUI.showToast(message, 'info');
