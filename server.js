@@ -136,6 +136,28 @@ const auth = (req, res, next) => {
     }
 };
 
+// Strict Admin Authentication Middleware
+const adminAuth = async (req, res, next) => {
+    const token = req.header('x-auth-token');
+    if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded.user;
+        
+        // Double-verify against the database to guarantee role hasn't changed
+        const dbUser = await User.findById(req.user.id);
+        if (!dbUser || dbUser.role !== 'admin') {
+            console.log(`[SECURITY ALERT] Non-admin user ${req.user.id} attempted to access an admin route.`);
+            return res.status(403).json({ msg: 'Access Denied: Requires Admin Privileges' });
+        }
+        
+        next();
+    } catch (err) {
+        res.status(401).json({ msg: 'Token is not valid' });
+    }
+};
+
 // Database Connection
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/everything_spread';
 let isConnected = false;
@@ -307,8 +329,8 @@ app.post('/api/register', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        // Validate role
-        const validRoles = ['publisher', 'reader'];
+        // Validate role - STRICTLY explicitly prevent 'admin' injection
+        let validRoles = ['publisher', 'reader'];
         const userRole = validRoles.includes(role) ? role : 'reader';
 
         // Generate 6-digit OTP
@@ -1509,6 +1531,169 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
     }
 });
 
+
+// --- ADMIN PORTAL API (Strictly Protected) ---
+
+// 1. Verify Admin Session
+app.get('/api/admin/verify', adminAuth, (req, res) => {
+    res.status(200).json({ msg: 'Admin Verified', user: req.user });
+});
+
+// 2. Setup First Admin (Secret Endpoint)
+app.post('/api/admin/setup-first-admin', auth, async (req, res) => {
+    try {
+        const { secretKey } = req.body;
+        // The hardcoded brutal secret key
+        if (secretKey !== 'Xy7@$Lp9!vQ2#mK8*jN5^hB4&cW1%zR3') {
+            return res.status(403).json({ msg: 'Invalid Secret Key' });
+        }
+        
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        user.role = 'admin';
+        await user.save();
+        
+        res.json({ msg: 'Upgrade successful. You are now the Admin.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 3. Get Platform Stats
+app.get('/api/admin/stats', adminAuth, async (req, res) => {
+    try {
+        const totalUsers = await User.countDocuments();
+        const totalBooks = await Book.countDocuments();
+        
+        // Sum total earnings across all publishers as \"Platform Revenue\"
+        const users = await User.find();
+        let totalRevenue = 0;
+        users.forEach(u => {
+            totalRevenue += (u.totalEarned || 0);
+        });
+
+        res.json({ totalUsers, totalBooks, totalRevenue });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 4. User Management (Get All)
+app.get('/api/admin/users', adminAuth, async (req, res) => {
+    try {
+        const users = await User.find().select('-password').sort({ createdAt: -1 });
+        res.json(users);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 5. User Management (Update Role)
+app.put('/api/admin/users/:id/role', adminAuth, async (req, res) => {
+    try {
+        const { role } = req.body;
+        if (!['reader', 'publisher', 'admin'].includes(role)) {
+            return res.status(400).json({ msg: 'Invalid role' });
+        }
+        
+        const user = await User.findById(req.params.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        user.role = role;
+        await user.save();
+        
+        res.json({ msg: 'User role updated', user });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 6. User Management (Delete User)
+app.delete('/api/admin/users/:id', adminAuth, async (req, res) => {
+    try {
+        await User.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'User deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 7. Content Management (Get All Books)
+app.get('/api/admin/books', adminAuth, async (req, res) => {
+    try {
+        const books = await Book.find().populate('author', 'username email').sort({ createdAt: -1 });
+        res.json(books);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 8. Content Management (Toggle Book Status)
+app.put('/api/admin/books/:id/status', adminAuth, async (req, res) => {
+    try {
+        const { status } = req.body; // 'published' or 'draft'
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+        
+        book.status = status;
+        await book.save();
+        
+        res.json({ msg: 'Book status updated', book });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 9. Content Management (Delete Book)
+app.delete('/api/admin/books/:id', adminAuth, async (req, res) => {
+    try {
+        await Book.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Book deleted' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 10. Financial Oversight (Get Withdrawals/Transactions)
+app.get('/api/admin/transactions', adminAuth, async (req, res) => {
+    try {
+        // Collect all withdrawal histories from all users
+        const users = await User.find({ 'withdrawalHistory.0': { $exists: true } }).select('username email withdrawalHistory');
+        
+        let allTransactions = [];
+        users.forEach(u => {
+            u.withdrawalHistory.forEach(w => {
+                allTransactions.push({
+                    userId: u._id,
+                    username: u.username,
+                    email: u.email,
+                    amount: w.amount,
+                    date: w.date,
+                    status: w.status,
+                    method: w.method,
+                    details: w.details
+                });
+            });
+        });
+        
+        // Sort by date newest first
+        allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+        
+        res.json(allTransactions);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
 
 // Start Server
 if (process.env.NODE_ENV !== 'production') {

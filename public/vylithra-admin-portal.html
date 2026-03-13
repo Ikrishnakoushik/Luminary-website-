@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- NO INDEX, NO FOLLOW TO KEEP SEARCH ENGINES OUT -->
+    <meta name="robots" content="noindex, nofollow">
+    <title>System Authentication</title>
+    <!-- Use standard platform styles but no external dependencies if we can help it -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="main.css"> <!-- We can reuse standard variables -->
+    
+    <style>
+        :root {
+            --bg-color: #f9fafb;
+            --card-bg: #ffffff;
+            --text-main: #111827;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --success: #10b981;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Hollow State Styling */
+        #hollow-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Dashboard Styles - Injected Later */
+        #admin-dashboard {
+            display: none; /* Hidden by default */
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .nav-tab {
+            padding: 0.75rem 1.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+
+        .nav-tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .nav-tab:hover:not(.active) {
+            background: var(--bg-color);
+            color: var(--text-main);
+        }
+
+        .dashboard-content-area {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            min-height: 500px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--bg-color);
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card h3 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-muted);
+            font-size: 1rem;
+        }
+
+        .stat-card .value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        /* Data Tables */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        .data-table th, .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-table th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            letter-spacing: 0.05em;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: var(--bg-color);
+        }
+
+        .badge {
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge.admin { background: #fee2e2; color: #991b1b; }
+        .badge.publisher { background: #e0e7ff; color: #3730a3; }
+        .badge.reader { background: #f3f4f6; color: #374151; }
+        
+        .badge.published, .badge.completed { background: #d1fae5; color: #065f46; }
+        .badge.draft, .badge.pending { background: #fef3c7; color: #92400e; }
+
+        .btn-action {
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.2s;
+            margin-right: 0.5rem;
+        }
+
+        .btn-update { background: var(--border); color: var(--text-main); }
+        .btn-update:hover { background: #d1d5db; }
+
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-danger:hover { background: var(--danger-hover); }
+
+        .secret-setup {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: #fef2f2;
+            border: 1px dashed #ef4444;
+            border-radius: 0.5rem;
+            display: none; /* Hidden unless explicitly needed by owner */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. The Hollow State (Only thing visible in source code) -->
+    <div id="hollow-state">
+        <div class="spinner"></div>
+        <p style="color: var(--text-muted); font-size: 0.875rem;">Authenticating Secure Environment...</p>
+    </div>
+
+    <!-- 2. The Dashboard Container (Empty initially) -->
+    <div id="admin-dashboard"></div>
+
+    <script>
+        // STRICT SECURITY: Immediate execution to verify identity.
+        // Do NOT put any sensitive HTML in the file itself.
+        
+        const token = localStorage.getItem('token');
+        if (!token) {
+            console.warn('No token found. Ejecting to main list.');
+            window.location.replace('/main.html'); // Kick out
+        } else {
+            verifyAdmin();
+        }
+
+        async function verifyAdmin() {
+            try {
+                const response = await fetch('/api/admin/verify', {
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    document.title = 'Command Center | Admin';
+                    buildDashboardUI(data.user);
+                } else {
+                    console.warn('Unauthorized. Ejecting.');
+                    window.location.replace('/main.html'); // Kick out
+                }
+            } catch (error) {
+                console.error('System error:', error);
+                window.location.replace('/main.html'); // Kick out on failure
+            }
+        }
+
+        function buildDashboardUI(user) {
+            // Hide hollow state
+            document.getElementById('hollow-state').style.display = 'none';
+
+            // Inject the highly sensitive UI
+            const dashboard = document.getElementById('admin-dashboard');
+            dashboard.style.display = 'block';
+            dashboard.innerHTML = `
+                <div class="admin-header">
+                    <div>
+                        <h1 style="margin: 0; font-size: 1.875rem;">Platform Command Center</h1>
+                        <p style="margin: 0.5rem 0 0 0; color: var(--text-muted);">Securely authenticated as: <strong>${user.username}</strong></p>
+                    </div>
+                    <div>
+                        <button onclick="localStorage.removeItem('token'); window.location.href='/index.html';" class="btn-action btn-update" style="margin:0;">Terminate Session</button>
+                    </div>
+                </div>
+
+                <div class="admin-nav">
+                    <button class="nav-tab active" onclick="switchTab('overview', this)">Overview</button>
+                    <button class="nav-tab" onclick="switchTab('users', this)">Users</button>
+                    <button class="nav-tab" onclick="switchTab('books', this)">Content</button>
+                    <button class="nav-tab" onclick="switchTab('financials', this)">Financials</button>
+                </div>
+
+                <div class="dashboard-content-area" id="content-area">
+                    <!-- Dynamic content loads here -->
+                </div>
+            `;
+
+            // Load initial tab
+            loadOverview();
+        }
+
+        function switchTab(tab, el) {
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            
+            const area = document.getElementById('content-area');
+            area.innerHTML = '<div class="spinner" style="margin: 40px auto;"></div>';
+
+            if (tab === 'overview') loadOverview();
+            if (tab === 'users') loadUsers();
+            if (tab === 'books') loadBooks();
+            if (tab === 'financials') loadFinancials();
+        }
+
+        // --- TAB LOADERS ---
+
+        async function loadOverview() {
+            try {
+                const res = await fetch('/api/admin/stats', { headers: { 'x-auth-token': token } });
+                const stats = await res.json();
+                
+                document.getElementById('content-area').innerHTML = `
+                    <h2 style="margin-top: 0;">Platform Statistics</h2>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h3>Total Registered Users</h3>
+                            <p class="value">${stats.totalUsers}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Books Published</h3>
+                            <p class="value">${stats.totalBooks}</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>Total Publisher Earnings</h3>
+                            <p class="value">₹${stats.totalRevenue.toLocaleString()}</p>
+                        </div>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+                document.getElementById('content-area').innerHTML = '<p style="color:red">Failed to load statistics.</p>';
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const res = await fetch('/api/admin/users', { headers: { 'x-auth-token': token } });
+                const users = await res.json();
+                
+                let tbody = '';
+                users.forEach(u => {
+                    tbody += \`
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">\${u.username}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">\${u.email}</div>
+                            </td>
+                            <td><span class="badge \${u.role}">\${u.role}</span></td>
+                            <td>\${new Date(u.loginHistory?.[u.loginHistory.length-1] || u.createdAt || Date.now()).toLocaleDateString()}</td>
+                            <td>
+                                <select onchange="updateUserRole('\${u._id}', this.value)" style="padding: 0.25rem; border-radius: 0.25rem; border: 1px solid var(--border); margin-right: 0.5rem;">
+                                    <option value="reader" \${u.role === 'reader' ? 'selected' : ''}>Reader</option>
+                                    <option value="publisher" \${u.role === 'publisher' ? 'selected' : ''}>Publisher</option>
+                                    <option value="admin" \${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+                                </select>
+                                <button class="btn-action btn-danger" onclick="deleteUser('\${u._id}', '\${u.username}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    \`;
+                });
+
+                document.getElementById('content-area').innerHTML = `
+                    <h2 style="margin-top: 0;">User Management</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Last Login</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>\${tbody}</tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadBooks() {
+            try {
+                const res = await fetch('/api/admin/books', { headers: { 'x-auth-token': token } });
+                const books = await res.json();
+                
+                let tbody = '';
+                books.forEach(b => {
+                    tbody += \`
+                        <tr>
+                            <td>
+                                <div style="font-weight: 500;">\${b.title}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">by \${b.author?.username || 'Unknown'}</div>
+                            </td>
+                            <td><span class="badge \${b.status}">\${b.status}</span></td>
+                            <td>₹\${b.price}</td>
+                            <td>
+                                <button class="btn-action btn-update" onclick="toggleBookStatus('\${b._id}', '\${b.status === 'published' ? 'draft' : 'published'}')">
+                                    \${b.status === 'published' ? 'Hide' : 'Publish'}
+                                </button>
+                                <button class="btn-action btn-danger" onclick="deleteBook('\${b._id}', '\${b.title.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                            </td>
+                        </tr>
+                    \`;
+                });
+
+                document.getElementById('content-area').innerHTML = `
+                    <h2 style="margin-top: 0;">Content Moderation</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Book Context</th>
+                                    <th>Status</th>
+                                    <th>Price</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>\${tbody}</tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadFinancials() {
+            try {
+                const res = await fetch('/api/admin/transactions', { headers: { 'x-auth-token': token } });
+                const txs = await res.json();
+                
+                let tbody = '';
+                txs.forEach(t => {
+                    tbody += \`
+                        <tr>
+                            <td>\${new Date(t.date).toLocaleString()}</td>
+                            <td>
+                                <div style="font-weight: 500;">\${t.username}</div>
+                                <div style="font-size: 0.875rem; color: var(--text-muted);">\${t.email}</div>
+                            </td>
+                            <td>WITHDRAWAL</td>
+                            <td style="font-weight: 600;">₹\${t.amount}</td>
+                            <td><span class="badge \${t.status}">\${t.status}</span></td>
+                            <td><span style="font-size: 0.875rem; color: var(--text-muted);">\${t.method} - \${t.details || ''}</span></td>
+                        </tr>
+                    \`;
+                });
+
+                if(txs.length === 0) {
+                    tbody = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No withdrawal history found across platform.</td></tr>';
+                }
+
+                document.getElementById('content-area').innerHTML = `
+                    <h2 style="margin-top: 0;">Financial Ledger (Withdrawals)</h2>
+                    <div style="overflow-x: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Publisher</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                    <th>Payment Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>\${tbody}</tbody>
+                        </table>
+                    </div>
+                `;
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // --- ACTIONS ---
+
+        async function updateUserRole(id, role) {
+            if(!confirm(`Are you sure you want to change this user\'s role to ${role}?`)) {
+                loadUsers(); // reset select
+                return;
+            }
+            try {
+                const res = await fetch(`/api/admin/users/\${id}/role`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ role })
+                });
+                if(res.ok) alert('Role updated successfully.');
+                loadUsers();
+            } catch(e) { console.error(e); alert('Error updating role.'); }
+        }
+
+        async function deleteUser(id, name) {
+            const code = prompt(`WARNING: Permanent Deletion.\nType "DELETE" to permanently erase user: ${name}`);
+            if (code !== 'DELETE') return;
+            
+            try {
+                const res = await fetch(`/api/admin/users/\${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+                if(res.ok) {
+                    alert('User permanently deleted.');
+                    loadUsers();
+                }
+            } catch(e) { console.error(e); alert('Error deleting user.'); }
+        }
+
+        async function toggleBookStatus(id, status) {
+            try {
+                const res = await fetch(`/api/admin/books/\${id}/status`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ status })
+                });
+                if(res.ok) loadBooks();
+            } catch(e) { console.error(e); alert('Error updating book status.'); }
+        }
+
+        async function deleteBook(id, title) {
+            if (!confirm(`Are you sure you want to PERMANENTLY delete the book: "${title}"?`)) return;
+            try {
+                const res = await fetch(`/api/admin/books/\${id}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': token }
+                });
+                if(res.ok) loadBooks();
+            } catch(e) { console.error(e); alert('Error deleting book.'); }
+        }
+
+        // This is a temporary function you can call from the browser console to set yourself up.
+        // Once used, the backend endpoint should be deleted!
+        async function FORCE_UPGRADE_ME(secretKey) {
+            try {
+                const response = await fetch('/api/admin/setup-first-admin', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ secretKey })
+                });
+                const data = await response.json();
+                console.log(data.msg);
+                if(response.ok) {
+                    alert('You are now an Admin! Refresh the page.');
+                    location.reload();
+                } else {
+                    alert(data.msg);
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+    </script>
+</body>
+</html>
