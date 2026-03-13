@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | Vylithra</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="ui-common.css">
+    <style>
+        :root {
+            --bg-dark: #0f172a;
+            --card-dark: #1e293b;
+            --primary: #6366f1;
+            --success: #10b981;
+            --danger: #ef4444;
+            --text-gray: #94a3b8;
+            --text-light: #f8fafc;
+            --border: #334155;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .admin-nav {
+            background: var(--card-dark);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, #818cf8, #c084fc);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+        }
+
+        /* Access Key Form */
+        #access-gate {
+            position: fixed;
+            inset: 0;
+            background: var(--bg-dark);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .gate-card {
+            background: var(--card-dark);
+            padding: 2.5rem;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--border);
+            text-align: center;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        .gate-card i {
+            font-size: 3rem;
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+        }
+
+        .gate-card h2 { margin-bottom: 0.5rem; }
+        .gate-card p { color: var(--text-gray); margin-bottom: 2rem; }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: white;
+            box-sizing: border-box;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s, transform 0.2s;
+        }
+
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        /* Dashboard Content */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-dark);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .stat-card .label { color: var(--text-gray); font-size: 0.875rem; }
+        .stat-card .value { font-size: 1.5rem; font-weight: 700; margin-top: 0.5rem; }
+
+        .request-table-card {
+            background: var(--card-dark);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            background: rgba(15, 23, 42, 0.5);
+            color: var(--text-gray);
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9375rem;
+        }
+
+        .user-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-cell .avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .status-badge {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-pending { background: rgba(234, 179, 8, 0.1); color: #eab308; }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8125rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-approve { background: var(--success); color: white; }
+        .btn-reject { background: var(--danger); color: white; }
+        
+        .remark-input {
+            background: #0f172a;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: white;
+            padding: 4px 8px;
+            margin-right: 8px;
+            width: 150px;
+        }
+
+        .hidden { display: none !important; }
+        
+        .loader {
+            display: flex;
+            justify-content: center;
+            padding: 3rem;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Access Gate -->
+    <div id="access-gate">
+        <div class="gate-card">
+            <i class="fas fa-shield-halved"></i>
+            <h2>Vylithra Admin</h2>
+            <p>Enter your secret access key to proceed</p>
+            <div class="input-group">
+                <input type="password" id="admin-secret-input" placeholder="Enter Secret Key">
+            </div>
+            <button class="btn" id="unlock-btn">Unlock Dashboard</button>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div id="dashboard-content" class="hidden">
+        <nav class="admin-nav">
+            <div class="logo">
+                <i class="fas fa-crown"></i> Vylithra Admin
+            </div>
+            <div class="user-info">
+                <span id="admin-email-display" style="color: var(--text-gray); font-size: 0.9rem;"></span>
+                <button class="btn-sm" onclick="logout()" style="margin-left: 15px; background: transparent; border: 1px solid var(--border); color: white;">Logout</button>
+            </div>
+        </nav>
+
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="label">Pending Requests</div>
+                    <div class="value" id="pending-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="label">Current Admin</div>
+                    <div class="value" style="font-size: 1.1rem; color: var(--primary);">Verified</div>
+                </div>
+            </div>
+
+            <div class="request-table-card">
+                <div class="card-header">
+                    <h3 style="margin:0">Withdrawal Requests</h3>
+                    <button class="btn-sm" onclick="fetchWithdrawals()" style="background: var(--primary)">
+                        <i class="fas fa-sync-alt"></i> Refresh
+                    </button>
+                </div>
+                
+                <div id="loader" class="loader hidden">
+                    <i class="fas fa-circle-notch fa-spin fa-2x" style="color: var(--primary)"></i>
+                </div>
+
+                <div id="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Publisher</th>
+                                <th>Amount</th>
+                                <th>Details</th>
+                                <th>Requested At</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="withdrawal-list">
+                            <!-- Rows injected here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div id="no-data" class="hidden" style="text-align:center; padding: 3rem; color: var(--text-gray);">
+                    <i class="fas fa-check-circle fa-3x" style="margin-bottom: 1rem; color: var(--success); opacity: 0.3;"></i>
+                    <p>No pending withdrawal requests. All clear!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="ui-common.js"></script>
+    <script>
+        const API_URL = '/api';
+        let adminKey = localStorage.getItem('vylithra_admin_key');
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (adminKey) {
+                showDashboard();
+            }
+
+            document.getElementById('unlock-btn').addEventListener('click', () => {
+                const input = document.getElementById('admin-secret-input').value;
+                if (!input) return showToast('Please enter a key', 'error');
+                
+                adminKey = input;
+                localStorage.setItem('vylithra_admin_key', adminKey);
+                showDashboard();
+            });
+
+            // Handle Enter key on input
+            document.getElementById('admin-secret-input').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') document.getElementById('unlock-btn').click();
+            });
+        });
+
+        function logout() {
+            localStorage.removeItem('vylithra_admin_key');
+            location.reload();
+        }
+
+        async function showDashboard() {
+            document.getElementById('access-gate').classList.add('hidden');
+            document.getElementById('dashboard-content').classList.remove('hidden');
+            
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('You must be logged in first', 'error');
+                setTimeout(() => window.location.href = '/auth.html', 1500);
+                return;
+            }
+
+            // Simple check to see if key works
+            fetchWithdrawals();
+        }
+
+        async function fetchWithdrawals() {
+            const list = document.getElementById('withdrawal-list');
+            const loader = document.getElementById('loader');
+            const table = document.getElementById('table-container');
+            const noData = document.getElementById('no-data');
+
+            list.innerHTML = '';
+            loader.classList.remove('hidden');
+            table.classList.add('hidden');
+            noData.classList.add('hidden');
+
+            try {
+                const res = await fetch(`${API_URL}/admin/withdrawals`, {
+                    headers: {
+                        'x-auth-token': localStorage.getItem('token'),
+                        'x-admin-key': adminKey
+                    }
+                });
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    throw new Error(data.msg || 'Unauthorized');
+                }
+
+                const withdrawals = await res.json();
+                
+                loader.classList.add('hidden');
+                document.getElementById('pending-count').innerText = withdrawals.length;
+
+                if (withdrawals.length === 0) {
+                    noData.classList.remove('hidden');
+                    return;
+                }
+
+                table.classList.remove('hidden');
+
+                withdrawals.forEach(item => {
+                    const row = document.createElement('tr');
+                    const date = new Date(item.withdrawal.date).toLocaleDateString('en-IN', {
+                        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                    });
+
+                    row.innerHTML = `
+                        <td>
+                            <div class="user-cell">
+                                <div class="avatar">${item.username.charAt(0).toUpperCase()}</div>
+                                <div>
+                                    <div style="font-weight:600">${item.username}</div>
+                                    <div style="font-size:0.75rem; color:var(--text-gray)">${item.email}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="font-weight:700">₹${item.withdrawal.amount.toLocaleString()}</td>
+                        <td>
+                            <div style="font-size:0.85rem">${item.withdrawal.details}</div>
+                        </td>
+                        <td style="color:var(--text-gray); font-size:0.8rem">${date}</td>
+                        <td>
+                            <div class="actions">
+                                <input type="text" placeholder="Remarks..." class="remark-input" id="remark-${item.withdrawal._id}">
+                                <button class="btn-sm btn-approve" onclick="processWithdrawal('${item.userId}', '${item.withdrawal._id}', 'completed')">Approve</button>
+                                <button class="btn-sm btn-reject" onclick="processWithdrawal('${item.userId}', '${item.withdrawal._id}', 'failed')">Reject</button>
+                            </div>
+                        </td>
+                    `;
+                    list.appendChild(row);
+                });
+
+            } catch (err) {
+                console.error(err);
+                if (err.message === 'Unauthorized' || err.message.includes('Key verification failed')) {
+                    showToast('Invalid Access Key or Role', 'error');
+                    logout();
+                } else {
+                    showToast(err.message, 'error');
+                }
+            }
+        }
+
+        async function processWithdrawal(userId, withdrawalId, status) {
+            const remark = document.getElementById(`remark-${withdrawalId}`).value;
+            
+            if (!confirm(`Are you sure you want to ${status === 'completed' ? 'APPROVE' : 'REJECT'} this request?`)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/admin/withdrawals/${userId}/${withdrawalId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token'),
+                        'x-admin-key': adminKey
+                    },
+                    body: JSON.stringify({ status, remarks: remark })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    showToast(data.msg, status === 'completed' ? 'success' : 'info');
+                    fetchWithdrawals();
+                } else {
+                    showToast(data.msg, 'error');
+                }
+            } catch (err) {
+                showToast('Failed to process request', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
