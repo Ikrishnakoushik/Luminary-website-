@@ -1318,13 +1318,13 @@ app.post('/api/publishers/withdraw', auth, async (req, res) => {
         user.walletBalance -= amount;
         user.withdrawalHistory.push({
             amount: amount,
-            status: 'pending',
+            status: 'completed',
             method: method || 'UPI',
             details: details || 'Not provided'
         });
 
         await user.save();
-        res.json({ msg: 'Withdrawal request submitted successfully', walletBalance: user.walletBalance });
+        res.json({ msg: 'Withdrawal processed instantly', walletBalance: user.walletBalance });
 
     } catch (err) {
         console.error('Error processing withdrawal:', err);

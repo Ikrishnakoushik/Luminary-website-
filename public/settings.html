@@ -903,17 +903,8 @@
                                 Payment
                                 Method</button>
                         </div>
-                        <div class="connection-item">
-                            <div class="connection-info">
-                                <div class="connection-icon" style="background:#1e3a8a; color:white;"><i
-                                        class="fab fa-cc-visa"></i></div>
-                                <div class="connection-details">
-                                    <h4>Visa ending in 4242</h4>
-                                    <p>Expires 12/26 • Default</p>
-                                </div>
-                            </div><button class="btn btn-secondary"
-                                style="color:var(--danger); border-color:var(--danger);"
-                                onclick="VylithraUI.showToast('Card removed', 'success')">Remove</button>
+                        <div style="text-align: center; padding: 20px; color: var(--text-muted); border: 1px dashed var(--border); border-radius: var(--radius-md);">
+                            No payment methods saved yet. Add one to checkout faster.
                         </div>
                     </div>
                 </div>
@@ -941,31 +932,10 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr style="border-bottom: 1px solid var(--border);">
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Mar
-                                            04,
-                                            2026</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">
-                                            Book Purchase - Advanced Patterns</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">
-                                            ₹14.99</td>
-                                        <td style="padding: 12px 16px; text-align: right;"><a href="#"
-                                                style="color: var(--primary); text-decoration: none;"
-                                                onclick="VylithraUI.showToast('Downloading invoice...', 'success')"><i
-                                                    class="fas fa-download"></i></a></td>
-                                    </tr>
                                     <tr>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">Feb
-                                            28,
-                                            2026</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">
-                                            Book Purchase - Getting Started</td>
-                                        <td style="padding: 12px 16px; color: var(--text-main);">
-                                            ₹9.99</td>
-                                        <td style="padding: 12px 16px; text-align: right;"><a href="#"
-                                                style="color: var(--primary); text-decoration: none;"
-                                                onclick="VylithraUI.showToast('Downloading invoice...', 'success')"><i
-                                                    class="fas fa-download"></i></a></td>
+                                        <td colspan="4" style="text-align: center; padding: 24px; color: var(--text-muted);">
+                                            No past purchases or invoices found.
+                                        </td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -989,18 +959,17 @@
                             style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 16px; margin-bottom: 24px;">
                             <div
                                 style="padding: 20px; background: rgba(243, 244, 246, 0.5); border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border);">
-                                <div
+                                <div id="pubOverviewBooks"
                                     style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit'; margin-bottom: 4px;">
-                                    12</div>
+                                    0</div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
                                     Books Published</div>
                             </div>
                             <div
                                 style="padding: 20px; background: rgba(243, 244, 246, 0.5); border-radius: var(--radius-lg); text-align: center; border: 1px solid var(--border);">
-                                <div
+                                <div id="pubOverviewReads"
                                     style="font-size: 1.75rem; font-weight: 700; color: var(--text-main); font-family: 'Outfit'; margin-bottom: 4px;">
-                                    3,
-                                    492</div>
+                                    0</div>
                                 <div style="font-size: 0.85rem; color: var(--text-muted); font-weight: 500;">
                                     Total Reads</div>
                             </div>
@@ -1431,10 +1400,7 @@
                 message: `Request withdrawal of <strong>${balanceText}</strong> to your preferred payout method?`,
                 confirmText: 'Submit Request',
                 onConfirm: () => {
-                    showToast('Withdrawal request submitted for review.', false);
-                    setTimeout(() => {
-                        showToast('Request received! Our team will process this within 2-3 business days.', false);
-                    }, 1500);
+                    showToast('Withdrawal processed instantly! Funds have been disbursed.', false);
                 }
             });
         }

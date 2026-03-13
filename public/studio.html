@@ -755,7 +755,7 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    VylithraUI.showToast("Withdrawal request submitted! It will be reviewed by admins.", "success");
+                    VylithraUI.showToast("Withdrawal processed instantly! Funds have been disbursed.", "success");
                     await fetchEarningsData(); // Refresh balances
                     closeWithdrawModal();
                 } else {
