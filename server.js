@@ -14,8 +14,8 @@ const Book = require('./models/Book'); // Added Book model
 const app = express();
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
-const ADMIN_EMAILS = process.env.ADMIN_EMAILS;
-const ADMIN_KEY = process.env.ADMIN_KEY || 'Xy7@$Lp9!vQ2#mK8*jN5^hB4&cW1%zR3';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY || 'Xy7@$Lp9!vQ2#mK8*jN5^hB4&cW1%zR3';
 const nodemailer = require('nodemailer');
 const { Resend } = require('resend');
 let resend;
@@ -353,7 +353,7 @@ app.post('/api/register', async (req, res) => {
         let userRole = validRoles.includes(role) ? role : 'reader';
 
         // --- PRODUCTION SECURITY: Auto-provision Master Admin ---
-        if (ADMIN_EMAILS && email.toLowerCase() === ADMIN_EMAILS.toLowerCase()) {
+        if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             userRole = 'admin';
             console.log(`[SECURITY] Auto-provisioned master admin role for ${email}`);
         }
@@ -520,7 +520,7 @@ app.post('/api/login', async (req, res) => {
         }
 
         // --- PRODUCTION SECURITY: Auto-upgrade existing master admin ---
-        if (ADMIN_EMAILS && user.email.toLowerCase() === ADMIN_EMAILS.toLowerCase() && user.role !== 'admin') {
+        if (ADMIN_EMAIL && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
             user.role = 'admin';
             console.log(`[SECURITY] Auto-upgraded existing master admin role for ${user.email} on login`);
         }
@@ -1576,9 +1576,9 @@ app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
         const { email, secretKey } = req.body;
         
         // Strict verification against environment variables
-        if (!ADMIN_EMAILS || !ADMIN_KEY || 
-            email.toLowerCase() !== ADMIN_EMAILS.toLowerCase() || 
-            secretKey !== ADMIN_KEY) {
+        if (!ADMIN_EMAIL || !ADMIN_SECRET_KEY || 
+            email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || 
+            secretKey !== ADMIN_SECRET_KEY) {
             console.log(`[SECURITY ALERT] Failed gateway challenge for user ${req.user.id}`);
             return res.status(401).json({ msg: 'Invalid Master Credentials' });
         }
@@ -1598,7 +1598,7 @@ app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
         // We do not await this, we let it process in the background. Or we can await to ensure delivery.
         try {
             await sendEmail(
-                ADMIN_EMAILS, 
+                ADMIN_EMAIL, 
                 "Strict Admin Security Alert: Gateway OTP", 
                 `Someone successfully supplied the Master Credentials to the Vylithra backend.\nIf this was you, here is your 6-digit unlock code:\n\n${otp}\n\nThis code expires in 5 minutes.\nIf you did not request this, CHANGE YOUR MASTER SECRET KEY IMMEDIATELY from the Vercel dashboard.`
             );
