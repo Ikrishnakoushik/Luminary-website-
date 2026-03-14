@@ -56,6 +56,14 @@ const UserSchema = new mongoose.Schema({
         type: String,
         enum: ['World News', 'Sports', 'Study', 'Animals', 'Coding', 'Other']
     }],
+    adminGatewayOtp: {
+        type: String,
+        default: null
+    },
+    adminGatewayOtpExpires: {
+        type: Date,
+        default: null
+    },
     connections: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'

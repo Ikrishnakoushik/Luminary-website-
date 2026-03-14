@@ -1564,8 +1564,8 @@ app.get('/api/admin/verify', adminAuth, (req, res) => {
     res.status(200).json({ msg: 'Admin Verified', user: req.user });
 });
 
-// 2.5. 2FA Gateway Unlock Route
-app.post('/api/admin/gateway', adminAuth, (req, res) => {
+// 2.5a. 2FA Gateway Unlock Request (Send OTP)
+app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
     try {
         const { email, secretKey } = req.body;
         
@@ -1576,6 +1576,65 @@ app.post('/api/admin/gateway', adminAuth, (req, res) => {
             console.log(`[SECURITY ALERT] Failed gateway challenge for user ${req.user.id}`);
             return res.status(401).json({ msg: 'Invalid Master Credentials' });
         }
+        
+        // Generate a 6-digit OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        
+        // Save to User document for stateless verification
+        const user = await User.findById(req.user.id);
+        if(!user) return res.status(404).json({ msg: 'User not found' });
+        
+        user.adminGatewayOtp = otp;
+        user.adminGatewayOtpExpires = Date.now() + 5 * 60 * 1000; // 5 mins
+        await user.save();
+        
+        // Email the OTP to the master email securely
+        // We do not await this, we let it process in the background. Or we can await to ensure delivery.
+        try {
+            await sendEmail(
+                ADMIN_EMAIL, 
+                "Strict Admin Security Alert: Gateway OTP", 
+                `Someone successfully supplied the Master Credentials to the Vylithra backend.\nIf this was you, here is your 6-digit unlock code:\n\n${otp}\n\nThis code expires in 5 minutes.\nIf you did not request this, CHANGE YOUR MASTER SECRET KEY IMMEDIATELY from the Vercel dashboard.`
+            );
+        } catch (emailErr) {
+            console.error('[SECURITY ALERT] Failed to send OTP email', emailErr);
+            // We tell the user it sent, but log the error
+        }
+
+        res.json({ msg: 'OTP sent to Master Email. Check your inbox.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 2.5b. 2FA Gateway Verification (Check OTP)
+app.post('/api/admin/gateway-verify', adminAuth, async (req, res) => {
+    try {
+        const { otp } = req.body;
+        
+        const user = await User.findById(req.user.id);
+        if(!user) return res.status(401).json({ msg: 'Invalid Session' });
+        
+        if (!user.adminGatewayOtp || !user.adminGatewayOtpExpires) {
+            return res.status(400).json({ msg: 'No OTP requested or session expired. Restart Gateway.' });
+        }
+        
+        if (Date.now() > user.adminGatewayOtpExpires) {
+            user.adminGatewayOtp = null;
+            user.adminGatewayOtpExpires = null;
+            await user.save();
+            return res.status(400).json({ msg: 'OTP has expired.' });
+        }
+        
+        if (user.adminGatewayOtp !== otp.trim()) {
+            return res.status(401).json({ msg: 'Invalid OTP.' });
+        }
+        
+        // Success! Clear OTP
+        user.adminGatewayOtp = null;
+        user.adminGatewayOtpExpires = null;
+        await user.save();
         
         // Generate a fast-expiring (1 hour) Gateway Ticket
         const payload = {
