@@ -609,27 +609,7 @@
             } catch(e) { console.error(e); alert('Error deleting book.'); }
         }
 
-        // This is a temporary function you can call from the browser console to set yourself up.
-        // Once used, the backend endpoint should be deleted!
-        async function FORCE_UPGRADE_ME(secretKey) {
-            try {
-                const response = await fetch('/api/admin/setup-first-admin', {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: JSON.stringify({ secretKey })
-                });
-                const data = await response.json();
-                console.log(data.msg);
-                if(response.ok) {
-                    alert('You are now an Admin! Refresh the page.');
-                    location.reload();
-                } else {
-                    alert(data.msg);
-                }
-            } catch(e) {
-                console.error(e);
-            }
-        }
+
     </script>
 </body>
 </html>

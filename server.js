@@ -1564,28 +1564,6 @@ app.get('/api/admin/verify', adminAuth, (req, res) => {
     res.status(200).json({ msg: 'Admin Verified', user: req.user });
 });
 
-// 2. Setup First Admin (Secret Endpoint)
-app.post('/api/admin/setup-first-admin', auth, async (req, res) => {
-    try {
-        const { secretKey } = req.body;
-        // Check against the secure environment variable key
-        if (!ADMIN_SECRET_KEY || secretKey !== ADMIN_SECRET_KEY) {
-            return res.status(403).json({ msg: 'Invalid Secret Key' });
-        }
-        
-        const user = await User.findById(req.user.id);
-        if (!user) return res.status(404).json({ msg: 'User not found' });
-        
-        user.role = 'admin';
-        await user.save();
-        
-        res.json({ msg: 'Upgrade successful. You are now the Admin.' });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Server Error');
-    }
-});
-
 // 2.5. 2FA Gateway Unlock Route
 app.post('/api/admin/gateway', adminAuth, (req, res) => {
     try {
