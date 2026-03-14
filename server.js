@@ -1595,13 +1595,12 @@ app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
         await user.save();
         
         // Email the OTP to the master email securely
-        // We do not await this, we let it process in the background. Or we can await to ensure delivery.
         try {
-            await sendEmail(
-                ADMIN_EMAIL, 
-                "Strict Admin Security Alert: Gateway OTP", 
-                `Someone successfully supplied the Master Credentials to the Vylithra backend.\nIf this was you, here is your 6-digit unlock code:\n\n${otp}\n\nThis code expires in 5 minutes.\nIf you did not request this, CHANGE YOUR MASTER SECRET KEY IMMEDIATELY from the Vercel dashboard.`
-            );
+            await sendEmail({
+                to: ADMIN_EMAIL, 
+                subject: "Strict Admin Security Alert: Gateway OTP", 
+                text: `Someone successfully supplied the Master Credentials to the Vylithra backend.\nIf this was you, here is your 6-digit unlock code:\n\n${otp}\n\nThis code expires in 5 minutes.\nIf you did not request this, CHANGE YOUR MASTER SECRET KEY IMMEDIATELY from the Vercel dashboard.`
+            });
         } catch (emailErr) {
             console.error('[SECURITY ALERT] Failed to send OTP email', emailErr);
             // We tell the user it sent, but log the error
