@@ -519,6 +519,12 @@ app.post('/api/login', async (req, res) => {
             return res.status(403).json({ msg: 'Please verify your email before logging in.', requiresVerification: true });
         }
 
+        // --- PRODUCTION SECURITY: Auto-upgrade existing master admin ---
+        if (ADMIN_EMAIL && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
+            user.role = 'admin';
+            console.log(`[SECURITY] Auto-upgraded existing master admin role for ${user.email} on login`);
+        }
+
         // Log visit
         user.loginHistory.push(new Date());
         await user.save();
