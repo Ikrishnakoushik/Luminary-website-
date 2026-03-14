@@ -1332,7 +1332,7 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
 app.get('/api/publishers/earnings', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('walletBalance totalEarned withdrawalHistory role');
-        if (!user || user.role !== 'publisher') {
+        if (!user || (user.role !== 'publisher' && user.role !== 'admin')) {
             return res.status(403).json({ msg: 'Access denied' });
         }
         res.json({
@@ -1353,7 +1353,7 @@ app.post('/api/publishers/withdraw', auth, async (req, res) => {
         if (!amount || amount <= 0) return res.status(400).json({ msg: 'Invalid withdrawal amount' });
 
         const user = await User.findById(req.user.id);
-        if (!user || user.role !== 'publisher') {
+        if (!user || (user.role !== 'publisher' && user.role !== 'admin')) {
             return res.status(403).json({ msg: 'Access denied' });
         }
 
@@ -1455,8 +1455,8 @@ app.post('/api/publisher/onboard', auth, async (req, res) => {
         const { method, handle } = req.body;
         const user = await User.findById(req.user.id);
 
-        if (user.role !== 'publisher') {
-            return res.status(403).json({ msg: 'Only publishers can onboard' });
+        if (user.role !== 'publisher' && user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Only publishers and admins can onboard payout methods' });
         }
 
         if (method === 'razorpay') {
@@ -1484,8 +1484,8 @@ app.post('/api/publisher/onboard', auth, async (req, res) => {
 app.get('/api/publisher/balance', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        if (user.role !== 'publisher') {
-            return res.status(403).json({ msg: 'Only publishers can view balance' });
+        if (user.role !== 'publisher' && user.role !== 'admin') {
+            return res.status(403).json({ msg: 'Only publishers and admins can view balance' });
         }
         res.json({ balance: user.balance || 0, razorpayAccountId: user.razorpayAccountId });
     } catch (err) {

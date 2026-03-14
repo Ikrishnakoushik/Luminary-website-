@@ -1198,7 +1198,7 @@
                 setSocialUI('linkedin', user.socials.linkedin);
             }
 
-            if (user.role === 'publisher') {
+            if (user.role === 'publisher' || user.role === 'admin') {
                 document.getElementById('publisher-menu').style.display = 'flex';
                 document.getElementById('verifiedPublisherCard').style.display = 'block';
                 document.getElementById('readerUpgradeCard').style.display = 'none';
