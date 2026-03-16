@@ -15,6 +15,7 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
+    "@paypal/checkout-server-sdk": "^1.0.3",
     "@vercel/blob": "^2.3.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",

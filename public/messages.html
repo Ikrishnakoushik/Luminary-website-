@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vylithra - Messages</title>
-    <script src="theme-loader.js"></script>
+    
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
 
@@ -19,21 +19,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-light: #818cf8;
-            --secondary: #8b5cf6;
-            --bg-color: #f1f5f9;
-            --surface: #ffffff;
-            --surface-solid: var(--surface);
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border: #e2e8f0;
-            --header-height: 75px;
-            --sidebar-width: 340px;
-            --shadow-sm: 0 4px 15px rgba(0, 0, 0, 0.03);
-            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.06);
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         * {
             margin: 0;
@@ -734,4 +734,5 @@
 </body>
 
 </html>
+
 

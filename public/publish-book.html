@@ -11,16 +11,21 @@
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <style>
-        :root {
-            --primary-btn: var(--primary, #4f46e5);
-            --bg-base: var(--bg-color, #f9fafb);
-            --surface-base: var(--surface, #ffffff);
-            --surface-hover: var(--surface-light, #f3f4f6);
-            --text-base: var(--text-main, #111827);
-            --text-muted: var(--text-muted, #6b7280);
-            --border-base: var(--border, #e5e7eb);
-            --nav-bg: var(--bg-color, rgba(255, 255, 255, 0.85));
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -459,8 +464,9 @@
                             <input type="file" id="bookCoverFile" accept="image/*" class="form-control"
                                 style="flex: 1; padding: 12px; cursor: pointer;" title="Upload an image file">
                             <span style="color:var(--text-muted); font-size:0.9rem; font-weight:600;">OR</span>
-                            <input type="url" id="bookCover" class="form-control" placeholder="Paste Image URL"
-                                style="flex: 1;">
+                            <input type="text" id="bookCover" class="form-control" placeholder="Paste Image URL or Path"
+                                style="flex: 1;" oninput="document.getElementById('coverPreview').src = this.value; document.getElementById('coverPreview').style.display = 'block';">
+                            <img id="coverPreview" src="" style="display:none; width:40px; height:40px; border-radius:4px; object-fit:cover; border:1px solid var(--border);" onerror="this.style.display='none'">
                         </div>
                     </div>
 
@@ -557,7 +563,7 @@
                 });
                 if (res.ok) {
                     const user = await res.json();
-                    if (user.role !== 'publisher') {
+                    if (user.role !== 'publisher' && user.role !== 'admin') {
                         VylithraUI.showToast('Only publishers can create books.', 'error');
                         window.location.href = '/books';
                     } else {
@@ -665,6 +671,10 @@
                         document.getElementById('bookCategory').value = book.category || 'General';
                         document.getElementById('bookDescription').value = book.description;
                         document.getElementById('bookCover').value = book.coverImage || '';
+                        if (book.coverImage) {
+                            document.getElementById('coverPreview').src = book.coverImage;
+                            document.getElementById('coverPreview').style.display = 'block';
+                        }
                         document.getElementById('bookPrice').value = book.price || 0;
                         document.getElementById('bookContent').innerHTML = book.content;
                     } else {
@@ -812,3 +822,4 @@
 </body>
 
 </html>
+

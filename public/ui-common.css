@@ -4,7 +4,7 @@
 */
 
 :root {
-    --toast-bg: var(--card-bg, #ffffff);
+    --toast-bg: var(--card-bg, var(--surface));
     --toast-text: var(--text-main, #1f2937);
     --toast-border: var(--border, #e5e7eb);
     --modal-backdrop: rgba(0, 0, 0, 0.6);
@@ -157,7 +157,7 @@
 
 .vylithra-btn-primary {
     background: var(--primary, #4f46e5);
-    color: var(--btn-text, #ffffff);
+    color: var(--btn-text, var(--surface));
 }
 
 .vylithra-btn-primary:hover {

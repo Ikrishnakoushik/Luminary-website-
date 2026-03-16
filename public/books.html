@@ -13,22 +13,21 @@
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
     <style>
         /* Premium Bookstore Theme (Aurora Press Aesthetic) */
-        :root {
-            --primary: #d4af37;
-            /* Elegant Gold */
-            --secondary: #fcd34d;
-            /* Lighter Gold */
-            --accent: #b45309;
-            /* Bronze/Amber */
-            --bg: #0f0f11;
-            /* Deep, pure cinematic black/dark gray */
-            --surface: rgba(255, 255, 255, 0.03);
-            --surface-hover: rgba(255, 255, 255, 0.08);
-            --text: #ffffff;
-            --text-secondary: #a1a1aa;
-            --border: rgba(255, 255, 255, 0.08);
-            --nav-bg: rgba(15, 15, 17, 0.85);
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         body {
             font-family: 'Outfit', -apple-system, sans-serif;
@@ -810,14 +809,16 @@
         <div class="nav-links">
             <a href="/books" class="nav-link active">Library</a>
             <a href="#" class="nav-link" onclick="VylithraUI.showToast('Author directory coming soon!', 'info'); return false;">Authors</a>
-            <a href="/publish-book" class="nav-link" id="publishBtn" style="display: none;">Publish Book</a>
+            <a href="/studio" class="nav-link" id="studioLink" style="display: none;">Studio</a>
             <a href="/settings" class="nav-link">Account</a>
         </div>
         <div class="header-right">
             <div class="search-icon"><i class="fas fa-search"></i></div>
-            <a href="/studio" id="studioLink"
-                style="display: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; color: #000; font-weight: 600; font-size: 0.9rem; background: linear-gradient(135deg, var(--secondary), var(--primary));">Studio</a>
-            <div class="user-avatar" id="logoutBtn" title="Logout"><i class="fas fa-user"></i></div>
+            <a href="/publish-book" id="publishBtn"
+                style="display: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; color: #fff; font-weight: 600; font-size: 0.9rem; background: var(--primary);">Publish</a>
+            <a href="/profile" class="user-avatar" title="Profile" style="text-decoration: none; display: flex; align-items: center; justify-content: center; color: inherit;">
+                <i class="fas fa-user"></i>
+            </a>
         </div>
     </nav>
 
@@ -962,12 +963,7 @@
             renderBooks();
 
             // Setup Logout
-            document.getElementById('logoutBtn').addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('token');
-                localStorage.removeItem('role');
-                window.location.href = '/auth';
-            });
+            // logoutBtn removed
         }
 
         // Fetch User Profile
@@ -991,9 +987,9 @@
         // Check User Role from localStorage
         function checkUserRole() {
             const role = localStorage.getItem('role');
-            if (role === 'publisher') {
-                document.getElementById('publishBtn').style.display = 'flex';
-                document.getElementById('studioLink').style.display = 'flex';
+            if (role === 'publisher' || role === 'admin') {
+                document.getElementById('publishBtn').style.display = 'inline-flex';
+                document.getElementById('studioLink').style.display = 'inline-block';
             }
         }
 
@@ -1413,3 +1409,4 @@
 </body>
 
 </html>
+

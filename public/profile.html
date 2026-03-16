@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vylithra - Profile</title>
-    <script src="theme-loader.js"></script>
+    
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <link rel="manifest" href="/manifest.json">
@@ -20,21 +20,21 @@
 
     <style>
         /* --- CSS VARIABLES --- */
-        :root {
-            /* Deeper, more refined colors */
-            --bg-color: #f8fafc;
-            --surface: #ffffff;
-            --primary: #6366f1;
-            --accent: #6366f1;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --border-radius: 16px;
-            --border: #e2e8f0;
-            /* Softer, more elegant shadows */
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         * {
             box-sizing: border-box;
@@ -2486,3 +2486,4 @@
 </body>
 
 </html>
+

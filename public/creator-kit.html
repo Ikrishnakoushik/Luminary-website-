@@ -578,6 +578,26 @@
             }
         ];
 
+        // Add Mint theme explicitly
+        themes.push({
+            id: 'mint',
+            name: 'Mint Fresh',
+            desc: 'Crisp and refreshing teal tones.',
+            colors: {
+                '--bg-color': '#f0fdfa',
+                '--surface': '#ffffff',
+                '--primary': '#14b8a6',
+                '--btn-text': '#ffffff',
+                '--accent': '#0d9488',
+                '--accent-hover': '#0f766e',
+                '--text-main': '#134e4a',
+                '--text-muted': '#115e59',
+                '--border': '#ccfbf1',
+                '--input-bg': '#f0fdfa',
+                '--card-shadow': '0 4px 6px -1px rgba(20, 184, 166, 0.15)'
+            }
+        });
+
         // Add even more themes
         themes.push(
             {
@@ -696,7 +716,7 @@
 
         // Init
         const themeGrid = document.getElementById('themeGrid');
-        const currentThemeId = localStorage.getItem('spectra-theme-id') || 'default';
+        const currentThemeId = localStorage.getItem('spectra-theme-id') || 'mint';
 
         // Wait to apply initial sync until DOM is ready
         let initialThemeSyncDone = false;
@@ -1008,4 +1028,6 @@
 </body>
 
 </html>
+
+
 

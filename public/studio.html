@@ -10,19 +10,21 @@
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <style>
-        :root {
-            --primary-btn: var(--primary, #4f46e5);
-            --bg-base: var(--bg-color, #f9fafb);
-            --surface-base: var(--surface, #ffffff);
-            --surface-hover: var(--surface-light, #f3f4f6);
-            --text-base: var(--text-main, #111827);
-            --text-muted: var(--text-muted, #6b7280);
-            --border-base: var(--border, #e5e7eb);
-            --nav-bg: var(--bg-color, rgba(255, 255, 255, 0.85));
-            /* Keep nav theme-aware but can be customized if needed */
-            --danger: #ef4444;
-            --warning: #f59e0b;
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
@@ -529,7 +531,7 @@
 
             await fetchUserProfile();
 
-            if (currentUser && currentUser.role === 'publisher') {
+            if (currentUser && (currentUser.role === 'publisher' || currentUser.role === 'admin')) {
                 document.getElementById('studioLink').style.display = 'flex';
                 fetchEarningsData();
                 fetchMyBooks();
@@ -755,7 +757,7 @@
                 const data = await res.json();
 
                 if (res.ok) {
-                    VylithraUI.showToast("Withdrawal processed instantly! Funds have been disbursed.", "success");
+                    VylithraUI.showToast(data.msg || "Withdrawal request submitted! Processing takes 3-5 business days.", "success");
                     await fetchEarningsData(); // Refresh balances
                     closeWithdrawModal();
                 } else {
@@ -775,3 +777,4 @@
 </body>
 
 </html>
+

@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Vylithra</title>
-    <script src="theme-loader.js"></script>
+    
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <script>
@@ -20,22 +20,21 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
     <style>
-        :root {
-            --bg-color: #f9fafb;
-            --surface: #ffffff;
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --text-main: #111827;
-            --text-muted: #6b7280;
-            --border: #e5e7eb;
-            --ring: rgba(79, 70, 229, 0.2);
-            --danger: #dc2626;
-            --success: #10b981;
-            --radius-md: 8px;
-            --radius-lg: 12px;
-            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
 
         * {
             margin: 0;
@@ -656,7 +655,9 @@
                     Payments</button><button class="tab-btn" data-target="preferences-tab"><i
                         class="fas fa-sliders-h"></i>Preferences</button><button class="tab-btn" id="publisher-menu"
                     style="display: none;" data-target="publisher-tab"><i class="fas fa-book-open"></i>Publisher
-                    Tools</button>
+                    Tools</button><button class="tab-btn" id="promo-menu"
+                    style="display: none;" data-target="promo-codes-tab"><i class="fas fa-ticket-alt"></i>Promo
+                    Codes</button>
             </nav>
         </aside>
         <main class="settings-content">
@@ -825,8 +826,7 @@
                                     Two-Factor Authentication (2FA)</h3>
                                 <p style="font-size: 0.9rem; color: var(--text-muted);">Add an extra layer
                                     of security to your account using an authenticator app.</p>
-                            </div><label class="switch"><input type="checkbox" id="twofactorToggle"
-                                    onchange="VylithraUI.showToast(this.checked ? '2FA Enabled!' : '2FA Disabled', 'success');"><span
+                            </div><label class="switch"><input type="checkbox" id="twofactorToggle" disabled onchange="VylithraUI.showToast('2FA integration arriving in v2.0', 'info');"><span
                                     class="slider"></span></label>
                         </div>
                         <hr style="border:none; border-top:1px solid var(--border); margin: 0 -24px 24px;">
@@ -1037,6 +1037,58 @@
                     </div>
                 </div>
             </div>
+            <!-- 6. Promo Codes Tab -->
+            <div id="promo-codes-tab" class="tab-content">
+                <div class="page-header">
+                    <h2>Promo Codes</h2>
+                    <p>Generate secure, cryptographic promo codes to offer automated discounts to your readers.</p>
+                </div>
+                <div class="settings-card">
+                    <form id="generatePromoForm">
+                        <div class="card-body">
+                            <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Generate New Code</h3>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                                <div class="form-group">
+                                    <label>Discount Percentage (%)</label>
+                                    <input type="number" id="promoDiscount" class="form-control" placeholder="e.g. 50" min="1" max="100" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Maximum Uses</label>
+                                    <input type="number" id="promoMaxUses" class="form-control" placeholder="e.g. 100" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Validity (Days)</label>
+                                    <input type="number" id="promoValidity" class="form-control" placeholder="e.g. 30" min="1" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-footer">
+                            <button type="submit" class="btn btn-primary" id="generatePromoBtn">Generate Secure Code</button>
+                        </div>
+                    </form>
+                </div>
+                <div class="settings-card">
+                    <div class="card-body">
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; font-family: 'Inter', sans-serif;">Active Promo Codes</h3>
+                        <div style="border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; overflow-x: auto;">
+                            <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 0.9rem; min-width: 500px;">
+                                <thead>
+                                    <tr style="background: #f9fafb; border-bottom: 1px solid var(--border);">
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">CODE</th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">DISCOUNT</th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">USES</th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted);">EXPIRES IN</th>
+                                        <th style="padding: 12px 16px; font-weight: 500; color: var(--text-muted); text-align: right;">ACTION</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="promoCodeList">
+                                    <tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">Loading codes...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <!-- Add Payment Method Modal -->
             <div id="paymentModalOverlay" class="custom-modal-overlay">
                 <div class="custom-modal" style="max-width: 450px;">
@@ -1200,6 +1252,8 @@
 
             if (user.role === 'publisher' || user.role === 'admin') {
                 document.getElementById('publisher-menu').style.display = 'flex';
+                document.getElementById('promo-menu').style.display = 'flex';
+                fetchMyCoupons();
                 document.getElementById('verifiedPublisherCard').style.display = 'block';
                 document.getElementById('readerUpgradeCard').style.display = 'none';
 
@@ -1400,7 +1454,7 @@
                 message: `Request withdrawal of <strong>${balanceText}</strong> to your preferred payout method?`,
                 confirmText: 'Submit Request',
                 onConfirm: () => {
-                    showToast('Withdrawal processed instantly! Funds have been disbursed.', false);
+                    showToast('Withdrawal request submitted! Payout processing takes 3-5 business days.', false);
                 }
             });
         }
@@ -1504,6 +1558,79 @@
                 btn.innerText = 'Become a Publisher';
             }
         }
+
+        async function fetchMyCoupons() {
+            try {
+                const res = await fetch(`${API_URL}/coupons/my-codes`, { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                if (res.ok) {
+                    const coupons = await res.json();
+                    const list = document.getElementById('promoCodeList');
+                    list.innerHTML = coupons.length ? '' : '<tr><td colspan="5" style="text-align: center; padding: 24px; color: var(--text-muted);">No promo codes generated yet.</td></tr>';
+                    
+                    coupons.forEach(coupon => {
+                        const tr = document.createElement('tr');
+                        tr.style.borderBottom = '1px solid var(--border)';
+                        
+                        const daysLeft = Math.ceil((new Date(coupon.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
+                        const expiryText = daysLeft > 0 ? `${daysLeft} days` : '<span style="color:var(--danger)">Expired</span>';
+                        
+                        tr.innerHTML = `
+                            <td style="padding: 12px 16px; font-family: monospace; font-weight: 600; color: var(--primary);">${coupon.code}</td>
+                            <td style="padding: 12px 16px;">${coupon.discountPercentage}% OFF</td>
+                            <td style="padding: 12px 16px;">${coupon.usedCount} / ${coupon.maxUses}</td>
+                            <td style="padding: 12px 16px;">${expiryText}</td>
+                            <td style="padding: 12px 16px; text-align: right;">
+                                <button class="btn btn-secondary" onclick="deleteCoupon('${coupon._id}')" style="padding: 4px 10px; font-size: 0.8rem; color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">Revoke</button>
+                            </td>
+                        `;
+                        list.appendChild(tr);
+                    });
+                }
+            } catch(e) { console.error('Error fetching coupons', e); }
+        }
+
+        async function deleteCoupon(id) {
+            if (!confirm('Are you sure you want to permanently revoke this promo code?')) return;
+            try {
+                const res = await fetch(`${API_URL}/coupons/${id}`, { method: 'DELETE', headers: { 'x-auth-token': localStorage.getItem('token') } });
+                if (res.ok) {
+                    showToast('Promo code revoked safely.');
+                    fetchMyCoupons();
+                } else { showToast('Failed to delete coupon.', true); }
+            } catch(e) { showToast('Network Error.', true); }
+        }
+
+        document.getElementById('generatePromoForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('generatePromoBtn');
+            btn.disabled = true;
+            btn.innerText = 'Generating...';
+            try {
+                const payload = {
+                    discountPercentage: document.getElementById('promoDiscount').value,
+                    maxUses: document.getElementById('promoMaxUses').value,
+                    validityDays: document.getElementById('promoValidity').value
+                };
+                const res = await fetch(`${API_URL}/coupons/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': localStorage.getItem('token') },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (res.ok) {
+                    showToast('Cryptographic Promo Code Generated!', false);
+                    document.getElementById('generatePromoForm').reset();
+                    fetchMyCoupons();
+                } else {
+                    const data = await res.json();
+                    showToast(data.msg || 'Generation failed', true);
+                }
+            } catch (err) {
+                showToast('Network error', true);
+            }
+            btn.disabled = false;
+            btn.innerText = 'Generate Secure Code';
+        });
 
         document.getElementById('profileForm').addEventListener('submit', (e) => {
             e.preventDefault();
@@ -1668,4 +1795,5 @@
 </body>
 
 </html>
+
 

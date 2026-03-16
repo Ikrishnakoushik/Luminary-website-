@@ -10,6 +10,7 @@ const User = require('./models/User');
 const Post = require('./models/Post');
 const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
+const Coupon = require('./models/Coupon'); // Added Coupon model
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -26,11 +27,18 @@ if (process.env.RESEND_API_KEY) {
 }
 const crypto = require('crypto');
 const Razorpay = require('razorpay');
+const paypal = require('@paypal/checkout-server-sdk');
 
 const razorpayInstance = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID || 'rzp_test_placeholder',
-    key_secret: process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder'
+    key_id: process.env.RAZORPAY_KEY_ID,
+    key_secret: process.env.RAZORPAY_KEY_SECRET
 });
+
+// Configure PayPal Environment
+const paypalEnvironment = process.env.PAYPAL_MODE === 'live'
+    ? new paypal.core.LiveEnvironment(process.env.PAYPAL_CLIENT_ID || 'sb', process.env.PAYPAL_SECRET || 'sb')
+    : new paypal.core.SandboxEnvironment(process.env.PAYPAL_CLIENT_ID || 'sb', process.env.PAYPAL_SECRET || 'sb');
+const paypalClient = new paypal.core.PayPalHttpClient(paypalEnvironment);
 
 // Nodemailer Transporter (Configure with your email service)
 const transporter = nodemailer.createTransport({
@@ -59,14 +67,14 @@ if (!resend) {
 }
 
 // Universal Email Sender
-async function sendEmail({ to, subject, text }) {
+async function sendEmail({ to, subject, text, html }) {
     if (resend) {
         try {
             const data = await resend.emails.send({
                 from: process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev',
                 to,
                 subject,
-                html: `<p>${text.replace(/\\n/g, '<br>')}</p>`
+                html: html || (text ? `<p>${text.replace(/\n/g, '<br>')}</p>` : '')
             });
             console.log('[DEBUG] Resend email sent successfully:', data);
             return data;
@@ -78,9 +86,11 @@ async function sendEmail({ to, subject, text }) {
         const mailOptions = {
             from: process.env.EMAIL_USER || 'no-reply@spectra.com',
             to,
-            subject,
-            text
+            subject
         };
+        if (text) mailOptions.text = text;
+        if (html) mailOptions.html = html;
+
         try {
             const info = await transporter.sendMail(mailOptions);
             console.log('[DEBUG] Nodemailer email sent successfully: ' + info.response);
@@ -138,6 +148,16 @@ const auth = (req, res, next) => {
     }
 };
 
+// Check Role Middleware (Verifies if the user matches one of the allowed roles)
+const checkRole = (roles) => {
+    return (req, res, next) => {
+        if (!req.user || !roles.includes(req.user.role)) {
+            return res.status(403).json({ msg: 'Access Denied: Insufficient Privileges' });
+        }
+        next();
+    };
+};
+
 // Strict Admin Authentication Middleware
 const adminAuth = async (req, res, next) => {
     const token = req.header('x-auth-token');
@@ -146,14 +166,14 @@ const adminAuth = async (req, res, next) => {
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded.user;
-        
+
         // Double-verify against the database to guarantee role hasn't changed
         const dbUser = await User.findById(req.user.id);
         if (!dbUser || dbUser.role !== 'admin') {
             console.log(`[SECURITY ALERT] Non-admin user ${req.user.id} attempted to access an admin route.`);
             return res.status(403).json({ msg: 'Access Denied: Requires Admin Privileges' });
         }
-        
+
         next();
     } catch (err) {
         res.status(401).json({ msg: 'Token is not valid' });
@@ -212,7 +232,7 @@ app.get('/sitemap.xml', async (req, res) => {
     try {
         await connectDB();
         const HOST = 'https://vylithra.in';
-        
+
         // Let's create the XML structure
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
         xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
@@ -260,13 +280,10 @@ app.get('/sitemap.xml', async (req, res) => {
 // Routes
 const multer = require('multer');
 
-// Configure Multer Storage
-const storage = multer.diskStorage({
-    destination: process.env.VERCEL ? '/tmp/uploads/' : './public/uploads/',
-    filename: function (req, file, cb) {
-        cb(null, 'avatar-' + Date.now() + path.extname(file.originalname));
-    }
-});
+const { put } = require('@vercel/blob');
+
+// Configure Multer Storage (Memory storage for Vercel compatibility)
+const storage = multer.memoryStorage();
 
 const upload = multer({
     storage: storage,
@@ -305,17 +322,21 @@ app.post('/api/users/avatar', auth, (req, res) => {
                 return res.status(400).json({ msg: 'No file selected!' });
             } else {
                 try {
-                    // Update user profile with image path
-                    // Path should be relative to public folder: /uploads/filename
-                    const imagePath = `/uploads/${req.file.filename}`;
+                    // Generate a unique filename and upload to Vercel Blob
+                    const filename = `avatar-${Date.now()}${path.extname(req.file.originalname)}`;
+                    const blob = await put(filename, req.file.buffer, {
+                        access: 'public',
+                        contentType: req.file.mimetype
+                    });
 
+                    // Update user profile with the permanent Vercel Blob URL
                     const user = await User.findById(req.user.id);
-                    user.profilePicture = imagePath;
+                    user.profilePicture = blob.url;
                     await user.save();
 
                     res.json({
                         msg: 'File Uploaded!',
-                        filePath: imagePath
+                        filePath: blob.url
                     });
                 } catch (error) {
                     console.error(error);
@@ -379,10 +400,30 @@ app.post('/api/register', async (req, res) => {
 
         // Send Verification Email
         try {
+            const emailHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center; letter-spacing: -0.5px;">Vylithra</h1>
+                <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600;">Welcome to the Platform!</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                    Thank you for joining Vylithra. To complete your registration and secure your account, please use the verification code below:
+                </p>
+                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <span style="font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #d4af37; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);">${otp}</span>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 40px;">
+                    This code will expire securely in <b>10 minutes</b>. If you did not request this, you may safely ignore this email.
+                </p>
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    © ${new Date().getFullYear()} Vylithra. The Premium Digital Reading Platform.<br>
+                    <a href="https://vylithra.in" style="color: #d4af37; text-decoration: none;">vylithra.in</a>
+                </p>
+            </div>`;
+
             await sendEmail({
                 to: user.email,
-                subject: 'Spectra - Verify Your Email',
-                text: `Welcome to Spectra! Please verify your email using this OTP: ${otp}\n\nIt expires in 10 minutes.`
+                subject: 'Vylithra - Verify Your Digital Account',
+                html: emailHtml
             });
         } catch (emailError) {
             console.error('[Warning] Email sending failed, but continuing registration:', emailError);
@@ -436,10 +477,30 @@ app.post('/api/auth/forgot-password', async (req, res) => {
         await user.save();
 
         try {
+            const resetHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center; letter-spacing: -0.5px;">Vylithra</h1>
+                <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600;">Account Recovery</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                    We received a request to reset the password for your Vylithra account. Use the authorization code below to proceed:
+                </p>
+                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <span style="font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #d4af37; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);">${otp}</span>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 40px;">
+                    This code will expire in <b>10 minutes</b>. If you did not request a password reset, your account is safe and you can ignore this email.
+                </p>
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    © ${new Date().getFullYear()} Vylithra Security<br>
+                    <a href="https://vylithra.in" style="color: #d4af37; text-decoration: none;">vylithra.in</a>
+                </p>
+            </div>`;
+
             await sendEmail({
                 to: email,
                 subject: 'Vylithra - Password Reset OTP',
-                text: `Your OTP for password reset is: ${otp}\n\nIt expires in 10 minutes.`
+                html: resetHtml
             });
             res.json({ msg: 'OTP sent to email', email: user.email });
         } catch (error) {
@@ -746,14 +807,23 @@ app.post('/api/posts', auth, (req, res) => {
 
             if (req.files) {
                 if (req.files['attachment']) {
-                    attachment = `/uploads/${req.files['attachment'][0].filename}`;
+                    const file = req.files['attachment'][0];
+                    const filename = `post-attach-${Date.now()}${path.extname(file.originalname)}`;
+                    const blob = await put(filename, file.buffer, { access: 'public', contentType: file.mimetype });
+                    attachment = blob.url;
                 }
                 if (req.files['image']) {
-                    image = `/uploads/${req.files['image'][0].filename}`;
+                    const file = req.files['image'][0];
+                    const filename = `post-image-${Date.now()}${path.extname(file.originalname)}`;
+                    const blob = await put(filename, file.buffer, { access: 'public', contentType: file.mimetype });
+                    image = blob.url;
                 }
                 // Legacy support (avatar was used for attachment in previous implementation)
                 if (req.files['avatar'] && !attachment) {
-                    attachment = `/uploads/${req.files['avatar'][0].filename}`;
+                    const file = req.files['avatar'][0];
+                    const filename = `post-legacy-${Date.now()}${path.extname(file.originalname)}`;
+                    const blob = await put(filename, file.buffer, { access: 'public', contentType: file.mimetype });
+                    attachment = blob.url;
                 }
             }
 
@@ -1068,14 +1138,19 @@ app.post('/api/books', auth, (req, res) => {
         try {
             const { title, description, price, coverImage, content, penName, category } = req.body;
 
-            // Check if publisher
-            if (req.user.role !== 'publisher') {
-                return res.status(403).json({ msg: 'Only publishers can create books' });
+            // Check if publisher or admin
+            if (req.user.role !== 'publisher' && req.user.role !== 'admin') {
+                return res.status(403).json({ msg: 'Only publishers and admins can create books' });
             }
 
             let finalCoverImage = coverImage || '';
             if (req.file) {
-                finalCoverImage = `/uploads/${req.file.filename}`;
+                const filename = `cover-${Date.now()}${path.extname(req.file.originalname)}`;
+                const blob = await put(filename, req.file.buffer, {
+                    access: 'public',
+                    contentType: req.file.mimetype
+                });
+                finalCoverImage = blob.url;
             }
 
             const newBook = new Book({
@@ -1122,7 +1197,12 @@ app.put('/api/books/:id', auth, (req, res) => {
 
             let finalCoverImage = coverImage;
             if (req.file) {
-                finalCoverImage = `/uploads/${req.file.filename}`;
+                const filename = `cover-${Date.now()}${path.extname(req.file.originalname)}`;
+                const blob = await put(filename, req.file.buffer, {
+                    access: 'public',
+                    contentType: req.file.mimetype
+                });
+                finalCoverImage = blob.url;
             }
 
             // Update fields
@@ -1249,9 +1329,192 @@ app.post('/api/books/:id/rate', auth, async (req, res) => {
     }
 });
 
-// Unified Purchase Intent (Razorpay Gateway)
+// Generate a Secure Promo Code
+app.post('/api/coupons/generate', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+    try {
+        const { discountPercentage, maxUses, validityDays } = req.body;
+
+        if (!discountPercentage || discountPercentage < 1 || discountPercentage > 100) {
+            return res.status(400).json({ msg: 'Valid discount percentage (1-100) is required.' });
+        }
+
+        const uses = parseInt(maxUses) || 50;
+        const days = parseInt(validityDays) || 30;
+
+        // Generate secure 8-character alphanumeric code
+        const crypto = require('crypto');
+        const code = crypto.randomBytes(4).toString('hex').toUpperCase();
+
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + days);
+
+        // Security: Publishers codes start as pending, Admins are active immediately
+        const status = req.user.role === 'admin' ? 'active' : 'pending';
+
+        const newCoupon = new Coupon({
+            code,
+            discountPercentage,
+            maxUses: uses,
+            expiryDate,
+            status,
+            generatedBy: req.user.id
+        });
+
+        await newCoupon.save();
+
+        if (status === 'pending') {
+            res.json({ msg: 'Promo code generated safely. Awaiting Admin moderation before active.', coupon: newCoupon });
+        } else {
+            res.json({ msg: 'Promo code generated actively.', coupon: newCoupon });
+        }
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error generating promo code.' });
+    }
+});
+
+// Get Generated Promo Codes
+app.get('/api/coupons/my-codes', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+    try {
+        // Admins see all codes, publishers only see their own
+        const query = req.user.role === 'admin' ? {} : { generatedBy: req.user.id };
+        const coupons = await Coupon.find(query)
+            .populate('generatedBy', 'username email')
+            .sort({ createdAt: -1 });
+        res.json(coupons);
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error fetching promo codes.' });
+    }
+});
+
+// Delete a Promo Code
+app.delete('/api/coupons/:id', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+    try {
+        const coupon = await Coupon.findById(req.params.id);
+        if (!coupon) return res.status(404).json({ msg: 'Coupon not found.' });
+
+        await coupon.deleteOne();
+        res.json({ msg: 'Promo code deleted securely.' });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error deleting promo code.' });
+    }
+});
+
+// Moderate a Promo Code (Admin Only)
+app.put('/api/coupons/:id/moderate', auth, adminAuth, async (req, res) => {
+    try {
+        const { status } = req.body;
+        if (!['active', 'rejected'].includes(status)) {
+            return res.status(400).json({ msg: 'Invalid moderation status.' });
+        }
+
+        const coupon = await Coupon.findById(req.params.id);
+        if (!coupon) return res.status(404).json({ msg: 'Coupon not found.' });
+
+        if (status === 'rejected') {
+            await coupon.deleteOne();
+            return res.json({ msg: 'Promo code rejected and deleted.' });
+        }
+
+        coupon.status = 'active';
+        await coupon.save();
+        res.json({ msg: 'Promo code successfully approved and activated.' });
+
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error moderating promo code.' });
+    }
+});
+
+// Dispatch Promo Code Emails (Admin Only)
+app.post('/api/coupons/dispatch', auth, adminAuth, async (req, res) => {
+    try {
+        const { couponId, targetCriteria, specificEmails } = req.body;
+
+        const coupon = await Coupon.findById(couponId);
+        if (!coupon || coupon.status !== 'active') {
+            return res.status(400).json({ msg: 'Only active promo codes can be dispatched.' });
+        }
+
+        let recipients = [];
+
+        if (targetCriteria === 'all') {
+            recipients = await User.find({ isVerified: true }).select('email');
+        } else if (targetCriteria === 'random') {
+            recipients = await User.aggregate([{ $match: { isVerified: true } }, { $sample: { size: 10 } }]);
+        } else if (targetCriteria === 'specific' && Array.isArray(specificEmails)) {
+            recipients = await User.find({ email: { $in: specificEmails } }).select('email');
+        }
+
+        if (recipients.length === 0) return res.status(400).json({ msg: 'No eligible recipients found.' });
+
+        const emailPromises = recipients.map(user => {
+            const htmlFragment = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 30px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24; text-align: center;">
+                <h1 style="color: #d4af37; margin-bottom: 20px; font-weight: 800; font-size: 28px; letter-spacing: -0.5px;">Vylithra Exclusive</h1>
+                <h2 style="font-size: 20px; margin-bottom: 25px; font-weight: 500; color: #e2e8f0;">You've received a special ${coupon.discountPercentage}% Discount!</h2>
+                
+                <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 35px;">
+                    Apply this cryptographic code at checkout on any digital book in the Vylithra Library to instantly unlock your discount.
+                </p>
+                
+                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; margin-bottom: 35px; border: 1px solid rgba(212, 175, 55, 0.4); display: inline-block;">
+                    <span style="font-size: 36px; font-weight: 800; letter-spacing: 10px; color: #d4af37; text-shadow: 0 0 20px rgba(212, 175, 55, 0.4); font-family: monospace;">${coupon.code}</span>
+                </div>
+                
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 40px;">
+                    Hurry! This code expires on ${new Date(coupon.expiryDate).toLocaleDateString()} and is only valid for the first ${coupon.maxUses} redeems.
+                </p>
+                
+                <a href="https://vylithra.in/main" style="background-color: #d4af37; color: #000; padding: 14px 28px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 16px; display: inline-block;">Browse Digital Library</a>
+                
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-top: 40px; margin-bottom: 25px;">
+                <p style="color: #475569; font-size: 12px;">© ${new Date().getFullYear()} Vylithra. The Premium Digital Reading Platform.</p>
+            </div>`;
+
+            return sendEmail({
+                to: user.email,
+                subject: `🎁 A ${coupon.discountPercentage}% Vylithra Discount is waiting for you!`,
+                html: htmlFragment
+            }).catch(e => console.error(`[Dispatch] Failed to send code to ${user.email}`));
+        });
+
+        await Promise.all(emailPromises);
+
+        res.json({ msg: `Promo code successfully dispatched via HTML email to ${recipients.length} user(s).` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error dispatching promo code.' });
+    }
+});
+
+// Validate a Promo Code
+app.post('/api/coupons/validate', auth, async (req, res) => {
+    try {
+        const { code, bookPrice } = req.body;
+        if (!code) return res.status(400).json({ msg: 'No code provided.' });
+        if (!bookPrice || bookPrice <= 0) return res.status(400).json({ msg: 'Coupons apply to paid books only.' });
+
+        const coupon = await Coupon.findOne({ code: code.toUpperCase(), status: 'active', isActive: true });
+
+        if (!coupon) return res.status(404).json({ msg: 'Invalid or expired promo code.' });
+        if (new Date() > coupon.expiryDate) return res.status(400).json({ msg: 'This promo code has expired.' });
+        if (coupon.usedCount >= coupon.maxUses) return res.status(400).json({ msg: 'This promo code has reached its usage limit.' });
+
+        const discountAmount = (bookPrice * coupon.discountPercentage) / 100;
+        res.json({ valid: true, discountPercentage: coupon.discountPercentage, discountAmount, newPrice: bookPrice - discountAmount });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Unified Purchase Intent (Razorpay & PayPal)
 app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
     try {
+        const { gateway = 'razorpay', couponCode } = req.body;
         const book = await Book.findById(req.params.id);
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
@@ -1260,60 +1523,123 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
             return res.status(400).json({ msg: 'You have already purchased this book' });
         }
 
-        // Create Razorpay Order
-        const amountInPaise = Math.round((book.price || 0) * 100); // Razorpay expects paise (lowest denominator)
-        const options = {
-            amount: amountInPaise,
-            currency: 'INR',
-            receipt: `receipt_order_${Math.random().toString(36).substring(2, 10)}`,
-            notes: {
-                bookId: book._id.toString(),
-                userId: req.user.id.toString(),
-                publisherId: book.author.toString()
+        let finalPrice = book.price || 0;
+        let discountApplied = 0;
+
+        if (finalPrice > 0 && couponCode) {
+            const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: 'active', isActive: true });
+            if (coupon && coupon.expiryDate > new Date() && coupon.usedCount < coupon.maxUses) {
+                discountApplied = (finalPrice * coupon.discountPercentage) / 100;
+                finalPrice = finalPrice - discountApplied;
             }
-        };
+        }
 
-        const order = await razorpayInstance.orders.create(options);
+        // Add 5% Transaction Fee
+        const transactionFee = finalPrice * 0.05;
+        let totalAmountToCharge = finalPrice + transactionFee;
 
-        // Tell frontend to open Razorpay Modal instead of redirecting
-        res.json({
-            type: 'razorpay',
-            order_id: order.id,
-            amount: amountInPaise,
-            currency: 'INR',
-            key_id: process.env.RAZORPAY_KEY_ID
-        });
+        // Add 4% PayPal Gateway Fee
+        if (gateway === 'paypal') {
+            const paypalExtraFee = finalPrice * 0.04;
+            totalAmountToCharge += paypalExtraFee;
+        }
+
+        // Ensure we don't negative price
+        if (totalAmountToCharge <= 0) {
+            return res.status(400).json({ msg: 'Final amount cannot be 0. Use Free purchase route.' });
+        }
+
+        if (gateway === 'razorpay') {
+            const amountInPaise = Math.round(totalAmountToCharge * 100);
+            const options = {
+                amount: amountInPaise,
+                currency: 'INR',
+                receipt: `receipt_order_${Math.random().toString(36).substring(2, 10)}`,
+                notes: {
+                    bookId: book._id.toString(),
+                    userId: req.user.id.toString(),
+                    publisherId: book.author.toString(),
+                    couponCode: couponCode ? couponCode.toUpperCase() : ''
+                }
+            };
+            const order = await razorpayInstance.orders.create(options);
+            return res.json({
+                type: 'razorpay',
+                order_id: order.id,
+                amount: amountInPaise,
+                currency: 'INR',
+                key_id: process.env.RAZORPAY_KEY_ID
+            });
+        } else if (gateway === 'paypal') {
+            // Convert INR to approx USD (1 USD = ~83 INR logic) for PayPal as PayPal doesn't natively route domestic INR well without strict KYC
+            const totalUSD = (totalAmountToCharge / 83).toFixed(2);
+
+            const request = new paypal.orders.OrdersCreateRequest();
+            request.prefer("return=representation");
+            request.requestBody({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    amount: {
+                        currency_code: 'USD',
+                        value: totalUSD
+                    },
+                    custom_id: JSON.stringify({
+                        bookId: book._id.toString(),
+                        userId: req.user.id.toString(),
+                        publisherId: book.author.toString(),
+                        couponCode: couponCode ? couponCode.toUpperCase() : ''
+                    })
+                }]
+            });
+            const order = await paypalClient.execute(request);
+
+            return res.json({
+                type: 'paypal',
+                order_id: order.result.id,
+                amount: totalUSD,
+                currency: 'USD'
+            });
+        } else {
+            return res.status(400).json({ msg: 'Unsupported payment gateway' });
+        }
     } catch (err) {
-        console.error('Razorpay Order Error:', err);
-        // Razorpay often nests the error message inside err.error.description
+        console.error('Payment Intent Error:', err);
         const errorMsg = (err.error && err.error.description) || err.description || err.message || JSON.stringify(err);
         res.status(500).json({ msg: 'Payment Service Error: ' + errorMsg });
     }
 });
 
+// Get PayPal Config
+app.get('/api/config/paypal', (req, res) => {
+    res.json({ clientId: process.env.PAYPAL_CLIENT_ID || 'sb' });
+});
 
-
-// Verify Purchase after Razorpay modal completion
+// Verify Final Purchase
 app.post('/api/books/verify-purchase', auth, async (req, res) => {
     try {
-        const { razorpay_order_id, razorpay_payment_id, razorpay_signature, book_id } = req.body;
+        const { gateway = 'razorpay', razorpay_order_id, razorpay_payment_id, razorpay_signature, paypal_order_id, book_id, couponCode } = req.body;
+        let isAuthentic = false;
 
-        // Verify the signature
-        const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
-        const generated_signature = crypto
-            .createHmac('sha256', secret)
-            .update(razorpay_order_id + "|" + razorpay_payment_id)
-            .digest('hex');
+        if (gateway === 'razorpay') {
+            const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
+            const generated_signature = crypto
+                .createHmac('sha256', secret)
+                .update(razorpay_order_id + "|" + razorpay_payment_id)
+                .digest('hex');
+            isAuthentic = (generated_signature === razorpay_signature);
+        } else if (gateway === 'paypal') {
+            const request = new paypal.orders.OrdersCaptureRequest(paypal_order_id);
+            request.requestBody({});
+            const capture = await paypalClient.execute(request);
+            isAuthentic = (capture.result.status === 'COMPLETED');
+        }
 
-        if (generated_signature === razorpay_signature) {
-            // Payment is successful and authentic
+        if (isAuthentic) {
             const user = await User.findById(req.user.id);
             if (!user.purchasedBooks.includes(book_id)) {
-                // Fulfill order
                 user.purchasedBooks.push(book_id);
                 await user.save();
 
-                // Credit publisher's internal wallet
                 const book = await Book.findById(book_id);
                 if (book && book.price > 0) {
                     const publisher = await User.findById(book.author);
@@ -1323,13 +1649,43 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
                         await publisher.save();
                     }
                 }
+
+                if (couponCode) {
+                    await Coupon.findOneAndUpdate({ code: couponCode.toUpperCase() }, { $inc: { usedCount: 1 } });
+                }
             }
             res.json({ msg: 'Purchase verified successfully' });
         } else {
-            res.status(400).json({ msg: 'Payment signature verification failed' });
+            res.status(400).json({ msg: 'Payment verification failed' });
         }
     } catch (err) {
-        console.error('Verify Purchase Error:', err);
+        console.error('Verify Order Error:', err);
+        res.status(500).json({ msg: 'Server error' });
+    }
+});
+
+// Acquire Free Book directly without payment gateway
+app.post('/api/books/:id/purchase-free', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        if (book.price > 0) {
+            return res.status(400).json({ msg: 'This book requires payment.' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (user.purchasedBooks.includes(book._id)) {
+            return res.status(400).json({ msg: 'You already own this book' });
+        }
+
+        // Fulfill Free Order
+        user.purchasedBooks.push(book._id);
+        await user.save();
+        res.json({ msg: 'Book added to your library successfully' });
+
+    } catch (err) {
+        console.error('Free Purchase Error:', err);
         res.status(500).json({ msg: 'Server Error' });
     }
 });
@@ -1371,13 +1727,50 @@ app.post('/api/publishers/withdraw', auth, async (req, res) => {
         user.walletBalance -= amount;
         user.withdrawalHistory.push({
             amount: amount,
-            status: 'completed',
+            status: 'pending',
             method: method || 'UPI',
             details: details || 'Not provided'
         });
 
         await user.save();
-        res.json({ msg: 'Withdrawal processed instantly', walletBalance: user.walletBalance });
+
+        // Dispatch HTML Receipt
+        try {
+            const receiptHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center; letter-spacing: -0.5px;">Vylithra</h1>
+                <h2 style="font-size: 20px; margin-bottom: 15px; font-weight: 600; text-align: center; color: #10b981;">Withdrawal Request Received</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                    Hello ${user.displayName || user.username},<br><br>
+                    We have successfully received your payout request. Our finance team is now processing the transaction.
+                </p>
+                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; margin-bottom: 30px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                    <p style="margin: 0 0 10px 0; color: #a0a0ab; font-size: 14px;">Amount Requested</p>
+                    <p style="margin: 0; font-size: 32px; font-weight: 800; color: #fff;">₹${amount.toFixed(2)}</p>
+                    <hr style="border: none; border-top: 1px dashed rgba(255,255,255,0.1); margin: 15px 0;">
+                    <p style="margin: 0 0 5px 0; color: #a0a0ab; font-size: 14px;">Method: <span style="color:#fff;">${method || 'UPI'}</span></p>
+                    <p style="margin: 0; color: #a0a0ab; font-size: 14px;">Destination: <span style="color:#fff;">${details || 'Not provided'}</span></p>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 40px;">
+                    Please allow <b>3-5 business days</b> for the funds to reflect in your designated account.
+                </p>
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    © ${new Date().getFullYear()} Vylithra Creator Platform.<br>
+                    <a href="https://vylithra.in" style="color: #d4af37; text-decoration: none;">vylithra.in</a>
+                </p>
+            </div>`;
+
+            await sendEmail({
+                to: user.email,
+                subject: 'Vylithra - Withdrawal Receipt',
+                html: receiptHtml
+            });
+        } catch (emailErr) {
+            console.error('[Warning] Payment notification email failed to send:', emailErr);
+        }
+
+        res.json({ msg: 'Withdrawal request submitted for processing (3-5 business days)', walletBalance: user.walletBalance });
 
     } catch (err) {
         console.error('Error processing withdrawal:', err);
@@ -1400,6 +1793,46 @@ app.put('/api/users/upgrade-to-publisher', auth, async (req, res) => {
 
         user.role = 'publisher';
         await user.save();
+
+        try {
+            const welcomeHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <img src="https://placehold.co/120x120/1a1a24/d4af37?text=V&font=Playfair+Display" style="border-radius: 12px; margin-bottom: 15px;" width="60" height="60" alt="Vylithra Logo">
+                    <h1 style="color: #d4af37; margin: 0; font-weight: 800; font-size: 28px; letter-spacing: -0.5px;">Vylithra Studio</h1>
+                </div>
+                <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600; text-align: center;">Welcome to the Creator Program</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 25px;">
+                    Congratulations ${user.displayName || user.username},<br><br>
+                    Your account has been officially upgraded to a <b>Publisher</b>. You now have exclusive access to the Vylithra Creator Studio.
+                </p>
+                <div style="background-color: rgba(212, 175, 55, 0.05); border-left: 4px solid #d4af37; padding: 20px; border-radius: 0 8px 8px 0; margin-bottom: 30px;">
+                    <h3 style="margin: 0 0 10px 0; color: #d4af37; font-size: 16px;">What you can do now:</h3>
+                    <ul style="margin: 0; padding-left: 20px; color: #a0a0ab; font-size: 14px; line-height: 1.8;">
+                        <li>Publish digital books globally</li>
+                        <li>Set custom pricing and track earnings</li>
+                        <li>Access your dedicated Creator Dashboard</li>
+                        <li>Engage directly with your expanding audience</li>
+                    </ul>
+                </div>
+                <div style="text-align: center; margin-bottom: 40px;">
+                    <a href="https://vylithra.in/studio" style="display: inline-block; background: linear-gradient(135deg, #d4af37, #f3e5ab); color: #000; padding: 14px 28px; text-decoration: none; font-weight: 700; border-radius: 8px; font-size: 16px;">Open Creator Studio</a>
+                </div>
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    © ${new Date().getFullYear()} Vylithra Creator Platform.<br>
+                    <a href="https://vylithra.in" style="color: #d4af37; text-decoration: none;">vylithra.in</a>
+                </p>
+            </div>`;
+
+            await sendEmail({
+                to: user.email,
+                subject: 'Vylithra - Welcome to the Creator Program',
+                html: welcomeHtml
+            });
+        } catch (emailErr) {
+            console.error('[Warning] Publisher Upgrade welcome email failed to send:', emailErr);
+        }
 
         res.json({
             msg: 'Successfully upgraded to publisher account',
@@ -1574,32 +2007,51 @@ app.get('/api/admin/verify', adminAuth, (req, res) => {
 app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
     try {
         const { email, secretKey } = req.body;
-        
+
         // Strict verification against environment variables
-        if (!ADMIN_EMAIL || !ADMIN_SECRET_KEY || 
-            email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() || 
+        if (!ADMIN_EMAIL || !ADMIN_SECRET_KEY ||
+            email.toLowerCase() !== ADMIN_EMAIL.toLowerCase() ||
             secretKey !== ADMIN_SECRET_KEY) {
             console.log(`[SECURITY ALERT] Failed gateway challenge for user ${req.user.id}`);
             return res.status(401).json({ msg: 'Invalid Master Credentials' });
         }
-        
+
         // Generate a 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
-        
+
         // Save to User document for stateless verification
         const user = await User.findById(req.user.id);
-        if(!user) return res.status(404).json({ msg: 'User not found' });
-        
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
         user.adminGatewayOtp = otp;
         user.adminGatewayOtpExpires = Date.now() + 5 * 60 * 1000; // 5 mins
         await user.save();
-        
+
         // Email the OTP to the master email securely
         try {
+            const gatewayHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #050505; color: #ffffff; border-radius: 16px; border: 1px solid #ef4444;">
+                <h1 style="color: #ef4444; margin-bottom: 20px; font-weight: 800; font-size: 28px; text-align: center; letter-spacing: -0.5px;"><span style="font-size: 32px; vertical-align: middle; margin-right: 10px;">⚠️</span> Security Alert</h1>
+                <h2 style="font-size: 20px; margin-bottom: 15px; font-weight: 600; text-align: center;">Master Credential Verification</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px; text-align: center;">
+                    Someone successfully supplied the Master Credentials to the Vylithra backend to access the Admin Command Center. If this was you, use the 6-digit unlock code below.
+                </p>
+                <div style="background-color: rgba(239, 68, 68, 0.05); padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px dashed rgba(239, 68, 68, 0.4);">
+                    <span style="font-size: 46px; font-weight: 800; letter-spacing: 12px; color: #ef4444; text-shadow: 0 0 20px rgba(239, 68, 68, 0.4);">${otp}</span>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 40px;">
+                    This code expires in <b>5 minutes</b>. If you did not request this, <b style="color:#ef4444;">CHANGE YOUR MASTER SECRET KEY IMMEDIATELY</b> from the Vercel dashboard.
+                </p>
+                <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
+                <p style="color: #666; font-size: 12px; text-align: center;">
+                    System Automated Message • Vylithra Architecture Security
+                </p>
+            </div>`;
+
             await sendEmail({
-                to: ADMIN_EMAIL, 
-                subject: "Strict Admin Security Alert: Gateway OTP", 
-                text: `Someone successfully supplied the Master Credentials to the Vylithra backend.\nIf this was you, here is your 6-digit unlock code:\n\n${otp}\n\nThis code expires in 5 minutes.\nIf you did not request this, CHANGE YOUR MASTER SECRET KEY IMMEDIATELY from the Vercel dashboard.`
+                to: ADMIN_EMAIL,
+                subject: "Strict Admin Security Alert: Gateway OTP",
+                html: gatewayHtml
             });
         } catch (emailErr) {
             console.error('[SECURITY ALERT] Failed to send OTP email', emailErr);
@@ -1617,36 +2069,36 @@ app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
 app.post('/api/admin/gateway-verify', adminAuth, async (req, res) => {
     try {
         const { otp } = req.body;
-        
+
         const user = await User.findById(req.user.id);
-        if(!user) return res.status(401).json({ msg: 'Invalid Session' });
-        
+        if (!user) return res.status(401).json({ msg: 'Invalid Session' });
+
         if (!user.adminGatewayOtp || !user.adminGatewayOtpExpires) {
             return res.status(400).json({ msg: 'No OTP requested or session expired. Restart Gateway.' });
         }
-        
+
         if (Date.now() > user.adminGatewayOtpExpires) {
             user.adminGatewayOtp = null;
             user.adminGatewayOtpExpires = null;
             await user.save();
             return res.status(400).json({ msg: 'OTP has expired.' });
         }
-        
+
         if (user.adminGatewayOtp !== otp.trim()) {
             return res.status(401).json({ msg: 'Invalid OTP.' });
         }
-        
+
         // Success! Clear OTP
         user.adminGatewayOtp = null;
         user.adminGatewayOtpExpires = null;
         await user.save();
-        
+
         // Generate a fast-expiring (1 hour) Gateway Ticket
         const payload = {
             gatewayVerified: true,
             adminId: req.user.id
         };
-        
+
         jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' }, (err, token) => {
             if (err) throw err;
             res.json({ token, msg: 'Gateway Unlocked' });
@@ -1662,7 +2114,7 @@ app.get('/api/admin/stats', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
         const totalBooks = await Book.countDocuments();
-        
+
         // Sum total earnings across all publishers as \"Platform Revenue\"
         const users = await User.find();
         let totalRevenue = 0;
@@ -1695,13 +2147,13 @@ app.put('/api/admin/users/:id/role', adminAuth, gatewayAuth, async (req, res) =>
         if (!['reader', 'publisher', 'admin'].includes(role)) {
             return res.status(400).json({ msg: 'Invalid role' });
         }
-        
+
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ msg: 'User not found' });
-        
+
         user.role = role;
         await user.save();
-        
+
         res.json({ msg: 'User role updated', user });
     } catch (err) {
         console.error(err);
@@ -1737,10 +2189,10 @@ app.put('/api/admin/books/:id/status', adminAuth, gatewayAuth, async (req, res) 
         const { status } = req.body; // 'published' or 'draft'
         const book = await Book.findById(req.params.id);
         if (!book) return res.status(404).json({ msg: 'Book not found' });
-        
+
         book.status = status;
         await book.save();
-        
+
         res.json({ msg: 'Book status updated', book });
     } catch (err) {
         console.error(err);
@@ -1764,11 +2216,12 @@ app.get('/api/admin/transactions', adminAuth, gatewayAuth, async (req, res) => {
     try {
         // Collect all withdrawal histories from all users
         const users = await User.find({ 'withdrawalHistory.0': { $exists: true } }).select('username email withdrawalHistory');
-        
+
         let allTransactions = [];
         users.forEach(u => {
             u.withdrawalHistory.forEach(w => {
                 allTransactions.push({
+                    transactionId: w._id,
                     userId: u._id,
                     username: u.username,
                     email: u.email,
@@ -1780,11 +2233,44 @@ app.get('/api/admin/transactions', adminAuth, gatewayAuth, async (req, res) => {
                 });
             });
         });
-        
+
         // Sort by date newest first
         allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         res.json(allTransactions);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 11. Financial Oversight (Process Withdrawal)
+app.put('/api/admin/transactions/:userId/:transactionId', adminAuth, gatewayAuth, async (req, res) => {
+    try {
+        const { status } = req.body; // 'completed' or 'rejected'
+        if (!['completed', 'rejected'].includes(status)) {
+            return res.status(400).json({ msg: 'Invalid status' });
+        }
+
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const transaction = user.withdrawalHistory.id(req.params.transactionId);
+        if (!transaction) return res.status(404).json({ msg: 'Transaction not found' });
+
+        if (transaction.status !== 'pending') {
+            return res.status(400).json({ msg: 'Transaction is already processed' });
+        }
+
+        transaction.status = status;
+
+        // If rejected, refund the wallet balance
+        if (status === 'rejected') {
+            user.walletBalance += transaction.amount;
+        }
+
+        await user.save();
+        res.json({ msg: `Withdrawal marked as ${status}` });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');

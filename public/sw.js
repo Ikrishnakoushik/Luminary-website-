@@ -6,12 +6,10 @@ const PRECACHE_URLS = [
     '/',
     '/main.html',
     '/profile.html',
-    '/publish.html',
     '/messages.html',
-    '/style.css',
-    '/mobile-main.css',
-    '/mobile-index.css',
-    '/mobile-messages.css',
+    '/books.html',
+    '/ui-common.css',
+    '/ui-common.js',
     '/vylithra_logo.svg',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap'
@@ -52,16 +50,25 @@ self.addEventListener('fetch', event => {
         event.respondWith(
             fetch(event.request)
                 .then(networkResponse => {
-                    // Update cache with fresh data
-                    const responseClone = networkResponse.clone();
-                    caches.open(API_CACHE_NAME).then(cache => {
-                        cache.put(event.request, responseClone);
-                    });
+                    // Only cache successful API responses
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(API_CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
                     return networkResponse;
                 })
-                .catch(() => {
-                    // If network fails, serve from cache
-                    return caches.match(event.request);
+                .catch(async () => {
+                    // Try to get from cache if offline
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) return cachedResponse;
+                    
+                    // If no cache, return a generic JSON error so the app doesn't crash completely
+                    return new Response(JSON.stringify({ msg: 'Offline mode active - Data unavailable' }), {
+                        status: 503,
+                        headers: { 'Content-Type': 'application/json' }
+                    });
                 })
         );
         return;

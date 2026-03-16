@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Gateway | Vylithra</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="ui-common.css">
+    <style>
+        body {
+            background-color: #0b0b0f;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(212, 175, 55, 0.05), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(20, 184, 166, 0.05), transparent 25%);
+            color: var(--text-color);
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .gateway-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 440px;
+            padding: 20px;
+            z-index: 2;
+            animation: slideUpFade 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Glassmorphic Card */
+        .gateway-card {
+            background: rgba(22, 22, 30, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        /* Subtle Animated Glow behind card */
+        .gateway-wrapper::before {
+            content: '';
+            position: absolute;
+            top: -2px; left: -2px; right: -2px; bottom: -2px;
+            background: linear-gradient(45deg, rgba(212, 175, 55, 0.3), rgba(20, 184, 166, 0.1), rgba(212, 175, 55, 0.3));
+            z-index: -1;
+            border-radius: 26px;
+            filter: blur(15px);
+            opacity: 0.5;
+            animation: pulseGlow 4s infinite alternate;
+        }
+
+        .brand-header {
+            text-align: center;
+            padding: 30px 30px 20px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.03) 0%, transparent 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .brand-header .icon-box {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.05));
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+            color: var(--primary);
+            font-size: 1.2rem;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+        }
+
+        .brand-header h2 {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            margin: 0;
+            font-size: 1.6rem;
+            letter-spacing: 0.5px;
+        }
+
+        .brand-header p {
+            color: var(--primary);
+            margin: 6px 0 0;
+            font-size: 0.9rem;
+            font-weight: 500;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .order-details {
+            padding: 30px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .price-row span:last-child {
+            color: #e2e8f0;
+            font-weight: 500;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .price-row.discount {
+            color: #10b981;
+        }
+        .price-row.discount span:last-child {
+            color: #34d399;
+        }
+
+        .price-row.total {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            color: #fff;
+            font-size: 1.1rem;
+        }
+        
+        .price-row.total span:last-child {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(to right, #fff, #d4af37);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .paypal-wrapper {
+            padding: 0 30px 30px;
+            text-align: center;
+        }
+
+        /* PayPal Button Overrides to make it look embedded */
+        #paypal-button-container {
+            position: relative;
+            z-index: 10;
+            min-height: 50px;
+            border-radius: 5px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        #paypal-button-container:hover {
+            transform: translateY(-2px);
+            filter: drop-shadow(0 10px 15px rgba(0,0,0,0.5));
+        }
+
+        .security-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 25px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: 0.3s;
+            padding: 8px 16px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .back-link:hover {
+            color: #fff;
+            background: rgba(255,255,255,0.08);
+            transform: translateX(-3px);
+        }
+
+        /* Loader specific */
+        .gateway-loader {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color);
+            z-index: 100;
+            transition: opacity 0.5s ease;
+        }
+
+        .loader-ring {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(212, 175, 55, 0.1);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        @keyframes pulseGlow {
+            from { opacity: 0.3; transform: scale(0.98); }
+            to { opacity: 0.6; transform: scale(1.02); }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+
+    <!-- Full Screen Loader matches background -->
+    <div id="loadingState" class="gateway-loader">
+        <div class="loader-ring"></div>
+        <p style="color: var(--text-muted); font-size: 0.95rem; font-weight: 500; letter-spacing: 0.5px;">Establishing Secure Connection...</p>
+    </div>
+
+    <!-- Main Payment Widget -->
+    <div class="gateway-wrapper" id="gatewayWrapper" style="display: none;">
+        <div class="gateway-card">
+            
+            <div class="brand-header">
+                <div class="icon-box"><i class="fas fa-lock"></i></div>
+                <h2>Secure Gateway</h2>
+                <p id="bookTitle">Loading Order Details</p>
+            </div>
+            
+            <div class="order-details">
+                <div class="price-row">
+                    <span>Digital Edition Subtotal</span>
+                    <span id="displaySubtotal">$0.00</span>
+                </div>
+                <div class="price-row discount" id="discountRow" style="display: none;">
+                    <span>Promotional Discount</span>
+                    <span id="displayDiscount">-$0.00</span>
+                </div>
+                <div class="price-row">
+                    <span>Platform Infrastructure (5%)</span>
+                    <span id="displayFee">$0.00</span>
+                </div>
+                <div class="price-row">
+                    <span>Tax (4%)</span>
+                    <span id="displayPaypalFee">$0.00</span>
+                </div>
+                <div class="price-row total">
+                    <span>USD Total Due</span>
+                    <span id="displayTotal">$0.00</span>
+                </div>
+            </div>
+
+            <div class="paypal-wrapper">
+                <div class="security-badge">
+                    <i class="fas fa-shield-check"></i> 256-bit Encrypted Checkout
+                </div>
+                <!-- Div for PayPal SDK to attach to -->
+                <div id="paypal-button-container"></div>
+            </div>
+            
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="#" id="cancelLink" class="back-link"><i class="fas fa-arrow-left"></i> Return to previous page</a>
+        </div>
+    </div>
+
+    <script src="ui-common.js"></script>
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const token = localStorage.getItem('token');
+        let currentBook = null;
+        let appliedCoupon = null;
+        
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('bookId');
+        const couponCode = urlParams.get('coupon');
+
+        document.getElementById('cancelLink').href = `/checkout.html?bookId=${bookId}`;
+
+        async function initPayPalFlow() {
+            if (!token || !bookId) {
+                window.location.href = '/books';
+                return;
+            }
+
+            try {
+                // Fetch book pricing
+                const res = await fetch(`${API_URL}/books`);
+                const books = await res.json();
+                currentBook = books.find(b => b._id === bookId);
+
+                if (!currentBook) throw new Error("Book not found");
+
+                let basePrice = currentBook.price || 0;
+                let discountPercentage = 0;
+
+                // Validate coupon if passed
+                if (couponCode && basePrice > 0) {
+                    try {
+                        const couponRes = await fetch(`${API_URL}/coupons/validate`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({ code: couponCode, bookPrice: basePrice })
+                        });
+                        if (couponRes.ok) {
+                            const cData = await couponRes.json();
+                            discountPercentage = cData.discountPercentage;
+                            appliedCoupon = { code: couponCode };
+                        }
+                    } catch (e) { console.error("Coupon validation bypassed"); }
+                }
+
+                document.getElementById('bookTitle').innerText = currentBook.title;
+
+                // Calculate Math
+                let discountINR = (basePrice * discountPercentage) / 100;
+                let subtotalINR = basePrice - discountINR;
+                let feeINR = subtotalINR * 0.05;
+                let paypalFeeINR = subtotalINR * 0.04;
+                let totalINR = subtotalINR + feeINR + paypalFeeINR;
+
+                // Convert to USD (÷ 83)
+                let subUSD = basePrice / 83;
+                let discountUSD = discountINR / 83;
+                let feeUSD = feeINR / 83;
+                let paypalFeeUSD = paypalFeeINR / 83;
+                let totalUSD = totalINR / 83;
+
+                // Populate UI
+                document.getElementById('displaySubtotal').innerText = `$${subUSD.toFixed(2)}`;
+                document.getElementById('displayFee').innerText = `$${feeUSD.toFixed(2)}`;
+                document.getElementById('displayPaypalFee').innerText = `$${paypalFeeUSD.toFixed(2)}`;
+                document.getElementById('displayTotal').innerText = `$${totalUSD.toFixed(2)}`;
+                
+                if (discountPercentage > 0) {
+                    document.getElementById('discountRow').style.display = 'flex';
+                    document.getElementById('displayDiscount').innerText = `-$${discountUSD.toFixed(2)}`;
+                }
+
+                // Inject PayPal Script
+                const configRes = await fetch(`${API_URL}/config/paypal`);
+                const configData = await configRes.json();
+                
+                const script = document.createElement('script');
+                script.src = `https://www.paypal.com/sdk/js?client-id=${configData.clientId}&currency=USD&disable-funding=card,credit`;
+                script.onload = renderPayPalButtons;
+                script.onerror = () => {
+                    document.getElementById('loadingState').innerHTML = `<p style="color:#ef4444;"><i class="fas fa-exclamation-triangle"></i> PayPal Failed to Load. Check your Client ID.</p>`;
+                };
+                document.body.appendChild(script);
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('gatewayWrapper').style.display = 'block';
+
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast("Gateway connection failed.", "error");
+                setTimeout(() => window.location.href = `/checkout.html?bookId=${bookId}`, 2000);
+            }
+        }
+
+        function renderPayPalButtons() {
+            paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    color: 'gold',
+                    shape: 'rect',
+                    label: 'paypal',
+                    height: 50
+                },
+                createOrder: async function(data, actions) {
+                    try {
+                        const res = await fetch(`${API_URL}/books/${currentBook._id}/purchase-intent`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({ 
+                                gateway: 'paypal', 
+                                couponCode: appliedCoupon ? appliedCoupon.code : '' 
+                            })
+                        });
+                        const orderData = await res.json();
+                        if (res.ok && orderData.type === 'paypal') {
+                            return orderData.order_id;
+                        } else {
+                            VylithraUI.showToast(orderData.msg || "PayPal initialization failed", 'error');
+                            throw new Error("Initialization failed");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        throw err;
+                    }
+                },
+                onApprove: async function(data, actions) {
+                    document.getElementById('loadingState').style.display = 'block';
+                    document.getElementById('gatewayWrapper').style.display = 'none';
+                    document.getElementById('loadingState').innerHTML = `<i class="fas fa-circle-notch fa-spin fa-3x" style="color: var(--primary);"></i><p style="margin-top:20px;">Verifying Payment...</p>`;
+
+                    try {
+                        const res = await fetch(`${API_URL}/books/verify-purchase`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({
+                                gateway: 'paypal',
+                                paypal_order_id: data.orderID,
+                                book_id: currentBook._id,
+                                couponCode: appliedCoupon ? appliedCoupon.code : ''
+                            })
+                        });
+
+                        if (res.ok) {
+                            VylithraUI.showToast("Payment successful! Redirecting...", "success");
+                            document.getElementById('loadingState').innerHTML = `<i class="fas fa-check-circle fa-4x" style="color: #10b981;"></i><h2 style="margin-top:20px; color:#fff;">Payment Complete</h2><p style="color:var(--text-muted)">Redirecting to your library...</p>`;
+                            setTimeout(() => window.location.href = '/books', 2500);
+                        } else {
+                            const rData = await res.json();
+                            VylithraUI.showToast(rData.msg || "Verification failed.", "error");
+                            setTimeout(() => window.location.href = `/checkout.html?bookId=${bookId}`, 2000);
+                        }
+                    } catch (err) {
+                        VylithraUI.showToast("Network Error during verification.", 'error');
+                        setTimeout(() => window.location.href = `/checkout.html?bookId=${bookId}`, 2000);
+                    }
+                },
+                onError: function (err) {
+                    VylithraUI.showToast("PayPal checkout failed or was cancelled.", "error");
+                }
+            }).render('#paypal-button-container');
+        }
+
+        document.addEventListener('DOMContentLoaded', initPayPalFlow);
+    </script>
+</body>
+</html>

@@ -36,21 +36,19 @@
     </script>
     <style>
         :root {
-            /* Defaults - overridden by JS */
-            --bg-color: #f9fafb;
+            /* Vylithra Global 3-Color Mint Theme (Default) */
+            --bg-color: #f0fdfa;
             --surface: #ffffff;
-            --text-main: #0f172a;
-            --text-muted: #64748b;
-            --primary: #6366f1;
-            --accent: #6366f1;
-            --accent-hover: #4f46e5;
-            --border: #e2e8f0;
-            --input-bg: #f8fafc;
-            --card-bg: #ffffff;
-            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-
+            --primary: #14b8a6;
+            --btn-text: #ffffff;
+            --accent: #0d9488;
+            --accent-hover: #0f766e;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: #f0fdfa;
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);
             --header-height: 70px;
-            --border-radius: 16px;
         }
 
         * {
@@ -93,15 +91,27 @@
             box-shadow: none;
         }
 
-        .logo {
-            font-size: 1.5rem;
+                .logo {
+            font-size: 1.6rem;
             font-weight: 700;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            background-clip: text;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: #5b62fa; /* Indigo matched from screenshot */
             text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            letter-spacing: -0.5px;
+        }
+
+        .logo i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+            background: #5b62fa;
+            color: #ffffff;
+            border-radius: 50%;
+            font-size: 1.1rem;
         }
 
         .search-bar {
@@ -580,6 +590,35 @@
             cursor: pointer;
         }
 
+        /* --- Auto-Hide Sidebar on Scroll --- */
+        .sidebar-right {
+            position: sticky;
+            top: calc(var(--header-height) + 30px);
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin-right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: right center;
+            opacity: 1;
+            transform: translateX(0) scale(1);
+        }
+
+        .container {
+            transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .sidebar-hidden-layout .sidebar-right {
+            opacity: 0;
+            transform: translateX(40px) scale(0.95);
+            pointer-events: none;
+            margin-right: -260px;
+        }
+
+        .container.sidebar-hidden-layout {
+            grid-template-columns: 260px 1fr 0px; 
+            gap: 0; 
+        }
         /* Mobile Responsive */
         @media (max-width: 900px) {
             .container {
@@ -1339,50 +1378,348 @@
             </a>
         </aside>
 
-        <!-- Main Feed -->
-        <main class="feed">
-            <!-- Integrated Carousel -->
-            <div class="carousel-section">
-                <div class="carousel-container" id="features">
-                    <div class="carousel-track" id="track">
-                        <!-- Slide 1 -->
-                        <div class="slide active">
-                            <div class="slide-content">
-                                <h2>Welcome to Vylithra</h2>
-                                <p>An all-in-one platform designed for modern creators.</p>
-                            </div>
-                        </div>
-                        <!-- Slide 2 -->
-                        <div class="slide">
-                            <div class="slide-content">
-                                <h2>Showcase Your Work</h2>
-                                <p>Highlight your best projects with premium aesthetics.</p>
-                            </div>
-                        </div>
-                        <!-- Slide 3 -->
-                        <div class="slide">
-                            <div class="slide-content">
-                                <h2>Join the Community</h2>
-                                <p>Connect, share, and grow with like-minded individuals.</p>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="carousel-nav" id="nav">
-                        <div class="dot active" onclick="goToSlide(0)"></div>
-                        <div class="dot" onclick="goToSlide(1)"></div>
-                        <div class="dot" onclick="goToSlide(2)"></div>
-                    </div>
-                </div>
+<!-- Main Feed -->
+<main class="feed">
+    <!-- Premium Dashboard Overlay -->
+    <style>
+        .dashboard-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Hero Banner */
+        .dv-hero {
+            position: relative;
+            width: 100%;
+            height: clamp(280px, 35vh, 320px);
+            border-radius: 20px;
+            overflow: hidden;
+            background: #1E293B; /* Fallback */
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            padding: 40px 60px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .dv-hero-bg {
+            position: absolute;
+            inset: 0;
+            background: url('/uploads/curation-banner.png') center/cover no-repeat;
+            z-index: 0;
+        }
+        
+        .dv-hero-gradient {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to right, transparent 0%, rgba(15, 23, 42, 0.4) 40%, rgba(15, 23, 42, 0.95) 75%, rgba(15, 23, 42, 1) 100%);
+            z-index: 1;
+        }
+
+        .dv-hero-content {
+            position: relative;
+            z-index: 2;
+            width: 450px;
+            text-align: left;
+            color: #f8fafc;
+        }
+
+        .dv-hero-content h1 {
+            font-family: 'Georgia', serif; /* Matching the elegant serif */
+            font-size: 2.2rem;
+            font-weight: 500;
+            line-height: 1.2;
+            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+        }
+
+        .dv-hero-content p {
+            font-size: 0.95rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            font-weight: 300;
+        }
+
+        .dv-hero-dots {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            display: flex;
+            gap: 8px;
+        }
+        .dv-hero-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+        }
+        .dv-hero-dot.active {
+            width: 20px;
+            background: #8b5cf6; /* The purple dot in the image */
+            border-radius: 8px;
+        }
+
+        /* Composer Bar */
+        .dv-composer {
+            display: flex;
+            align-items: center;
+            background: #1e293b;
+            border-radius: 50px;
+            padding: 8px 12px 8px 15px;
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        
+        .dv-composer-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94A3B8;
+            margin-right: 15px;
+        }
+
+        .dv-composer-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #f1f5f9;
+            font-size: 0.95rem;
+            outline: none;
+            font-family: inherit;
+        }
+        .dv-composer-input::placeholder {
+            color: #64748b;
+        }
+
+        .dv-composer-tools {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-right: 20px;
+            color: #64748b;
+            font-size: 1rem;
+        }
+        .dv-composer-tools i {
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dv-composer-tools i:hover {
+            color: #f1f5f9;
+        }
+        .dv-composer-tools .divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255,255,255,0.1);
+        }
+
+        .dv-composer-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .dv-btn {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .dv-btn-ghost {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dv-btn-ghost:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+        .dv-btn-solid {
+            background: #e2e8f0;
+            color: #0f172a;
+        }
+        .dv-btn-solid:hover {
+            background: white;
+        }
+
+        /* Featured Grid */
+        .dv-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        .dv-card {
+            background: #1E293B;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .dv-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255,255,255,0.15);
+        }
+
+        .dv-card-primary {
+            padding: 25px;
+            justify-content: space-between;
+        }
+
+        .dv-card-label {
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-bottom: 5px;
+        }
+        
+        .dv-card-title {
+            font-size: 1.4rem;
+            color: #f8fafc;
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        .dv-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            row-gap: 15px;
+            column-gap: 10px;
+            margin-bottom: 30px;
+        }
+        .dv-stat {
+            display: flex;
+            flex-direction: column;
+        }
+        .dv-stat-label {
+            font-size: 0.8rem;
+            color: #64748b;
+        }
+        .dv-stat-val {
+            font-size: 1rem;
+            color: #e2e8f0;
+            font-weight: 600;
+        }
+
+        .dv-author {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: auto;
+        }
+        .dv-author img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .dv-author-info {
+            display: flex;
+            flex-direction: column;
+        }
+        .dv-author-name {
+            font-size: 0.9rem;
+            color: #f1f5f9;
+            font-weight: 500;
+        }
+        .dv-author-role {
+            font-size: 0.75rem;
+            color: #64748b;
+        }
+
+        /* Sub Cards */
+        .dv-subcard {
+            display: flex;
+            flex-direction: column;
+        }
+        .dv-subcard-img {
+            height: 140px;
+            width: 100%;
+            background-size: cover;
+            background-position: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .dv-subcard-body {
+            padding: 15px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .dv-subcard-title {
+            font-size: 1rem;
+            color: #f8fafc;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 10px;
+        }
+
+        /* Override Body globally to match dark sleek theme */
+        body[data-theme="dark"] .container {
+            grid-template-columns: 240px 1fr;
+        }
+        body[data-theme="dark"] .sidebar-right {
+            display: none !important;
+        }
+    </style>
+
+    <div class="dashboard-layout">
+        
+        <!-- 1. Hero Banner -->
+        <div class="dv-hero">
+            <div class="dv-hero-bg"></div>
+            <div class="dv-hero-gradient"></div>
+            <div class="dv-hero-content">
+                <h1>Reclaiming the art of curation</h1>
+                <p>Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>- Vylithra Editorial.</p>
             </div>
-            <!-- Create Post Trigger (redirects to profile for now) -->
-            <div class="create-post-placeholder" onclick="handleCreatePostClick()">
-                <div class="avatar-sm" style="width: 35px; height: 35px; background: var(--border); font-size: 1rem;"><i
-                        class="fas fa-pen"></i></div>
-                <div class="create-input">Start a new spread...</div>
+            <div class="dv-hero-dots">
+                <div class="dv-hero-dot active"></div>
+                <div class="dv-hero-dot"></div>
+                <div class="dv-hero-dot"></div>
+            </div>
+        </div>
+
+        <!-- 2. Composer Pill -->
+        <div class="dv-composer">
+            <div class="dv-composer-icon"><i class="fas fa-pen"></i></div>
+            <input type="text" class="dv-composer-input" placeholder="Start a new spread..." onclick="handleCreatePostClick()" readonly style="cursor: pointer;">
+            
+            <div class="dv-composer-tools">
+                <i class="fas fa-bold"></i>
+                <i class="fas fa-italic"></i>
+                <i class="fas fa-font"></i>
+                <i class="fas fa-image"></i>
+                <i class="fas fa-link"></i>
+                <div class="divider"></div>
             </div>
 
-            <div id="feed-container">
+            <div class="dv-composer-actions">
+                <button class="dv-btn dv-btn-ghost" onclick="handleCreatePostClick()">New Spread</button>
+                <button class="dv-btn dv-btn-solid" onclick="handleCreatePostClick()">Publish</button>
+            </div>
+        </div>
+
+
+    </div>
+
+    <!-- Original Feed Anchor -->
+    <div id="feed-container">
+
                 <!-- Posts will be injected here -->
                 <div style="text-align: center; padding: 40px; color: #94a3b8;">
                     <i class="fas fa-spinner fa-spin fa-2x"></i>
@@ -1828,7 +2165,7 @@
                                                                                 <div>
                                                                                     <div style="font-size: 0.9rem;">
                                                                                         <a href="profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
-                                                                                        <span style="font-size: 0.8rem; color: #aaa;">• Commented</span>
+                                                                                        <span style="font-size: 0.8rem; color: #aaa;">â€¢ Commented</span>
                                                                                     </div>
                                                                                     <div style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
                                                                                         ${c.text}
@@ -2237,13 +2574,24 @@
 
         function updateAuthLink() {
             const token = localStorage.getItem('token');
+            const role = localStorage.getItem('role');
             const authSection = document.getElementById('auth-section');
             if (!authSection) return;
 
             if (token) {
                 // Logged in: show messages icon, profile avatar, and logout
+                let publisherLink = '';
+                if (role === 'publisher' || role === 'admin') {
+                    publisherLink = `
+                        <a href="studio" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publish Studio">
+                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.95rem;">Studio</span>
+                        </a>
+                    `;
+                }
+
                 authSection.innerHTML = `
                     <div style="display: flex; gap: 15px; align-items: center;">
+                        ${publisherLink}
                         <a href="messages" style="color: var(--text-muted); font-size: 1.2rem; text-decoration: none; transition: 0.2s;" title="Messages" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
                             <i class="fa-regular fa-envelope"></i>
                         </a>
@@ -2271,193 +2619,19 @@
             window.location.href = 'auth';
         }
 
-        // Run on load
-        document.addEventListener('DOMContentLoaded', () => {
-            updateAuthLink();
-        });
-    </script>
+        let lastScrollTop = 0;
+        const mainContainer = document.querySelector('.container');
 
-    <!-- PREFERENCES MODAL -->
-    <div id="prefModal" class="modal">
-        <div class="modal-content">
-            <span class="close" onclick="closeModal('prefModal')">&times;</span>
-            <h2>Select Your Interests</h2>
-            <p style="color: #666; margin-bottom: 20px;">Choose what you want to see in your feed.</p>
-
-            <div id="pref-options" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px;">
-                <!-- Generating via JS -->
-            </div>
-
-            <button class="btn btn-primary" onclick="savePreferences()"
-                style="width: 100%; padding: 10px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; border-radius: 8px; cursor: pointer;">Save
-                Preferences</button>
-        </div>
-    </div>
-
-    <script>
-
-        // --- PREFERENCES LOGIC ---
-        const interests = [
-            'Global Affairs',
-            'Technology & Innovation',
-            'Business & Finance',
-            'Science & Environment',
-            'Arts & Culture',
-            'Health & Wellness',
-            'Sports & Athletics',
-            'Education & Career',
-            'Lifestyle & Travel',
-            'Opinion & Commentary',
-            'Other'
-        ];
-        let userPreferences = [];
-
-        function closeModal(id) {
-            document.getElementById(id).style.display = 'none';
-        }
-
-        // Fetch User Profile to get Preferences
-        async function fetchUserProfile() {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-
-            try {
-                // Decode token to get ID
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                const userId = payload.user.id;
-
-                const res = await fetch(`${API_URL}/users/${userId}`, {
-                    headers: { 'x-auth-token': token }
-                });
-
-                if (res.ok) {
-                    const user = await res.json();
-                    if (user.preferences) {
-                        userPreferences = user.preferences;
-                        console.log('Loaded user preferences:', userPreferences);
-                    }
-                }
-            } catch (err) {
-                console.error('Error fetching user profile:', err);
-            }
-        }
-
-        // Call on load
-        fetchUserProfile();
-
-        function openPreferences() {
-            const container = document.getElementById('pref-options');
-
-            // Allow 'pref-container' class if not present
-            container.classList.add('pref-container');
-            container.style.display = 'flex'; // Restore display if overwritten
-
-            container.innerHTML = interests.map(cat => {
-                const isSelected = userPreferences.includes(cat) ? 'selected' : '';
-                return `<div class="pref-chip ${isSelected}" onclick="togglePref(this, '${cat}')">${cat}</div>`;
-            }).join('');
-
-            document.getElementById('prefModal').style.display = 'flex';
-        }
-
-        function togglePref(el, cat) {
-            if (userPreferences.includes(cat)) {
-                userPreferences = userPreferences.filter(c => c !== cat);
-                el.classList.remove('selected');
+        window.addEventListener('scroll', function () {
+            let st = window.pageYOffset || document.documentElement.scrollTop;
+            if (st > lastScrollTop) {
+                // downscroll code
+                if(mainContainer) mainContainer.classList.add('sidebar-hidden-layout');
             } else {
-                userPreferences.push(cat);
-                el.classList.add('selected');
+                mainContainer.classList.remove('sidebar-hidden-layout');
             }
-        }
-
-        async function savePreferences() {
-            try {
-                const res = await fetch(`${API_URL}/users/preferences`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'x-auth-token': localStorage.getItem('token')
-                    },
-                    body: JSON.stringify({ preferences: userPreferences })
-                });
-
-                if (res.ok) {
-                    closeModal('prefModal');
-                    // Reload posts with new prefs
-                    // For now, reload page is easiest to sync state
-                    window.location.reload();
-                }
-            } catch (e) { console.error(e); }
-        }
-
-        // Initialize Publisher Link visibility
-        const role = localStorage.getItem('role');
-        const pubLink = document.getElementById('publisher-link');
-        const pubBookLink = document.getElementById('publish-book-link');
-
-        if (role === 'publisher') {
-            if (pubLink) pubLink.style.display = 'flex';
-            if (pubBookLink) pubBookLink.style.display = 'flex';
-        }
-    </script>
-    <script>
-        // Smart Hide Header on Scroll
-        let lastScroll = 0;
-        const header = document.querySelector('header');
-
-        window.addEventListener('scroll', () => {
-            const currentScroll = window.pageYOffset;
-
-            if (currentScroll <= 0) {
-                header.classList.remove('nav-hidden');
-                return;
-            }
-
-            if (currentScroll > lastScroll && currentScroll > 60) {
-                // Scrolling Down
-                header.classList.add('nav-hidden');
-            } else {
-                // Scrolling Up
-                header.classList.remove('nav-hidden');
-            }
-            lastScroll = currentScroll;
-        });
-
-        // Hero Carousel Logic
-        let currentSlide = 0;
-        let slideInterval;
-        const totalSlides = 3;
-
-        function goToSlide(index) {
-            const track = document.getElementById('track');
-            const dots = document.querySelectorAll('.dot');
-            const slides = document.querySelectorAll('.slide');
-
-            if (!track || slides.length === 0) return;
-
-            currentSlide = index;
-            track.style.transform = `translateX(-${currentSlide * 100}%)`;
-
-            // Update dots
-            dots.forEach(d => d.classList.remove('active'));
-            if (dots[currentSlide]) dots[currentSlide].classList.add('active');
-
-            // Update slides opacity
-            slides.forEach(s => s.classList.remove('active'));
-            if (slides[currentSlide]) slides[currentSlide].classList.add('active');
-
-            resetInterval();
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % totalSlides;
-            goToSlide(currentSlide);
-        }
-
-        function resetInterval() {
-            clearInterval(slideInterval);
-            slideInterval = setInterval(nextSlide, 5000); // 5 seconds per slide
-        }
+            lastScrollTop = st <= 0 ? 0 : st;
+        }, false);
 
         // Initialize carousel
         document.addEventListener('DOMContentLoaded', () => {
@@ -2468,3 +2642,6 @@
 </body>
 
 </html>
+
+
+
