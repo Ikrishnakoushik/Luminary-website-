@@ -1147,13 +1147,13 @@
     </div>
 
     <!-- 2FA Setup Modal -->
-    <div class="modal-overlay" id="twofaModalOverlay">
-        <div class="modal">
-            <div class="modal-header">
+    <div class="custom-modal-overlay" id="twofaModalOverlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header" style="justify-content: space-between;">
                 <h2>Two-Factor Authentication</h2>
-                <button class="close-btn" onclick="closeTwofaModal()"><i class="fas fa-times"></i></button>
+                <button class="close-btn" onclick="closeTwofaModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);"><i class="fas fa-times"></i></button>
             </div>
-            <div class="modal-body">
+            <div class="custom-modal-body">
                 <p style="margin-bottom: 15px; color: var(--text-muted);">
                     Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy), then enter the 6-digit code below to verify.
                 </p>
