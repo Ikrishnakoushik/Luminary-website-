@@ -151,7 +151,8 @@ const auth = async (req, res, next) => {
             const dbUser = await User.findById(req.user.id);
             if (!dbUser) return res.status(401).json({ msg: 'Session invalid' });
             
-            const isValidSession = dbUser.activeSessions.some(session => session.sessionId === req.user.sessionId);
+            const activeSessions = dbUser.activeSessions || [];
+            const isValidSession = activeSessions.some(session => session.sessionId === req.user.sessionId);
             if (!isValidSession) {
                 return res.status(401).json({ msg: 'Session revoked. Please login again.', sessionRevoked: true });
             }
