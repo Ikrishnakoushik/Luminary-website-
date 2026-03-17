@@ -527,9 +527,12 @@ app.get('/api/auth/:provider', async (req, res) => {
             u.mockToken = jwt.sign({ user: { id: u.id, role: u.role } }, JWT_SECRET, { expiresIn: '30d' });
         }
 
+        // Build the darker, sleek Google-style confirmation UI
         let userListHtml = mockUsers.map(u => `
             <div class="account-item" onclick="login('${u.mockToken}', '${u.username}', '${u.role}')">
-                <div class="avatar">${u.username.charAt(0).toUpperCase()}</div>
+                <div class="avatar-wrapper">
+                    <img src="${u.profilePicture || 'https://ui-avatars.com/api/?name=' + u.username + '&background=random'}" alt="Profile">
+                </div>
                 <div class="user-details">
                     <div class="name">${u.username}</div>
                     <div class="email">${u.email}</div>
@@ -543,12 +546,13 @@ app.get('/api/auth/:provider', async (req, res) => {
             <head>
                 <meta charset="UTF-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Sign in with ${providerName} - Vylithra</title>
-                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+                <title>Sign in with ${providerName}</title>
+                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
                 <style>
                     body {
                         font-family: 'Roboto', -apple-system, sans-serif;
-                        background-color: #f0f2f5;
+                        background-color: #1a1a24; /* Dark modern theme */
+                        color: #e8eaed;
                         display: flex;
                         justify-content: center;
                         align-items: center;
@@ -556,76 +560,171 @@ app.get('/api/auth/:provider', async (req, res) => {
                         margin: 0;
                     }
                     .oauth-card {
-                        background: white;
-                        padding: 40px;
+                        background: #202124;
+                        padding: 48px 40px 36px;
                         border-radius: 8px;
-                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        border: 1px solid #3c4043;
                         width: 100%;
-                        max-width: 400px;
+                        max-width: 450px;
                         text-align: center;
+                    }
+                    .logo-row {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        margin-bottom: 16px;
+                    }
+                    .logo-row img {
+                        height: 24px;
                     }
                     .oauth-card h1 {
                         font-size: 24px;
-                        font-weight: 500;
-                        margin-bottom: 8px;
-                        color: #202124;
+                        font-weight: 400;
+                        margin-bottom: 24px;
+                        color: #e8eaed;
+                        line-height: 1.4;
                     }
-                    .oauth-card p {
-                        font-size: 16px;
-                        color: #5f6368;
-                        margin-bottom: 30px;
+                    .oauth-card h1 span {
+                        color: #8ab4f8; /* Google blue link style */
+                    }
+                    .disclaimer {
+                        font-size: 14px;
+                        color: #9aa0a6;
+                        margin-bottom: 32px;
+                        line-height: 1.5;
+                        text-align: left;
+                    }
+                    .disclaimer a {
+                        color: #8ab4f8;
+                        text-decoration: none;
+                    }
+                    .disclaimer a:hover {
+                        text-decoration: underline;
                     }
                     .account-list {
                         text-align: left;
-                        border: 1px solid #dadce0;
-                        border-radius: 8px;
-                        overflow: hidden;
+                        margin-bottom: 32px;
                     }
                     .account-item {
                         display: flex;
                         align-items: center;
-                        padding: 12px 16px;
+                        padding: 12px 0;
                         cursor: pointer;
-                        transition: background 0.2s;
-                        border-bottom: 1px solid #dadce0;
+                        border-top: 1px solid #3c4043;
                     }
                     .account-item:last-child {
-                        border-bottom: none;
+                        border-bottom: 1px solid #3c4043;
                     }
                     .account-item:hover {
-                        background: #f8f9fa;
+                        background: rgba(255,255,255,0.04);
                     }
-                    .avatar {
-                        width: 36px;
-                        height: 36px;
+                    .avatar-wrapper {
+                        width: 32px;
+                        height: 32px;
                         border-radius: 50%;
-                        background: #1a73e8;
-                        color: white;
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        font-weight: 500;
-                        font-size: 18px;
+                        overflow: hidden;
                         margin-right: 12px;
+                    }
+                    .avatar-wrapper img {
+                        width: 100%;
+                        height: 100%;
+                        object-fit: cover;
+                    }
+                    .user-details {
+                        flex-grow: 1;
                     }
                     .user-details .name {
                         font-size: 14px;
                         font-weight: 500;
-                        color: #3c4043;
+                        color: #e8eaed;
+                        margin-bottom: 2px;
                     }
                     .user-details .email {
+                        font-size: 14px;
+                        color: #9aa0a6;
+                    }
+                    .action-buttons {
+                        display: flex;
+                        justify-content: space-between;
+                        margin-top: 24px;
+                    }
+                    .btn-cancel {
+                        background: transparent;
+                        color: #8ab4f8;
+                        border: none;
+                        padding: 8px 24px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        transition: background 0.2s;
+                    }
+                    .btn-cancel:hover {
+                        background: rgba(138, 180, 248, 0.08);
+                    }
+                    .btn-confirm {
+                        background: transparent;
+                        color: #8ab4f8;
+                        border: none;
+                        padding: 8px 24px;
+                        font-size: 14px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        border-radius: 4px;
+                        transition: background 0.2s;
+                    }
+                    .btn-confirm:hover {
+                        background: rgba(138, 180, 248, 0.08);
+                    }
+                    .footer-links {
+                        display: flex;
+                        justify-content: space-between;
+                        width: 100%;
+                        max-width: 450px;
+                        margin-top: 20px;
+                        padding: 0 40px;
+                        box-sizing: border-box;
+                    }
+                    .footer-links a {
+                        color: #9aa0a6;
                         font-size: 12px;
-                        color: #5f6368;
+                        text-decoration: none;
+                    }
+                    .footer-links a:hover {
+                        background: rgba(255,255,255,0.04);
                     }
                 </style>
             </head>
             <body>
+                <div style="display:flex; flex-direction:column; align-items:center;">
+                    <div class="logo-row">
+                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" style="height:24px; margin-right:8px;" alt="G"> 
+                        <span style="font-size: 16px; font-weight: 500; color: #e8eaed;">Sign in with ${providerName}</span>
+                    </div>
                 <div class="oauth-card">
-                    <h1>Choose an account</h1>
-                    <p>to continue to <strong>Vylithra</strong></p>
+                    <h1>Confirm you want to sign in to<br><span>vylithra.in</span></h1>
+                    
                     <div class="account-list">
                         ${userListHtml}
                     </div>
+
+                    <p class="disclaimer">
+                        To create your account, ${providerName} will share your name, email address, and profile picture with vylithra.in. See vylithra.in's <a href="/terms.html">privacy policy</a> and <a href="/terms.html">terms of service</a>.
+                    </p>
+                    
+                    <div class="action-buttons">
+                        <button class="btn-cancel" onclick="window.location.href='/auth.html'">Cancel</button>
+                        <button class="btn-confirm" onclick="alert('Please select an account from the list above to confirm.')">Confirm</button>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <div></div> <!-- Spacer -->
+                    <div style="display:flex; gap: 24px;">
+                        <a href="#">Help</a>
+                        <a href="#">Privacy Policy</a>
+                        <a href="#">Terms of Service</a>
+                    </div>
+                </div>
                 </div>
                 <script>
                     function login(token, username, role) {
