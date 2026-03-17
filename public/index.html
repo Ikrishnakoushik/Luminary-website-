@@ -209,7 +209,7 @@
         .cta-group {
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 1.5rem;
             margin-bottom: 3rem;
         }
 
@@ -472,18 +472,19 @@
         .btn-social {
             background: white;
             border: none;
-            border-radius: 8px;
-            width: 44px;
-            height: 44px;
+            border-radius: 14px;
+            width: 60px;
+            height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
             cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
         }
-        .btn-social.github { color: #24292e; font-size: 1.5rem; }
+        .btn-social.github { color: #24292e; font-size: 34px; }
+        .btn-social.google img { width: 30px; height: auto; }
+        .btn-social.microsoft img { width: 28px; height: auto; }
         .btn-social:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 15px rgba(255,255,255,0.1);
@@ -592,9 +593,9 @@
                         <div class="social-auth">
                             <div class="social-divider">Or continue with:</div>
                             <div class="social-buttons">
-                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="22"></button>
+                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
                                 <button type="button" class="btn-social github" onclick="window.location.href='/api/auth/github'"><i class="fab fa-github"></i></button>
-                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft" width="20" style="border-radius:0"></button>
+                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
                             </div>
                             <div class="auth-footer">
                                 New to Vylithra? <a href="#" onclick="switchTab('register'); return false;">Create an account</a>
@@ -647,9 +648,9 @@
                         <div class="social-auth">
                             <div class="social-divider">Or continue with:</div>
                             <div class="social-buttons">
-                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="22"></button>
+                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
                                 <button type="button" class="btn-social github" onclick="window.location.href='/api/auth/github'"><i class="fab fa-github"></i></button>
-                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft" width="20" style="border-radius:0"></button>
+                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
                             </div>
                             <div class="auth-footer">
                                 Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>
