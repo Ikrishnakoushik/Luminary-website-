@@ -1,86 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Vylithra is the perfect digital canvas and portfolio platform for creators to showcase their work, share their journey, and connect with a community.">
-    <!-- Open Graph Tags -->
-    <meta property="og:title" content="Vylithra | Portfolio & Showcase for Creators">
-    <meta property="og:description"
-        content="Showcase your projects, thoughts, and ideas in one beautifully designed space. Connect with a community of creators.">
-    <meta property="og:image" content="https://vylithra-website.vercel.app/uploads/preview-mockup.png">
-    <meta property="og:url" content="https://vylithra-website.vercel.app/">
-    <meta property="og:type" content="website">
-    <link rel="canonical" href="https://vylithra-website.vercel.app/" />
-    <title>Vylithra | Portfolio & Showcase for Creators</title>
-    <script src="theme-loader.js"></script>
-    <link rel="stylesheet" href="/ui-common.css">
-    <script src="/ui-common.js"></script>
+    <title>Vylithra | Your Digital Canvas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script>
         if (localStorage.getItem('token')) {
             window.location.href = '/main';
         }
     </script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            /* Vylithra Global 3-Color Mint Theme (Default) */
-            --bg-color: #f0fdfa;
-            --surface: #ffffff;
-            --primary: #14b8a6;
-            --btn-text: #ffffff;
-            --accent: #0d9488;
-            --accent-hover: #0f766e;
-            --text-main: #134e4a;
-            --text-muted: #115e59;
-            --border: #ccfbf1;
-            --input-bg: #f0fdfa;
-            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);
+            --bg-dark: #0f1115;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            
+            /* Gradient variables matching exactly the image */
+            --glow-cyan: #0ea5e9;
+            --glow-blue: #3b82f6;
+            --glow-purple: #8b5cf6;
+            
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --input-border: rgba(255, 255, 255, 0.15);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            overflow-x: hidden;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
             min-height: 100vh;
+            overflow-x: hidden;
             display: flex;
             flex-direction: column;
         }
 
-        /* Animated Background */
-        .bg-gradient {
+        /* Ambient Background Glows */
+        .bg-glows {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; right: 0; bottom: 0;
             z-index: -1;
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, color-mix(in srgb, var(--primary) 8%, transparent) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, color-mix(in srgb, var(--accent) 8%, transparent) 0px, transparent 50%);
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+        
+        .bg-mesh {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            /* Faint dotted grid pattern */
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 24px 24px;
         }
 
-            
+        .glow-cyan {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 60%);
+            left: -15%;
+            top: 10%;
+            border-radius: 50%;
+        }
 
-        /* Glassmorphism Utilities - Updated for higher contrast */
-        .glass {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        .glow-purple {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            right: -20%;
+            top: 5%;
+            border-radius: 50%;
+        }
+
+        .glow-bottom {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 60%);
+            left: 20%;
+            bottom: -20%;
+            border-radius: 50%;
         }
 
         /* Navigation */
@@ -95,525 +105,799 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 700;
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            background-clip: text;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
         }
 
         .nav-links a {
-            color: var(--text-main);
+            color: var(--text-muted);
             text-decoration: none;
-            margin-left: 2rem;
+            font-size: 0.95rem;
             font-weight: 500;
             transition: color 0.3s;
         }
 
         .nav-links a:hover {
-            color: var(--primary);
+            color: white;
         }
 
-        .nav-links a i {
-            margin-right: 6px;
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
         }
 
-        .btn {
-            padding: 0.75rem 1.5rem;
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            color: white;
+            padding: 10px 24px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
-            transition: all 0.3s;
-            display: inline-block;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
         }
 
-        .btn-primary {
-            background: var(--primary);
-            color: var(--btn-text, #ffffff);
-            font-weight: 600;
-            box-shadow: 0 2px 10px rgba(20, 184, 166, 0.3);
-            border: 1px solid transparent;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            background: var(--accent);
-            box-shadow: 0 4px 15px rgba(20, 184, 166, 0.4);
-            color: var(--btn-text, #ffffff);
+        .btn-gradient:hover {
+            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+            color: white;
         }
 
         .btn-outline {
-            border: 2px solid var(--border);
-            color: var(--text-main);
-            margin-left: 1rem;
             background: transparent;
+            color: var(--text-muted);
+            padding: 10px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
         }
 
         .btn-outline:hover {
-            background: var(--surface);
-            border-color: var(--primary);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
         }
 
-        /* Navbar Auth Buttons */
-        .btn-login {
-            color: var(--text-main);
-            text-decoration: none;
-            font-weight: 500;
-            margin-left: 2rem;
-            transition: color 0.3s;
-        }
-
-        .btn-login:hover {
-            color: var(--primary);
-        }
-
-        .btn-signup {
-            background: var(--primary);
-            color: #ffffff;
-            padding: 8px 20px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 600;
-            margin-left: 1rem;
-            transition: all 0.2s;
-            box-shadow: 0 2px 8px rgba(20, 184, 166, 0.3);
-        }
-
-        .btn-signup:hover {
-            transform: translateY(-1px);
-            background: var(--accent);
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.4);
-            color: #ffffff;
-        }
-
-        /* Hero Section */
-        header {
-            flex: 1;
-            display: flex;
+        /* Hero Layout */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
             align-items: center;
-            justify-content: center;
-            padding: 4rem 5%;
-            text-align: center;
-            position: relative;
+            flex-grow: 1;
         }
 
-        .hero-content {
-            max-width: 800px;
-            z-index: 2;
-        }
-
-        h1 {
-            font-size: 3.5rem;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
-            color: var(--text-main);
-            font-weight: 800;
-        }
-
-        p.subtitle {
-            font-size: 1.25rem;
-            color: var(--text-muted);
-            margin-bottom: 2.5rem;
-            margin-left: auto;
-            margin-right: auto;
+        .hero-left {
             max-width: 600px;
         }
 
-        /* Features Section (Vertical Cards) */
-        .features-container {
-            margin-top: 4rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            max-width: 800px;
-            margin-left: auto;
-            margin-right: auto;
-            text-align: left;
+        .hero-left h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: white;
+            letter-spacing: -1px;
         }
 
-        .feature-card {
-            padding: 2.5rem;
+        .hero-left p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero-mockup-wrapper {
+            position: relative;
+            margin-top: 2rem;
+        }
+
+        .hero-mockup-wrapper img {
+            max-width: 100%;
+            border-radius: 12px;
+            opacity: 0.8;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Glassmorphic Auth Modal */
+        .hero-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Top highlight rim light */
+        .auth-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        }
+
+        .auth-card h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-card > p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Tabs */
+        .auth-tabs {
+            display: flex;
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px 0;
+            color: var(--text-muted);
+            font-weight: 500;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .tab.active {
+            color: white;
+        }
+
+        .tab-indicator {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            height: 2px;
+            width: 50%;
+            background: white;
             transition: transform 0.3s ease;
         }
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            background: color-mix(in srgb, var(--surface) 80%, transparent);
-            box-shadow: var(--card-shadow, 0 10px 25px rgba(0, 0, 0, 0.15));
+        /* Forms */
+        .form-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
         }
 
-        .feature-card .icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
+        .form-panel.active {
+            display: block;
         }
 
-        .feature-card h2 {
-            font-size: 1.8rem;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .input-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .input-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-light);
             margin-bottom: 0.5rem;
-            color: var(--accent);
-            background: linear-gradient(to right, var(--primary), var(--accent));
-            background-clip: text;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
-        .feature-card p {
-            font-size: 1.1rem;
+        .input-group label a {
+            color: var(--glow-cyan);
+            text-decoration: none;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--text-muted);
-            line-height: 1.7;
+            font-size: 1rem;
         }
 
-        /* Footer */
-        footer {
+        .input-field {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: white;
+            border-radius: 8px;
+            padding: 12px 14px 12px 42px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--glow-cyan);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input {
+            accent-color: var(--glow-blue);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+
+        .submit-btn {
+            width: 100%;
+            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 14px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
+            margin-top: 10px;
             text-align: center;
-            padding: 2rem;
-            color: var(--text-muted);
-            font-size: 0.9rem;
+            min-height: 20px;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+            min-height: 20px;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            nav {
-                padding: 15px 20px;
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 15px;
-            }
-
-            .logo {
-                width: 100%;
-                text-align: center;
-            }
-
-            .nav-links {
-                gap: 15px;
-                display: flex;
-                flex-wrap: wrap;
-                justify-content: center;
-            }
-
-            .nav-links a {
-                margin-left: 0;
-                font-size: 0.95rem;
-            }
-
-            .btn-login,
-            .btn-signup {
-                padding: 8px 16px;
-                font-size: 0.9rem;
-                margin-left: 0;
-            }
-
-            h1 {
-                font-size: 2.5rem;
-                line-height: 1.2;
-                margin-top: 40px;
-            }
-
-            p.subtitle {
-                font-size: 1.1rem;
-                padding: 0 10px;
-                line-height: 1.5;
-            }
-
-            .features-container {
-                margin-top: 2rem;
-                grid-template-columns: 1fr;
-                gap: 1.5rem;
-                padding: 0 20px;
-            }
-
-            .feature-card {
-                padding: 2rem 1.5rem;
-                text-align: center;
-            }
-
+        @media (max-width: 968px) {
             .hero {
-                padding-top: 100px;
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
             }
-        }
-
-        /* Accessibility Utilities */
-        .skip-to-content {
-            position: absolute;
-            top: -40px;
-            left: 0;
-            background: var(--primary);
-            color: white;
-            padding: 8px;
-            z-index: 100;
-            transition: top 0.2s;
-        }
-
-        .skip-to-content:focus {
-            top: 0;
-        }
-
-        /* Back to Top */
-        #backToTop {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            background: var(--primary);
-            color: white;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-            cursor: pointer;
-            border: none;
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s ease;
-            z-index: 50;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-        }
-
-        #backToTop.show {
-            opacity: 1;
-            visibility: visible;
-        }
-
-        #backToTop:hover {
-            transform: translateY(-3px);
-            background: var(--accent);
-        }
-
-        /* FAQ Section */
-        .faq-container {
-            max-width: 800px;
-            margin: 4rem auto 2rem;
-            padding: 0 5%;
-        }
-
-        .faq-item {
-            border-bottom: 1px solid var(--border);
-            padding: 1.5rem 0;
-        }
-
-        .faq-question {
-            font-size: 1.25rem;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            color: var(--text-main);
-        }
-
-        .faq-answer {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            color: var(--text-muted);
-            margin-top: 0;
-            line-height: 1.6;
-        }
-
-        .faq-item.active .faq-answer {
-            max-height: 200px;
-            margin-top: 1rem;
-        }
-
-        .faq-item.active .faq-question i {
-            transform: rotate(180deg);
-        }
-
-        .faq-question i {
-            transition: transform 0.3s ease;
-        }
-
-        /* Image Mockup */
-        .product-mockup {
-            max-width: 90%;
-            width: 800px;
-            margin: 3rem auto 0;
-            border-radius: 12px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border);
-            display: block;
+            .hero-left {
+                margin: 0 auto;
+            }
+            .hero-left h1 {
+                font-size: 3.5rem;
+            }
+            .cta-group {
+                justify-content: center;
+            }
+            .hero-mockup-wrapper {
+                display: none; /* Hide on small screens to prioritize auth */
+            }
+            .nav-links {
+                display: none; /* Mobile nav hiding */
+            }
+            .auth-card {
+                margin: 0 auto;
+            }
         }
     </style>
-
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
 </head>
-
 <body>
 
-    <a href="#main-content" class="skip-to-content">Skip to content</a>
-    <div class="bg-gradient"></div>
+    <div class="bg-glows">
+        <div class="bg-mesh"></div>
+        <div class="glow-cyan"></div>
+        <div class="glow-purple"></div>
+        <div class="glow-bottom"></div>
+    </div>
 
-    <nav class="glass">
-        <div class="logo">
-            <img src="vylithra_logo.svg" alt="Vylithra"
-                style="height: 40px; vertical-align: middle; margin-right: 10px;">
+    <nav>
+        <a href="/" class="logo" style="text-decoration:none;">
+            <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">
             Vylithra
+        </a>
+        <div class="nav-links">
+            <a href="/main">Feed</a>
+            <a href="/profile">Profile</a>
+            <a href="/studio">Studio</a>
+            <a href="/creator-kit">Creator Kit</a>
         </div>
-        <div class="nav-links" id="navLinksContainer">
-            <a href="/main" class="auth-required" style="display: none;"><i class="fas fa-home"></i> Feed</a>
-            <a href="/profile" class="auth-required" style="display: none;"><i class="fas fa-user"></i> Profile</a>
-            <a href="/studio" class="auth-required" style="display: none;"><i class="fas fa-pen"></i> Studio</a>
-            <span id="authLinks">
-                <a href="/auth" class="btn-login">Log In</a>
-                <a href="/auth" class="btn-signup">Sign Up</a>
-            </span>
+        <div class="nav-right">
+            <a href="#" onclick="switchTab('login')" style="color:var(--text-muted);text-decoration:none;font-size:0.95rem;font-weight:500;">Sign In</a>
+            <a href="#" onclick="switchTab('register')" class="btn-gradient">Get Started</a>
         </div>
     </nav>
 
-    <header id="main-content">
-        <div class="hero-content">
-            <h1>Your Digital Canvas for<br>Everything You Create.</h1>
-            <p class="subtitle">Showcase your projects, thoughts, and ideas in one beautifully designed space. Connect
-                with a community of creators.</p>
-
-            <div>
-                <a href="auth" class="btn btn-primary">Get Started</a>
-                <a href="#features" class="btn btn-outline">Learn More</a>
+    <main class="hero">
+        <div class="hero-left">
+            <h1>Your Digital<br>Canvas</h1>
+            <p>Architect, Collaborate, and Deliver. Transform ideas into reality with our intuitive enterprise workspace.</p>
+            <div class="cta-group">
+                <a href="#" onclick="switchTab('register')" class="btn-gradient">Explore the Canvas &rarr;</a>
+                <a href="#demo" class="btn-outline">Request Demo</a>
             </div>
-
-            <img src="/uploads/preview-mockup.png" alt="Vylithra Platform Preview" class="product-mockup" loading="lazy"
-                onerror="this.style.display='none'">
-
-            <!-- Vertical Feature Slides -->
-            <div class="features-container" id="features">
-
-                <!-- Feature 1 -->
-                <div class="feature-card glass fade-in">
-                    <div class="icon" aria-hidden="true">🎨</div>
-                    <h2>Your Personal Portfolio</h2>
-                    <p>Create a stunning profile that aggregates your best work. Whether you are a designer, developer,
-                        or writer, Vylithra gives you the perfect canvas to showcase your projects with premium
-                        glassmorphism aesthetics.</p>
-                </div>
-
-                <!-- Feature 2 -->
-                <div class="feature-card glass fade-in" style="animation-delay: 0.2s;">
-                    <div class="icon" aria-hidden="true">🚀</div>
-                    <h2>Share Your Journey</h2>
-                    <p>Don't just show the end result. Share your process, write detailed case studies, or blog about
-                        your latest learnings. Vylithra is built for storytelling.</p>
-                </div>
-
-                <!-- Feature 3 -->
-                <div class="feature-card glass fade-in" style="animation-delay: 0.4s;">
-                    <div class="icon" aria-hidden="true">🤝</div>
-                    <h2>Connect & Grow</h2>
-                    <p>Discover other creators, get feedback on your work, and find inspiration. Our community feed
-                        brings the best creative minds together in one place.</p>
-                </div>
-
-                <!-- Feature 4 -->
-                <div class="feature-card glass fade-in" style="animation-delay: 0.6s;">
-                    <div class="icon" aria-hidden="true">📱</div>
-                    <h2>Everywhere You Are</h2>
-                    <p>Fully responsive and optimized for every device. Your portfolio looks just as professional on a
-                        phone as it does on a 4k monitor.</p>
-                </div>
-
+            <div class="hero-mockup-wrapper">
+                <img src="/uploads/preview-mockup.png" alt="Platform Preview" onerror="this.style.display='none'">
             </div>
         </div>
-    </header>
 
-    <section class="faq-container">
-        <h2 style="text-align: center; margin-bottom: 2rem; font-size: 2.5rem;">Frequently Asked Questions</h2>
-        <div class="faq-item">
-            <div class="faq-question">Is it free? <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">Yes, Vylithra is completely free to use for creators looking to showcase their work
-                and connect with others.</div>
-        </div>
-        <div class="faq-item">
-            <div class="faq-question">Who is it for? <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">Vylithra is built for writers, developers, designers, artists, and any creator who
-                wants a premium, ad-free portfolio that looks great out of the box.</div>
-        </div>
-        <div class="faq-item">
-            <div class="faq-question">What can I publish? <i class="fas fa-chevron-down"></i></div>
-            <div class="faq-answer">You can publish case studies, blog posts, short-form updates, and links to external
-                projects. Your profile acts as your central hub.</div>
-        </div>
-    </section>
+        <div class="hero-right">
+            <div class="auth-card">
+                <!-- Login specific header -->
+                <div id="header-login" class="form-header">
+                    <h2>Sign in to Vylithra</h2>
+                    <p>Welcome back! Design your future.</p>
+                </div>
+                <!-- Register specific header -->
+                <div id="header-register" class="form-header" style="display:none;">
+                    <h2>Join Vylithra</h2>
+                    <p>Create your account and start building.</p>
+                </div>
 
-    <footer>
-        &copy; 2026 Vylithra. All rights reserved.
-        <div style="margin-top:15px; display: flex; flex-wrap: wrap; justify-content: center; gap: 20px;">
-            <a href="legal" style="color:var(--text-muted); text-decoration:none;">Privacy & Terms</a>
-            <a href="community" style="color:var(--text-muted); text-decoration:none;">Community Guidelines</a>
-            <a href="documentation" style="color:var(--text-muted); text-decoration:none;">Documentation</a>
-            <a href="mailto:support@vylithra.site" style="color:var(--text-muted); text-decoration:none;">Contact
-                Support</a>
-            <a href="main" style="color:var(--text-muted); text-decoration:none;">Feed</a>
-            <a href="profile" style="color:var(--text-muted); text-decoration:none;">Profile</a>
-            <a href="studio" style="color:var(--text-muted); text-decoration:none;">Studio</a>
-            <a href="creator-kit" style="color:var(--text-muted); text-decoration:none;">Creator Kit</a>
-        </div>
-    </footer>
+                <div class="auth-tabs" id="authTabsUI">
+                    <div class="tab active" onclick="switchTab('login')">Sign In</div>
+                    <div class="tab" onclick="switchTab('register')">Sign Up</div>
+                    <div class="tab-indicator" id="tab-indicator"></div>
+                </div>
 
-    <button id="backToTop" aria-label="Back to top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
+                <!-- LOGIN FORM -->
+                <div class="form-panel active" id="panel-login">
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>
+                                Password 
+                                <a href="#" onclick="switchTab('forgot'); return false;">Forgot password?</a>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" class="input-field" placeholder="Password" required>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="rememberMe">
+                            <label for="rememberMe">Remember me</label>
+                        </div>
+                        <button type="submit" class="submit-btn">Continue with Vylithra</button>
+                        <div class="error-message" id="loginError"></div>
+                    </form>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div class="form-panel" id="panel-register">
+                    <form id="registerForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="regUsername" class="input-field" placeholder="Username" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="regEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="regPassword" class="input-field" placeholder="Create Password" required>
+                            </div>
+                        </div>
+                         <div class="input-group">
+                            <label>Account Type</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-shield"></i>
+                                <select id="regRole" class="input-field">
+                                    <option value="reader">Read content (Reader)</option>
+                                    <option value="publisher">Publish content (Publisher)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" style="margin-top: 10px;">Create Account</button>
+                        <div class="error-message" id="regError"></div>
+                    </form>
+                </div>
+
+                 <!-- 2FA FORM -->
+                 <div class="form-panel" id="panel-twofa">
+                    <h2>2FA Required</h2>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Enter the code from your Authenticator app.</p>
+                    <form id="twofaForm">
+                        <div class="input-group">
+                            <label>Authenticator Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-mobile-alt"></i>
+                                <input type="text" id="twofaToken" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Verify and Login</button>
+                        <div class="error-message" id="twofaError"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- FORGOT PASSWORD FORM -->
+                <div class="form-panel" id="panel-forgot">
+                    <h2>Reset Password</h2>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">We'll email you instructions to reset your password.</p>
+                    
+                    <form id="forgotFormStep1">
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="forgotEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" id="btnSendOtp">Send Instructions</button>
+                        <div class="error-message" id="forgotError1"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+
+                    <form id="forgotFormStep2" style="display: none; margin-top: 10px;">
+                        <div class="input-group">
+                            <label>OTP Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="forgotOtp" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>New Password</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="newPassword" class="input-field" placeholder="New Password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Reset Password</button>
+                        <div class="error-message" id="forgotError2"></div>
+                    </form>
+                </div>
+
+                <!-- VERIFY EMAIL FORM -->
+                <div class="form-panel" id="panel-verify">
+                     <h2>Verify Email</h2>
+                     <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Enter the code sent to <span id="verifyEmailDisplay" style="color:white; font-weight:600;">your email</span>.</p>
+                     <form id="verifyForm">
+                        <div class="input-group">
+                            <label>OTP Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="verifyOtp" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Verify Account</button>
+                        <div class="error-message" id="verifyError"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
 
     <script>
-        // Simple intersection observer to trigger animations on scroll
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = 1;
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        });
+        // Authentication UI Logic
+        function switchTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            // Hide headers
+            document.getElementById('header-login').style.display = 'none';
+            document.getElementById('header-register').style.display = 'none';
+            
+            const tabsUI = document.getElementById('authTabsUI');
+            const indicator = document.getElementById('tab-indicator');
+            const tabs = document.querySelectorAll('.tab');
 
-        document.querySelectorAll('.feature-card').forEach((el) => {
-            el.style.opacity = 0;
-            el.style.transform = 'translateY(20px)';
-            el.style.transition = 'all 0.6s ease-out';
-            observer.observe(el);
-        });
-
-        // Dynamic Auth Navbar and Interactions
-        document.addEventListener('DOMContentLoaded', () => {
-            const token = localStorage.getItem('token');
-            const authLinks = document.getElementById('authLinks');
-
-            // If logged in, show different actions in header
-            if (token && authLinks) {
-                document.querySelectorAll('.auth-required').forEach(el => el.style.display = '');
-                authLinks.innerHTML = `
-                    <a href="/settings" class="btn-outline" style="padding: 6px 16px; border-radius: 20px; text-decoration: none;"><i class="fas fa-cog" aria-hidden="true"></i> Settings</a>
-                    <a href="#" onclick="localStorage.removeItem('token'); location.reload();" class="btn-login" style="margin-left: 1rem;">Log Out</a>
-                `;
+            if (tabName === 'login') {
+                tabsUI.style.display = 'flex';
+                document.getElementById('header-login').style.display = 'block';
+                document.getElementById('panel-login').classList.add('active');
+                indicator.style.transform = 'translateX(0)';
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+            } else if (tabName === 'register') {
+                tabsUI.style.display = 'flex';
+                document.getElementById('header-register').style.display = 'block';
+                document.getElementById('panel-register').classList.add('active');
+                indicator.style.transform = 'translateX(100%)';
+                tabs[1].classList.add('active');
+                tabs[0].classList.remove('active');
+            } else if (tabName === 'forgot') {
+                tabsUI.style.display = 'none'; // hide tabs for sub-flows
+                document.getElementById('panel-forgot').classList.add('active');
+                document.getElementById('forgotFormStep1').style.display = 'block';
+                document.getElementById('forgotFormStep2').style.display = 'none';
+            } else if (tabName === 'twofa') {
+                tabsUI.style.display = 'none';
+                document.getElementById('panel-twofa').classList.add('active');
+            } else if (tabName === 'verify') {
+                tabsUI.style.display = 'none';
+                document.getElementById('panel-verify').classList.add('active');
             }
+        }
 
-            // FAQ Accordion
-            document.querySelectorAll('.faq-question').forEach(question => {
-                question.addEventListener('click', () => {
-                    const item = question.parentElement;
-                    item.classList.toggle('active');
-                });
-            });
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
-            // Back to Top Button
-            const backToTopBtn = document.getElementById('backToTop');
-            if (backToTopBtn) {
-                window.addEventListener('scroll', () => {
-                    if (window.scrollY > 300) {
-                        backToTopBtn.classList.add('show');
-                    } else {
-                        backToTopBtn.classList.remove('show');
-                    }
+        // ----------------------------------------
+        // Form submissions (cloned from auth.html)
+        // ----------------------------------------
+        
+        let pendingLoginEmail = '';
+        let pendingLoginPassword = '';
+
+        // Handle Login
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const errorMsg = document.getElementById('loginError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
                 });
-                backToTopBtn.addEventListener('click', () => {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                const data = await res.json();
+
+                if (data.requires2FA) {
+                    pendingLoginEmail = email;
+                    pendingLoginPassword = password;
+                    switchTab('twofa');
+                    return;
+                }
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/main';
+                } else {
+                    errorMsg.innerText = data.msg || 'Login failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // Handle Registration
+        let registrationEmail = '';
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            const errorMsg = document.getElementById('regError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role })
                 });
+                const data = await res.json();
+
+                if (res.status === 201) {
+                    registrationEmail = data.email;
+                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
+                    switchTab('verify');
+                } else {
+                    errorMsg.innerText = data.msg || 'Registration failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // 2FA Submit
+        document.getElementById('twofaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const totpCode = document.getElementById('twofaToken').value;
+            const errorMsg = document.getElementById('twofaError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingLoginEmail, password: pendingLoginPassword, totpCode })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/main';
+                } else {
+                    errorMsg.innerText = data.msg || 'Invalid code.';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // Forgot Step 1
+        document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const btn = document.getElementById('btnSendOtp');
+            const errorMsg = document.getElementById('forgotError1');
+            btn.disabled = true;
+            btn.innerText = 'Sending...';
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    document.getElementById('forgotFormStep1').style.display = 'none';
+                    document.getElementById('forgotFormStep2').style.display = 'block';
+                } else {
+                    errorMsg.innerText = data.msg || 'Failed to send OTP';
+                    btn.disabled = false;
+                    btn.innerText = 'Send Instructions';
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerText = 'Send Instructions';
+                errorMsg.innerText = 'Server error.';
+            }
+        });
+
+        // Forgot Step 2
+        document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const otpCode = document.getElementById('forgotOtp').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const errorMsg = document.getElementById('forgotError2');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otpCode, newPassword })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    errorMsg.className = 'success-message';
+                    errorMsg.innerText = 'Password reset! Redirecting to login...';
+                    setTimeout(() => { switchTab('login'); }, 2000);
+                } else {
+                    errorMsg.className = 'error-message';
+                    errorMsg.innerText = data.msg || 'Reset failed';
+                }
+            } catch (err) {
+                errorMsg.className = 'error-message';
+                errorMsg.innerText = 'Server error.';
+            }
+        });
+
+        // Verify Step
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = document.getElementById('verifyOtp').value;
+            const errorMsg = document.getElementById('verifyError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: registrationEmail, otp })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    errorMsg.className = 'success-message';
+                    errorMsg.innerText = 'Verified! Logging in...';
+                    setTimeout(() => window.location.href = '/main', 1500);
+                } else {
+                    errorMsg.className = 'error-message';
+                    errorMsg.innerText = data.msg || 'Verification failed';
+                }
+            } catch (err) {
+                errorMsg.className = 'error-message';
+                errorMsg.innerText = 'Server error.';
             }
         });
     </script>
 </body>
-
 </html>
-
-

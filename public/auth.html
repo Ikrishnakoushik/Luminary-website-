@@ -1,194 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vylithra - Authentication</title>
+    <title>Vylithra | Your Digital Canvas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <link rel="stylesheet" href="/ui-common.css">
-    <script src="/ui-common.js"></script>
     <script>
         if (localStorage.getItem('token')) {
             window.location.href = '/main';
         }
     </script>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-                :root {
-            /* Vylithra Global 3-Color Mint Theme */
-            --bg-color: #f0fdfa; /* Base background */
-            --surface: #ffffff; /* Card backgrounds */
-            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+        :root {
+            --bg-dark: #0f1115;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
             
-            /* Derived mapping for existing elements */
-            --accent: var(--primary);
-            --accent-hover: #0d9488;
-            --text-main: #134e4a;
-            --text-muted: #115e59;
-            --border: #ccfbf1;
-            --input-bg: var(--bg-color);
-            --card-bg: var(--surface);
-            --error: #ef4444;
-            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
+            /* Gradient variables matching exactly the image */
+            --glow-cyan: #0ea5e9;
+            --glow-blue: #3b82f6;
+            --glow-purple: #8b5cf6;
+            
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(0, 0, 0, 0.2);
+            --input-border: rgba(255, 255, 255, 0.15);
+        }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
 
         body {
-            font-family: 'Outfit', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
+            background-color: var(--bg-dark);
+            color: var(--text-light);
             min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Ambient Background Glows */
+        .bg-glows {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: -1;
+            background: var(--bg-dark);
+            overflow: hidden;
+        }
+        
+        .bg-mesh {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            /* Faint dotted grid pattern */
+            background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+
+        .glow-cyan {
+            position: absolute;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 60%);
+            left: -15%;
+            top: 10%;
+            border-radius: 50%;
+        }
+
+        .glow-purple {
+            position: absolute;
+            width: 1000px;
+            height: 1000px;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            right: -20%;
+            top: 5%;
+            border-radius: 50%;
+        }
+
+        .glow-bottom {
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 60%);
+            left: 20%;
+            bottom: -20%;
+            border-radius: 50%;
+        }
+
+        /* Navigation */
+        nav {
+            padding: 1.5rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            color: white;
+            padding: 10px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.95rem;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .btn-gradient:hover {
+            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.5);
+            transform: translateY(-1px);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-muted);
+            padding: 10px 24px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid var(--glass-border);
+            transition: all 0.3s;
+        }
+
+        .btn-outline:hover {
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Hero Layout */
+        .hero {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 4rem;
+            padding: 5rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+            align-items: center;
+            flex-grow: 1;
+        }
+
+        .hero-left {
+            max-width: 600px;
+        }
+
+        .hero-left h1 {
+            font-size: 4.5rem;
+            line-height: 1.1;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            color: white;
+            letter-spacing: -1px;
+        }
+
+        .hero-left p {
+            font-size: 1.15rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 2.5rem;
+            max-width: 500px;
+        }
+
+        .cta-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 3rem;
+        }
+
+        .hero-mockup-wrapper {
+            position: relative;
+            margin-top: 2rem;
+        }
+
+        .hero-mockup-wrapper img {
+            max-width: 100%;
+            border-radius: 12px;
+            opacity: 0.8;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border: 1px solid var(--glass-border);
+        }
+
+        /* Glassmorphic Auth Modal */
+        .hero-right {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .auth-card {
+            width: 100%;
+            max-width: 440px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            position: relative;
             overflow: hidden;
         }
 
-        /* Animated Background */
-        .bg-gradient {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-color: var(--bg-color);
-            background-image: 
-                radial-gradient(at 0% 0%, color-mix(in srgb, var(--primary) 6%, transparent) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, color-mix(in srgb, var(--accent) 6%, transparent) 0px, transparent 50%);
-        }
-
-            
-
-        .auth-container {
-            width: 100%;
-            max-width: 450px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 40px;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
-            position: relative;
-            overflow-y: auto;
-            max-height: 90vh;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-        }
-
-        .auth-container::-webkit-scrollbar {
-            display: none;
-        }
-
-        /*
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        } 
-        */
-
-        .back-link {
+        /* Top highlight rim light */
+        .auth-card::before {
+            content: '';
             position: absolute;
-            top: 20px;
-            left: 20px;
-            color: var(--text-muted, rgba(128, 128, 128, 0.8));
-            text-decoration: none;
-            font-size: 0.9rem;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            top: 0; left: 0; right: 0; height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
         }
 
-        .back-link:hover {
-            color: var(--text-main, #fff);
+        .auth-card h2 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
         }
 
-        .tabs {
+        .auth-card > p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Tabs */
+        .auth-tabs {
             display: flex;
-            margin-bottom: 30px;
-            border-bottom: 2px solid rgba(128, 128, 128, 0.2);
+            border-bottom: 1px solid var(--glass-border);
+            margin-bottom: 2rem;
             position: relative;
         }
 
         .tab {
             flex: 1;
             text-align: center;
-            padding: 15px;
+            padding: 10px 0;
+            color: var(--text-muted);
+            font-weight: 500;
             cursor: pointer;
-            font-weight: 600;
-            color: var(--text-muted, rgba(128, 128, 128, 0.8));
-            transition: 0.3s;
+            transition: color 0.3s;
         }
 
         .tab.active {
-            color: var(--text-main, #fff);
+            color: white;
         }
 
-        .indicator {
+        .tab-indicator {
             position: absolute;
-            bottom: -2px;
+            bottom: -1px;
             left: 0;
             height: 2px;
             width: 50%;
-            background: var(--primary);
-            transition: 0.3s ease;
-            box-shadow: 0 -2px 10px var(--primary);
+            background: white;
+            transition: transform 0.3s ease;
         }
 
-        .form-container {
-            position: relative;
-            min-height: 500px;
-            /* Adjust based on content */
+        /* Forms */
+        .form-panel {
+            display: none;
+            animation: fadeIn 0.3s ease;
         }
 
-        .auth-form {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            transition: 0.4s ease;
-            opacity: 0;
-            visibility: hidden;
-            transform: translateX(20px);
+        .form-panel.active {
+            display: block;
         }
 
-        .auth-form.active {
-            opacity: 1;
-            visibility: visible;
-            transform: translateX(0);
-        }
-
-        h2 {
-            font-size: 2rem;
-            margin-bottom: 10px;
-            color: var(--text-main, #fff);
-            text-align: center;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: var(--text-muted, rgba(128, 128, 128, 0.8));
-            margin-bottom: 30px;
-            font-size: 0.95rem;
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .input-group {
-            margin-bottom: 20px;
+            margin-bottom: 1.25rem;
+            position: relative;
         }
 
         .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.9rem;
-            color: var(--text-main, #fff);
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--text-light);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-group label a {
+            color: var(--glow-cyan);
+            text-decoration: none;
         }
 
         .input-wrapper {
@@ -197,422 +338,370 @@
 
         .input-wrapper i {
             position: absolute;
-            left: 15px;
+            left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-muted, rgba(128, 128, 128, 0.8));
-        }
-
-        input,
-        select {
-            width: 100%;
-            padding: 12px 15px 12px 45px;
-            background: color-mix(in srgb, var(--surface) 95%, var(--text-main) 5%);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--text-main);
-            font-family: inherit;
+            color: var(--text-muted);
             font-size: 1rem;
-            outline: none;
-            transition: 0.2s;
         }
 
-        select {
-            appearance: none;
+        .input-field {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid var(--input-border);
+            color: white;
+            border-radius: 8px;
+            padding: 12px 14px 12px 42px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--glow-cyan);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1.5rem;
+        }
+
+        .checkbox-group input {
+            accent-color: var(--glow-blue);
+            width: 16px;
+            height: 16px;
+        }
+
+        .checkbox-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
             cursor: pointer;
         }
 
-        input:focus,
-        select:focus {
-            border-color: var(--primary);
-            background: var(--surface);
-            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
-        }
-
-        .btn-submit {
+        .submit-btn {
             width: 100%;
-            padding: 14px;
-            background: var(--primary);
+            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            color: white;
             border: none;
             border-radius: 8px;
-            color: white;
+            padding: 14px;
+            font-size: 1rem;
             font-weight: 600;
-            font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: 0.3s ease;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+        }
+
+        .submit-btn:hover {
+            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            color: #ef4444;
+            font-size: 0.85rem;
             margin-top: 10px;
-            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            background: var(--accent);
-            box-shadow: 0 6px 15px rgba(20, 184, 166, 0.4);
-        }
-
-        .error-msg {
-            color: var(--error);
-            font-size: 0.9rem;
-            font-weight: 600;
             text-align: center;
-            margin-top: 15px;
-            margin-bottom: 5px;
+            min-height: 20px;
+        }
+
+        .success-message {
+            color: #10b981;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
             min-height: 20px;
         }
 
         /* Responsive */
-        @media (max-width: 768px) {
-            body {
-                padding: 20px;
+        @media (max-width: 968px) {
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
             }
-
-            .auth-container {
-                padding: 30px 20px;
-                margin: 40px auto;
-                border-radius: 20px;
+            .hero-left {
+                margin: 0 auto;
             }
-
-            h2 {
-                font-size: 1.75rem;
+            .hero-left h1 {
+                font-size: 3.5rem;
             }
-
-            .subtitle {
-                font-size: 1rem;
-                line-height: 1.5;
+            .cta-group {
+                justify-content: center;
             }
-
-            .input-wrapper input {
-                font-size: 1rem;
+            .hero-mockup-wrapper {
+                display: none; /* Hide on small screens to prioritize auth */
+            }
+            .nav-links {
+                display: none; /* Mobile nav hiding */
+            }
+            .auth-card {
+                margin: 0 auto;
             }
         }
     </style>
-
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
 </head>
-
 <body>
 
-    <div class="bg-gradient"></div>
-
-    <div class="auth-container">
-        <div style="text-align: center; margin-bottom: 20px;">
-            <img src="vylithra_logo.svg" alt="Vylithra" style="width: 50px; height: 50px;">
-        </div>
-        <a href="index" class="back-link"><i class="fas fa-arrow-left"></i> Home</a>
-
-        <div class="tabs">
-            <div class="tab active" onclick="switchTab('login')">Sign In</div>
-            <div class="tab" onclick="switchTab('register')">Sign Up</div>
-            <div class="indicator" id="indicator"></div>
-        </div>
-
-        <div class="form-container">
-
-            <!-- Login Form -->
-            <div class="auth-form active" id="login-form">
-                <h2>Welcome Back</h2>
-                <p class="subtitle">Enter your credentials to access your account.</p>
-
-                <form id="loginForm">
-                    <div class="input-group">
-                        <label>Email Address</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="loginEmail" placeholder="you@example.com" required>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="loginPassword" placeholder="••••••••" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-submit">Sign In</button>
-                    <div class="error-msg" id="loginError"></div>
-                    <p style="text-align: center; margin-top: 15px;">
-                        <a href="#" onclick="switchTab('forgot')"
-                            style="color: var(--accent); text-decoration: none; font-size: 0.9rem;">Forgot Password?</a>
-                    </p>
-                </form>
-            </div>
-
-            <!-- 2FA Form -->
-            <div class="auth-form" id="twofa-form" style="display: none; transform: translateX(20px);">
-                <h2>Authentication</h2>
-                <p class="subtitle">Enter the 6-digit code from your authenticator app.</p>
-
-                <form id="twofaForm">
-                    <div class="input-group">
-                        <label>Authenticator Code</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-mobile-alt"></i>
-                            <input type="text" id="twofaToken" placeholder="123456" required>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn-submit">Verify</button>
-                    <div class="error-msg" id="twofaError"></div>
-                </form>
-
-                <p style="text-align: center; margin-top: 15px;">
-                    <a href="#" onclick="switchTab('login')"
-                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
-                        In</a>
-                </p>
-            </div>
-
-            <!-- Register Form -->
-            <div class="auth-form" id="register-form">
-                <h2>Create Account</h2>
-                <p class="subtitle">Join our community of creators today.</p>
-
-                <form id="registerForm">
-                    <div class="input-group">
-                        <label>Username</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-user"></i>
-                            <input type="text" id="regUsername" placeholder="username" required>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Email Address</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="regEmail" placeholder="you@example.com" required>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="regPassword" placeholder="••••••••" required>
-                        </div>
-                    </div>
-
-                    <div class="input-group">
-                        <label>I want to</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-dice"></i>
-                            <select id="regRole">
-                                <option value="reader">Read content (Reader)</option>
-                                <option value="publisher">Publish content (Publisher)</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <div class="input-group" style="margin-bottom: 25px;">
-                        <label style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-                            <input type="checkbox" id="regConsent" required style="width:auto; transform:scale(1.2);">
-                            <span style="font-size:0.85rem; color:var(--text-muted, rgba(128,128,128,0.8));">
-                                I agree to the <a href="legal" target="_blank" style="color:var(--accent);">Terms &
-                                    Privacy Policy</a>
-                            </span>
-                        </label>
-                    </div>
-
-                    <button type="submit" class="btn-submit">Sign Up</button>
-                    <div class="error-msg" id="regError"></div>
-                </form>
-            </div>
-
-            <!-- Forgot Password Form -->
-            <div class="auth-form" id="forgot-form" style="display: none; transform: translateX(20px);">
-                <h2>Reset Password</h2>
-                <p class="subtitle">Enter your email to receive an OTP.</p>
-
-                <!-- Step 1: Send OTP -->
-                <form id="forgotFormStep1">
-                    <div class="input-group">
-                        <label>Email Address</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-envelope"></i>
-                            <input type="email" id="forgotEmail" placeholder="you@example.com" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-submit" id="btnSendOtp">Send OTP</button>
-                    <div class="error-msg" id="forgotError1"></div>
-                </form>
-
-                <!-- Step 2: Verify & Reset (Hidden initially) -->
-                <form id="forgotFormStep2" style="display: none; margin-top: 20px;">
-                    <div class="input-group">
-                        <label>Enter OTP</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-key"></i>
-                            <input type="text" id="forgotOtp" placeholder="6-digit OTP" required>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>New Password</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-lock"></i>
-                            <input type="password" id="newPassword" placeholder="New Password" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-submit">Reset Password</button>
-                    <div class="error-msg" id="forgotError2"></div>
-                </form>
-
-                <p style="text-align: center; margin-top: 15px;">
-                    <a href="#" onclick="switchTab('login')"
-                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
-                        In</a>
-                </p>
-            </div>
-
-            <!-- Verify Email Form -->
-            <div class="auth-form" id="verify-form" style="display: none; transform: translateX(20px);">
-                <h2>Verify Email</h2>
-                <p class="subtitle">Enter the code sent to <span id="verifyEmailDisplay"
-                        style="color: var(--white);">your email</span>.</p>
-
-                <form id="verifyForm">
-                    <div class="input-group">
-                        <label>Enter OTP</label>
-                        <div class="input-wrapper">
-                            <i class="fas fa-key"></i>
-                            <input type="text" id="verifyOtp" placeholder="6-digit OTP" required>
-                        </div>
-                    </div>
-                    <button type="submit" class="btn-submit">Verify Account</button>
-                    <div class="error-msg" id="verifyError"></div>
-                </form>
-
-                <p style="text-align: center; margin-top: 15px;">
-                    <a href="#" onclick="switchTab('login')"
-                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
-                        In</a>
-                </p>
-            </div>
-
-        </div>
+    <div class="bg-glows">
+        <div class="bg-mesh"></div>
+        <div class="glow-cyan"></div>
+        <div class="glow-purple"></div>
+        <div class="glow-bottom"></div>
     </div>
 
-    <footer
-        style="position: fixed; bottom: 10px; text-align: center; width: 100%; color: rgba(255,255,255,0.5); font-size: 0.8rem;">
-        &copy; 2026 Vylithra. All rights reserved.
-    </footer>
+    <nav>
+        <a href="/" class="logo" style="text-decoration:none;">
+            <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">
+            Vylithra
+        </a>
+        <div class="nav-links">
+            <a href="/main">Feed</a>
+            <a href="/profile">Profile</a>
+            <a href="/studio">Studio</a>
+            <a href="/creator-kit">Creator Kit</a>
+        </div>
+        <div class="nav-right">
+            <a href="#" onclick="switchTab('login')" style="color:var(--text-muted);text-decoration:none;font-size:0.95rem;font-weight:500;">Sign In</a>
+            <a href="#" onclick="switchTab('register')" class="btn-gradient">Get Started</a>
+        </div>
+    </nav>
+
+    <main class="hero">
+        <div class="hero-left">
+            <h1>Your Digital<br>Canvas</h1>
+            <p>Architect, Collaborate, and Deliver. Transform ideas into reality with our intuitive enterprise workspace.</p>
+            <div class="cta-group">
+                <a href="#" onclick="switchTab('register')" class="btn-gradient">Explore the Canvas &rarr;</a>
+                <a href="#demo" class="btn-outline">Request Demo</a>
+            </div>
+            <div class="hero-mockup-wrapper">
+                <img src="/uploads/preview-mockup.png" alt="Platform Preview" onerror="this.style.display='none'">
+            </div>
+        </div>
+
+        <div class="hero-right">
+            <div class="auth-card">
+                <!-- Login specific header -->
+                <div id="header-login" class="form-header">
+                    <h2>Sign in to Vylithra</h2>
+                    <p>Welcome back! Design your future.</p>
+                </div>
+                <!-- Register specific header -->
+                <div id="header-register" class="form-header" style="display:none;">
+                    <h2>Join Vylithra</h2>
+                    <p>Create your account and start building.</p>
+                </div>
+
+                <div class="auth-tabs" id="authTabsUI">
+                    <div class="tab active" onclick="switchTab('login')">Sign In</div>
+                    <div class="tab" onclick="switchTab('register')">Sign Up</div>
+                    <div class="tab-indicator" id="tab-indicator"></div>
+                </div>
+
+                <!-- LOGIN FORM -->
+                <div class="form-panel active" id="panel-login">
+                    <form id="loginForm">
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="loginEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>
+                                Password 
+                                <a href="#" onclick="switchTab('forgot'); return false;">Forgot password?</a>
+                            </label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="loginPassword" class="input-field" placeholder="Password" required>
+                            </div>
+                        </div>
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="rememberMe">
+                            <label for="rememberMe">Remember me</label>
+                        </div>
+                        <button type="submit" class="submit-btn">Continue with Vylithra</button>
+                        <div class="error-message" id="loginError"></div>
+                    </form>
+                </div>
+
+                <!-- REGISTER FORM -->
+                <div class="form-panel" id="panel-register">
+                    <form id="registerForm">
+                        <div class="input-group">
+                            <label>Username</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user"></i>
+                                <input type="text" id="regUsername" class="input-field" placeholder="Username" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="regEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>Password</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="regPassword" class="input-field" placeholder="Create Password" required>
+                            </div>
+                        </div>
+                         <div class="input-group">
+                            <label>Account Type</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-shield"></i>
+                                <select id="regRole" class="input-field">
+                                    <option value="reader">Read content (Reader)</option>
+                                    <option value="publisher">Publish content (Publisher)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" style="margin-top: 10px;">Create Account</button>
+                        <div class="error-message" id="regError"></div>
+                    </form>
+                </div>
+
+                 <!-- 2FA FORM -->
+                 <div class="form-panel" id="panel-twofa">
+                    <h2>2FA Required</h2>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Enter the code from your Authenticator app.</p>
+                    <form id="twofaForm">
+                        <div class="input-group">
+                            <label>Authenticator Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-mobile-alt"></i>
+                                <input type="text" id="twofaToken" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Verify and Login</button>
+                        <div class="error-message" id="twofaError"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- FORGOT PASSWORD FORM -->
+                <div class="form-panel" id="panel-forgot">
+                    <h2>Reset Password</h2>
+                    <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">We'll email you instructions to reset your password.</p>
+                    
+                    <form id="forgotFormStep1">
+                        <div class="input-group">
+                            <label>Email Address</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope"></i>
+                                <input type="email" id="forgotEmail" class="input-field" placeholder="Email Address" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn" id="btnSendOtp">Send Instructions</button>
+                        <div class="error-message" id="forgotError1"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+
+                    <form id="forgotFormStep2" style="display: none; margin-top: 10px;">
+                        <div class="input-group">
+                            <label>OTP Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="forgotOtp" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <label>New Password</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-lock"></i>
+                                <input type="password" id="newPassword" class="input-field" placeholder="New Password" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Reset Password</button>
+                        <div class="error-message" id="forgotError2"></div>
+                    </form>
+                </div>
+
+                <!-- VERIFY EMAIL FORM -->
+                <div class="form-panel" id="panel-verify">
+                     <h2>Verify Email</h2>
+                     <p style="color:var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">Enter the code sent to <span id="verifyEmailDisplay" style="color:white; font-weight:600;">your email</span>.</p>
+                     <form id="verifyForm">
+                        <div class="input-group">
+                            <label>OTP Code</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-key"></i>
+                                <input type="text" id="verifyOtp" class="input-field" placeholder="6-digit code" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="submit-btn">Verify Account</button>
+                        <div class="error-message" id="verifyError"></div>
+                        <div style="text-align:center; margin-top:15px;">
+                             <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
+                        </div>
+                    </form>
+                </div>
+
+            </div>
+        </div>
+    </main>
 
     <script>
-        // Apply Full Theme from LocalStorage
-        (function () {
-            try {
-                const themeData = localStorage.getItem('spectra-theme-data');
-                if (themeData) {
-                    const colors = JSON.parse(themeData);
-                    Object.entries(colors).forEach(([key, value]) => {
-                        document.documentElement.style.setProperty(key, value);
-                    });
-                }
-            } catch (e) { console.error(e); }
-        })();
+        // Authentication UI Logic
+        function switchTab(tabName) {
+            // Hide all panels
+            document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+            // Hide headers
+            document.getElementById('header-login').style.display = 'none';
+            document.getElementById('header-register').style.display = 'none';
+            
+            const tabsUI = document.getElementById('authTabsUI');
+            const indicator = document.getElementById('tab-indicator');
+            const tabs = document.querySelectorAll('.tab');
 
-        const indicator = document.getElementById('indicator');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const tabs = document.querySelectorAll('.tab');
-
-        const forgotForm = document.getElementById('forgot-form');
-        const verifyForm = document.getElementById('verify-form');
-
-        function switchTab(tab) {
-            if (tab === 'login') {
-                indicator.style.left = '0';
-                loginForm.classList.add('active');
-                loginForm.style.display = 'block';
-
-                registerForm.classList.remove('active');
-                registerForm.style.transform = 'translateX(20px)';
-                loginForm.style.transform = 'translateX(0)';
-
-                forgotForm.style.display = 'none'; // Hide forgot form
-                verifyForm.style.display = 'none'; // Hide verify form
-
+            if (tabName === 'login') {
+                tabsUI.style.display = 'flex';
+                document.getElementById('header-login').style.display = 'block';
+                document.getElementById('panel-login').classList.add('active');
+                indicator.style.transform = 'translateX(0)';
                 tabs[0].classList.add('active');
                 tabs[1].classList.remove('active');
-            } else if (tab === 'register') {
-                indicator.style.left = '50%';
-                loginForm.classList.remove('active');
-
-                registerForm.classList.add('active');
-                registerForm.style.display = 'block';
-
-                loginForm.style.transform = 'translateX(-20px)';
-                registerForm.style.transform = 'translateX(0)';
-
-                forgotForm.style.display = 'none'; // Hide forgot form
-                verifyForm.style.display = 'none'; // Hide verify form
-
-                tabs[0].classList.remove('active');
+            } else if (tabName === 'register') {
+                tabsUI.style.display = 'flex';
+                document.getElementById('header-register').style.display = 'block';
+                document.getElementById('panel-register').classList.add('active');
+                indicator.style.transform = 'translateX(100%)';
                 tabs[1].classList.add('active');
-            } else if (tab === 'forgot') {
-                // Show Forgot Form, Hide others
-                loginForm.classList.remove('active');
-                registerForm.classList.remove('active');
-
-                forgotForm.classList.add('active');
-
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'none';
-                verifyForm.style.display = 'none';
-
-                forgotForm.style.display = 'block';
-                forgotForm.style.transform = 'translateX(0)';
-
-                // Reset indicator or hide it? Let's keep it at login pos mostly
-                indicator.style.left = '0';
                 tabs[0].classList.remove('active');
-                tabs[1].classList.remove('active');
-            } else if (tab === 'verify') {
-                loginForm.classList.remove('active');
-                registerForm.classList.remove('active');
-
-                verifyForm.classList.add('active');
-
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'none';
-                forgotForm.style.display = 'none';
-
-                verifyForm.style.display = 'block';
-                verifyForm.style.transform = 'translateX(0)';
-
-                indicator.style.left = '50%'; // Keep under Signup mostly
-            } else if (tab === 'twofa') {
-                loginForm.classList.remove('active');
-                registerForm.classList.remove('active');
-                forgotForm.classList.remove('active');
-                verifyForm.classList.remove('active');
-                
-                loginForm.style.display = 'none';
-                registerForm.style.display = 'none';
-                forgotForm.style.display = 'none';
-                verifyForm.style.display = 'none';
-
-                const twofaForm = document.getElementById('twofa-form');
-                twofaForm.classList.add('active');
-                twofaForm.style.display = 'block';
-                twofaForm.style.transform = 'translateX(0)';
-
-                indicator.style.left = '0';
-            }
-
-            // Always hide 2FA form unless it's explicitly the twofa tab
-            if (tab !== 'twofa') {
-                const tf = document.getElementById('twofa-form');
-                if (tf) {
-                    tf.classList.remove('active');
-                    tf.style.display = 'none';
-                }
+            } else if (tabName === 'forgot') {
+                tabsUI.style.display = 'none'; // hide tabs for sub-flows
+                document.getElementById('panel-forgot').classList.add('active');
+                document.getElementById('forgotFormStep1').style.display = 'block';
+                document.getElementById('forgotFormStep2').style.display = 'none';
+            } else if (tabName === 'twofa') {
+                tabsUI.style.display = 'none';
+                document.getElementById('panel-twofa').classList.add('active');
+            } else if (tabName === 'verify') {
+                tabsUI.style.display = 'none';
+                document.getElementById('panel-verify').classList.add('active');
             }
         }
 
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
+        // ----------------------------------------
+        // Form submissions (cloned from auth.html)
+        // ----------------------------------------
+        
         let pendingLoginEmail = '';
         let pendingLoginPassword = '';
 
@@ -622,7 +711,6 @@
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
             const errorMsg = document.getElementById('loginError');
-
             errorMsg.innerText = '';
 
             try {
@@ -644,7 +732,7 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
-                    window.location.href = 'main';
+                    window.location.href = '/main';
                 } else {
                     errorMsg.innerText = data.msg || 'Login failed';
                 }
@@ -654,12 +742,43 @@
             }
         });
 
-        // Handle 2FA Verification
+        // Handle Registration
+        let registrationEmail = '';
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('regUsername').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+            const errorMsg = document.getElementById('regError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password, role })
+                });
+                const data = await res.json();
+
+                if (res.status === 201) {
+                    registrationEmail = data.email;
+                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
+                    switchTab('verify');
+                } else {
+                    errorMsg.innerText = data.msg || 'Registration failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // 2FA Submit
         document.getElementById('twofaForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const totpCode = document.getElementById('twofaToken').value;
             const errorMsg = document.getElementById('twofaError');
-
             errorMsg.innerText = '';
 
             try {
@@ -674,9 +793,9 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
-                    window.location.href = 'main';
+                    window.location.href = '/main';
                 } else {
-                    errorMsg.innerText = data.msg || 'Invalid code. Please try again.';
+                    errorMsg.innerText = data.msg || 'Invalid code.';
                 }
             } catch (err) {
                 console.error(err);
@@ -684,84 +803,12 @@
             }
         });
 
-        // Global variable to store email for verification
-        let registrationEmail = '';
-
-        // Handle Register
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('regUsername').value;
-            const email = document.getElementById('regEmail').value;
-            const password = document.getElementById('regPassword').value;
-            const role = document.getElementById('regRole').value;
-            const errorMsg = document.getElementById('regError');
-
-            errorMsg.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, role })
-                });
-
-                const data = await res.json();
-
-                if (res.status === 201) {
-                    // Registration successful, verification required
-                    registrationEmail = data.email;
-                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
-                    switchTab('verify');
-                    // alert('Registration successful! Please verify your email.');
-                } else {
-                    errorMsg.innerText = data.msg || 'Registration failed';
-                }
-            } catch (err) {
-                console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
-            }
-        });
-
-        // Handle Verification
-        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const otp = document.getElementById('verifyOtp').value;
-            const errorMsg = document.getElementById('verifyError');
-
-            errorMsg.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/verify-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: registrationEmail, otp })
-                });
-
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('role', data.role);
-                    errorMsg.style.color = '#10b981'; // Success Green
-                    errorMsg.innerText = 'Email Verified! Logging you in...';
-                    setTimeout(() => window.location.href = 'main', 1500);
-                } else {
-                    errorMsg.innerText = data.msg || 'Verification failed';
-                }
-            } catch (err) {
-                console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
-            }
-        });
-
-        // Handle Forgot Password
+        // Forgot Step 1
         document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value;
             const btn = document.getElementById('btnSendOtp');
             const errorMsg = document.getElementById('forgotError1');
-
             btn.disabled = true;
             btn.innerText = 'Sending...';
             errorMsg.innerText = '';
@@ -772,68 +819,85 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
-                    // Show Step 2
                     document.getElementById('forgotFormStep1').style.display = 'none';
                     document.getElementById('forgotFormStep2').style.display = 'block';
-                    // Store email for step 2 (could also just read from input, but let's be safe)
-                    // document.getElementById('forgotEmail').disabled = true; 
                 } else {
                     errorMsg.innerText = data.msg || 'Failed to send OTP';
+                    btn.disabled = false;
+                    btn.innerText = 'Send Instructions';
                 }
             } catch (err) {
-                console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
-            } finally {
-                btn.innerText = 'Send OTP';
                 btn.disabled = false;
+                btn.innerText = 'Send Instructions';
+                errorMsg.innerText = 'Server error.';
             }
         });
 
+        // Forgot Step 2
         document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value;
-            const otp = document.getElementById('forgotOtp').value;
+            const otpCode = document.getElementById('forgotOtp').value;
             const newPassword = document.getElementById('newPassword').value;
             const errorMsg = document.getElementById('forgotError2');
-
             errorMsg.innerText = '';
 
             try {
                 const res = await fetch(`${API_URL}/auth/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp, newPassword })
+                    body: JSON.stringify({ email, otpCode, newPassword })
                 });
-
                 const data = await res.json();
 
                 if (res.ok) {
-                    errorMsg.style.color = '#10b981'; // Success Green
-                    errorMsg.innerText = 'Password reset successful! Please login.';
-                    setTimeout(() => {
-                        switchTab('login');
-                        // Reset form state
-                        document.getElementById('forgotFormStep1').reset();
-                        document.getElementById('forgotFormStep2').reset();
-                        document.getElementById('forgotFormStep1').style.display = 'block';
-                        document.getElementById('forgotFormStep2').style.display = 'none';
-                        errorMsg.innerText = '';
-                        errorMsg.style.color = 'var(--error)';
-                    }, 2000);
+                    errorMsg.className = 'success-message';
+                    errorMsg.innerText = 'Password reset! Redirecting to login...';
+                    setTimeout(() => { switchTab('login'); }, 2000);
                 } else {
+                    errorMsg.className = 'error-message';
                     errorMsg.innerText = data.msg || 'Reset failed';
                 }
             } catch (err) {
-                console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
+                errorMsg.className = 'error-message';
+                errorMsg.innerText = 'Server error.';
+            }
+        });
+
+        // Verify Step
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otp = document.getElementById('verifyOtp').value;
+            const errorMsg = document.getElementById('verifyError');
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: registrationEmail, otp })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    errorMsg.className = 'success-message';
+                    errorMsg.innerText = 'Verified! Logging in...';
+                    setTimeout(() => window.location.href = '/main', 1500);
+                } else {
+                    errorMsg.className = 'error-message';
+                    errorMsg.innerText = data.msg || 'Verification failed';
+                }
+            } catch (err) {
+                errorMsg.className = 'error-message';
+                errorMsg.innerText = 'Server error.';
             }
         });
     </script>
 </body>
-
 </html>
-
