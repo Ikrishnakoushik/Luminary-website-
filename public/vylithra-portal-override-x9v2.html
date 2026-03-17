@@ -629,11 +629,11 @@
                                 <div style="font-weight: 500;">${b.title}</div>
                                 <div style="font-size: 0.875rem; color: var(--text-muted);">by ${b.author?.username || 'Unknown'}</div>
                             </td>
-                            <td><span class="badge ${b.status}">${b.status}</span></td>
+                            <td><span class="badge ${b.isPublished ? 'active' : 'pending'}">${b.isPublished ? 'PUBLISHED' : 'UNPUBLISHED'}</span></td>
                             <td>₹${b.price}</td>
                             <td>
-                                <button class="btn-action btn-update" onclick="toggleBookStatus('${b._id}', '${b.status === 'published' ? 'draft' : 'published'}')">
-                                    ${b.status === 'published' ? 'Hide' : 'Publish'}
+                                <button class="btn-action btn-update" onclick="toggleBookStatus('${b._id}', ${!b.isPublished})" style="background: ${b.isPublished ? 'var(--danger)' : 'var(--primary)'}; color: white;">
+                                    ${b.isPublished ? 'Unpublish' : 'Publish'}
                                 </button>
                                 <button class="btn-action btn-danger" onclick="deleteBook('${b._id}', '${b.title.replace(/'/g, "'")}')"><i class="fas fa-trash"></i></button>
                             </td >
@@ -1017,12 +1017,12 @@
             } catch (e) { console.error(e); alert('Error deleting user.'); }
         }
 
-        async function toggleBookStatus(id, status) {
+        async function toggleBookStatus(id, isPublished) {
             try {
                 const res = await fetch(`/api/admin/books/${id}/status`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ status })
+                    body: JSON.stringify({ isPublished })
                 });
                 if (res.ok) loadBooks();
             } catch (e) { console.error(e); alert('Error updating book status.'); }
@@ -1120,7 +1120,7 @@
                                 <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">Allow new users to create accounts.</p>
                             </div>
                             <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
-                                <input type="checkbox" id="setting-registration" ${settings.registrationEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                <input type="checkbox" id="setting-registration" onchange="savePlatformSettings()" ${settings.registrationEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
                                 <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
                             </label>
                         </div>
@@ -1131,7 +1131,7 @@
                                 <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">Displays a maintenance screen to all non-admin users.</p>
                             </div>
                             <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
-                                <input type="checkbox" id="setting-maintenance" ${settings.maintenanceMode ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                <input type="checkbox" id="setting-maintenance" onchange="savePlatformSettings()" ${settings.maintenanceMode ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
                                 <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
                             </label>
                         </div>
@@ -1139,10 +1139,8 @@
                         <div style="margin-bottom: 2rem;">
                             <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Platform Fee (%)</h3>
                             <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">The default revenue cut taken from publisher sales.</p>
-                            <input type="number" id="setting-fee" value="${settings.platformFee}" min="0" max="100" style="width: 100px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem;" />
+                            <input type="number" id="setting-fee" value="${settings.platformFee}" onchange="savePlatformSettings()" min="0" max="100" style="width: 100px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem;" />
                         </div>
-
-                        <button onclick="savePlatformSettings()" id="settings-btn" style="padding: 1rem 2rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s;"><i class="fas fa-save" style="margin-right: 8px;"></i> Save Configuration</button>
                     </div>
 
                     <style>
@@ -1159,12 +1157,25 @@
             }
         }
 
-        async function savePlatformSettings() {
-            const btn = document.getElementById('settings-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
-            btn.disabled = true;
+        function showAdminToast(msg, type = 'success') {
+            const toast = document.createElement('div');
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}" style="margin-right:8px;"></i>${msg}`;
+            toast.style.position = 'fixed';
+            toast.style.bottom = '20px';
+            toast.style.right = '20px';
+            toast.style.padding = '12px 24px';
+            toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            toast.style.color = 'white';
+            toast.style.borderRadius = '8px';
+            toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
+            toast.style.zIndex = '10000';
+            toast.style.fontWeight = '500';
+            toast.style.transition = 'opacity 0.3s';
+            document.body.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        }
 
+        async function savePlatformSettings() {
             const payload = {
                 registrationEnabled: document.getElementById('setting-registration').checked,
                 maintenanceMode: document.getElementById('setting-maintenance').checked,
@@ -1180,16 +1191,13 @@
                 
                 const data = await res.json();
                 if(res.ok) {
-                    alert('SUCCESS: ' + data.msg);
+                    showAdminToast('Settings updated instantly.', 'success');
                 } else {
-                    alert('Error: ' + data.msg);
+                    showAdminToast(data.msg, 'error');
                 }
             } catch(e) {
                 console.error(e);
-                alert('Network error saving settings.');
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
+                showAdminToast('Network error saving settings.', 'error');
             }
         }
 

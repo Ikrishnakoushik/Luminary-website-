@@ -2495,14 +2495,14 @@ app.get('/api/admin/books', adminAuth, gatewayAuth, async (req, res) => {
 // 8. Content Management (Toggle Book Status)
 app.put('/api/admin/books/:id/status', adminAuth, gatewayAuth, async (req, res) => {
     try {
-        const { status } = req.body; // 'published' or 'draft'
+        const { isPublished } = req.body; 
         const book = await Book.findById(req.params.id);
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
-        book.status = status;
+        book.isPublished = Boolean(isPublished);
         await book.save();
 
-        res.json({ msg: 'Book status updated', book });
+        res.json({ msg: `Book ${book.isPublished ? 'published' : 'unpublished'} successfully`, book });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
