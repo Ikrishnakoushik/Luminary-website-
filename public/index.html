@@ -20,14 +20,14 @@
             --text-muted: #94a3b8;
             
             /* Gradient variables matching exactly the image */
-            --glow-cyan: #0ea5e9;
+            --glow-cyan: #007AFF;
             --glow-blue: #3b82f6;
             --glow-purple: #8b5cf6;
             
-            --glass-bg: rgba(255, 255, 255, 0.03);
-            --glass-border: rgba(255, 255, 255, 0.08);
-            --input-bg: rgba(0, 0, 0, 0.2);
-            --input-border: rgba(255, 255, 255, 0.15);
+            --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.25));
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --input-bg: rgba(0, 0, 0, 0.35);
+            --input-border: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -136,7 +136,7 @@
         }
 
         .btn-gradient {
-            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            background: linear-gradient(90deg, var(--glow-cyan), var(--glow-purple));
             color: white;
             padding: 10px 24px;
             border-radius: 50px;
@@ -235,9 +235,9 @@
         .auth-card {
             width: 100%;
             max-width: 440px;
-            background: linear-gradient(145deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.01));
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            background: var(--glass-bg);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
             padding: 40px;
@@ -360,7 +360,7 @@
             outline: none;
             border-color: var(--glow-cyan);
             background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
         }
 
         .checkbox-group {
@@ -384,7 +384,7 @@
 
         .submit-btn {
             width: 100%;
-            background: linear-gradient(135deg, var(--glow-cyan), var(--glow-purple));
+            background: linear-gradient(90deg, var(--glow-cyan), var(--glow-purple));
             color: white;
             border: none;
             border-radius: 8px;
@@ -393,7 +393,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.3s ease;
-            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.4);
         }
 
         .submit-btn:hover {
