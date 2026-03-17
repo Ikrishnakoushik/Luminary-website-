@@ -78,56 +78,101 @@
         #admin-dashboard {
             display: none;
             /* Hidden by default */
-            padding: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
+            padding: 0;
+            margin: 0;
             width: 100%;
+            height: 100vh;
             box-sizing: border-box;
+            background: #f8fafc; /* Slightly darker body bg to contrast cards */
         }
 
-        .admin-header {
+        .admin-layout {
             display: flex;
-            justify-content: space-between;
-            align-items: center;
+            height: 100vh;
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: #ffffff;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 1.5rem 1rem;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
             margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
-            padding-bottom: 1rem;
+            padding: 0 0.5rem;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .sidebar-header p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin: 0.25rem 0 0 0;
+            word-break: break-all;
         }
 
         .admin-nav {
             display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
+            flex-direction: column;
+            gap: 0.5rem;
+            flex-grow: 1;
         }
 
         .nav-tab {
-            padding: 0.75rem 1.5rem;
-            background: var(--card-bg);
-            border: 1px solid var(--border);
+            padding: 0.875rem 1rem;
+            background: transparent;
+            border: none;
             border-radius: 0.5rem;
             cursor: pointer;
             font-weight: 500;
             color: var(--text-muted);
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            font-size: 0.95rem;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        .nav-tab i {
+            margin-right: 0.75rem;
+            width: 20px;
+            text-align: center;
+            font-size: 1.1rem;
         }
 
         .nav-tab.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
+            background: var(--bg-color);
+            color: var(--primary);
+            font-weight: 600;
         }
 
         .nav-tab:hover:not(.active) {
-            background: var(--bg-color);
+            background: #f1f5f9;
             color: var(--text-main);
         }
 
+        .main-content {
+            flex-grow: 1;
+            padding: 2rem 3rem;
+            overflow-y: auto;
+        }
+
         .dashboard-content-area {
-            background: var(--card-bg);
+            background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 1rem;
-            padding: 2rem;
-            min-height: 500px;
+            padding: 2.5rem;
+            min-height: calc(100vh - 4rem);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
@@ -441,31 +486,35 @@
             // Inject the highly sensitive UI
             const dashboard = document.getElementById('admin-dashboard');
             dashboard.style.display = 'block';
-            dashboard.style.alignItems = 'initial';
-            dashboard.style.justifyContent = 'initial';
-            dashboard.style.minHeight = 'initial';
-            dashboard.style.background = 'var(--bg-light)';
             dashboard.innerHTML = `
-                <div class="admin-header" >
-                    <div>
-                        <h1 style="margin: 0; font-size: 1.875rem;">Platform Command Center</h1>
-                        <p style="margin: 0.5rem 0 0 0; color: var(--text-muted);">Securely authenticated as: <strong>${user.username}</strong></p>
-                    </div>
-                    <div>
-                        <button onclick="localStorage.removeItem('token'); window.location.href='/index';" class="btn-action btn-update" style="margin:0;">Terminate Session</button>
-                    </div>
-                </div>
+                <div class="admin-layout">
+                    <div class="sidebar">
+                        <div class="sidebar-header">
+                            <h1><i class="fas fa-shield-alt" style="color:var(--primary); margin-right:8px;"></i> Command Center</h1>
+                            <p>${user.username}</p>
+                        </div>
+                        
+                        <div class="admin-nav">
+                            <button class="nav-tab active" onclick="switchTab('overview', this)"><i class="fas fa-chart-pie"></i> Overview</button>
+                            <button class="nav-tab" onclick="switchTab('users', this)"><i class="fas fa-users"></i> Users</button>
+                            <button class="nav-tab" onclick="switchTab('books', this)"><i class="fas fa-book"></i> Content</button>
+                            <button class="nav-tab" onclick="switchTab('financials', this)"><i class="fas fa-money-bill-wave"></i> Financials</button>
+                            <button class="nav-tab" onclick="switchTab('promos', this)"><i class="fas fa-ticket-alt"></i> Promo Codes</button>
+                            <hr style="margin: 1rem 0; border: 0; border-top: 1px solid var(--border);">
+                            <button class="nav-tab" onclick="switchTab('broadcast', this)"><i class="fas fa-bullhorn"></i> Broadcast</button>
+                            <button class="nav-tab" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> Settings</button>
+                        </div>
 
-                <div class="admin-nav">
-                    <button class="nav-tab active" onclick="switchTab('overview', this)">Overview</button>
-                    <button class="nav-tab" onclick="switchTab('users', this)">Users</button>
-                    <button class="nav-tab" onclick="switchTab('books', this)">Content</button>
-                    <button class="nav-tab" onclick="switchTab('financials', this)">Financials</button>
-                    <button class="nav-tab" onclick="switchTab('promos', this)">Promo Codes</button>
-                </div>
+                        <div style="margin-top: auto; padding-top: 1rem;">
+                            <button onclick="localStorage.removeItem('token'); window.location.href='/index';" class="nav-tab" style="width: 100%; color: var(--danger);"><i class="fas fa-sign-out-alt"></i> Terminate Session</button>
+                        </div>
+                    </div>
 
-                <div class="dashboard-content-area" id="content-area">
-                    <!-- Dynamic content loads here -->
+                    <div class="main-content">
+                        <div class="dashboard-content-area" id="content-area">
+                            <!-- Dynamic content loads here -->
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -485,6 +534,8 @@
             if (tab === 'books') loadBooks();
             if (tab === 'financials') loadFinancials();
             if (tab === 'promos') loadPromoCodes();
+            if (tab === 'broadcast') loadBroadcast();
+            if (tab === 'settings') loadPlatformSettings();
         }
 
         // --- TAB LOADERS ---
@@ -931,6 +982,159 @@
             } catch (e) { console.error(e); alert('Error deleting book.'); }
         }
 
+
+        async function loadBroadcast() {
+            document.getElementById('content-area').innerHTML = `
+                <h2 style="margin-top: 0;">Global Broadcast</h2>
+                <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">Send an email announcement to all registered users on the platform.</p>
+                
+                <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid var(--border); max-width: 800px;">
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Subject Line</label>
+                        <input type="text" id="broadcast-subject" placeholder="e.g. Major Platform Update!" style="width: 100%; padding: 0.875rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
+                    </div>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem;">Email Message (HTML Supported)</label>
+                        <textarea id="broadcast-message" rows="10" placeholder="Hello everyone,<br><br>We are excited to announce..." style="width: 100%; padding: 0.875rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box; font-family: monospace; resize: vertical;"></textarea>
+                    </div>
+
+                    <button onclick="sendBroadcast()" id="broadcast-btn" style="padding: 1rem 2rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s;"><i class="fas fa-paper-plane" style="margin-right: 8px;"></i> Dispatch Broadcast</button>
+                </div>
+            `;
+        }
+
+        async function sendBroadcast() {
+            const subject = document.getElementById('broadcast-subject').value;
+            const message = document.getElementById('broadcast-message').value;
+            
+            if(!subject || !message) {
+                alert('Subject and Message are required.');
+                return;
+            }
+
+            if(!confirm('Are you ABSOLUTELY sure you want to mass-email ALL users? This cannot be undone.')) return;
+
+            const btn = document.getElementById('broadcast-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Sending...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/broadcast', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify({ subject, message })
+                });
+                
+                const data = await res.json();
+                if(res.ok) {
+                    alert('SUCCESS: ' + data.msg);
+                    document.getElementById('broadcast-subject').value = '';
+                    document.getElementById('broadcast-message').value = '';
+                } else {
+                    alert('Error: ' + data.msg);
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Network error during broadcast dispatch.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        async function loadPlatformSettings() {
+            document.getElementById('content-area').innerHTML = '<div class="spinner" style="margin: 40px auto;"></div>';
+            
+            try {
+                const res = await fetch('/api/admin/settings', { headers: getAuthHeaders() });
+                const settings = await res.json();
+                
+                document.getElementById('content-area').innerHTML = `
+                    <h2 style="margin-top: 0;">Platform Settings</h2>
+                    <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">Manage global application state and configuration.</p>
+                    
+                    <div style="background: white; padding: 2rem; border-radius: 1rem; border: 1px solid var(--border); max-width: 600px;">
+                        
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                            <div>
+                                <h3 style="margin: 0 0 0.25rem 0; font-size: 1rem;">New Registrations</h3>
+                                <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">Allow new users to create accounts.</p>
+                            </div>
+                            <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
+                                <input type="checkbox" id="setting-registration" ${settings.registrationEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; padding-bottom: 1.5rem; border-bottom: 1px solid #f1f5f9;">
+                            <div>
+                                <h3 style="margin: 0 0 0.25rem 0; font-size: 1rem; color: var(--danger);">Maintenance Mode</h3>
+                                <p style="margin: 0; font-size: 0.875rem; color: var(--text-muted);">Displays a maintenance screen to all non-admin users.</p>
+                            </div>
+                            <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
+                                <input type="checkbox" id="setting-maintenance" ${settings.maintenanceMode ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
+                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
+                            </label>
+                        </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Platform Fee (%)</h3>
+                            <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">The default revenue cut taken from publisher sales.</p>
+                            <input type="number" id="setting-fee" value="${settings.platformFee}" min="0" max="100" style="width: 100px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem;" />
+                        </div>
+
+                        <button onclick="savePlatformSettings()" id="settings-btn" style="padding: 1rem 2rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; font-size: 1rem; transition: 0.2s;"><i class="fas fa-save" style="margin-right: 8px;"></i> Save Configuration</button>
+                    </div>
+
+                    <style>
+                        /* Custom Toggle Switch CSS */
+                        input:checked + .slider { background-color: var(--primary); }
+                        input:focus + .slider { box-shadow: 0 0 1px var(--primary); }
+                        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+                        input:checked + .slider:before { transform: translateX(22px); }
+                    </style>
+                `;
+            } catch (e) {
+                console.error(e);
+                document.getElementById('content-area').innerHTML = '<p style="color:var(--danger)">Failed to load settings.</p>';
+            }
+        }
+
+        async function savePlatformSettings() {
+            const btn = document.getElementById('settings-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin"></i> Saving...';
+            btn.disabled = true;
+
+            const payload = {
+                registrationEnabled: document.getElementById('setting-registration').checked,
+                maintenanceMode: document.getElementById('setting-maintenance').checked,
+                platformFee: parseFloat(document.getElementById('setting-fee').value)
+            };
+
+            try {
+                const res = await fetch('/api/admin/settings', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: JSON.stringify(payload)
+                });
+                
+                const data = await res.json();
+                if(res.ok) {
+                    alert('SUCCESS: ' + data.msg);
+                } else {
+                    alert('Error: ' + data.msg);
+                }
+            } catch(e) {
+                console.error(e);
+                alert('Network error saving settings.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
 
     </script>
 </body>

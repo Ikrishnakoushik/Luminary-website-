@@ -14,6 +14,7 @@ const Post = require('./models/Post');
 const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
+const PlatformSetting = require('./models/PlatformSetting');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -2343,7 +2344,98 @@ app.get('/api/admin/stats', adminAuth, gatewayAuth, async (req, res) => {
     }
 });
 
-// 4. User Management (Get All)
+// 4. Global Email Broadcast
+app.post('/api/admin/broadcast', adminAuth, gatewayAuth, async (req, res) => {
+    try {
+        const { subject, message } = req.body;
+        if (!subject || !message) {
+            return res.status(400).json({ msg: 'Subject and message are required' });
+        }
+
+        // Fetch all users
+        const users = await User.find({ email: { $exists: true, $ne: '' } }).select('email');
+        
+        if (users.length === 0) {
+            return res.status(400).json({ msg: 'No users found to broadcast to.' });
+        }
+
+        let successCount = 0;
+        let failCount = 0;
+
+        // Note: For a real production app with 10k+ users, use a generic queue like Bull, or an external API like SendGrid.
+        // For our scale, mapping standard Nodemailer is acceptable.
+        await Promise.allSettled(users.map(async (u) => {
+            try {
+                await transporter.sendMail({
+                    from: `"Vylithra Platform" <${process.env.EMAIL_USER}>`,
+                    to: u.email,
+                    subject: subject,
+                    html: `
+                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                            <div style="text-align: center; margin-bottom: 20px;">
+                                <h1 style="color: #14b8a6; margin: 0;">Vylithra Platform Announcement</h1>
+                            </div>
+                            <div style="padding: 20px; background: #f8fafc; border-radius: 8px; font-size: 16px; line-height: 1.6; color: #334155;">
+                                ${message}
+                            </div>
+                            <div style="text-align: center; margin-top: 30px; font-size: 12px; color: #94a3b8;">
+                                You are receiving this because you are an active member of Vylithra.<br>
+                                © ${new Date().getFullYear()} Vylithra Platform. All rights reserved.
+                            </div>
+                        </div>
+                    `
+                });
+                successCount++;
+            } catch (err) {
+                console.error(`Broadcast failed to ${u.email}`, err);
+                failCount++;
+            }
+        }));
+
+        res.json({ msg: `Broadcast complete: ${successCount} sent, ${failCount} failed.` });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 5. Get Platform Settings
+app.get('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
+    try {
+        let settings = await PlatformSetting.findOne();
+        if (!settings) {
+            settings = await PlatformSetting.create({});
+        }
+        res.json(settings);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 6. Update Platform Settings
+app.post('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
+    try {
+        const { registrationEnabled, maintenanceMode, platformFee } = req.body;
+        
+        let settings = await PlatformSetting.findOne();
+        if (!settings) {
+            settings = new PlatformSetting();
+        }
+
+        if (typeof registrationEnabled === 'boolean') settings.registrationEnabled = registrationEnabled;
+        if (typeof maintenanceMode === 'boolean') settings.maintenanceMode = maintenanceMode;
+        if (typeof platformFee === 'number') settings.platformFee = platformFee;
+
+        await settings.save();
+        res.json({ msg: 'Global settings updated.', settings });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// 7. User Management (Get All)
 app.get('/api/admin/users', adminAuth, gatewayAuth, async (req, res) => {
     try {
         const users = await User.find().select('-password').sort({ createdAt: -1 });
