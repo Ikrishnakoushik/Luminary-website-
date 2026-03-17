@@ -247,7 +247,6 @@ app.get('/sitemap.xml', async (req, res) => {
             '/community',
             '/books',
             '/creator-kit',
-            '/publish',
             '/publish-book',
             '/documentation',
             '/legal',
