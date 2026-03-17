@@ -509,29 +509,135 @@ app.post('/api/request-demo', async (req, res) => {
 // Mock Social OAuth Route
 app.get('/api/auth/:provider', async (req, res) => {
     const provider = req.params.provider;
+    let providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
     try {
-        // Find existing master admin OR create a mock Google/Github/Microsoft User
-        let mockUser = await User.findOne({ email: ADMIN_EMAIL }) || await User.findOne();
-        if (!mockUser) {
+        // Find a few mock users to present in the selection screen
+        let adminUser = await User.findOne({ email: ADMIN_EMAIL });
+        let otherUsers = await User.find({ email: { $ne: ADMIN_EMAIL } }).limit(2);
+        let mockUsers = [];
+        if (adminUser) mockUsers.push(adminUser);
+        mockUsers = mockUsers.concat(otherUsers);
+
+        if (mockUsers.length === 0) {
             return res.status(500).send("No users exist in DB to simulate mock OAuth login.");
         }
-        const payload = { user: { id: mockUser.id, role: mockUser.role } };
-        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
-            if (err) throw err;
-            // Simulated login: redirect to frontend with token injected in URL (frontend needs to handle or just drop a cookie)
-            // For now, simpler to redirect to /main and let a script catch it, or send an HTML page that sets localStorage.
-            res.send(`
-                <html><body>
-                <h2>OAuth Authentication Successful for ${provider.toUpperCase()}</h2>
+
+        // Generate tokens for each user to embed in the UI
+        for (let u of mockUsers) {
+            u.mockToken = jwt.sign({ user: { id: u.id, role: u.role } }, JWT_SECRET, { expiresIn: '30d' });
+        }
+
+        let userListHtml = mockUsers.map(u => `
+            <div class="account-item" onclick="login('${u.mockToken}', '${u.username}', '${u.role}')">
+                <div class="avatar">${u.username.charAt(0).toUpperCase()}</div>
+                <div class="user-details">
+                    <div class="name">${u.username}</div>
+                    <div class="email">${u.email}</div>
+                </div>
+            </div>
+        `).join('');
+
+        res.send(`
+            <!DOCTYPE html>
+            <html lang="en">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>Sign in with ${providerName} - Vylithra</title>
+                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+                <style>
+                    body {
+                        font-family: 'Roboto', -apple-system, sans-serif;
+                        background-color: #f0f2f5;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100vh;
+                        margin: 0;
+                    }
+                    .oauth-card {
+                        background: white;
+                        padding: 40px;
+                        border-radius: 8px;
+                        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                        width: 100%;
+                        max-width: 400px;
+                        text-align: center;
+                    }
+                    .oauth-card h1 {
+                        font-size: 24px;
+                        font-weight: 500;
+                        margin-bottom: 8px;
+                        color: #202124;
+                    }
+                    .oauth-card p {
+                        font-size: 16px;
+                        color: #5f6368;
+                        margin-bottom: 30px;
+                    }
+                    .account-list {
+                        text-align: left;
+                        border: 1px solid #dadce0;
+                        border-radius: 8px;
+                        overflow: hidden;
+                    }
+                    .account-item {
+                        display: flex;
+                        align-items: center;
+                        padding: 12px 16px;
+                        cursor: pointer;
+                        transition: background 0.2s;
+                        border-bottom: 1px solid #dadce0;
+                    }
+                    .account-item:last-child {
+                        border-bottom: none;
+                    }
+                    .account-item:hover {
+                        background: #f8f9fa;
+                    }
+                    .avatar {
+                        width: 36px;
+                        height: 36px;
+                        border-radius: 50%;
+                        background: #1a73e8;
+                        color: white;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: 500;
+                        font-size: 18px;
+                        margin-right: 12px;
+                    }
+                    .user-details .name {
+                        font-size: 14px;
+                        font-weight: 500;
+                        color: #3c4043;
+                    }
+                    .user-details .email {
+                        font-size: 12px;
+                        color: #5f6368;
+                    }
+                </style>
+            </head>
+            <body>
+                <div class="oauth-card">
+                    <h1>Choose an account</h1>
+                    <p>to continue to <strong>Vylithra</strong></p>
+                    <div class="account-list">
+                        ${userListHtml}
+                    </div>
+                </div>
                 <script>
-                    localStorage.setItem('token', '${token}');
-                    localStorage.setItem('username', '${mockUser.username}');
-                    localStorage.setItem('role', '${mockUser.role}');
-                    window.location.href = '/main';
+                    function login(token, username, role) {
+                        localStorage.setItem('token', token);
+                        localStorage.setItem('username', username);
+                        localStorage.setItem('role', role);
+                        window.location.href = '/main';
+                    }
                 </script>
-                </body></html>
-            `);
-        });
+            </body>
+            </html>
+        `);
     } catch (err) {
         console.error(err);
         res.status(500).send('OAuth simulation failed');
