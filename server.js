@@ -1519,10 +1519,18 @@ app.post('/api/books/:id/rate', auth, async (req, res) => {
 // Generate a Secure Promo Code
 app.post('/api/coupons/generate', auth, adminAuth, async (req, res) => {
     try {
-        const { discountPercentage, maxUses, validityDays } = req.body;
+        const { discountType = 'percentage', discountPercentage, discountAmount, minPurchaseAmount = 0, maxUses, validityDays } = req.body;
 
-        if (!discountPercentage || discountPercentage < 1 || discountPercentage > 100) {
-            return res.status(400).json({ msg: 'Valid discount percentage (1-100) is required.' });
+        if (discountType === 'percentage') {
+            if (!discountPercentage || discountPercentage < 1 || discountPercentage > 100) {
+                return res.status(400).json({ msg: 'Valid discount percentage (1-100) is required.' });
+            }
+        } else if (discountType === 'fixed') {
+            if (!discountAmount || discountAmount < 1) {
+                return res.status(400).json({ msg: 'Valid fixed discount amount is required.' });
+            }
+        } else {
+            return res.status(400).json({ msg: 'Invalid discount type.' });
         }
 
         const uses = parseInt(maxUses) || 50;
@@ -1540,7 +1548,10 @@ app.post('/api/coupons/generate', auth, adminAuth, async (req, res) => {
 
         const newCoupon = new Coupon({
             code,
-            discountPercentage,
+            discountType,
+            discountPercentage: discountType === 'percentage' ? discountPercentage : undefined,
+            discountAmount: discountType === 'fixed' ? discountAmount : undefined,
+            minPurchaseAmount,
             maxUses: uses,
             expiryDate,
             status,
@@ -1689,9 +1700,20 @@ app.post('/api/coupons/validate', auth, async (req, res) => {
         if (!coupon) return res.status(404).json({ msg: 'Invalid or expired promo code.' });
         if (new Date() > coupon.expiryDate) return res.status(400).json({ msg: 'This promo code has expired.' });
         if (coupon.usedCount >= coupon.maxUses) return res.status(400).json({ msg: 'This promo code has reached its usage limit.' });
+        if (bookPrice < (coupon.minPurchaseAmount || 0)) {
+            return res.status(400).json({ msg: `This code requires a minimum purchase of $${coupon.minPurchaseAmount}.` });
+        }
 
-        const discountAmount = (bookPrice * coupon.discountPercentage) / 100;
-        res.json({ valid: true, discountPercentage: coupon.discountPercentage, discountAmount, newPrice: bookPrice - discountAmount });
+        let discountAmount = 0;
+        if (coupon.discountType === 'percentage') {
+            discountAmount = (bookPrice * coupon.discountPercentage) / 100;
+        } else if (coupon.discountType === 'fixed') {
+            discountAmount = coupon.discountAmount;
+            // Prevent discounts from making the book price negative
+            if (discountAmount > bookPrice) discountAmount = bookPrice;
+        }
+
+        res.json({ valid: true, discountType: coupon.discountType, discountPercentage: coupon.discountPercentage, discountAmount, minPurchaseAmount: coupon.minPurchaseAmount, newPrice: bookPrice - discountAmount });
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Server error' });
@@ -1715,8 +1737,13 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
 
         if (finalPrice > 0 && couponCode) {
             const coupon = await Coupon.findOne({ code: couponCode.toUpperCase(), status: 'active', isActive: true });
-            if (coupon && coupon.expiryDate > new Date() && coupon.usedCount < coupon.maxUses) {
-                discountApplied = (finalPrice * coupon.discountPercentage) / 100;
+            if (coupon && coupon.expiryDate > new Date() && coupon.usedCount < coupon.maxUses && finalPrice >= (coupon.minPurchaseAmount || 0)) {
+                if (coupon.discountType === 'percentage') {
+                    discountApplied = (finalPrice * coupon.discountPercentage) / 100;
+                } else if (coupon.discountType === 'fixed') {
+                    discountApplied = coupon.discountAmount;
+                    if (discountApplied > finalPrice) discountApplied = finalPrice;
+                }
                 finalPrice = finalPrice - discountApplied;
             }
         }

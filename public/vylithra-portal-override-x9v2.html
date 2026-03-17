@@ -678,7 +678,7 @@
                     tbody += `
                 <tr>
                             <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${p.code}</td>
-                            <td>${p.discountPercentage}%</td>
+                            <td>${p.discountType === 'fixed' ? `$${p.discountAmount}` : `${p.discountPercentage}%`}</td>
                             <td>${p.usedCount} / ${p.maxUses}</td>
                             <td>${generator}</td>
                             <td><span class="badge ${p.status}">${p.status}</span></td>
@@ -709,8 +709,19 @@
                         <h3 style="margin-top: 0; margin-bottom: 1rem;">Generate Master Code</h3>
                         <div style="display: flex; gap: 1rem; align-items: flex-end; flex-wrap: wrap;">
                             <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Discount Percentage (%)</label>
-                                <input type="number" id="admin-promo-discount" min="1" max="100" placeholder="e.g. 50" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
+                                <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Type</label>
+                                <select id="admin-promo-type" onchange="toggleAdminPromoType()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;">
+                                    <option value="percentage">Percentage (%)</option>
+                                    <option value="fixed">Fixed ($)</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label id="admin-promo-val-label" style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Discount Percentage (%)</label>
+                                <input type="number" id="admin-promo-discount" min="1" placeholder="e.g. 50" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
+                            </div>
+                            <div style="flex: 1; min-width: 150px;">
+                                <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Minimum Purchase ($)</label>
+                                <input type="number" id="admin-promo-min-spend" min="0" value="0" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
                             </div>
                             <div style="flex: 1; min-width: 150px;">
                                 <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Max Uses</label>
@@ -804,13 +815,24 @@
             loadPromoCodes(); // Refresh view
         }
 
+        function toggleAdminPromoType() {
+            const type = document.getElementById('admin-promo-type').value;
+            document.getElementById('admin-promo-val-label').innerText = type === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount ($)';
+        }
+
         async function generateAdminPromo() {
-            const discount = document.getElementById('admin-promo-discount').value;
+            const type = document.getElementById('admin-promo-type').value;
+            const discountVal = document.getElementById('admin-promo-discount').value;
+            const minSpend = document.getElementById('admin-promo-min-spend').value;
             const uses = document.getElementById('admin-promo-uses').value;
             const days = document.getElementById('admin-promo-days').value;
             
-            if(!discount || discount < 1 || discount > 100) {
-                alert('Please enter a valid discount percentage (1-100).');
+            if(!discountVal || parseInt(discountVal) < 1) {
+                alert('Please enter a valid discount value.');
+                return;
+            }
+            if(type === 'percentage' && parseInt(discountVal) > 100) {
+                alert('Percentage cannot exceed 100.');
                 return;
             }
             if(!uses || uses < 1) {
@@ -831,7 +853,10 @@
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ 
-                        discountPercentage: parseInt(discount), 
+                        discountType: type,
+                        discountPercentage: type === 'percentage' ? parseInt(discountVal) : undefined,
+                        discountAmount: type === 'fixed' ? parseInt(discountVal) : undefined,
+                        minPurchaseAmount: parseInt(minSpend),
                         maxUses: parseInt(uses),
                         validityDays: parseInt(days)
                     })

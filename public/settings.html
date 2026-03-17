@@ -1032,13 +1032,31 @@
                             <h3 style="margin-bottom: 16px; font-size: 1.1rem; font-family: 'Inter', sans-serif;">Generate New Code</h3>
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
                                 <div class="form-group">
-                                    <label>Discount Percentage (%)</label>
-                                    <input type="number" id="promoDiscount" class="form-control" placeholder="e.g. 50" min="1" max="100" required>
+                                    <label>Discount Type</label>
+                                    <select id="promoDiscountType" class="form-control" onchange="toggleDiscountLabel()">
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="fixed">Fixed Amount ($)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label id="promoDiscountLabel">Discount Percentage (%)</label>
+                                    <input type="number" id="promoDiscountValue" class="form-control" placeholder="e.g. 50" min="1" required>
+                                </div>
+                                <div class="form-group">
+                                    <label>Minimum Purchase ($)</label>
+                                    <input type="number" id="promoMinValue" class="form-control" placeholder="e.g. 400" min="0" value="0" required>
                                 </div>
                                 <div class="form-group">
                                     <label>Maximum Uses</label>
                                     <input type="number" id="promoMaxUses" class="form-control" placeholder="e.g. 100" min="1" required>
                                 </div>
+
+                                <script>
+                                    function toggleDiscountLabel() {
+                                        const type = document.getElementById('promoDiscountType').value;
+                                        document.getElementById('promoDiscountLabel').innerText = type === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount ($)';
+                                    }
+                                </script>
                                 <div class="form-group">
                                     <label>Validity (Days)</label>
                                     <input type="number" id="promoValidity" class="form-control" placeholder="e.g. 30" min="1" required>
@@ -1753,9 +1771,12 @@
                         const daysLeft = Math.ceil((new Date(coupon.expiryDate) - new Date()) / (1000 * 60 * 60 * 24));
                         const expiryText = daysLeft > 0 ? `${daysLeft} days` : '<span style="color:var(--danger)">Expired</span>';
                         
+                        const discountTypeStr = coupon.discountType === 'fixed' ? `$${coupon.discountAmount} OFF` : `${coupon.discountPercentage}% OFF`;
+                        const minPurchaseStr = (coupon.minPurchaseAmount && coupon.minPurchaseAmount > 0) ? ` <span style="color:var(--text-muted); font-size: 0.8rem;">(Min $${coupon.minPurchaseAmount})</span>` : '';
+
                         tr.innerHTML = `
                             <td style="padding: 12px 16px; font-family: monospace; font-weight: 600; color: var(--primary);">${coupon.code}</td>
-                            <td style="padding: 12px 16px;">${coupon.discountPercentage}% OFF</td>
+                            <td style="padding: 12px 16px;">${discountTypeStr}${minPurchaseStr}</td>
                             <td style="padding: 12px 16px;">${coupon.usedCount} / ${coupon.maxUses}</td>
                             <td style="padding: 12px 16px;">${expiryText}</td>
                             <td style="padding: 12px 16px; text-align: right;">
@@ -1785,8 +1806,15 @@
             btn.disabled = true;
             btn.innerText = 'Generating...';
             try {
+                const type = document.getElementById('promoDiscountType').value;
+                const value = document.getElementById('promoDiscountValue').value;
+                const min = document.getElementById('promoMinValue').value;
+
                 const payload = {
-                    discountPercentage: document.getElementById('promoDiscount').value,
+                    discountType: type,
+                    discountPercentage: type === 'percentage' ? value : undefined,
+                    discountAmount: type === 'fixed' ? value : undefined,
+                    minPurchaseAmount: min,
                     maxUses: document.getElementById('promoMaxUses').value,
                     validityDays: document.getElementById('promoValidity').value
                 };
