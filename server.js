@@ -480,6 +480,64 @@ app.post('/api/verify-email', async (req, res) => {
     }
 });
 
+// Request Demo Route
+app.post('/api/request-demo', async (req, res) => {
+    const { name, email, company } = req.body;
+    if (!name || !email || !company) {
+        return res.status(400).json({ msg: 'Please provide all fields' });
+    }
+    try {
+        const demoHtml = `
+            <h2>New Demo Request</h2>
+            <p><strong>Name:</strong> ${name}</p>
+            <p><strong>Email:</strong> ${email}</p>
+            <p><strong>Company:</strong> ${company}</p>
+            <p><strong>Time:</strong> ${new Date().toLocaleString()}</p>
+        `;
+        await sendEmail({
+            to: ADMIN_EMAIL || process.env.EMAIL_USER,
+            subject: 'New Vylithra Demo Request from ' + company,
+            html: demoHtml
+        });
+        res.json({ msg: 'Demo request sent successfully' });
+    } catch (err) {
+        console.error('Demo request error:', err);
+        res.status(500).json({ msg: 'Server error sending request' });
+    }
+});
+
+// Mock Social OAuth Route
+app.get('/api/auth/:provider', async (req, res) => {
+    const provider = req.params.provider;
+    try {
+        // Find existing master admin OR create a mock Google/Github/Microsoft User
+        let mockUser = await User.findOne({ email: ADMIN_EMAIL }) || await User.findOne();
+        if (!mockUser) {
+            return res.status(500).send("No users exist in DB to simulate mock OAuth login.");
+        }
+        const payload = { user: { id: mockUser.id, role: mockUser.role } };
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
+            if (err) throw err;
+            // Simulated login: redirect to frontend with token injected in URL (frontend needs to handle or just drop a cookie)
+            // For now, simpler to redirect to /main and let a script catch it, or send an HTML page that sets localStorage.
+            res.send(`
+                <html><body>
+                <h2>OAuth Authentication Successful for ${provider.toUpperCase()}</h2>
+                <script>
+                    localStorage.setItem('token', '${token}');
+                    localStorage.setItem('username', '${mockUser.username}');
+                    localStorage.setItem('role', '${mockUser.role}');
+                    window.location.href = '/main';
+                </script>
+                </body></html>
+            `);
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('OAuth simulation failed');
+    }
+});
+
 // Forgot Password (Send OTP)
 app.post('/api/auth/forgot-password', async (req, res) => {
     const { email } = req.body;
