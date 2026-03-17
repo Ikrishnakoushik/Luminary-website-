@@ -1651,7 +1651,7 @@ app.post('/api/coupons/dispatch', auth, adminAuth, async (req, res) => {
         if (recipients.length === 0) return res.status(400).json({ msg: 'No eligible recipients found.' });
 
         const emailPromises = recipients.map(user => {
-            const discountDisplay = coupon.discountType === 'fixed' ? `$${coupon.discountAmount}` : `${coupon.discountPercentage}%`;
+            const discountDisplay = coupon.discountType === 'fixed' ? `₹${coupon.discountAmount}` : `${coupon.discountPercentage}%`;
             
             const htmlFragment = `
             <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 30px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24; text-align: center;">

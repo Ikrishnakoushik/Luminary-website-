@@ -729,7 +729,7 @@
                     tbody += `
                 <tr>
                             <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${p.code}</td>
-                            <td>${p.discountType === 'fixed' ? `$${p.discountAmount}` : `${p.discountPercentage}%`}</td>
+                            <td>${p.discountType === 'fixed' ? `₹${p.discountAmount}` : `${p.discountPercentage}%`}</td>
                             <td>${p.usedCount} / ${p.maxUses}</td>
                             <td>${generator}</td>
                             <td><span class="badge ${p.status}">${p.status}</span></td>
@@ -738,7 +738,7 @@
                                     <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="moderatePromo('${p._id}', 'active')">Approve</button>
                                     <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem; margin-top: 5px; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="moderatePromo('${p._id}', 'rejected')">Reject</button>
                                 ` : `
-                                    <button class="btn-action btn-update" onclick="openDispatchModal('${p._id}', '${p.code}', '${p.discountType === 'fixed' ? `$${p.discountAmount}` : `${p.discountPercentage}%`}')" style="background: var(--primary); color: white;">
+                                    <button class="btn-action btn-update" onclick="openDispatchModal('${p._id}', '${p.code}', '${p.discountType === 'fixed' ? `₹${p.discountAmount}` : `${p.discountPercentage}%`}')" style="background: var(--primary); color: white;">
                                         <i class="fas fa-paper-plane" style="margin-right: 4px;"></i> Dispatch Email
                                     </button>
                                     <button class="btn-action btn-danger" onclick="deletePromo('${p._id}', '${p.code}')"><i class="fas fa-trash"></i></button>
@@ -763,7 +763,7 @@
                                 <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Type</label>
                                 <select id="admin-promo-type" onchange="toggleAdminPromoType()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;">
                                     <option value="percentage">Percentage (%)</option>
-                                    <option value="fixed">Fixed ($)</option>
+                                    <option value="fixed">Fixed (₹)</option>
                                 </select>
                             </div>
                             <div style="flex: 1; min-width: 150px;">
@@ -771,7 +771,7 @@
                                 <input type="number" id="admin-promo-discount" min="1" placeholder="e.g. 50" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
                             </div>
                             <div style="flex: 1; min-width: 150px;">
-                                <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Minimum Purchase ($)</label>
+                                <label style="display: block; font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 500;">Minimum Purchase (₹)</label>
                                 <input type="number" id="admin-promo-min-spend" min="0" value="0" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; box-sizing: border-box;" />
                             </div>
                             <div style="flex: 1; min-width: 150px;">
@@ -924,7 +924,7 @@
 
         function toggleAdminPromoType() {
             const type = document.getElementById('admin-promo-type').value;
-            document.getElementById('admin-promo-val-label').innerText = type === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount ($)';
+            document.getElementById('admin-promo-val-label').innerText = type === 'percentage' ? 'Discount Percentage (%)' : 'Discount Amount (₹)';
         }
 
         async function generateAdminPromo() {
