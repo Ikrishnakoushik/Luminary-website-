@@ -1651,10 +1651,12 @@ app.post('/api/coupons/dispatch', auth, adminAuth, async (req, res) => {
         if (recipients.length === 0) return res.status(400).json({ msg: 'No eligible recipients found.' });
 
         const emailPromises = recipients.map(user => {
+            const discountDisplay = coupon.discountType === 'fixed' ? `$${coupon.discountAmount}` : `${coupon.discountPercentage}%`;
+            
             const htmlFragment = `
             <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 30px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24; text-align: center;">
                 <h1 style="color: #d4af37; margin-bottom: 20px; font-weight: 800; font-size: 28px; letter-spacing: -0.5px;">Vylithra Exclusive</h1>
-                <h2 style="font-size: 20px; margin-bottom: 25px; font-weight: 500; color: #e2e8f0;">You've received a special ${coupon.discountPercentage}% Discount!</h2>
+                <h2 style="font-size: 20px; margin-bottom: 25px; font-weight: 500; color: #e2e8f0;">You've received a special ${discountDisplay} Discount!</h2>
                 
                 <p style="color: #cbd5e1; font-size: 16px; line-height: 1.6; margin-bottom: 35px;">
                     Apply this cryptographic code at checkout on any digital book in the Vylithra Library to instantly unlock your discount.
@@ -1676,7 +1678,7 @@ app.post('/api/coupons/dispatch', auth, adminAuth, async (req, res) => {
 
             return sendEmail({
                 to: user.email,
-                subject: `🎁 A ${coupon.discountPercentage}% Vylithra Discount is waiting for you!`,
+                subject: `🎁 A ${discountDisplay} Vylithra Discount is waiting for you!`,
                 html: htmlFragment
             }).catch(e => console.error(`[Dispatch] Failed to send code to ${user.email}`));
         });

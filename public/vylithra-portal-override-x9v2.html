@@ -738,7 +738,7 @@
                                     <button class="btn btn-primary" style="padding: 4px 8px; font-size: 0.75rem;" onclick="moderatePromo('${p._id}', 'active')">Approve</button>
                                     <button class="btn btn-danger" style="padding: 4px 8px; font-size: 0.75rem; margin-top: 5px; background: rgba(239, 68, 68, 0.1); color: #ef4444;" onclick="moderatePromo('${p._id}', 'rejected')">Reject</button>
                                 ` : `
-                                    <button class="btn-action btn-update" onclick="openDispatchModal('${p._id}', '${p.code}', ${p.discountPercentage})" style="background: var(--primary); color: white;">
+                                    <button class="btn-action btn-update" onclick="openDispatchModal('${p._id}', '${p.code}', '${p.discountType === 'fixed' ? `$${p.discountAmount}` : `${p.discountPercentage}%`}')" style="background: var(--primary); color: white;">
                                         <i class="fas fa-paper-plane" style="margin-right: 4px;"></i> Dispatch Email
                                     </button>
                                     <button class="btn-action btn-danger" onclick="deletePromo('${p._id}', '${p.code}')"><i class="fas fa-trash"></i></button>
@@ -833,11 +833,9 @@
              } catch(e) { console.error(e); alert('Error deleting code.'); }
         }
 
-        function openDispatchModal(id, code, percentage) {
+        function openDispatchModal(id, code, discountText) {
             const existingModal = document.getElementById('promo-dispatch-modal');
             if(existingModal) existingModal.remove();
-
-            const discountText = percentage ? `${percentage}%` : 'Fixed Amount';
 
             const modalHtml = `
             <div id="promo-dispatch-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
