@@ -834,12 +834,70 @@
         }
 
         function openDispatchModal(id, code, percentage) {
-            // Re-use content area for simple modal display (or create full overlay)
-            const target = prompt(`Dispatch ${percentage}% Promo Code (${code}) via HTML Email.nnEnter target:n- 'all' (All Users)n- 'random' (100 Random Users)n- OR enter specific email addresses separated by commas:`);
+            const existingModal = document.getElementById('promo-dispatch-modal');
+            if(existingModal) existingModal.remove();
+
+            const discountText = percentage ? `${percentage}%` : 'Fixed Amount';
+
+            const modalHtml = `
+            <div id="promo-dispatch-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
+                <div style="background: white; padding: 2rem; border-radius: 1rem; width: 90%; max-width: 500px; box-shadow: 0 10px 25px rgba(0,0,0,0.1);">
+                    <h2 style="margin-top: 0; color: var(--text-main);"><i class="fas fa-paper-plane" style="color: var(--primary); margin-right: 10px;"></i> Dispatch Promo Code</h2>
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Dispatching <strong>${discountText}</strong> discount code <strong>${code}</strong> via HTML Email.</p>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #1a1a24;">Target Audience</label>
+                        <select id="dispatch-target-select" onchange="toggleSpecificEmailInput()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: #1a1a24;">
+                            <option value="all">All Registered Users</option>
+                            <option value="random">100 Random Users</option>
+                            <option value="specific">Specific Email Addresses</option>
+                        </select>
+                    </div>
+
+                    <div id="specific-email-container" style="display: none; margin-bottom: 1.5rem;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #1a1a24;">Email Addresses (comma separated)</label>
+                        <input type="text" id="dispatch-specific-emails" placeholder="user1@example.com, user2@example.com" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: #1a1a24;" />
+                    </div>
+
+                    <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                        <button onclick="closeDispatchModal()" style="padding: 0.75rem 1.5rem; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 0.5rem; font-weight: 600; cursor: pointer;">Cancel</button>
+                        <button onclick="confirmDispatchPromo('${id}', '${code}')" style="padding: 0.75rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">Dispatch <i class="fas fa-paper-plane" style="margin-left: 5px;"></i></button>
+                    </div>
+                </div>
+            </div>
+            `;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+        }
+
+        function toggleSpecificEmailInput() {
+            const select = document.getElementById('dispatch-target-select');
+            const container = document.getElementById('specific-email-container');
+            if(select.value === 'specific') {
+                container.style.display = 'block';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+
+        function closeDispatchModal() {
+            const modal = document.getElementById('promo-dispatch-modal');
+            if(modal) modal.remove();
+        }
+
+        function confirmDispatchPromo(id, code) {
+            const select = document.getElementById('dispatch-target-select');
+            let target = select.value;
             
-            if(!target) return;
-            
-            if(confirm(`Are you sure you want to dispatch ${code} to ${target}?`)) {
+            if(target === 'specific') {
+                target = document.getElementById('dispatch-specific-emails').value.trim();
+                if(!target) {
+                    alert('Please enter at least one email address.');
+                    return;
+                }
+            }
+
+            if(confirm(`Are you absolutely sure you want to dispatch code ${code} to ${target}?`)) {
+                closeDispatchModal();
                 dispatchPromo(id, target);
             }
         }
