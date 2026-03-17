@@ -36,6 +36,23 @@ const UserSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     }],
+    activeSessions: [{
+        sessionId: { type: String, required: true },
+        userAgent: { type: String },
+        device: { type: String },
+        browser: { type: String },
+        os: { type: String },
+        ip: { type: String },
+        lastActive: { type: Date, default: Date.now }
+    }],
+    twoFactorSecret: {
+        type: String,
+        default: null
+    },
+    isTwoFactorEnabled: {
+        type: Boolean,
+        default: false
+    },
     resetPasswordOtp: {
         type: String
     },

@@ -350,6 +350,31 @@
                 </form>
             </div>
 
+            <!-- 2FA Form -->
+            <div class="auth-form" id="twofa-form" style="display: none; transform: translateX(20px);">
+                <h2>Authentication</h2>
+                <p class="subtitle">Enter the 6-digit code from your authenticator app.</p>
+
+                <form id="twofaForm">
+                    <div class="input-group">
+                        <label>Authenticator Code</label>
+                        <div class="input-wrapper">
+                            <i class="fas fa-mobile-alt"></i>
+                            <input type="text" id="twofaToken" placeholder="123456" required>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Verify</button>
+                    <div class="error-msg" id="twofaError"></div>
+                </form>
+
+                <p style="text-align: center; margin-top: 15px;">
+                    <a href="#" onclick="switchTab('login')"
+                        style="color: rgba(255,255,255,0.7); text-decoration: none; font-size: 0.9rem;">Back to Sign
+                        In</a>
+                </p>
+            </div>
+
             <!-- Register Form -->
             <div class="auth-form" id="register-form">
                 <h2>Create Account</h2>
@@ -568,10 +593,39 @@
                 verifyForm.style.transform = 'translateX(0)';
 
                 indicator.style.left = '50%'; // Keep under Signup mostly
+            } else if (tab === 'twofa') {
+                loginForm.classList.remove('active');
+                registerForm.classList.remove('active');
+                forgotForm.classList.remove('active');
+                verifyForm.classList.remove('active');
+                
+                loginForm.style.display = 'none';
+                registerForm.style.display = 'none';
+                forgotForm.style.display = 'none';
+                verifyForm.style.display = 'none';
+
+                const twofaForm = document.getElementById('twofa-form');
+                twofaForm.classList.add('active');
+                twofaForm.style.display = 'block';
+                twofaForm.style.transform = 'translateX(0)';
+
+                indicator.style.left = '0';
+            }
+
+            // Always hide 2FA form unless it's explicitly the twofa tab
+            if (tab !== 'twofa') {
+                const tf = document.getElementById('twofa-form');
+                if (tf) {
+                    tf.classList.remove('active');
+                    tf.style.display = 'none';
+                }
             }
         }
 
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+
+        let pendingLoginEmail = '';
+        let pendingLoginPassword = '';
 
         // Handle Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -590,6 +644,13 @@
                 });
                 const data = await res.json();
 
+                if (data.requires2FA) {
+                    pendingLoginEmail = email;
+                    pendingLoginPassword = password;
+                    switchTab('twofa');
+                    return;
+                }
+
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
@@ -597,6 +658,36 @@
                     window.location.href = 'main';
                 } else {
                     errorMsg.innerText = data.msg || 'Login failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Server error. Please try again.';
+            }
+        });
+
+        // Handle 2FA Verification
+        document.getElementById('twofaForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const totpCode = document.getElementById('twofaToken').value;
+            const errorMsg = document.getElementById('twofaError');
+
+            errorMsg.innerText = '';
+
+            try {
+                const res = await fetch(`${API_URL}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingLoginEmail, password: pendingLoginPassword, totpCode })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = 'main';
+                } else {
+                    errorMsg.innerText = data.msg || 'Invalid code. Please try again.';
                 }
             } catch (err) {
                 console.error(err);

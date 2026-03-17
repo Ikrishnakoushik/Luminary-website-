@@ -826,7 +826,7 @@
                                     Two-Factor Authentication (2FA)</h3>
                                 <p style="font-size: 0.9rem; color: var(--text-muted);">Add an extra layer
                                     of security to your account using an authenticator app.</p>
-                            </div><label class="switch"><input type="checkbox" id="twofactorToggle" disabled onchange="VylithraUI.showToast('2FA integration arriving in v2.0', 'info');"><span
+                            </div><label class="switch"><input type="checkbox" id="twofactorToggle"><span
                                     class="slider"></span></label>
                         </div>
                         <hr style="border:none; border-top:1px solid var(--border); margin: 0 -24px 24px;">
@@ -834,28 +834,11 @@
                             <h3 style="font-size: 1.1rem; margin-bottom: 12px; font-family: 'Inter', sans-serif;">
                                 Active Sessions</h3>
                             <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 16px;">
-                                These are device that have logged into your account. Revoke any you do not
-                                recognize.</p>
-                            <div class="connection-item">
-                                <div class="connection-info">
-                                    <div class="connection-icon"><i class="fas fa-desktop"></i></div>
-                                    <div class="connection-details">
-                                        <h4>Windows PC - Chrome</h4>
-                                        <p>Active now • Los Angeles,
-                                            CA</p>
-                                    </div>
+                                These are devices that have logged into your account. Revoke any you do not recognize.</p>
+                            <div id="activeSessionsContainer">
+                                <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading sessions...
                                 </div>
-                            </div>
-                            <div class="connection-item">
-                                <div class="connection-info">
-                                    <div class="connection-icon"><i class="fas fa-mobile-alt"></i></div>
-                                    <div class="connection-details">
-                                        <h4>iPhone 14 - Safari</h4>
-                                        <p>Last active 2 hours ago • Los Angeles,
-                                            CA</p>
-                                    </div>
-                                </div><button class="btn btn-secondary"
-                                    onclick="VylithraUI.showToast('Session revoked', 'success')">Revoke</button>
                             </div>
                         </div>
                     </div>
@@ -1101,7 +1084,7 @@
                                 <label
                                     style="display: block; font-size: 0.9rem; margin-bottom: 5px; color: var(--text-muted); font-weight: 500;">Cardholder
                                     Name</label>
-                                <input type="text" class="form-control" placeholder="John Doe" required
+                                <input type="text" class="form-control" placeholder="Name on card" required
                                     style="width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 10px; background: var(--bg-color); color: var(--text-main);">
                             </div>
                             <div class="form-group" style="margin-bottom: 15px;">
@@ -1144,6 +1127,32 @@
 
         </main>
     </div>
+
+    <!-- 2FA Setup Modal -->
+    <div class="modal-overlay" id="twofaModalOverlay">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Two-Factor Authentication</h2>
+                <button class="close-btn" onclick="closeTwofaModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 15px; color: var(--text-muted);">
+                    Scan this QR code with your authenticator app (e.g., Google Authenticator, Authy), then enter the 6-digit code below to verify.
+                </p>
+                <div style="text-align: center; margin-bottom: 20px;">
+                    <img id="twofaQrCode" src="" alt="2FA QR Code" style="background:#fff; padding:10px; border-radius:10px; max-width: 200px; display:none; margin: 0 auto;">
+                    <div id="twofaQrLoading" style="padding: 20px;"><i class="fas fa-spinner fa-spin fa-2x"></i></div>
+                </div>
+                <form id="verifyTwofaForm" onsubmit="submitTwofaVerification(event)">
+                    <div class="form-group">
+                        <label>Authenticator Code</label>
+                        <input type="text" class="form-control" id="twofaCodeInput" placeholder="123456" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Verify & Enable</button>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUser = null;
 
@@ -1151,6 +1160,8 @@
             setupTabs();
             setupPreferencesUI();
             await fetchProfile();
+            loadActiveSessions();
+            check2faStatus();
 
             // Handle URL fragment for direct tab access
             const hash = window.location.hash;
@@ -1158,6 +1169,170 @@
             if (hash === '#publisher-tools') {
                 const pubTab = document.querySelector('[data-target="publisher-tab"]');
                 if (pubTab) pubTab.click();
+            }
+        }
+
+        // --- Account Security Functions ---
+        async function loadActiveSessions() {
+            const container = document.getElementById('activeSessionsContainer');
+            if(!container) return;
+            try {
+                const res = await fetch('/api/user/sessions', { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                if (res.ok) {
+                    const sessions = await res.json();
+                    container.innerHTML = '';
+                    sessions.forEach(session => {
+                        let iconClass = 'fa-desktop';
+                        if(session.device.toLowerCase().includes('mobile') || session.device.toLowerCase().includes('iphone') || session.device.toLowerCase().includes('android')) {
+                            iconClass = 'fa-mobile-alt';
+                        }
+                        
+                        const d = new Date(session.lastActive);
+                        const timeStr = session.isCurrent ? 'Active now' : `Last active ${d.toLocaleDateString()}`;
+                        
+                        const itemHtml = `
+                            <div class="connection-item">
+                                <div class="connection-info">
+                                    <div class="connection-icon"><i class="fas ${iconClass}"></i></div>
+                                    <div class="connection-details">
+                                        <h4>${session.device} ${session.isCurrent ? '(This device)' : ''}</h4>
+                                        <p>${timeStr} • ${session.ip}</p>
+                                    </div>
+                                </div>
+                                ${session.isCurrent ? '' : `<button class="btn btn-secondary" style="color:var(--danger); border-color:var(--danger);" onclick="revokeSession('${session.sessionId}')">Revoke</button>`}
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', itemHtml);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+                container.innerHTML = '<p style="color:var(--danger);">Error loading sessions.</p>';
+            }
+        }
+
+        async function revokeSession(sessionId) {
+            if(!confirm('Are you sure you want to revoke this session?')) return;
+            try {
+                const res = await fetch(`/api/user/sessions/${sessionId}`, {
+                    method: 'DELETE',
+                    headers: { 'x-auth-token': localStorage.getItem('token') }
+                });
+                if (res.ok) {
+                    VylithraUI.showToast('Session revoked', 'success');
+                    loadActiveSessions();
+                } else {
+                    const data = await res.json();
+                    VylithraUI.showToast(data.msg || 'Failed to revoke', 'error');
+                }
+            } catch(e) {
+                VylithraUI.showToast('Server error', 'error');
+            }
+        }
+        
+        async function check2faStatus() {
+            try {
+                const res = await fetch('/api/users/profile', { headers: { 'x-auth-token': localStorage.getItem('token') } });
+                if(res.ok) {
+                    const user = await res.json();
+                    const toggle = document.getElementById('twofactorToggle');
+                    if (toggle) {
+                        toggle.checked = user.isTwoFactorEnabled === true;
+                        toggle.addEventListener('change', handleTwoFaToggle);
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function handleTwoFaToggle(e) {
+            const isChecked = e.target.checked;
+            e.preventDefault(); 
+            
+            if (isChecked) {
+                e.target.checked = false; 
+                document.getElementById('twofaModalOverlay').classList.add('show');
+                document.getElementById('twofaQrCode').style.display = 'none';
+                document.getElementById('twofaQrLoading').style.display = 'block';
+                document.getElementById('twofaCodeInput').value = '';
+                
+                try {
+                    const res = await fetch('/api/user/2fa/setup', { 
+                        method: 'POST',
+                        headers: { 'x-auth-token': localStorage.getItem('token') } 
+                    });
+                    const data = await res.json();
+                    if(res.ok) {
+                        document.getElementById('twofaQrLoading').style.display = 'none';
+                        document.getElementById('twofaQrCode').style.display = 'block';
+                        document.getElementById('twofaQrCode').src = data.qrCode;
+                    } else {
+                        VylithraUI.showToast(data.msg, 'error');
+                        closeTwofaModal();
+                    }
+                } catch(err) {
+                    VylithraUI.showToast('Error generating setup', 'error');
+                    closeTwofaModal();
+                }
+            } else {
+                e.target.checked = true; 
+                const code = prompt('Enter your 6-digit Authenticator code to disable Two-Factor Authentication:');
+                if (code) {
+                    try {
+                        const res = await fetch('/api/user/2fa/disable', {
+                            method: 'POST',
+                            headers: { 
+                                'Content-Type': 'application/json',
+                                'x-auth-token': localStorage.getItem('token') 
+                            },
+                            body: JSON.stringify({ token: code })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            VylithraUI.showToast('2FA Disabled successfully', 'success');
+                            e.target.checked = false;
+                        } else {
+                            VylithraUI.showToast(data.msg || 'Error disabling 2FA', 'error');
+                        }
+                    } catch(err) {
+                        VylithraUI.showToast('Server error', 'error');
+                    }
+                }
+            }
+        }
+
+        function closeTwofaModal() {
+            document.getElementById('twofaModalOverlay').classList.remove('show');
+            check2faStatus(); // reset toggle visually
+        }
+
+        async function submitTwofaVerification(e) {
+            e.preventDefault();
+            const token = document.getElementById('twofaCodeInput').value;
+            const btn = e.target.querySelector('button[type="submit"]');
+            btn.disabled = true;
+            btn.innerText = 'Verifying...';
+            try {
+                const res = await fetch('/api/user/2fa/verify', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'x-auth-token': localStorage.getItem('token') 
+                    },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                if(res.ok) {
+                    VylithraUI.showToast('2FA Enabled successfully', 'success');
+                    document.getElementById('twofactorToggle').checked = true;
+                    closeTwofaModal();
+                } else {
+                    VylithraUI.showToast(data.msg || 'Invalid code', 'error');
+                }
+            } catch(err) {
+                VylithraUI.showToast('Server error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Verify & Enable';
             }
         }
 

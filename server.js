@@ -6,6 +6,9 @@ const jwt = require('jsonwebtoken');
 const cors = require('cors');
 const path = require('path');
 const fs = require('fs'); // Import fs
+const UAParser = require('ua-parser-js');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 const User = require('./models/User');
 const Post = require('./models/Post');
 const Message = require('./models/Message');
@@ -134,13 +137,25 @@ app.use(express.static(path.join(__dirname, 'public'), {
         }
     }
 }));
-const auth = (req, res, next) => {
+const auth = async (req, res, next) => {
     const token = req.header('x-auth-token');
     if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
         req.user = decoded.user;
+        
+        // Stateful verification
+        if (req.user.sessionId) {
+            const dbUser = await User.findById(req.user.id);
+            if (!dbUser) return res.status(401).json({ msg: 'Session invalid' });
+            
+            const isValidSession = dbUser.activeSessions.some(session => session.sessionId === req.user.sessionId);
+            if (!isValidSession) {
+                return res.status(401).json({ msg: 'Session revoked. Please login again.', sessionRevoked: true });
+            }
+        }
+        
         next();
     } catch (err) {
         console.log(`[DEBUG AUTH] Token validation failed. Error: ${err.message}. Token snippets: prefix(${token.substring(0, 10)}) length(${token.length}) secretLength(${JWT_SECRET.length})`);
@@ -559,7 +574,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 // Login
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, totpCode } = req.body;
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -579,11 +594,49 @@ app.post('/api/login', async (req, res) => {
             return res.status(403).json({ msg: 'Please verify your email before logging in.', requiresVerification: true });
         }
 
+        // 2FA Intercept
+        if (user.isTwoFactorEnabled) {
+            if (!totpCode) {
+                return res.json({ requires2FA: true, msg: 'Two-Factor Authentication required' });
+            }
+            // Verify 2FA
+            const verified = speakeasy.totp.verify({
+                secret: user.twoFactorSecret,
+                encoding: 'base32',
+                token: totpCode,
+                window: 1 // allow 30 seconds drift either way
+            });
+            if (!verified) {
+                return res.status(400).json({ msg: 'Invalid 2FA code' });
+            }
+        }
+
         // --- PRODUCTION SECURITY: Auto-upgrade existing master admin ---
         if (ADMIN_EMAIL && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase() && user.role !== 'admin') {
             user.role = 'admin';
             console.log(`[SECURITY] Auto-upgraded existing master admin role for ${user.email} on login`);
         }
+
+        // Parse User Agent
+        const parser = new UAParser(req.headers['user-agent']);
+        const result = parser.getResult();
+        const deviceName = result.device.model || result.os.name || 'Unknown Device';
+        const browserName = result.browser.name || 'Unknown Browser';
+        
+        // Generate Session ID
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        
+        const newSession = {
+            sessionId,
+            userAgent: req.headers['user-agent'],
+            device: `${deviceName} - ${browserName}`,
+            browser: browserName,
+            os: result.os.name || 'Unknown OS',
+            ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+            lastActive: new Date()
+        };
+
+        user.activeSessions.push(newSession);
 
         // Log visit
         user.loginHistory.push(new Date());
@@ -594,7 +647,8 @@ app.post('/api/login', async (req, res) => {
             user: {
                 id: user.id,
                 username: user.username,
-                role: user.role
+                role: user.role,
+                sessionId: sessionId
             }
         };
 
@@ -607,6 +661,140 @@ app.post('/api/login', async (req, res) => {
                 res.json({ token, username: user.username, role: user.role });
             }
         );
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Get Active Sessions
+app.get('/api/user/sessions', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        const currentSessionId = req.user.sessionId;
+        const sessions = user.activeSessions.map(s => ({
+            sessionId: s.sessionId,
+            device: s.device,
+            browser: s.browser,
+            os: s.os,
+            ip: s.ip,
+            lastActive: s.lastActive,
+            isCurrent: s.sessionId === currentSessionId
+        }));
+        res.json(sessions);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Revoke a Session
+app.delete('/api/user/sessions/:sessionId', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        if (req.params.sessionId === req.user.sessionId) {
+            return res.status(400).json({ msg: 'Cannot revoke current session. Please logout instead.' });
+        }
+        
+        const initialLength = user.activeSessions.length;
+        user.activeSessions = user.activeSessions.filter(s => s.sessionId !== req.params.sessionId);
+        
+        if (user.activeSessions.length === initialLength) {
+            return res.status(404).json({ msg: 'Session not found' });
+        }
+        
+        await user.save();
+        res.json({ msg: 'Session revoked successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Generate 2FA Secret
+app.post('/api/user/2fa/setup', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        if (user.isTwoFactorEnabled) {
+            return res.status(400).json({ msg: '2FA is already enabled.' });
+        }
+        
+        const secret = speakeasy.generateSecret({
+            name: `Vylithra (${user.email})`
+        });
+        
+        user.twoFactorSecret = secret.base32;
+        await user.save();
+        
+        QRCode.toDataURL(secret.otpauth_url, (err, data_url) => {
+            if (err) throw err;
+            res.json({ secret: secret.base32, qrCode: data_url });
+        });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Verify and Enable 2FA
+app.post('/api/user/2fa/verify', auth, async (req, res) => {
+    try {
+        const { token } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        if (!user.twoFactorSecret) {
+            return res.status(400).json({ msg: '2FA setup not initiated.' });
+        }
+        
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: 'base32',
+            token: token,
+            window: 1
+        });
+        
+        if (verified) {
+            user.isTwoFactorEnabled = true;
+            await user.save();
+            res.json({ msg: 'Two-Factor Authentication successfully enabled.' });
+        } else {
+            res.status(400).json({ msg: 'Invalid token. Please try again.' });
+        }
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Disable 2FA
+app.post('/api/user/2fa/disable', auth, async (req, res) => {
+    try {
+        const { token } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFactorSecret,
+            encoding: 'base32',
+            token: token,
+            window: 1
+        });
+        
+        if (verified) {
+            user.isTwoFactorEnabled = false;
+            user.twoFactorSecret = null;
+            await user.save();
+            res.json({ msg: 'Two-Factor Authentication disabled.' });
+        } else {
+            res.status(400).json({ msg: 'Invalid verification token.' });
+        }
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
