@@ -1527,7 +1527,7 @@ app.post('/api/coupons/generate', auth, adminAuth, async (req, res) => {
             if (!discountPercentage || discountPercentage < 1 || discountPercentage > 100) {
                 return res.status(400).json({ msg: 'Valid discount percentage (1-100) is required.' });
             }
-        } else if (discountType === 'fixed') {
+        } else if (discountType === 'fixed' || discountType === 'fixed-usd' || discountType === 'fixed-inr') {
             if (!discountAmount || discountAmount < 1) {
                 return res.status(400).json({ msg: 'Valid fixed discount amount is required.' });
             }
@@ -1552,7 +1552,7 @@ app.post('/api/coupons/generate', auth, adminAuth, async (req, res) => {
             code,
             discountType,
             discountPercentage: discountType === 'percentage' ? discountPercentage : undefined,
-            discountAmount: discountType === 'fixed' ? discountAmount : undefined,
+            discountAmount: (discountType === 'fixed' || discountType === 'fixed-usd' || discountType === 'fixed-inr') ? discountAmount : undefined,
             minPurchaseAmount,
             maxUses: uses,
             expiryDate,
@@ -1711,7 +1711,7 @@ app.post('/api/coupons/validate', auth, async (req, res) => {
         let discountAmount = 0;
         if (coupon.discountType === 'percentage') {
             discountAmount = (bookPrice * coupon.discountPercentage) / 100;
-        } else if (coupon.discountType === 'fixed') {
+        } else if (coupon.discountType === 'fixed' || coupon.discountType === 'fixed-usd' || coupon.discountType === 'fixed-inr') {
             discountAmount = coupon.discountAmount;
             // Prevent discounts from making the book price negative
             if (discountAmount > bookPrice) discountAmount = bookPrice;
@@ -1744,7 +1744,7 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
             if (coupon && coupon.expiryDate > new Date() && coupon.usedCount < coupon.maxUses && finalPrice >= (coupon.minPurchaseAmount || 0)) {
                 if (coupon.discountType === 'percentage') {
                     discountApplied = (finalPrice * coupon.discountPercentage) / 100;
-                } else if (coupon.discountType === 'fixed') {
+                } else if (coupon.discountType === 'fixed' || coupon.discountType === 'fixed-usd' || coupon.discountType === 'fixed-inr') {
                     discountApplied = coupon.discountAmount;
                     if (discountApplied > finalPrice) discountApplied = finalPrice;
                 }
