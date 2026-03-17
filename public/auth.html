@@ -60,15 +60,11 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at 85% 30%, rgba(99, 102, 241, 0.15), transparent 25%),
-                radial-gradient(circle at 15% 50%, rgba(168, 85, 247, 0.15), transparent 25%);
-            animation: pulse 10s ease-in-out infinite alternate;
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, color-mix(in srgb, var(--primary) 6%, transparent) 0px, transparent 50%),
+                radial-gradient(at 100% 0%, color-mix(in srgb, var(--accent) 6%, transparent) 0px, transparent 50%);
         }
-
-        @keyframes pulse {
-            0% {
-                transform: scale(1);
-            }
 
             100% {
                 transform: scale(1.1);
@@ -78,24 +74,16 @@
         .auth-container {
             width: 100%;
             max-width: 450px;
-            background: var(--glass);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border: 1px solid var(--glass-border);
-            border-radius: 24px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
             padding: 40px;
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
             position: relative;
-            /* overflow: hidden;  <-- Removing this to allow dropdowns/content to show if needed, 
-               but main issue might be fixed height or viewport constraints. 
-               Let's ensure it has max-height and scrolling if screen is tiny. */
             overflow-y: auto;
             max-height: 90vh;
-            /* Hide scrollbar for Chrome/Safari/Opera */
             scrollbar-width: none;
-            /* Firefox */
             -ms-overflow-style: none;
-            /* IE/Edge */
         }
 
         .auth-container::-webkit-scrollbar {
@@ -222,14 +210,14 @@
         select {
             width: 100%;
             padding: 12px 15px 12px 45px;
-            background: var(--surface, rgba(0, 0, 0, 0.05));
-            border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
-            border-radius: 12px;
-            color: var(--text-main, #fff);
+            background: color-mix(in srgb, var(--surface) 95%, var(--text-main) 5%);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-main);
             font-family: inherit;
             font-size: 1rem;
             outline: none;
-            transition: 0.3s;
+            transition: 0.2s;
         }
 
         select {
@@ -240,28 +228,29 @@
         input:focus,
         select:focus {
             border-color: var(--primary);
-            background: var(--surface, rgba(0, 0, 0, 0.08));
-            box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+            background: var(--surface);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 20%, transparent);
         }
 
         .btn-submit {
             width: 100%;
             padding: 14px;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            background: var(--primary);
             border: none;
-            border-radius: 12px;
+            border-radius: 8px;
             color: white;
             font-weight: 600;
             font-size: 1.1rem;
             cursor: pointer;
-            transition: 0.3s;
+            transition: all 0.2s;
             margin-top: 10px;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.3);
         }
 
         .btn-submit:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.6);
+            background: var(--accent);
+            box-shadow: 0 6px 15px rgba(20, 184, 166, 0.4);
         }
 
         .error-msg {
