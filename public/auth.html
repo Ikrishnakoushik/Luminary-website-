@@ -504,6 +504,72 @@
             text-decoration: underline;
         }
     </style>
+
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <!-- Firebase Authentication -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBteERqCAwUcACnD0rOFE3sefswgLQQXI",
+            authDomain: "vylithra-b677b.firebaseapp.com",
+            projectId: "vylithra-b677b",
+            storageBucket: "vylithra-b677b.appspot.com",
+            messagingSenderId: "141477085945",
+            appId: "1:141477085945:web:f0fc2626a4cc58a23b1828",
+            measurementId: "G-R0BK81V91J"
+        };
+        
+        // Ensure Firebase gets initialized only once
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        
+        // Define providers globally so inline onclick handlers can use them
+        const googleProvider = new firebase.auth.GoogleAuthProvider();
+        const githubProvider = new firebase.auth.GithubAuthProvider();
+        // Option to add Microsoft provider if enabled later:
+        // const microsoftProvider = new firebase.auth.OAuthProvider('microsoft.com');
+
+        async function handleFirebaseSocialLogin(providerType) {
+            let provider;
+            if (providerType === 'google') provider = googleProvider;
+            else if (providerType === 'github') provider = githubProvider;
+            else {
+                alert(providerType + " login is not fully configured yet.");
+                return;
+            }
+
+            try {
+                const result = await firebase.auth().signInWithPopup(provider);
+                const idToken = await result.user.getIdToken();
+                
+                // Exchange Firebase token for our systems JWT session
+                const res = await fetch('/api/auth/firebase', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ idToken })
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/main';
+                } else {
+                    alert('Login failed: ' + (data.msg || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    alert('Authentication failed: ' + error.message);
+                }
+            }
+        }
+    </script>
 </head>
 <body>
 
@@ -593,9 +659,9 @@
                         <div class="social-auth">
                             <div class="social-divider">Or continue with:</div>
                             <div class="social-buttons">
-                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
-                                <button type="button" class="btn-social github" onclick="window.location.href='/api/auth/github'"><i class="fab fa-github"></i></button>
-                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
+                                <button type="button" class="btn-social google" onclick="handleFirebaseSocialLogin('google')"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
+                                <button type="button" class="btn-social github" onclick="handleFirebaseSocialLogin('github')"><i class="fab fa-github"></i></button>
+                                <button type="button" class="btn-social microsoft" onclick="handleFirebaseSocialLogin('microsoft')"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
                             </div>
                             <div class="auth-footer">
                                 New to Vylithra? <a href="#" onclick="switchTab('register'); return false;">Create an account</a>
@@ -648,9 +714,9 @@
                         <div class="social-auth">
                             <div class="social-divider">Or continue with:</div>
                             <div class="social-buttons">
-                                <button type="button" class="btn-social google" onclick="window.location.href='/api/auth/google'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
-                                <button type="button" class="btn-social github" onclick="window.location.href='/api/auth/github'"><i class="fab fa-github"></i></button>
-                                <button type="button" class="btn-social microsoft" onclick="window.location.href='/api/auth/microsoft'"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
+                                <button type="button" class="btn-social google" onclick="handleFirebaseSocialLogin('google')"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" ></button>
+                                <button type="button" class="btn-social github" onclick="handleFirebaseSocialLogin('github')"><i class="fab fa-github"></i></button>
+                                <button type="button" class="btn-social microsoft" onclick="handleFirebaseSocialLogin('microsoft')"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft"  style="border-radius:0"></button>
                             </div>
                             <div class="auth-footer">
                                 Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>

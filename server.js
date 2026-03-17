@@ -1,4 +1,20 @@
 require('dotenv').config();
+const admin = require('firebase-admin');
+
+// Firebase Admin Initialization
+try {
+    admin.initializeApp({
+        credential: admin.credential.cert({
+            projectId: process.env.FIREBASE_PROJECT_ID || 'vylithra-b677b',
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        })
+    });
+    console.log('[Startup] Firebase Admin SDK Initialized');
+} catch (error) {
+    console.warn('[Startup] Firebase Admin SDK Failed to Initialize:', error.message);
+}
+
 const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
@@ -506,240 +522,73 @@ app.post('/api/request-demo', async (req, res) => {
     }
 });
 
-// Mock Social OAuth Route
-app.get('/api/auth/:provider', async (req, res) => {
-    const provider = req.params.provider;
-    let providerName = provider.charAt(0).toUpperCase() + provider.slice(1);
+// Real Firebase Social Login verification Route
+app.post('/api/auth/firebase', async (req, res) => {
+    const { idToken } = req.body;
+    
+    if (!idToken) {
+        return res.status(400).json({ msg: 'No token provided' });
+    }
+
     try {
-        // Find a few mock users to present in the selection screen
-        let adminUser = await User.findOne({ email: ADMIN_EMAIL });
-        let otherUsers = await User.find({ email: { $ne: ADMIN_EMAIL } }).limit(2);
-        let mockUsers = [];
-        if (adminUser) mockUsers.push(adminUser);
-        mockUsers = mockUsers.concat(otherUsers);
-
-        if (mockUsers.length === 0) {
-            return res.status(500).send("No users exist in DB to simulate mock OAuth login.");
+        // 1. Verify the Google/GitHub/Microsoft token mathematically with Firebase servers
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const { email, name, picture, uid } = decodedToken;
+        
+        if (!email) {
+            return res.status(400).json({ msg: 'Social account must have an email attached.' });
         }
 
-        // Generate tokens for each user to embed in the UI
-        for (let u of mockUsers) {
-            u.mockToken = jwt.sign({ user: { id: u.id, role: u.role } }, JWT_SECRET, { expiresIn: '30d' });
+        // 2. Check if a User with this email already exists in our MongoDB database
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // 3. If they don't exist, auto-register them seamlessly as a basic reader
+            let baseUsername = name ? name.replace(/\s+/g, '').toLowerCase() : email.split('@')[0];
+            let username = baseUsername;
+            let counter = 1;
+            
+            // Ensure username uniqueness
+            while (await User.findOne({ username })) {
+                username = baseUsername + counter;
+                counter++;
+            }
+
+            user = new User({
+                username,
+                email,
+                // Assign a huge random password since they login via SSO
+                password: crypto.randomBytes(32).toString('hex'), 
+                role: 'reader',
+                profilePicture: picture || '',
+                isVerified: true // Social logins are inherently verified by the provider
+            });
+            await user.save();
         }
 
-        // Build the darker, sleek Google-style confirmation UI
-        let userListHtml = mockUsers.map(u => `
-            <div class="account-item" onclick="login('${u.mockToken}', '${u.username}', '${u.role}')">
-                <div class="avatar-wrapper">
-                    <img src="${u.profilePicture || 'https://ui-avatars.com/api/?name=' + u.username + '&background=random'}" alt="Profile">
-                </div>
-                <div class="user-details">
-                    <div class="name">${u.username}</div>
-                    <div class="email">${u.email}</div>
-                </div>
-            </div>
-        `).join('');
+        // 4. Mint our standard Vylithra JSON Web Token (JWT) so the rest of the app works perfectly
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role
+            }
+        };
 
-        res.send(`
-            <!DOCTYPE html>
-            <html lang="en">
-            <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                <title>Sign in with ${providerName}</title>
-                <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
-                <style>
-                    body {
-                        font-family: 'Roboto', -apple-system, sans-serif;
-                        background-color: #1a1a24; /* Dark modern theme */
-                        color: #e8eaed;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 100vh;
-                        margin: 0;
-                    }
-                    .oauth-card {
-                        background: #202124;
-                        padding: 48px 40px 36px;
-                        border-radius: 8px;
-                        border: 1px solid #3c4043;
-                        width: 100%;
-                        max-width: 450px;
-                        text-align: center;
-                    }
-                    .logo-row {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        margin-bottom: 16px;
-                    }
-                    .logo-row img {
-                        height: 24px;
-                    }
-                    .oauth-card h1 {
-                        font-size: 24px;
-                        font-weight: 400;
-                        margin-bottom: 24px;
-                        color: #e8eaed;
-                        line-height: 1.4;
-                    }
-                    .oauth-card h1 span {
-                        color: #8ab4f8; /* Google blue link style */
-                    }
-                    .disclaimer {
-                        font-size: 14px;
-                        color: #9aa0a6;
-                        margin-bottom: 32px;
-                        line-height: 1.5;
-                        text-align: left;
-                    }
-                    .disclaimer a {
-                        color: #8ab4f8;
-                        text-decoration: none;
-                    }
-                    .disclaimer a:hover {
-                        text-decoration: underline;
-                    }
-                    .account-list {
-                        text-align: left;
-                        margin-bottom: 32px;
-                    }
-                    .account-item {
-                        display: flex;
-                        align-items: center;
-                        padding: 12px 0;
-                        cursor: pointer;
-                        border-top: 1px solid #3c4043;
-                    }
-                    .account-item:last-child {
-                        border-bottom: 1px solid #3c4043;
-                    }
-                    .account-item:hover {
-                        background: rgba(255,255,255,0.04);
-                    }
-                    .avatar-wrapper {
-                        width: 32px;
-                        height: 32px;
-                        border-radius: 50%;
-                        overflow: hidden;
-                        margin-right: 12px;
-                    }
-                    .avatar-wrapper img {
-                        width: 100%;
-                        height: 100%;
-                        object-fit: cover;
-                    }
-                    .user-details {
-                        flex-grow: 1;
-                    }
-                    .user-details .name {
-                        font-size: 14px;
-                        font-weight: 500;
-                        color: #e8eaed;
-                        margin-bottom: 2px;
-                    }
-                    .user-details .email {
-                        font-size: 14px;
-                        color: #9aa0a6;
-                    }
-                    .action-buttons {
-                        display: flex;
-                        justify-content: space-between;
-                        margin-top: 24px;
-                    }
-                    .btn-cancel {
-                        background: transparent;
-                        color: #8ab4f8;
-                        border: none;
-                        padding: 8px 24px;
-                        font-size: 14px;
-                        font-weight: 500;
-                        cursor: pointer;
-                        border-radius: 4px;
-                        transition: background 0.2s;
-                    }
-                    .btn-cancel:hover {
-                        background: rgba(138, 180, 248, 0.08);
-                    }
-                    .btn-confirm {
-                        background: transparent;
-                        color: #8ab4f8;
-                        border: none;
-                        padding: 8px 24px;
-                        font-size: 14px;
-                        font-weight: 500;
-                        cursor: pointer;
-                        border-radius: 4px;
-                        transition: background 0.2s;
-                    }
-                    .btn-confirm:hover {
-                        background: rgba(138, 180, 248, 0.08);
-                    }
-                    .footer-links {
-                        display: flex;
-                        justify-content: space-between;
-                        width: 100%;
-                        max-width: 450px;
-                        margin-top: 20px;
-                        padding: 0 40px;
-                        box-sizing: border-box;
-                    }
-                    .footer-links a {
-                        color: #9aa0a6;
-                        font-size: 12px;
-                        text-decoration: none;
-                    }
-                    .footer-links a:hover {
-                        background: rgba(255,255,255,0.04);
-                    }
-                </style>
-            </head>
-            <body>
-                <div style="display:flex; flex-direction:column; align-items:center;">
-                    <div class="logo-row">
-                        <img src="https://upload.wikimedia.org/wikipedia/commons/2/2f/Google_2015_logo.svg" style="height:24px; margin-right:8px;" alt="G"> 
-                        <span style="font-size: 16px; font-weight: 500; color: #e8eaed;">Sign in with ${providerName}</span>
-                    </div>
-                <div class="oauth-card">
-                    <h1>Confirm you want to sign in to<br><span>vylithra.in</span></h1>
-                    
-                    <div class="account-list">
-                        ${userListHtml}
-                    </div>
+        jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
+            if (err) throw err;
+            
+            // Send token and metadata back to the frontend inline handler
+            res.json({ 
+                token,
+                username: user.username,
+                role: user.role,
+                msg: 'Social Login Successful' 
+            });
+        });
 
-                    <p class="disclaimer">
-                        To create your account, ${providerName} will share your name, email address, and profile picture with vylithra.in. See vylithra.in's <a href="/terms.html">privacy policy</a> and <a href="/terms.html">terms of service</a>.
-                    </p>
-                    
-                    <div class="action-buttons">
-                        <button class="btn-cancel" onclick="window.location.href='/auth.html'">Cancel</button>
-                        <button class="btn-confirm" onclick="alert('Please select an account from the list above to confirm.')">Confirm</button>
-                    </div>
-                </div>
-                <div class="footer-links">
-                    <div></div> <!-- Spacer -->
-                    <div style="display:flex; gap: 24px;">
-                        <a href="#">Help</a>
-                        <a href="#">Privacy Policy</a>
-                        <a href="#">Terms of Service</a>
-                    </div>
-                </div>
-                </div>
-                <script>
-                    function login(token, username, role) {
-                        localStorage.setItem('token', token);
-                        localStorage.setItem('username', username);
-                        localStorage.setItem('role', role);
-                        window.location.href = '/main';
-                    }
-                </script>
-            </body>
-            </html>
-        `);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('OAuth simulation failed');
+    } catch (error) {
+        console.error('Firebase Auth Verification Error:', error);
+        res.status(401).json({ msg: 'Unauthorized - Invalid Social Token' });
     }
 });
 
