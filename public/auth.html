@@ -26,8 +26,8 @@
             
             --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.12), rgba(0, 0, 0, 0.25));
             --glass-border: rgba(255, 255, 255, 0.12);
-            --input-bg: rgba(0, 0, 0, 0.35);
-            --input-border: rgba(255, 255, 255, 0.2);
+            --input-bg: rgba(255, 255, 255, 0.04);
+            --input-border: rgba(255, 255, 255, 0.15);
         }
 
         * {
@@ -67,7 +67,7 @@
             position: absolute;
             width: 800px;
             height: 800px;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.12) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.45) 0%, transparent 60%);
             left: -15%;
             top: 10%;
             border-radius: 50%;
@@ -77,7 +77,7 @@
             position: absolute;
             width: 1000px;
             height: 1000px;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 60%);
             right: -20%;
             top: 5%;
             border-radius: 50%;
@@ -87,7 +87,7 @@
             position: absolute;
             width: 600px;
             height: 600px;
-            background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, transparent 60%);
+            background: radial-gradient(circle, rgba(14, 165, 233, 0.45) 0%, transparent 60%);
             left: 20%;
             bottom: -20%;
             border-radius: 50%;
@@ -236,11 +236,11 @@
             width: 100%;
             max-width: 440px;
             background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
+            backdrop-filter: blur(50px);
+            -webkit-backdrop-filter: blur(50px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 40px;
+            padding: 35px 30px;
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
             position: relative;
             overflow: hidden;
@@ -251,7 +251,7 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
         }
 
         .auth-card h2 {
@@ -270,7 +270,7 @@
         /* Tabs */
         .auth-tabs {
             display: flex;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             margin-bottom: 2rem;
             position: relative;
         }
@@ -351,7 +351,7 @@
             border: 1px solid var(--input-border);
             color: white;
             border-radius: 8px;
-            padding: 12px 14px 12px 42px;
+            padding: 14px 16px 14px 44px;
             font-size: 0.95rem;
             transition: all 0.2s;
         }
@@ -370,7 +370,7 @@
             margin-bottom: 1.5rem;
         }
 
-        .checkbox-group input {
+        .checkbox-group input { border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; cursor: pointer;
             accent-color: var(--glow-blue);
             width: 16px;
             height: 16px;
@@ -393,7 +393,7 @@
             font-weight: 600;
             cursor: pointer;
             transition: 0.3s ease;
-            box-shadow: 0 4px 20px rgba(0, 122, 255, 0.4);
+            box-shadow: 0 8px 30px rgba(0, 122, 255, 0.5);
         }
 
         .submit-btn:hover {
@@ -458,7 +458,7 @@
         .social-divider::before, .social-divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid var(--glass-border);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
         .social-divider::before { margin-right: 15px; }
         .social-divider::after { margin-left: 15px; }
@@ -515,7 +515,7 @@
 
     <nav>
         <a href="/" class="logo" style="text-decoration:none;">
-            <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));">
+            <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));">
             Vylithra
         </a>
         <div class="nav-links">
