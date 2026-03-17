@@ -1252,10 +1252,14 @@
 
             if (user.role === 'publisher' || user.role === 'admin') {
                 document.getElementById('publisher-menu').style.display = 'flex';
-                document.getElementById('promo-menu').style.display = 'flex';
-                fetchMyCoupons();
                 document.getElementById('verifiedPublisherCard').style.display = 'block';
                 document.getElementById('readerUpgradeCard').style.display = 'none';
+
+            if (user.role === 'admin') {
+                document.getElementById('promo-menu').style.display = 'flex';
+                fetchMyCoupons();
+            }
+
 
                 document.getElementById('publisherBalance').innerText = `₹${(user.balance || 0).toFixed(2)}`;
 

@@ -1329,7 +1329,7 @@ app.post('/api/books/:id/rate', auth, async (req, res) => {
 });
 
 // Generate a Secure Promo Code
-app.post('/api/coupons/generate', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+app.post('/api/coupons/generate', auth, adminAuth, async (req, res) => {
     try {
         const { discountPercentage, maxUses, validityDays } = req.body;
 
@@ -1373,7 +1373,7 @@ app.post('/api/coupons/generate', auth, checkRole(['admin', 'publisher']), async
 });
 
 // Get Generated Promo Codes
-app.get('/api/coupons/my-codes', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+app.get('/api/coupons/my-codes', auth, adminAuth, async (req, res) => {
     try {
         // Admins see all codes, publishers only see their own
         const query = req.user.role === 'admin' ? {} : { generatedBy: req.user.id };
@@ -1388,7 +1388,7 @@ app.get('/api/coupons/my-codes', auth, checkRole(['admin', 'publisher']), async 
 });
 
 // Delete a Promo Code
-app.delete('/api/coupons/:id', auth, checkRole(['admin', 'publisher']), async (req, res) => {
+app.delete('/api/coupons/:id', auth, adminAuth, async (req, res) => {
     try {
         const coupon = await Coupon.findById(req.params.id);
         if (!coupon) return res.status(404).json({ msg: 'Coupon not found.' });
