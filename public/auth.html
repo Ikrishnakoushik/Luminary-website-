@@ -443,6 +443,65 @@
                 margin: 0 auto;
             }
         }
+        /* Social Auth */
+        .social-auth {
+            margin-top: 1.5rem;
+        }
+        .social-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 1.25rem;
+        }
+        .social-divider::before, .social-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--glass-border);
+        }
+        .social-divider::before { margin-right: 15px; }
+        .social-divider::after { margin-left: 15px; }
+        
+        .social-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .btn-social {
+            background: white;
+            border: none;
+            border-radius: 8px;
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .btn-social.github { color: #24292e; font-size: 1.5rem; }
+        .btn-social:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(255,255,255,0.1);
+        }
+
+        .auth-footer {
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+        .auth-footer a {
+            color: white;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .auth-footer a:hover {
+            text-decoration: underline;
+        }
     </style>
 </head>
 <body>
@@ -529,6 +588,18 @@
                         </div>
                         <button type="submit" class="submit-btn">Continue with Vylithra</button>
                         <div class="error-message" id="loginError"></div>
+
+                        <div class="social-auth">
+                            <div class="social-divider">Or continue with:</div>
+                            <div class="social-buttons">
+                                <button type="button" class="btn-social google"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="22"></button>
+                                <button type="button" class="btn-social github"><i class="fab fa-github"></i></button>
+                                <button type="button" class="btn-social microsoft"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft" width="20" style="border-radius:0"></button>
+                            </div>
+                            <div class="auth-footer">
+                                New to Vylithra? <a href="#" onclick="switchTab('register'); return false;">Create an account</a>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
@@ -568,6 +639,18 @@
                         </div>
                         <button type="submit" class="submit-btn" style="margin-top: 10px;">Create Account</button>
                         <div class="error-message" id="regError"></div>
+
+                        <div class="social-auth">
+                            <div class="social-divider">Or continue with:</div>
+                            <div class="social-buttons">
+                                <button type="button" class="btn-social google"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/google/google-original.svg" alt="Google" width="22"></button>
+                                <button type="button" class="btn-social github"><i class="fab fa-github"></i></button>
+                                <button type="button" class="btn-social microsoft"><img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/windows8/windows8-original.svg" alt="Microsoft" width="20" style="border-radius:0"></button>
+                            </div>
+                            <div class="auth-footer">
+                                Already have an account? <a href="#" onclick="switchTab('login'); return false;">Sign in</a>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
