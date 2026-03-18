@@ -455,7 +455,7 @@
             background: var(--border);
             padding: 4px 10px;
             border-radius: 12px;
-            color: #475569;
+            color: var(--text-muted);
         }
 
         .post-content {
@@ -471,7 +471,7 @@
             border-top: 1px solid var(--border);
             display: flex;
             justify-content: space-around;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
         .action-btn {
@@ -1033,7 +1033,7 @@
         }
 
         .reader-body strong {
-            color: #0f172a;
+            color: var(--text-main);
             font-weight: 700;
         }
 
@@ -1086,7 +1086,7 @@
 
         .reader-meta {
             font-size: 1rem;
-            color: #666;
+            color: var(--text-muted);
             margin-bottom: 3rem;
             border-bottom: 1px solid #ddd;
             padding-bottom: 1rem;
@@ -1165,7 +1165,7 @@
             position: absolute;
             top: 20px;
             right: 25px;
-            color: #aaa;
+            color: var(--text-muted);
             font-size: 28px;
             font-weight: bold;
             cursor: pointer;
@@ -1281,7 +1281,7 @@
             height: 40px;
             font-size: 1.1rem;
             background: linear-gradient(135deg, var(--border) 0%, #cbd5e1 100%);
-            color: #64748b;
+            color: var(--text-muted);
             box-shadow: none;
         }
 
@@ -1442,7 +1442,7 @@
         .dv-hero-content p {
             font-size: 0.95rem;
             line-height: 1.6;
-            color: #cbd5e1;
+            color: var(--text-muted);
             font-weight: 300;
         }
 
@@ -1500,7 +1500,7 @@
             font-family: inherit;
         }
         .dv-composer-input::placeholder {
-            color: #64748b;
+            color: var(--text-muted);
         }
 
         .dv-composer-tools {
@@ -1508,7 +1508,7 @@
             align-items: center;
             gap: 12px;
             margin-right: 20px;
-            color: #64748b;
+            color: var(--text-muted);
             font-size: 1rem;
         }
         .dv-composer-tools i {
@@ -1539,7 +1539,7 @@
         }
         .dv-btn-ghost {
             background: transparent;
-            color: #94a3b8;
+            color: var(--text-muted);
             border: 1px solid rgba(255,255,255,0.1);
         }
         .dv-btn-ghost:hover {
@@ -1548,7 +1548,7 @@
         }
         .dv-btn-solid {
             background: #e2e8f0;
-            color: #0f172a;
+            color: var(--text-main);
         }
         .dv-btn-solid:hover {
             background: white;
@@ -1583,7 +1583,7 @@
 
         .dv-card-label {
             font-size: 0.8rem;
-            color: #94a3b8;
+            color: var(--text-muted);
             margin-bottom: 5px;
         }
         
@@ -1607,7 +1607,7 @@
         }
         .dv-stat-label {
             font-size: 0.8rem;
-            color: #64748b;
+            color: var(--text-muted);
         }
         .dv-stat-val {
             font-size: 1rem;
@@ -1638,7 +1638,7 @@
         }
         .dv-author-role {
             font-size: 0.75rem;
-            color: #64748b;
+            color: var(--text-muted);
         }
 
         /* Sub Cards */
@@ -1721,7 +1721,7 @@
     <div id="feed-container">
 
                 <!-- Posts will be injected here -->
-                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                     <i class="fas fa-spinner fa-spin fa-2x"></i>
                     <p style="margin-top: 10px;">Loading your feed...</p>
                 </div>
@@ -1768,7 +1768,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 0.95rem;">Documentation</div>
-                                <div style="font-size: 0.8rem; color: #94a3b8;">Learn how to use Vylithra</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Learn how to use Vylithra</div>
                             </div>
                         </a>
                     </li>
@@ -1783,7 +1783,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 0.95rem;">Creator Kit</div>
-                                <div style="font-size: 0.8rem; color: #94a3b8;">Assets & Guidelines</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Assets & Guidelines</div>
                             </div>
                         </a>
                     </li>
@@ -1798,7 +1798,7 @@
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 0.95rem;">Community</div>
-                                <div style="font-size: 0.8rem; color: #94a3b8;">Rules & Safety</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Rules & Safety</div>
                             </div>
                         </a>
                     </li>
@@ -1808,11 +1808,11 @@
                             onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='var(--text-main)'">
                             <div
                                 style="width: 32px; height: 32px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-balance-scale" style="color: #64748b;"></i>
+                                <i class="fas fa-balance-scale" style="color: var(--text-muted);"></i>
                             </div>
                             <div>
                                 <div style="font-weight: 600; font-size: 0.95rem;">Legal</div>
-                                <div style="font-size: 0.8rem; color: #94a3b8;">Privacy & Terms</div>
+                                <div style="font-size: 0.8rem; color: var(--text-muted);">Privacy & Terms</div>
                             </div>
                         </a>
                     </li>
@@ -1883,7 +1883,7 @@
                 const users = await res.json();
 
                 if (users.length === 0) {
-                    list.innerHTML = '<div style="color: #94a3b8; font-size: 0.9rem;">No spreaders found yet.</div>';
+                    list.innerHTML = '<div style="color: var(--text-muted); font-size: 0.9rem;">No spreaders found yet.</div>';
                     return;
                 }
 
@@ -2033,7 +2033,7 @@
 
                 if (!posts || posts.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                             <p>No spreads found. Be the first to spread something!</p>
                         </div>`;
                     return;
@@ -2165,7 +2165,7 @@
                                                                                 <div>
                                                                                     <div style="font-size: 0.9rem;">
                                                                                         <a href="profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
-                                                                                        <span style="font-size: 0.8rem; color: #aaa;">â€¢ Commented</span>
+                                                                                        <span style="font-size: 0.8rem; color: var(--text-muted);">â€¢ Commented</span>
                                                                                     </div>
                                                                                     <div style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
                                                                                         ${c.text}
@@ -2425,7 +2425,7 @@
             if (category.toLowerCase() === 'foryou') {
                 if (!userPreferences || userPreferences.length === 0) {
                     document.getElementById('feed-container').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                             <i class="fas fa-sliders-h fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
                             <h3>Personalize Your Feed</h3>
                             <p>Select your interests to see a curated feed just for you.</p>
@@ -2445,7 +2445,7 @@
 
                 if (filtered.length === 0) {
                     document.getElementById('feed-container').innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: #64748b;">
+                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
                             <i class="fas fa-search fa-3x" style="margin-bottom: 20px; opacity: 0.5;"></i>
                             <h3>No matches found</h3>
                             <p>We couldn't find any posts matching your interests yet.</p>

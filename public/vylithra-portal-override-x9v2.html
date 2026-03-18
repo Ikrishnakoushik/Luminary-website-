@@ -248,7 +248,7 @@
         }
 
         .badge.reader {
-            background: #f3f4f6;
+            background: var(--surface);
             color: #374151;
         }
 
@@ -845,8 +845,8 @@
                     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Dispatching <strong>${discountText}</strong> discount code <strong>${code}</strong> via HTML Email.</p>
                     
                     <div style="margin-bottom: 1.5rem;">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #1a1a24;">Target Audience</label>
-                        <select id="dispatch-target-select" onchange="toggleSpecificEmailInput()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: #1a1a24;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-main);">Target Audience</label>
+                        <select id="dispatch-target-select" onchange="toggleSpecificEmailInput()" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: var(--text-main);">
                             <option value="all">All Registered Users</option>
                             <option value="random">100 Random Users</option>
                             <option value="specific">Specific Email Addresses</option>
@@ -854,8 +854,8 @@
                     </div>
 
                     <div id="specific-email-container" style="display: none; margin-bottom: 1.5rem;">
-                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: #1a1a24;">Email Addresses (comma separated)</label>
-                        <input type="text" id="dispatch-specific-emails" placeholder="user1@example.com, user2@example.com" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: #1a1a24;" />
+                        <label style="display: block; font-size: 0.875rem; font-weight: 500; margin-bottom: 0.5rem; color: var(--text-main);">Email Addresses (comma separated)</label>
+                        <input type="text" id="dispatch-specific-emails" placeholder="user1@example.com, user2@example.com" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem; color: var(--text-main);" />
                     </div>
 
                     <div style="display: flex; gap: 1rem; justify-content: flex-end;">
@@ -1121,7 +1121,7 @@
                             </div>
                             <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
                                 <input type="checkbox" id="setting-registration" onchange="savePlatformSettings()" ${settings.registrationEnabled ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
-                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
+                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--text-muted); transition: .4s; border-radius: 34px;" class="slider"></span>
                             </label>
                         </div>
 
@@ -1132,7 +1132,7 @@
                             </div>
                             <label style="position: relative; display: inline-block; width: 50px; height: 28px;">
                                 <input type="checkbox" id="setting-maintenance" onchange="savePlatformSettings()" ${settings.maintenanceMode ? 'checked' : ''} style="opacity: 0; width: 0; height: 0;">
-                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .4s; border-radius: 34px;" class="slider"></span>
+                                <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: var(--text-muted); transition: .4s; border-radius: 34px;" class="slider"></span>
                             </label>
                         </div>
 

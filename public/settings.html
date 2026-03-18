@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Vylithra</title>
+    <script src="theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -308,7 +309,7 @@
         }
 
         .btn-secondary:hover {
-            background: #f3f4f6;
+            background: var(--surface);
         }
 
         /* Avatar */
@@ -362,7 +363,7 @@
         .connection-icon {
             width: 40px;
             height: 40px;
-            background: #f3f4f6;
+            background: var(--surface);
             border-radius: var(--radius-md);
             display: flex;
             align-items: center;
@@ -426,7 +427,7 @@
             border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
-            background: #f3f4f6;
+            background: var(--surface);
             color: var(--text-muted);
         }
 

@@ -6,6 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vylithra - Messages</title>
+    <script src="theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -434,7 +435,7 @@
             </div>
             <div class="conversation-list" id="convos-list">
                 <!-- Loaded via JS -->
-                <div style="padding: 20px; text-align:center; color: #64748b;">Loading chats...</div>
+                <div style="padding: 20px; text-align:center; color: var(--text-muted);">Loading chats...</div>
             </div>
         </aside>
 
@@ -512,7 +513,7 @@
                     const convos = await res.json();
 
                     if (convos.length === 0 && !activeChatUserId) {
-                        list.innerHTML = '<div style="padding: 20px; text-align:center; color: #64748b; font-size: 0.9rem;">No active conversations yet. Visit a user\'s profile to message them.</div>';
+                        list.innerHTML = '<div style="padding: 20px; text-align:center; color: var(--text-muted); font-size: 0.9rem;">No active conversations yet. Visit a user\'s profile to message them.</div>';
                         return;
                     }
 
