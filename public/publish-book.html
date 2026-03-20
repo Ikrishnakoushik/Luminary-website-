@@ -29,10 +29,10 @@
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-base);
+            background-color: var(--bg-color);
             background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
-            color: var(--text-base);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             display: flex;
@@ -46,10 +46,10 @@
             top: 0;
             width: 100%;
             height: 70px;
-            background: var(--nav-bg);
+            background: var(--surface);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-base);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -89,7 +89,7 @@
         }
 
         .nav-link:hover {
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .main-container {
@@ -113,7 +113,7 @@
         .header h2 {
             font-size: 2.2rem;
             margin: 0;
-            background: linear-gradient(90deg, var(--primary-btn), var(--text-base));
+            background: linear-gradient(90deg, var(--primary), var(--text-main));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
@@ -121,8 +121,8 @@
 
         .back-btn {
             background: rgba(128, 128, 128, 0.08);
-            border: 1px solid var(--border-base);
-            color: var(--text-base);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             padding: 10px 16px;
             border-radius: 8px;
             text-decoration: none;
@@ -140,9 +140,9 @@
 
         /* Form Styling - Premium Look */
         .form-container {
-            background: var(--surface-base);
+            background: var(--surface);
             border-radius: 12px;
-            border: 1px solid var(--border-base);
+            border: 1px solid var(--border);
             padding: 40px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
             margin-bottom: 30px;
@@ -165,8 +165,8 @@
             width: 100%;
             padding: 16px 20px;
             background: rgba(128, 128, 128, 0.08);
-            border: 1px solid var(--border-base);
-            color: var(--text-base);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             border-radius: 12px;
             font-family: inherit;
             font-size: 1rem;
@@ -176,14 +176,14 @@
 
         .form-control:focus {
             outline: none;
-            border-color: var(--primary-btn);
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
             background: rgba(128, 128, 128, 0.12);
         }
 
         /* Content Editor Customization */
         .editor-container {
-            border: 1px solid var(--border-base);
+            border: 1px solid var(--border);
             border-radius: 12px;
             overflow: hidden;
             background: rgba(128, 128, 128, 0.08);
@@ -192,13 +192,13 @@
         }
 
         .editor-container:focus-within {
-            border-color: var(--primary-btn);
+            border-color: var(--primary);
             box-shadow: 0 0 0 3px rgba(138, 43, 226, 0.15);
         }
 
         .editor-toolbar {
             padding: 12px 15px;
-            border-bottom: 1px solid var(--border-base);
+            border-bottom: 1px solid var(--border);
             background: rgba(128, 128, 128, 0.05);
             display: flex;
             gap: 8px;
@@ -222,7 +222,7 @@
 
         .editor-btn:hover {
             background: var(--surface-hover);
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .editor-area {
@@ -234,23 +234,23 @@
             font-size: 1.15rem;
             overflow-y: auto;
             max-height: 60vh;
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .editor-area h1 {
             font-size: 2.2rem;
-            color: var(--text-base);
+            color: var(--text-main);
             margin-bottom: 20px;
         }
 
         .editor-area h2 {
             font-size: 1.8rem;
-            color: var(--text-base);
+            color: var(--text-main);
             margin-bottom: 15px;
         }
 
         .editor-area blockquote {
-            border-left: 4px solid var(--primary-btn);
+            border-left: 4px solid var(--primary);
             margin: 20px 0;
             padding: 10px 20px;
             font-style: italic;
@@ -260,7 +260,7 @@
         }
 
         .editor-area a {
-            color: var(--primary-btn);
+            color: var(--primary);
             text-decoration: underline;
             transition: color 0.2s;
         }
@@ -270,7 +270,7 @@
         }
 
         .submit-btn {
-            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
+            background: linear-gradient(135deg, var(--primary), #b366ff);
             color: white;
             border: none;
             padding: 18px 30px;
@@ -326,8 +326,8 @@
         }
 
         .prompt-box {
-            background: var(--surface-base);
-            border: 1px solid var(--border-base);
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 30px;
             width: 90%;
@@ -344,7 +344,7 @@
         .prompt-title {
             margin: 0 0 15px 0;
             font-size: 1.25rem;
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .prompt-input {
@@ -360,7 +360,7 @@
         .prompt-actions .btn-cancel {
             background: rgba(128, 128, 128, 0.1);
             border: none;
-            color: var(--text-base);
+            color: var(--text-main);
             padding: 10px 20px;
             border-radius: 8px;
             font-weight: 500;
@@ -373,7 +373,7 @@
         }
 
         .prompt-actions .btn-confirm {
-            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
+            background: linear-gradient(135deg, var(--primary), #b366ff);
             color: white;
             border: none;
             padding: 10px 20px;
@@ -478,7 +478,7 @@
 
                 <div class="form-group" style="margin-top: 20px;">
                     <label>Manuscript Designer</label>
-                    <p style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 15px;">Write and format
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 15px;">Write and format
                         your text exactly as readers will see it.</p>
                     <div class="editor-container">
                         <div class="editor-toolbar">
@@ -510,7 +510,7 @@
                                 title="Bullet List"><i class="fas fa-list-ul"></i></button>
                             <button type="button" class="editor-btn" onclick="formatDoc('insertOrderedList')"
                                 title="Numbered List"><i class="fas fa-list-ol"></i></button>
-                            <div style="width: 1px; height: 24px; background: var(--border-base); margin: 0 5px;">
+                            <div style="width: 1px; height: 24px; background: var(--border); margin: 0 5px;">
                             </div>
                             <button type="button" class="editor-btn" onclick="insertLink()" title="Insert Link"><i
                                     class="fas fa-link"></i></button>

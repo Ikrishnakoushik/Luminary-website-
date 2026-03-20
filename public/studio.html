@@ -28,10 +28,10 @@
 
         body {
             font-family: 'Inter', -apple-system, sans-serif;
-            background-color: var(--bg-base);
+            background-color: var(--bg-color);
             background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
                 radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
-            color: var(--text-base);
+            color: var(--text-main);
             margin: 0;
             padding: 0;
             display: flex;
@@ -45,10 +45,10 @@
             top: 0;
             width: 100%;
             height: 70px;
-            background: var(--nav-bg);
+            background: var(--surface);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border-base);
+            border-bottom: 1px solid var(--border);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -89,7 +89,7 @@
 
         .nav-link:hover,
         .nav-link.active {
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .main-container {
@@ -113,14 +113,14 @@
         .header h1 {
             font-size: 2.2rem;
             margin: 0;
-            background: linear-gradient(90deg, var(--primary-btn), var(--text-base));
+            background: linear-gradient(90deg, var(--primary), var(--text-main));
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
         }
 
         .btn-primary {
-            background: linear-gradient(135deg, var(--primary-btn), #b366ff);
+            background: linear-gradient(135deg, var(--primary), #b366ff);
             color: white;
             border: none;
             padding: 12px 24px;
@@ -143,9 +143,9 @@
 
         /* Books Table */
         .table-container {
-            background: var(--surface-base);
+            background: var(--surface);
             border-radius: 12px;
-            border: 1px solid var(--border-base);
+            border: 1px solid var(--border);
             overflow: hidden;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
         }
@@ -159,7 +159,7 @@
         th,
         td {
             padding: 16px 20px;
-            border-bottom: 1px solid var(--border-base);
+            border-bottom: 1px solid var(--border);
         }
 
         th {
@@ -197,7 +197,7 @@
             font-weight: 600;
             font-size: 1rem;
             margin: 0 0 4px 0;
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .book-meta {
@@ -233,8 +233,8 @@
 
         .action-btn {
             background: rgba(128, 128, 128, 0.08);
-            border: 1px solid var(--border-base);
-            color: var(--text-base);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             padding: 8px 12px;
             border-radius: 6px;
             cursor: pointer;
@@ -294,8 +294,8 @@
         }
 
         .stat-card {
-            background: var(--surface-base);
-            border: 1px solid var(--border-base);
+            background: var(--surface);
+            border: 1px solid var(--border);
             border-radius: 12px;
             padding: 24px;
             display: flex;
@@ -316,7 +316,7 @@
             font-size: 2.5rem;
             font-weight: 700;
             margin: 0;
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .stat-icon {
@@ -327,7 +327,7 @@
             align-items: center;
             justify-content: center;
             font-size: 1.5rem;
-            color: var(--text-base);
+            color: var(--text-main);
         }
 
         .bg-purple {
@@ -343,8 +343,8 @@
             margin-top: 15px;
             padding: 8px 16px;
             background: rgba(255, 255, 255, 0.1);
-            border: 1px solid var(--border-base);
-            color: var(--text-base);
+            border: 1px solid var(--border);
+            color: var(--text-main);
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
@@ -352,7 +352,7 @@
         }
 
         .btn-withdraw:hover {
-            background: var(--text-base);
+            background: var(--text-main);
             color: var(--text-main);
         }
 
@@ -372,8 +372,8 @@
         }
 
         .modal {
-            background: var(--bg-base);
-            border: 1px solid var(--border-base);
+            background: var(--bg-color);
+            border: 1px solid var(--border);
             border-radius: 16px;
             padding: 30px;
             width: 90%;
@@ -400,7 +400,7 @@
             width: 100%;
             padding: 12px;
             background: rgba(0, 0, 0, 0.2);
-            border: 1px solid var(--border-base);
+            border: 1px solid var(--border);
             border-radius: 6px;
             color: white;
             box-sizing: border-box;
@@ -416,7 +416,7 @@
         .btn-cancel {
             padding: 10px 20px;
             background: transparent;
-            border: 1px solid var(--border-base);
+            border: 1px solid var(--border);
             color: white;
             border-radius: 6px;
             cursor: pointer;

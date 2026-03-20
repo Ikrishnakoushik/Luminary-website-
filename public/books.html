@@ -51,7 +51,7 @@
             top: 0;
             width: 100%;
             height: 70px;
-            background: var(--nav-bg);
+            background: var(--surface);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
@@ -89,7 +89,7 @@
 
         .nav-link {
             text-decoration: none;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-size: 0.95rem;
             font-weight: 500;
             transition: all 0.3s ease;
@@ -191,7 +191,7 @@
 
         .hero-section p {
             font-size: 1.25rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             margin: 0 0 40px 0;
             line-height: 1.7;
             font-weight: 300;
@@ -267,7 +267,7 @@
         }
 
         .btn-outline:hover {
-            border-color: var(--text-secondary);
+            border-color: var(--text-muted);
             background: var(--surface);
         }
 
@@ -384,7 +384,7 @@
 
         .indicator-number {
             font-size: 0.85rem;
-            color: var(--text-secondary);
+            color: var(--text-muted);
             font-weight: 600;
         }
 
@@ -475,7 +475,7 @@
         }
 
         .search-bar i {
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
         /* Netflix-style Category Rows */
@@ -570,7 +570,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            color: var(--text-secondary);
+            color: var(--text-muted);
         }
 
         /* Book pages depth effect on right edge */
@@ -804,7 +804,7 @@
     <!-- Top Navigation -->
     <nav class="top-nav">
         <a href="/" class="brand" style="text-decoration: none;">
-            Vylithra <span style="font-weight: 300; color: var(--text-secondary);">Library</span>
+            Vylithra <span style="font-weight: 300; color: var(--text-muted);">Library</span>
         </a>
         <div class="nav-links">
             <a href="/books" class="nav-link active">Library</a>
@@ -1046,7 +1046,7 @@
                         (b.author && b.author._id === currentUser._id)
                     );
                 } else {
-                    grid.innerHTML = '<div style="color: var(--text-secondary); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth" style="color: var(--primary);">log in</a> to view your library.</div>';
+                    grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth" style="color: var(--primary);">log in</a> to view your library.</div>';
                     return;
                 }
             }
@@ -1063,7 +1063,7 @@
             }
 
             if (booksToShow.length === 0) {
-                grid.innerHTML = '<p style="color: var(--text-secondary); width: 100%; font-size: 1.1rem; padding: 0 5%;">No books found matching your criteria.</p>';
+                grid.innerHTML = '<p style="color: var(--text-muted); width: 100%; font-size: 1.1rem; padding: 0 5%;">No books found matching your criteria.</p>';
                 return;
             }
 
