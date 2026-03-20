@@ -2391,7 +2391,7 @@
 
         function handleCreatePostClick() {
             // Allow everyone to access the studio for now
-            window.location.href = 'publish';
+            window.location.href = 'publish-book';
         }
 
         // --- Filter Logic ---
@@ -2583,8 +2583,8 @@
                 let publisherLink = '';
                 if (role === 'publisher' || role === 'admin') {
                     publisherLink = `
-                        <a href="studio" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publish Studio">
-                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.95rem;">Studio</span>
+                        <a href="publish-book" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publisher Page">
+                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.95rem;">Publisher</span>
                         </a>
                     `;
                 }
