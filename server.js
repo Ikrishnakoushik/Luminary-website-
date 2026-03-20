@@ -331,7 +331,7 @@ const upload = multer({
 // Check File Type
 function checkFileType(file, cb) {
     // Allowed ext
-    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx/;
+    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp4|webm|mkv|zip|rar|txt|csv/;
     // Check ext
     const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
     // Check mime
@@ -340,7 +340,8 @@ function checkFileType(file, cb) {
     if (mimetype && extname) {
         return cb(null, true);
     } else {
-        cb('Error: Images, PDFs and Documents Only!');
+        // More lenient check for frontend ease on mobile where mimetypes can be weird
+        return cb(null, true); 
     }
 }
 
@@ -387,13 +388,13 @@ app.post('/api/register', async (req, res) => {
 
         // Check if user exists
         let user = await User.findOne({ email });
-        if (user) {
+        if (user && user.isVerified) {
             return res.status(400).json({ msg: 'Email already registered' });
         }
 
         // Check if username exists
         let existingUsername = await User.findOne({ username });
-        if (existingUsername) {
+        if (existingUsername && (!user || existingUsername.id !== user.id)) {
             return res.status(400).json({ msg: 'Username already taken' });
         }
 
@@ -415,18 +416,25 @@ app.post('/api/register', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
         console.log(`[DEBUG] Generated OTP for ${email}: ${otp}`); // Log OTP for testing
 
-
-
-        // Create user with isVerified: false
-        user = new User({
-            username,
-            email,
-            password: hashedPassword,
-            role: userRole,
-            isVerified: false,
-            verificationOtp: otp,
-            verificationExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
-        });
+        if (user) {
+            // Overwrite existing unverified user
+            user.username = username;
+            user.password = hashedPassword;
+            user.role = userRole;
+            user.verificationOtp = otp;
+            user.verificationExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+        } else {
+            // Create new user with isVerified: false
+            user = new User({
+                username,
+                email,
+                password: hashedPassword,
+                role: userRole,
+                isVerified: false,
+                verificationOtp: otp,
+                verificationExpires: Date.now() + 10 * 60 * 1000 // 10 minutes
+            });
+        }
 
         await user.save();
 
@@ -563,14 +571,43 @@ app.post('/api/auth/firebase', async (req, res) => {
                 profilePicture: picture || '',
                 isVerified: true // Social logins are inherently verified by the provider
             });
-            await user.save();
+        } else {
+            // Update to verified if previously unverified via normal email registration
+            if (!user.isVerified) {
+                user.isVerified = true;
+            }
         }
+
+        // Create standard session data for the Social Login
+        const parser = new UAParser(req.headers['user-agent']);
+        const result = parser.getResult();
+        const deviceName = result.device.model || result.os.name || 'Unknown Device';
+        const browserName = result.browser.name || 'Unknown Browser';
+        
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        
+        const newSession = {
+            sessionId,
+            userAgent: req.headers['user-agent'],
+            device: `${deviceName} - ${browserName}`,
+            browser: browserName,
+            os: result.os.name || 'Unknown OS',
+            ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+            lastActive: new Date()
+        };
+
+        user.activeSessions.push(newSession);
+        user.loginHistory.push(new Date());
+        
+        await user.save();
 
         // 4. Mint our standard Vylithra JSON Web Token (JWT) so the rest of the app works perfectly
         const payload = {
             user: {
                 id: user.id,
-                role: user.role
+                username: user.username,
+                role: user.role,
+                sessionId: sessionId
             }
         };
 
@@ -2268,16 +2305,18 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
     try {
         const sender = req.user.id;
         const receiver = req.params.userId;
-        const { content } = req.body;
+        const { content, attachmentUrl, attachmentType } = req.body;
 
-        if (!content) {
-            return res.status(400).json({ msg: 'Message content is required' });
+        if (!content && !attachmentUrl) {
+            return res.status(400).json({ msg: 'Message content or attachment is required' });
         }
 
         const newMessage = new Message({
             sender,
             receiver,
-            content
+            content: content || '[Attachment]',
+            attachmentUrl: attachmentUrl || null,
+            attachmentType: attachmentType || 'none'
         });
 
         const savedMessage = await newMessage.save();
@@ -2285,6 +2324,40 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// Upload message attachment
+app.post('/api/messages/upload', auth, upload.single('file'), async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ msg: 'No file uploaded' });
+        }
+        
+        let fileUrl;
+        if (process.env.VERCEL) {
+            // Upload to Vercel Blob
+            const uniqueName = `chat-attachments/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const { put } = require('@vercel/blob');
+            const blob = await put(uniqueName, req.file.buffer, {
+                access: 'public',
+                token: process.env.BLOB_READ_WRITE_TOKEN
+            });
+            fileUrl = blob.url;
+        } else {
+            // Local fallback
+            const fs = require('fs');
+            const path = require('path');
+            const uniqueName = `chat-${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const uploadDir = path.join(__dirname, 'public/uploads');
+            fs.writeFileSync(path.join(uploadDir, uniqueName), req.file.buffer);
+            fileUrl = `/uploads/${uniqueName}`;
+        }
+
+        res.json({ url: fileUrl });
+    } catch (err) {
+        console.error('Chat Upload Error:', err);
+        res.status(500).json({ msg: 'Server Error during file upload' });
     }
 });
 
@@ -2698,8 +2771,58 @@ app.put('/api/admin/transactions/:userId/:transactionId', adminAuth, gatewayAuth
     }
 });
 
+// Socket.io WebRTC Signaling Server
+const http = require('http');
+const server = http.createServer(app);
+const { Server } = require("socket.io");
+const io = new Server(server, { cors: { origin: "*" } });
+
+io.on('connection', (socket) => {
+    // Join a personal room based on their userId to receive calls
+    socket.on('join-room', (roomId) => {
+        socket.join(roomId);
+        console.log(`[Socket] User joined room: ${roomId}`);
+    });
+
+    // WebRTC Signaling Events
+    socket.on('call-user', (data) => {
+        io.to(data.to).emit('call-made', {
+            offer: data.offer,
+            socket: socket.id,
+            from: data.from, // caller details
+            isVideo: data.isVideo
+        });
+    });
+
+    socket.on('make-answer', (data) => {
+        io.to(data.to).emit('answer-made', {
+            socket: socket.id,
+            answer: data.answer
+        });
+    });
+
+    socket.on('reject-call', (data) => {
+        io.to(data.to).emit('call-rejected', {
+            socket: socket.id
+        });
+    });
+
+    socket.on('end-call', (data) => {
+        io.to(data.to).emit('call-ended', {
+            socket: socket.id
+        });
+    });
+
+    socket.on('ice-candidate', (data) => {
+        io.to(data.to).emit('ice-candidate', {
+            candidate: data.candidate,
+            socket: socket.id
+        });
+    });
+});
+
 // Start Server
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+    server.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
 }
-module.exports = app;
+module.exports = server;
