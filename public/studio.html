@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vylithra Studio | Vylithra</title>
+    <script src="/theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <style>
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            background-image: radial-gradient(circle at 15% 50%, rgba(138, 43, 226, 0.08), transparent 25%),
+                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.05), transparent 25%);
+            color: var(--text-main);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            height: 70px;
+            background: var(--surface);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 800;
+            text-decoration: none;
+            background: linear-gradient(to right, #b366ff, #ec4899);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .nav-link {
+            text-decoration: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            color: var(--text-main);
+        }
+
+        .main-container {
+            margin-top: 70px;
+            flex: 1;
+            padding: 40px;
+            max-width: 1800px;
+            width: 100%;
+            box-sizing: border-box;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2rem;
+            margin: 0;
+            background: linear-gradient(90deg, var(--primary), var(--text-main));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), #b366ff);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6);
+        }
+
+        /* Books Table */
+        .table-container {
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th,
+        td {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            background: rgba(128, 128, 128, 0.08);
+            color: var(--text-muted);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: var(--surface-hover);
+        }
+
+        .book-cell {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .book-thumb {
+            width: 40px;
+            height: 60px;
+            border-radius: 4px;
+            object-fit: cover;
+            background: #2a2a2a;
+        }
+
+        .book-title {
+            font-weight: 600;
+            font-size: 1rem;
+            margin: 0 0 4px 0;
+            color: var(--text-main);
+        }
+
+        .book-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-published {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .status-unpublished {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .actions-cell {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            background: rgba(128, 128, 128, 0.08);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background: rgba(128, 128, 128, 0.15);
+        }
+
+        .action-btn.edit:hover {
+            color: #60a5fa;
+            border-color: #60a5fa;
+        }
+
+        .action-btn.unpublish:hover {
+            color: var(--warning);
+            border-color: var(--warning);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(239, 68, 68, 0.1);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-muted);
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 40px;
+            font-size: 1.2rem;
+            color: var(--text-muted);
+            display: none;
+        }
+
+        /* Earnings Dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+        }
+
+        .stat-card-left h3 {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin: 0 0 10px 0;
+            font-weight: 500;
+        }
+
+        .stat-card-left .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-main);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: var(--text-main);
+        }
+
+        .bg-purple {
+            background: linear-gradient(135deg, #8A2BE2, #b366ff);
+        }
+
+        .bg-gold {
+            background: linear-gradient(135deg, #d4af37, #f3e5ab);
+            color: var(--text-main);
+        }
+
+        .btn-withdraw {
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border);
+            color: var(--text-main);
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .btn-withdraw:hover {
+            background: var(--text-main);
+            color: var(--text-main);
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal {
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .modal h2 {
+            margin-top: 0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-cancel {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <a href="/books" class="nav-logo">
+            <i class="fas fa-book-open"></i> Vylithra Books
+        </a>
+        <div class="nav-links">
+            <a href="/main" class="nav-link"><i class="fas fa-home"></i> Home</a>
+            <a href="/books" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
+            <a href="/publisher" class="nav-link active" id="studioLink" style="display:none;"><i
+                    class="fas fa-pen-nib"></i> Publisher</a>
+            <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="header">
+            <div>
+                <h1>Vylithra Studio</h1>
+                <p style="color: var(--text-muted); margin-top: 5px;">Manage your published works and track your
+                    portfolio.</p>
+            </div>
+            <a href="/publish-book" class="btn-primary">
+                <i class="fas fa-plus"></i> Create New Book
+            </a>
+        </div>
+
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <div class="stat-card-left">
+                    <h3>Available Balance</h3>
+                    <p class="stat-value" id="walletBalance">₹0</p>
+                    <button class="btn-withdraw" onclick="openWithdrawModal()"><i class="fas fa-money-bill-wave"></i>
+                        Withdraw Funds</button>
+                </div>
+                <div class="stat-icon bg-purple"><i class="fas fa-wallet"></i></div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-left">
+                    <h3>Lifetime Earnings</h3>
+                    <p class="stat-value" id="lifetimeEarnings">₹0</p>
+                    <p style="color: var(--text-muted); font-size: 0.85rem; margin-top: 10px;">Total revenue generated
+                        from sales</p>
+                </div>
+                <div class="stat-icon bg-gold"><i class="fas fa-chart-line"></i></div>
+            </div>
+        </div>
+
+        <div id="loading"><i class="fas fa-circle-notch fa-spin"></i> Loading your studio...</div>
+
+        <!-- Withdraw Modal -->
+        <div class="modal-overlay" id="withdrawModal">
+            <div class="modal">
+                <h2>Withdraw Funds</h2>
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 25px;">Maximum available to
+                    withdraw: <strong style="color:white;" id="maxWithdrawText">₹0</strong></p>
+
+                <div class="form-group">
+                    <label>Amount (₹)</label>
+                    <input type="number" id="withdrawAmount" placeholder="Enter amount..." min="100">
+                </div>
+                <div class="form-group">
+                    <label>Payout Method (UPI ID)</label>
+                    <input type="text" id="withdrawMethod" placeholder="e.g. yourname@okicici">
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-cancel" onclick="closeWithdrawModal()">Cancel</button>
+                    <button class="btn-primary" onclick="submitWithdrawal()" id="withdrawSubmitBtn">Request
+                        Payout</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table id="booksTable">
+                <thead>
+                    <tr>
+                        <th>Book</th>
+                        <th>Status</th>
+                        <th>Price</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="booksList">
+                    <!-- Books will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+
+        async function init() {
+            if (!token) {
+                window.location.href = '/auth';
+                return;
+            }
+
+            await fetchUserProfile();
+
+            if (currentUser && (currentUser.role === 'publisher' || currentUser.role === 'admin')) {
+                document.getElementById('studioLink').style.display = 'flex';
+                fetchEarningsData();
+                fetchMyBooks();
+            } else {
+                VylithraUI.showToast("Only Publishers can access the Studio.", 'error');
+                setTimeout(() => window.location.href = '/books', 1500);
+            }
+
+            document.getElementById('logoutBtn').addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('token');
+                localStorage.removeItem('role');
+                window.location.href = '/auth';
+            });
+        }
+
+        async function fetchUserProfile() {
+            try {
+                const res = await fetch(`${API_URL}/users/profile`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    currentUser = await res.json();
+                } else if (res.status === 401) {
+                    localStorage.removeItem('token');
+                    window.location.href = '/auth';
+                }
+            } catch (err) {
+                console.error("Error fetching user profile:", err);
+            }
+        }
+
+        async function fetchMyBooks() {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('booksTable').style.display = 'none';
+
+            try {
+                const res = await fetch(`${API_URL}/books`, {
+                    headers: { 'x-auth-token': token } // Needed to see unpublished books
+                });
+
+                if (res.ok) {
+                    const allBooks = await res.json();
+                    const myBooks = allBooks.filter(b => b.author._id === currentUser._id);
+                    renderBooksList(myBooks);
+                }
+            } catch (err) {
+                console.error("Error fetching books:", err);
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('booksTable').style.display = 'table';
+            }
+        }
+
+        function renderBooksList(books) {
+            const list = document.getElementById('booksList');
+            list.innerHTML = '';
+
+            if (books.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colspan="4">
+                            <div class="empty-state">
+                                <i class="fas fa-book-open"></i>
+                                <h3>No books published yet</h3>
+                                <p>Start your journey as a publisher by creating your first masterpiece.</p>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            books.forEach(book => {
+                const isPublished = book.isPublished !== false;
+                const statusHtml = isPublished
+                    ? `<span class="status-badge status-published">Published</span>`
+                    : `<span class="status-badge status-unpublished">Unpublished</span>`;
+
+                const coverUrl = book.coverImage || '';
+                const coverImg = coverUrl ? `<img src="${coverUrl}" class="book-thumb" onerror="this.src=''; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
+
+                const date = new Date(book.createdAt).toLocaleDateString();
+
+                const unpubText = isPublished ? 'Unpublish' : 'Publish';
+                const unpubIcon = isPublished ? 'fa-eye-slash' : 'fa-eye';
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>
+                        <div class="book-cell">
+                            ${coverImg}
+                            <div>
+                                <h4 class="book-title">${book.title}</h4>
+                                <p class="book-meta">Published under: <strong>${book.penName || 'Real Name'}</strong><br>Created on ${date}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td>${statusHtml}</td>
+                    <td>${book.price > 0 ? '₹' + book.price : 'Free'}</td>
+                    <td>
+                        <div class="actions-cell">
+                            <button class="action-btn edit" onclick="window.location.href='/publish-book?editId=${book._id}'" title="Edit Book">
+                                <i class="fas fa-pen"></i> Edit
+                            </button>
+                            <button class="action-btn unpublish" onclick="togglePublishStatus('${book._id}', ${isPublished})" title="${unpubText}">
+                                <i class="fas ${unpubIcon}"></i> ${unpubText}
+                            </button>
+                            <button class="action-btn delete" onclick="deleteBook('${book._id}')" title="Hard Delete">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                list.appendChild(tr);
+            });
+        }
+
+        async function togglePublishStatus(bookId, currentStatus) {
+            const msg = currentStatus
+                ? 'Unpublishing will hide this book from the public store. People who already bought it can still read it. Continuue?'
+                : 'Publishing will make this book available in the public store again. Continue?';
+
+            VylithraUI.showConfirm(msg, async () => {
+                try {
+                    const res = await fetch(`${API_URL}/books/${bookId}/unpublish`, {
+                        method: 'PUT',
+                        headers: { 'x-auth-token': token }
+                    });
+                    if (res.ok) {
+                        fetchMyBooks();
+                    } else {
+                        const data = await res.json();
+                        VylithraUI.showToast(data.msg || 'Error updating status', 'error');
+                    }
+                } catch (err) {
+                    VylithraUI.showToast('Network error', 'error');
+                }
+            });
+        }
+
+        async function deleteBook(bookId) {
+            VylithraUI.showConfirm('WARNING: Hard Deletion!\n\nThis will permanently delete the book AND automatically refund all purchasers from your Publisher Balance! If you just want to hide it from the store, use Unpublish instead.\n\nProceed?', async () => {
+                try {
+                    const res = await fetch(`${API_URL}/books/${bookId}`, {
+                        method: 'DELETE',
+                        headers: { 'x-auth-token': token }
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        VylithraUI.showToast(data.msg || 'Book completely deleted and purchasers refunded.', 'success');
+                        fetchMyBooks();
+                    } else {
+                        VylithraUI.showToast(data.msg || 'Error deleting book', 'error');
+                    }
+                } catch (err) {
+                    VylithraUI.showToast('Network error while deleting book', 'error');
+                }
+            });
+        }
+
+        /* --- Earnings & Withdrawals Logic --- */
+        let currentWalletBalance = 0;
+
+        async function fetchEarningsData() {
+            try {
+                const res = await fetch(`${API_URL}/publishers/earnings`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    currentWalletBalance = data.walletBalance || 0;
+                    document.getElementById('walletBalance').innerText = '₹' + currentWalletBalance;
+                    document.getElementById('lifetimeEarnings').innerText = '₹' + (data.totalEarned || 0);
+                    document.getElementById('maxWithdrawText').innerText = '₹' + currentWalletBalance;
+                }
+            } catch (err) {
+                console.error("Failed to load earnings:", err);
+            }
+        }
+
+        function openWithdrawModal() {
+            if (currentWalletBalance <= 0) {
+                VylithraUI.showToast("You don't have enough funds to withdraw yet.", 'error');
+                return;
+            }
+            document.getElementById('withdrawAmount').max = currentWalletBalance;
+            document.getElementById('withdrawAmount').value = currentWalletBalance;
+            document.getElementById('withdrawModal').style.display = 'flex';
+        }
+
+        function closeWithdrawModal() {
+            document.getElementById('withdrawModal').style.display = 'none';
+        }
+
+        async function submitWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdrawAmount').value);
+            const method = document.getElementById('withdrawMethod').value;
+            const btn = document.getElementById('withdrawSubmitBtn');
+
+            if (!amount || amount <= 0 || amount > currentWalletBalance) {
+                VylithraUI.showToast("Please enter a valid amount within your limits.", 'error');
+                return;
+            }
+            if (!method) {
+                VylithraUI.showToast("Please provide a valid payout tracking method (like a UPI ID).", 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerText = 'Processing...';
+
+            try {
+                const res = await fetch(`${API_URL}/publishers/withdraw`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ amount, method })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    VylithraUI.showToast(data.msg || "Withdrawal request submitted! Processing takes 3-5 business days.", "success");
+                    await fetchEarningsData(); // Refresh balances
+                    closeWithdrawModal();
+                } else {
+                    VylithraUI.showToast(data.msg || "Failed to process withdrawal.", 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                VylithraUI.showToast("Network failure.", 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = 'Request Payout';
+            }
+        }
+
+        init();
+    </script>
+</body>
+
+</html>
+
