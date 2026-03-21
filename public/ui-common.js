@@ -114,7 +114,7 @@ if ('serviceWorker' in navigator) {
     });
 }
 
-// Global WebRTC Integration
+// Global WebRTC & Firebase Integration
 window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('token') && !window.GlobalWebRTCInit) {
         window.GlobalWebRTCInit = true;
@@ -125,14 +125,50 @@ window.addEventListener('DOMContentLoaded', () => {
         link.href = '/global-webrtc.css';
         document.head.appendChild(link);
 
-        // 2. Load Socket.IO, then Global WebRTC Logic
-        const s1 = document.createElement('script');
-        s1.src = "/socket.io/socket.io.js";
-        s1.onload = () => {
+        // 2. Ensure Firebase is loaded for Signaling
+        function loadFirebaseAndWebRTC() {
+            const loadDb = () => {
+                if (!window.firebase.database) {
+                    const fbDb = document.createElement('script');
+                    fbDb.src = "https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js";
+                    fbDb.onload = initAndLoadRealtime;
+                    document.head.appendChild(fbDb);
+                } else {
+                    initAndLoadRealtime();
+                }
+            };
+            
+            if (!window.firebase || !window.firebase.app) {
+                const fbApp = document.createElement('script');
+                fbApp.src = "https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js";
+                fbApp.onload = loadDb;
+                document.head.appendChild(fbApp);
+            } else {
+                loadDb();
+            }
+
+            function initAndLoadRealtime() {
+                const firebaseConfig = {
+                    apiKey: "AIzaSyBMe2R5iWYj_H4IZ5OpkXSsyc9ULM5Esbw",
+                    authDomain: "luminary-eae16.firebaseapp.com",
+                    projectId: "luminary-eae16",
+                    storageBucket: "luminary-eae16.firebasestorage.app",
+                    messagingSenderId: "271803460699",
+                    appId: "1:271803460699:web:fcdd88f117dfe0817de37e"
+                };
+                if (!firebase.apps.length) {
+                    firebase.initializeApp(firebaseConfig);
+                }
+                loadWebRTC();
+            }
+        }
+
+        function loadWebRTC() {
             const s2 = document.createElement('script');
             s2.src = "/global-webrtc.js";
             document.head.appendChild(s2);
-        };
-        document.head.appendChild(s1);
+        }
+
+        loadFirebaseAndWebRTC();
     }
 });

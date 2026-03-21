@@ -68,8 +68,96 @@
 
     if(!currentUserId) return;
 
-    window.globalSocket = window.io ? io() : window.socket;
-    if(!window.globalSocket) return;
+    // --- Firebase Realtime Database Signaling Adapter ---
+    if (!window.firebase || !window.firebase.database) {
+        console.error("Firebase Database not initialized for signaling.");
+        return;
+    }
+    
+    const db = firebase.database();
+    const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
+    const statusRef = db.ref(`webrtc/status/${currentUserId}`);
+    
+    // Set presence status
+    statusRef.set(true);
+    statusRef.onDisconnect().remove();
+
+    const eventHandlers = {};
+
+    // Listen for incoming 1-on-1 signals (offers, answers, ice)
+    signalsRef.on('child_added', (snapshot) => {
+        const data = snapshot.val();
+        if (!data || !data.type) return;
+        
+        if (eventHandlers[data.type]) {
+            eventHandlers[data.type](data.payload);
+        }
+        // Remove signal immediately after processing
+        snapshot.ref.remove().catch(e => console.error(e));
+    });
+
+    window.globalSocket = {
+        on: (event, handler) => {
+            eventHandlers[event] = handler;
+        },
+        emit: async (event, data, callback) => {
+            if (event === 'check-online') {
+                const targetId = data;
+                try {
+                    const snap = await db.ref(`webrtc/status/${targetId}`).once('value');
+                    if (callback) callback({ isOnline: snap.exists() });
+                } catch(e) {
+                    if (callback) callback({ isOnline: false });
+                }
+                return;
+            }
+            if (event === 'join-room') {
+                return; // Handled structurally by Firebase
+            }
+            
+            // Standard 1-on-1 peer events require a "to" field
+            if (data && data.to) {
+                db.ref(`webrtc/signals/${data.to}`).push({
+                    type: event,
+                    payload: data
+                }).catch(e => console.error(e));
+            } 
+            // Group Call Logic
+            else if (event === 'join-group-call') {
+                const { groupId, userId } = data;
+                const groupRef = db.ref(`webrtc/groups/${groupId}`);
+                const myNode = groupRef.child(userId);
+                
+                const now = Date.now();
+                myNode.set(now);
+                myNode.onDisconnect().remove();
+
+                // Listen for others joining
+                groupRef.on('child_added', snap => {
+                    const otherId = snap.key;
+                    const joinTime = snap.val();
+                    // If they joined AFTER me, I initiate to prevent glare
+                    if (otherId !== userId && joinTime > now) {
+                        if (eventHandlers['user-joined-call']) {
+                            eventHandlers['user-joined-call']({ userId: otherId });
+                        }
+                    }
+                });
+
+                groupRef.on('child_removed', snap => {
+                    const otherId = snap.key;
+                    if (otherId !== userId && eventHandlers['user-left-call']) {
+                        eventHandlers['user-left-call']({ userId: otherId });
+                    }
+                });
+            }
+            else if (event === 'leave-group-call') {
+                const { groupId, userId } = data;
+                db.ref(`webrtc/groups/${groupId}/${userId}`).remove();
+                db.ref(`webrtc/groups/${groupId}`).off();
+            }
+        }
+    };
 
     // Mesh Network State
     let peerConnections = {}; // Map of userId -> RTCPeerConnection
