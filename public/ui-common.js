@@ -115,22 +115,24 @@ if ('serviceWorker' in navigator) {
 }
 
 // Global WebRTC Integration
-if (localStorage.getItem('token') && !window.GlobalWebRTCInit) {
-    window.GlobalWebRTCInit = true;
-    
-    // 1. Load WebRTC CSS
-    const link = document.createElement('link');
-    link.rel = 'stylesheet';
-    link.href = '/global-webrtc.css';
-    document.head.appendChild(link);
+window.addEventListener('DOMContentLoaded', () => {
+    if (localStorage.getItem('token') && !window.GlobalWebRTCInit) {
+        window.GlobalWebRTCInit = true;
+        
+        // 1. Load WebRTC CSS
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = '/global-webrtc.css';
+        document.head.appendChild(link);
 
-    // 2. Load Socket.IO, then Global WebRTC Logic
-    const s1 = document.createElement('script');
-    s1.src = "/socket.io/socket.io.js";
-    s1.onload = () => {
-        const s2 = document.createElement('script');
-        s2.src = "/global-webrtc.js";
-        document.head.appendChild(s2);
-    };
-    document.head.appendChild(s1);
-}
+        // 2. Load Socket.IO, then Global WebRTC Logic
+        const s1 = document.createElement('script');
+        s1.src = "/socket.io/socket.io.js";
+        s1.onload = () => {
+            const s2 = document.createElement('script');
+            s2.src = "/global-webrtc.js";
+            document.head.appendChild(s2);
+        };
+        document.head.appendChild(s1);
+    }
+});
