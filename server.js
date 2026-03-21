@@ -345,6 +345,168 @@ function checkFileType(file, cb) {
     }
 }
 
+// --- Followers API ---
+app.post('/api/users/:targetId/follow', auth, async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user.id);
+        const targetUser = await User.findById(req.params.targetId);
+
+        if (!targetUser) return res.status(404).json({ msg: 'User not found' });
+        if (currentUser.id === targetUser.id) return res.status(400).json({ msg: 'Cannot follow yourself' });
+
+        if (!currentUser.following) currentUser.following = [];
+        if (!targetUser.followers) targetUser.followers = [];
+
+        const isFollowing = currentUser.following.some(id => id.toString() === targetUser.id);
+        if (!isFollowing) {
+            currentUser.following.push(targetUser._id);
+            await currentUser.save();
+        }
+        
+        const hasFollower = targetUser.followers.some(id => id.toString() === currentUser.id);
+        if (!hasFollower) {
+            targetUser.followers.push(currentUser._id);
+            await targetUser.save();
+        }
+
+        res.json({ msg: 'Followed successfully', following: currentUser.following });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.delete('/api/users/:targetId/unfollow', auth, async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user.id);
+        const targetUser = await User.findById(req.params.targetId);
+        
+        if (currentUser) {
+            currentUser.following = (currentUser.following || []).filter(c => c.toString() !== req.params.targetId);
+            await currentUser.save();
+        }
+        if (targetUser) {
+            targetUser.followers = (targetUser.followers || []).filter(c => c.toString() !== req.user.id);
+            await targetUser.save();
+        }
+
+        res.json({ msg: 'Unfollowed successfully' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/users/me/following', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).populate('following', 'username displayName profilePicture bio');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user.following || []);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Used to view the followers/following of ANY user
+app.get('/api/users/:targetId/followers', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.targetId).populate('followers', 'username displayName profilePicture bio role');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user.followers || []);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/users/:targetId/following', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.targetId).populate('following', 'username displayName profilePicture bio role');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user.following || []);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// --- Group Chat APIs ---
+const Group = require('./models/Group');
+
+app.post('/api/groups', auth, async (req, res) => {
+    try {
+        const { name, description, memberIds } = req.body;
+        if (!name || name.trim() === '') return res.status(400).json({ msg: 'Group name required' });
+
+        const members = memberIds ? [...new Set([req.user.id, ...memberIds])] : [req.user.id];
+
+        const newGroup = new Group({
+            name: name.trim(),
+            description: description || '',
+            admin: req.user.id,
+            members: members
+        });
+
+        const group = await newGroup.save();
+        res.json(group);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/groups', auth, async (req, res) => {
+    try {
+        const groups = await Group.find({ members: req.user.id }).populate('members', 'username displayName profilePicture').sort({ createdAt: -1 });
+        res.json(groups);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/messages/group/:groupId', auth, async (req, res) => {
+    try {
+        const group = await Group.findById(req.params.groupId);
+        if(!group || !group.members.includes(req.user.id)) return res.status(403).json({ msg: 'Not a member of this group' });
+
+        const messages = await Message.find({ groupId: req.params.groupId })
+                                      .populate('sender', 'username profilePicture displayName')
+                                      .sort({ createdAt: 1 });
+        res.json(messages);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+app.post('/api/messages/group/:groupId', auth, async (req, res) => {
+    try {
+        const group = await Group.findById(req.params.groupId);
+        if(!group || !group.members.includes(req.user.id)) return res.status(403).json({ msg: 'Not a member of this group' });
+
+        const { content, attachmentUrl, attachmentType, isSystemLog } = req.body;
+
+        const newMessage = new Message({
+            sender: req.user.id,
+            groupId: req.params.groupId,
+            content,
+            attachmentUrl,
+            attachmentType,
+            isSystemLog: isSystemLog || false
+        });
+
+        const msg = await newMessage.save();
+        await msg.populate('sender', 'username profilePicture displayName');
+        
+        res.json(msg);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Upload Avatar Route
 app.post('/api/users/avatar', auth, (req, res) => {
     upload.single('avatar')(req, res, async (err) => {
@@ -2777,11 +2939,30 @@ const server = http.createServer(app);
 const { Server } = require("socket.io");
 const io = new Server(server, { cors: { origin: "*" } });
 
+// Global mapping of userId to socket.id for presence tracking
+const activeUsers = new Map();
+
 io.on('connection', (socket) => {
     // Join a personal room based on their userId to receive calls
     socket.on('join-room', (roomId) => {
         socket.join(roomId);
+        activeUsers.set(roomId, socket.id);
         console.log(`[Socket] User joined room: ${roomId}`);
+    });
+
+    socket.on('check-online', (userId, callback) => {
+        if (typeof callback === 'function') {
+            callback({ isOnline: activeUsers.has(String(userId)) });
+        }
+    });
+
+    socket.on('disconnect', () => {
+        for (let [userId, sockId] of activeUsers.entries()) {
+            if (sockId === socket.id) {
+                activeUsers.delete(userId);
+                break;
+            }
+        }
     });
 
     // WebRTC Signaling Events
@@ -2816,8 +2997,25 @@ io.on('connection', (socket) => {
     socket.on('ice-candidate', (data) => {
         io.to(data.to).emit('ice-candidate', {
             candidate: data.candidate,
-            socket: socket.id
+            socket: socket.id,
+            from: data.from // Added so receiver knows which peer this candidate is for
         });
+    });
+
+    // Group Call Signaling
+    socket.on('join-group-call', (data) => {
+        const roomName = `call_${data.groupId}`;
+        socket.join(roomName);
+        console.log(`[Socket] User ${data.userId} joined group call room: ${roomName}`);
+        // Notify others to initiate a connection to the new user
+        socket.to(roomName).emit('user-joined-call', { userId: data.userId });
+    });
+
+    socket.on('leave-group-call', (data) => {
+        const roomName = `call_${data.groupId}`;
+        socket.leave(roomName);
+        console.log(`[Socket] User ${data.userId} left group call room: ${roomName}`);
+        socket.to(roomName).emit('user-left-call', { userId: data.userId });
     });
 });
 

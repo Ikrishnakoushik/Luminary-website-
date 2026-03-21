@@ -543,32 +543,44 @@
             }
 
             try {
-                const result = await firebase.auth().signInWithPopup(provider);
-                const idToken = await result.user.getIdToken();
-                
-                // Exchange Firebase token for our systems JWT session
-                const res = await fetch('/api/auth/firebase', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken })
-                });
-                
-                const data = await res.json();
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('role', data.role);
-                    window.location.href = '/main';
-                } else {
-                    alert('Login failed: ' + (data.msg || 'Unknown error'));
-                }
+                // Use redirect for maximum compatibility on mobile devices and cross-origin
+                await firebase.auth().signInWithRedirect(provider);
             } catch (error) {
                 console.error("Firebase Auth Error:", error);
-                if (error.code !== 'auth/popup-closed-by-user') {
-                    alert('Authentication failed: ' + error.message);
-                }
+                alert('Authentication failed to start: ' + error.message);
             }
         }
+
+        // Check for redirect result on page load
+        firebase.auth().getRedirectResult().then(async (result) => {
+            if (result && result.user) {
+                try {
+                    const idToken = await result.user.getIdToken();
+                    
+                    // Exchange Firebase token for our systems JWT session
+                    const res = await fetch('/api/auth/firebase', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ idToken })
+                    });
+                    
+                    const data = await res.json();
+                    if (res.ok) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('username', data.username);
+                        localStorage.setItem('role', data.role);
+                        window.location.href = '/main';
+                    } else {
+                        alert('Login failed: ' + (data.msg || 'Unknown error'));
+                    }
+                } catch(e) {
+                    console.error('Session conversion error:', e);
+                }
+            }
+        }).catch((error) => {
+            console.error("Firebase Redirect Error:", error);
+            alert('Authentication failed: ' + error.message);
+        });
     </script>
 </head>
 <body>
@@ -885,6 +897,11 @@
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
                     window.location.href = '/main';
+                } else if (data.requiresVerification) {
+                    registrationEmail = email;
+                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
+                    switchTab('verify');
+                    document.getElementById('verifyError').innerText = data.msg;
                 } else {
                     errorMsg.innerText = data.msg || 'Login failed';
                 }

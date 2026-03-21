@@ -19,6 +19,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
+    <!-- Dependencies -->
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
     <style>
                 :root {
             /* Vylithra Global 3-Color Mint Theme */
@@ -411,6 +415,43 @@
             }
         }
 
+        /* Call UI & Overlays */
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        .header-actions-chat { display: flex; align-items: center; gap: 12px; }
+        .e2e-badge { font-size: 0.75rem; color: #10b981; background: rgba(16,185,129,0.1); padding: 4px 8px; border-radius: 12px; display: flex; align-items: center; gap: 4px; font-weight: 600; border: 1px solid rgba(16,185,129,0.2); }
+        .action-btn-circle { width: 38px; height: 38px; border-radius: 50%; background: var(--surface); border: 1px solid var(--border); color: var(--text-main); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .action-btn-circle:hover { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .call-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.85); backdrop-filter: blur(10px); z-index: 9999; display: none; align-items: center; justify-content: center; flex-direction: column; color: white; }
+        .call-video-container { position: relative; width: 90%; max-width: 1000px; height: 70vh; background: #000; border-radius: 20px; overflow: hidden; display: none; margin-bottom: 20px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video { position: absolute; bottom: 20px; right: 20px; width: 200px; height: 150px; border-radius: 12px; object-fit: cover; border: 2px solid white; background: #222; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+
+        .call-audio-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; }
+        .audio-avatar { width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #4f46e5); color: white; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; margin-bottom: 20px; box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4); border: 4px solid rgba(255,255,255,0.1); }
+        .audio-avatar.pulsing { animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0.7); } 70% { box-shadow: 0 0 0 20px rgba(20, 184, 166, 0); } 100% { box-shadow: 0 0 0 0 rgba(20, 184, 166, 0); } }
+
+        .call-controls { display: flex; gap: 20px; }
+        .call-control-btn { width: 60px; height: 60px; border-radius: 50%; border: none; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; color: white; background: rgba(255,255,255,0.2); backdrop-filter: blur(5px); }
+        .call-control-btn:hover { background: rgba(255,255,255,0.3); }
+        .call-control-btn.end-btn { background: #ef4444; }
+        .call-control-btn.end-btn:hover { background: #dc2626; box-shadow: 0 0 15px rgba(239,68,68,0.5); }
+        .call-control-btn.accept-btn { background: #10b981; }
+        .call-control-btn.accept-btn:hover { background: #059669; box-shadow: 0 0 15px rgba(16,185,129,0.5); }
+        
+        /* Attachment UI */
+        .attach-btn { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; margin-right: 5px; cursor: pointer; transition: color 0.2s; display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 50%; }
+        .attach-btn:hover { color: var(--primary); background: rgba(20, 184, 166, 0.1); }
+        .attachment-preview { display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); padding: 10px 15px; border-radius: 12px; margin-bottom: 10px; max-width: 300px; }
+        .attachment-preview img { width: 40px; height: 40px; object-fit: cover; border-radius: 6px; }
+        .attachment-preview i { font-size: 1.5rem; color: var(--primary); }
+        .message-attachment { margin-top: 10px; border-radius: 12px; overflow: hidden; max-width: 100%; border: 1px solid rgba(0,0,0,0.1); }
+        .message-attachment img { max-width: 100%; height: auto; display: block; }
+        .message-attachment video { max-width: 100%; height: auto; display: block; border-radius: 12px;}
+        .attachment-file-link { display: flex; align-items: center; gap: 10px; padding: 12px; background: rgba(0,0,0,0.05); text-decoration: none; color: inherit; font-weight: 500; }
+        .attachment-file-link:hover { background: rgba(0,0,0,0.1); }
+        
         /* Custom Scrollbar for Theme Consistency */
         </style>
 
@@ -430,8 +471,11 @@
 
         <!-- Conversations Sidebar -->
         <aside class="conversations-sidebar">
-            <div class="sidebar-header">
-                Chats
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Chats</span>
+                <button onclick="openCreateGroupModal()" style="background:none; border:none; color:var(--text-main); font-size:1.1rem; cursor:pointer; padding:5px; transition:color 0.2s;" title="Create Group" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-main)'">
+                    <i class="fas fa-users-medical"></i>
+                </button>
             </div>
             <div class="conversation-list" id="convos-list">
                 <!-- Loaded via JS -->
@@ -442,11 +486,20 @@
         <!-- Main Chat Area -->
         <main class="chat-main">
             <!-- Header for active chat -->
-            <div class="chat-header" id="chat-header" style="display: none;">
-                <div class="avatar" id="active-avatar">U</div>
-                <div>
-                    <h3 id="active-name">Select a conversation</h3>
-                    <p id="active-status">Start typing to connect</p>
+            <div class="chat-header" id="chat-header" style="display: none; justify-content: space-between;">
+                <div class="header-left">
+                    <div class="avatar" id="active-avatar">U</div>
+                    <div>
+                        <h3 id="active-name" style="display: flex; align-items: center; gap: 8px;">
+                            Select a conversation
+                            <span class="e2e-badge" title="End-to-End Encrypted"><i class="fas fa-lock"></i> E2EE</span>
+                        </h3>
+                        <p id="active-status">Start typing to connect</p>
+                    </div>
+                </div>
+                <div class="header-actions-chat">
+                    <button class="action-btn-circle" onclick="startCall(false)" title="Audio Call"><i class="fas fa-phone-alt"></i></button>
+                    <button class="action-btn-circle" onclick="startCall(true)" title="Video Call"><i class="fas fa-video"></i></button>
                 </div>
             </div>
 
@@ -460,8 +513,28 @@
             </div>
 
             <!-- Input Area -->
+            <div style="padding: 0 30px;">
+                <div id="attachment-preview-container" style="display: none;"></div>
+            </div>
             <div class="chat-input-container" id="chat-input-area" style="opacity: 0.5; pointer-events: none;">
-                <input type="text" id="message-input" class="chat-input" placeholder="Type a message..."
+                <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileSelect(event)">
+                <div style="position: relative;">
+                    <button class="attach-btn" onclick="toggleAttachmentMenu()" id="attachMenuBtn" title="Attach Media">
+                        <i class="fas fa-paperclip"></i>
+                    </button>
+                    <div id="attach-dropdown" style="display:none; position:absolute; bottom:50px; left:0; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:5px; box-shadow:0 10px 25px rgba(0,0,0,0.5); width:160px; z-index:100;">
+                        <div onclick="triggerFileSelect('image/*')" style="padding:10px; cursor:pointer; display:flex; gap:12px; align-items:center; border-radius:8px; font-size:0.9rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                            <i class="fas fa-image" style="color:#10b981; width:20px;"></i> Photo
+                        </div>
+                        <div onclick="triggerFileSelect('video/*')" style="padding:10px; cursor:pointer; display:flex; gap:12px; align-items:center; border-radius:8px; font-size:0.9rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                            <i class="fas fa-video" style="color:#3b82f6; width:20px;"></i> Video
+                        </div>
+                        <div onclick="triggerFileSelect('*')" style="padding:10px; cursor:pointer; display:flex; gap:12px; align-items:center; border-radius:8px; font-size:0.9rem;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background=''">
+                            <i class="fas fa-file-alt" style="color:#8b5cf6; width:20px;"></i> Document
+                        </div>
+                    </div>
+                </div>
+                <input type="text" id="message-input" class="chat-input" placeholder="Type an encrypted message..."
                     autocomplete="off" onkeypress="handleEnter(event)">
                 <button class="send-btn" onclick="sendMessage()">
                     <i class="fas fa-paper-plane"></i>
@@ -470,10 +543,29 @@
         </main>
     </div>
 
+    <!-- Create Group Modal -->
+    <div id="createGroupModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+        <div style="background-color: var(--surface); margin: 10% auto; padding: 25px; border: 1px solid var(--border); width: 90%; max-width: 450px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="margin:0; font-size:1.5rem;">Create New Group</h2>
+                <span onclick="document.getElementById('createGroupModal').style.display='none'" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted);">&times;</span>
+            </div>
+            <input type="text" id="groupNameInput" placeholder="Group Name (e.g., Development Team...)" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-family: inherit; font-size: 1rem;">
+            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;">Select Members from Network</p>
+            <div id="groupConnectionsList" style="max-height: 200px; min-height: 100px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 20px; background: var(--bg-color);">
+                <div style="color:var(--text-muted); text-align:center;">Loading...</div>
+            </div>
+            <button onclick="submitCreateGroup()" style="width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Ready. Create Group</button>
+        </div>
+    </div>
+
+    <!-- Call Overlay handled globally by ui-common/global-webrtc -->
+
     <script>
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUserId = null;
         let activeChatUserId = null;
+        let chatKey = '';
 
         // Verify Auth
         function checkAuth() {
@@ -500,48 +592,132 @@
             return true;
         }
 
+        async function openCreateGroupModal() {
+            document.getElementById('createGroupModal').style.display = 'block';
+            const list = document.getElementById('groupConnectionsList');
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/users/me/connections`, { headers: { 'x-auth-token': token } });
+                if (res.ok) {
+                    const connections = await res.json();
+                    if (connections.length === 0) {
+                        list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top: 20px;">No connections found. Build your network first!</div>';
+                        return;
+                    }
+                    list.innerHTML = connections.map(conn => `
+                        <label style="display: flex; align-items: center; gap: 12px; padding: 8px; cursor: pointer; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
+                            <input type="checkbox" class="group-member-checkbox" value="${conn._id}" style="width: 18px; height: 18px; cursor: pointer;">
+                            <span style="font-weight: 600; font-size: 0.95rem;">@${conn.username}</span>
+                        </label>
+                    `).join('');
+                }
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = '<div style="color:red; text-align:center;">Failed to load connections</div>';
+            }
+        }
+
+        async function submitCreateGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            if (!name) return VylithraUI.showToast('Group name is required!', 'error');
+            const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
+            const memberIds = Array.from(checkboxes).map(cb => cb.value);
+
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/groups`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ name, memberIds })
+                });
+                if (res.ok) {
+                    document.getElementById('createGroupModal').style.display = 'none';
+                    document.getElementById('groupNameInput').value = '';
+                    VylithraUI.showToast('Group created!', 'success');
+                    loadConversations();
+                }
+            } catch(e) { console.error(e); }
+        }
+
+        let isGroupChatActive = false;
+        let activeGroupId = null;
+
         async function loadConversations() {
             const token = localStorage.getItem('token');
             try {
                 const res = await fetch(`${API_URL}/messages/conversations`, {
                     headers: { 'x-auth-token': token }
                 });
+                
+                const groupRes = await fetch(`${API_URL}/groups`, {
+                    headers: { 'x-auth-token': token }
+                });
 
                 const list = document.getElementById('convos-list');
 
-                if (res.ok) {
-                    const convos = await res.json();
+                if (res.ok && groupRes.ok) {
+                    const dms = await res.json();
+                    const groups = await groupRes.json();
+                    
+                    // Normalize DMs
+                    const normalizedDMs = dms.map(c => ({
+                        type: 'dm',
+                        id: c.user._id,
+                        name: c.user.username,
+                        avatar: c.user.profilePicture,
+                        timestamp: c.timestamp,
+                        lastMessage: c.lastMessage || 'Start a conversation',
+                        unread: c.unread
+                    }));
 
-                    if (convos.length === 0 && !activeChatUserId) {
-                        list.innerHTML = '<div style="padding: 20px; text-align:center; color: var(--text-muted); font-size: 0.9rem;">No active conversations yet. Visit a user\'s profile to message them.</div>';
+                    // Normalize Groups
+                    const normalizedGroups = groups.map(g => ({
+                        type: 'group',
+                        id: g._id,
+                        name: g.name,
+                        avatar: g.avatar,
+                        timestamp: g.createdAt, // Or last message if added later
+                        lastMessage: 'Tap to view group',
+                        unread: false
+                    }));
+
+                    const allConvos = [...normalizedDMs, ...normalizedGroups].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+                    if (allConvos.length === 0 && !activeChatUserId) {
+                        list.innerHTML = '<div style="padding: 20px; text-align:center; color: var(--text-muted); font-size: 0.9rem;">No active conversations yet. Visit a user\'s profile to message them or create a group.</div>';
                         return;
                     }
 
                     list.innerHTML = '';
-
                     let foundActiveInList = false;
 
-                    convos.forEach(c => {
+                    allConvos.forEach(c => {
                         const date = new Date(c.timestamp);
                         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-
-                        // User info
-                        const otherUserId = c.user._id;
-                        const initial = (c.user.username || 'U').charAt(0).toUpperCase();
-                        const avatarHtml = c.user.profilePicture
-                            ? `<img src="${c.user.profilePicture}" alt="Avatar">`
+                        
+                        const initial = (c.name || 'G').charAt(0).toUpperCase();
+                        let avatarHtml = c.avatar
+                            ? `<img src="${c.avatar}" alt="Avatar">`
                             : initial;
+                            
+                        if(c.type === 'group' && !c.avatar) {
+                            avatarHtml = `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface);"><i class="fas fa-users" style="font-size:1.2rem; color:var(--text-muted);"></i></div>`;
+                        }
 
                         // Check if this is the active chat
-                        const isActive = activeChatUserId === otherUserId;
+                        const isActive = (c.type === 'dm' && activeChatUserId === c.id) || (c.type === 'group' && activeGroupId === c.id);
                         if (isActive) foundActiveInList = true;
 
+                        const clickHandler = c.type === 'dm' 
+                            ? `openChat('${c.id}', '${c.name}', '${c.avatar || ''}')`
+                            : `openGroupChat('${c.id}', '${c.name}', '${c.avatar || ''}')`;
+
                         list.innerHTML += `
-                            <div class="conversation-item ${isActive ? 'active' : ''}" onclick="openChat('${otherUserId}', '${c.user.username}', '${c.user.profilePicture || ''}')">
+                            <div class="conversation-item ${isActive ? 'active' : ''}" onclick="${clickHandler}">
                                 <div class="avatar">${avatarHtml}</div>
                                 <div class="convo-info">
                                     <div class="convo-header">
-                                        <span class="convo-name">@${c.user.username}</span>
+                                        <span class="convo-name">${c.type === 'dm' ? '@' : ''}${c.name}</span>
                                         <span class="convo-time">${timeStr}</span>
                                     </div>
                                     <div class="convo-preview ${c.unread ? 'unread' : ''}">
@@ -554,7 +730,6 @@
 
                     // If we came from a profile page with ?user=ID and they aren't in the list yet
                     if (activeChatUserId && !foundActiveInList) {
-                        // Create a dummy convo item for the new user at the top
                         fetch(`${API_URL}/users/${activeChatUserId}`).then(r => r.json()).then(user => {
                             if (user && user._id) {
                                 const initial = (user.username || 'U').charAt(0).toUpperCase();
@@ -590,6 +765,53 @@
             }
         }
 
+        async function openGroupChat(groupId, groupName, profilePic) {
+            activeGroupId = groupId;
+            activeChatUserId = null; // Important: Clear DM active state
+            isGroupChatActive = true;
+
+            // UI Updates
+            const initial = (groupName || 'G').charAt(0).toUpperCase();
+            document.getElementById('chat-header').style.display = 'flex';
+            document.getElementById('active-avatar').innerHTML = profilePic ? `<img src="${profilePic}">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface);"><i class="fas fa-users" style="font-size:1.2rem; color:var(--accent);"></i></div>`;
+            document.getElementById('active-name').innerText = groupName;
+
+            document.getElementById('chat-input-area').style.opacity = '1';
+            document.getElementById('chat-input-area').style.pointerEvents = 'auto';
+            document.getElementById('message-input').focus();
+
+            loadConversations();
+
+            // Setup group chat key
+            // Note: In an E2E mesh, group keys should ideally be securely distributed among members using Double Ratchets (Signal Protocol).
+            // For now, we will fallback to a symmetric secret key based on the groupId.
+            chatKey = CryptoJS.SHA256(groupId + 'vylithra-group-e2ee-secret').toString();
+
+            // Load Chat History
+            const token = localStorage.getItem('token');
+            const stream = document.getElementById('chat-stream');
+            stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px;">Loading group messages...</div>';
+
+            try {
+                const res = await fetch(`${API_URL}/messages/group/${groupId}`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (res.ok) {
+                    const msgs = await res.json();
+                    stream.innerHTML = '';
+                    if (msgs.length === 0) {
+                        stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px; font-style:italic;">This group is quiet. Break the ice!</div>';
+                    } else {
+                        msgs.forEach(m => renderMessage(m));
+                        scrollToBottom();
+                    }
+                }
+            } catch(e) {
+                console.error(e);
+                stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Failed to load messages</div>';
+            }
+        }
+
         async function openChat(userId, username, profilePic) {
             activeChatUserId = userId;
 
@@ -605,6 +827,9 @@
 
             // Refresh sidebar highlighting
             loadConversations();
+
+            // Set up E2EE Key
+            chatKey = CryptoJS.SHA256([currentUserId, activeChatUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
 
             // Load Chat History
             const token = localStorage.getItem('token');
@@ -651,9 +876,31 @@
                 if (stream.children.length === 1) stream.innerHTML = ''; // Clear if only empty state
             }
 
+            // Decrypt content 
+            let displayContent = msg.content;
+            try {
+                const bytes = CryptoJS.AES.decrypt(msg.content, chatKey);
+                const decrypted = bytes.toString(CryptoJS.enc.Utf8);
+                if (decrypted) displayContent = decrypted;
+            } catch (e) {
+                // Ignore decryption errors for unencrypted legacy messages
+            }
+
+            let attachmentHtml = '';
+            if (msg.attachmentUrl) {
+                if (msg.attachmentType === 'image') {
+                    attachmentHtml = `<div class="message-attachment"><img src="${msg.attachmentUrl}"></div>`;
+                } else if (msg.attachmentType === 'video') {
+                    attachmentHtml = `<div class="message-attachment"><video src="${msg.attachmentUrl}" controls></video></div>`;
+                } else if (msg.attachmentType === 'file') {
+                    attachmentHtml = `<a href="${msg.attachmentUrl}" target="_blank" class="attachment-file-link"><i class="fas fa-file"></i> Download File</a>`;
+                }
+            }
+
             stream.innerHTML += `
                 <div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}">
-                    ${msg.content}
+                    ${displayContent === '[Attachment]' && attachmentHtml ? '' : displayContent}
+                    ${attachmentHtml}
                     <div class="message-time">${timeClass}</div>
                 </div>
             `;
@@ -664,37 +911,105 @@
             stream.scrollTop = stream.scrollHeight;
         }
 
+        let pendingAttachmentUrl = null;
+        let pendingAttachmentType = 'none';
+
+        async function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const previewContainer = document.getElementById('attachment-preview-container');
+            previewContainer.style.display = 'block';
+            previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-spinner fa-spin"></i> Uploading ${file.name}...</div>`;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/messages/upload`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    pendingAttachmentUrl = data.url;
+                    
+                    if (file.type.startsWith('image/')) pendingAttachmentType = 'image';
+                    else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
+                    else pendingAttachmentType = 'file';
+
+                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="${pendingAttachmentUrl}">` : `<i class="fas fa-file"></i>`;
+                    previewContainer.innerHTML = `
+                        <div class="attachment-preview">
+                            ${iconHtml}
+                            <span style="flex:1; font-size: 0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:10px;">Ready to send</span>
+                            <button class="attach-btn" style="width:24px;height:24px;" onclick="cancelAttachment()"><i class="fas fa-times"></i></button>
+                        </div>
+                    `;
+                } else {
+                    previewContainer.innerHTML = `<div style="color:red; font-size:0.85rem; padding: 10px;">Upload failed.</div>`;
+                    setTimeout(cancelAttachment, 2000);
+                }
+            } catch (e) {
+                console.error(e);
+                cancelAttachment();
+            }
+        }
+
+        function cancelAttachment() {
+            pendingAttachmentUrl = null;
+            pendingAttachmentType = 'none';
+            document.getElementById('file-upload-input').value = '';
+            document.getElementById('attachment-preview-container').style.display = 'none';
+        }
+
         async function sendMessage() {
-            if (!activeChatUserId) return;
+            if (!activeChatUserId && !activeGroupId) return;
             const input = document.getElementById('message-input');
             const content = input.value.trim();
-            if (!content) return;
+            if (!content && !pendingAttachmentUrl) return;
 
             const token = localStorage.getItem('token');
+            const encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
 
             // Optimistic UI Render
             const optimisticMsg = {
-                content: content,
+                content: encryptedContent || CryptoJS.AES.encrypt('[Attachment]', chatKey).toString(), 
+                attachmentUrl: pendingAttachmentUrl,
+                attachmentType: pendingAttachmentType,
                 createdAt: new Date(),
                 sender: currentUserId,
-                receiver: activeChatUserId
             };
+            if (isGroupChatActive) optimisticMsg.groupId = activeGroupId;
+            else optimisticMsg.receiver = activeChatUserId;
+            
             input.value = '';
+            const payloadAttachmentUrl = pendingAttachmentUrl;
+            const payloadAttachmentType = pendingAttachmentType;
+            cancelAttachment();
+            
             renderMessage(optimisticMsg);
             scrollToBottom();
 
+            const url = isGroupChatActive ? `${API_URL}/messages/group/${activeGroupId}` : `${API_URL}/messages/${activeChatUserId}`;
+
             try {
-                const res = await fetch(`${API_URL}/messages/${activeChatUserId}`, {
+                const res = await fetch(url, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'x-auth-token': token
                     },
-                    body: JSON.stringify({ content })
+                    body: JSON.stringify({ 
+                        content: encryptedContent, 
+                        attachmentUrl: payloadAttachmentUrl, 
+                        attachmentType: payloadAttachmentType 
+                    })
                 });
 
                 if (res.ok) {
-                    // Update sidebar internally without reloading chat
                     loadConversations();
                 } else {
                     VylithraUI.showToast("Failed to send message!", 'error');
@@ -726,14 +1041,58 @@
 
             // Setup polling for new messages every 10 seconds
             setInterval(() => {
-                if (activeChatUserId) openChat(activeChatUserId, document.getElementById('active-name').innerText.replace('@', ''), null); // Re-fetch active
-                else loadConversations();
+                if (isGroupChatActive && activeGroupId) {
+                    openGroupChat(activeGroupId, document.getElementById('active-name').innerText, null);
+                }
+                else if (activeChatUserId) {
+                    openChat(activeChatUserId, document.getElementById('active-name').innerText.replace('@', ''), null); 
+                }
+                else {
+                    loadConversations();
+                }
             }, 10000);
         });
 
+        // --- Attachment Menu Helpers ---
+        function toggleAttachmentMenu() {
+            const menu = document.getElementById('attach-dropdown');
+            menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        }
+        function triggerFileSelect(type) {
+            const input = document.getElementById('file-upload-input');
+            input.accept = type;
+            input.click();
+            toggleAttachmentMenu();
+        }
+        
+        document.addEventListener('click', (e) => {
+            const menu = document.getElementById('attach-dropdown');
+            const btn = document.getElementById('attachMenuBtn');
+            if(menu && menu.style.display === 'block' && !menu.contains(e.target) && !btn.contains(e.target)) {
+                menu.style.display = 'none';
+            }
+        });
+
+        // --- Global Call Wrapper ---
+        function startCall(isVideo) {
+            if(!activeChatUserId && !activeGroupId) return;
+            const name = document.getElementById('active-name').innerText.replace('@', '').replace('E2EE', '').trim();
+            
+            if (isGroupChatActive && activeGroupId) {
+                if(window.globalInitiateGroupCall) {
+                    window.globalInitiateGroupCall(activeGroupId, name, isVideo);
+                } else {
+                    VylithraUI.showToast('Call system initializing...', 'info');
+                }
+            } else if (activeChatUserId) {
+                if(window.globalInitiateCall) {
+                    window.globalInitiateCall(activeChatUserId, name, isVideo);
+                } else {
+                    VylithraUI.showToast('Call system initializing...', 'info');
+                }
+            }
+        }
     </script>
 </body>
 
 </html>
-
-

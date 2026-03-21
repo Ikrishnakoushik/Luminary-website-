@@ -17,7 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Font Awesome for Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
     <style>
         /* --- CSS VARIABLES --- */
@@ -398,6 +398,66 @@
             flex-grow: 1;
             display: flex;
             flex-direction: column;
+        }
+
+        .profile-stat-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 8px 18px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .profile-stat-btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .profile-stat-btn strong {
+            font-size: 1.1rem;
+            color: var(--text-main);
+        }
+
+        .profile-stat-btn span {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .social-links {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .social-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08); /* light translucent surface */
+            color: var(--text-main);
+            font-size: 1.25rem;
+            text-decoration: none;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .social-btn:hover {
+            transform: translateY(-4px);
+            background: var(--text-main);
+            color: var(--bg-color); /* Invert color */
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            border-color: transparent;
         }
 
         .project-title {
@@ -1217,12 +1277,7 @@
                 learn along the
                 way.</p>
 
-            <div class="tags">
-                <span class="tag" id="profile-role">User</span>
-                <span class="tag">Development</span>
-                <span class="tag">AI</span>
-                <span class="tag">Writing</span>
-            </div>
+            <!-- Tags removed per user request -->
 
             <div class="social-links">
                 <a href="#" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
@@ -1239,6 +1294,16 @@
         <main class="feed">
 
             <!-- SETTINGS MODAL REMOVED - NOW A DEDICATED PAGE -->
+
+            <!-- Connections Section -->
+            <section id="connections-section" style="display: none; background: var(--surface); padding: 25px; border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 25px;">
+                <div class="section-header">
+                    <h2 class="section-title">Network</h2>
+                </div>
+                <div id="connections-list" style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- Connection items injected here -->
+                </div>
+            </section>
 
             <!-- Simulated OAuth Overlay -->
             <div id="oauthOverlay"></div>
@@ -1300,9 +1365,30 @@
                     const bioEl = document.getElementById('profile-bio');
                     if (bioEl) {
                         bioEl.innerText = user.bio || "Digital Craftsman & Writer. Building things for the web and sharing what I learn along the way.";
+                        
+                        // Render Social Stats
+                        let statsEl = document.getElementById('profile-stats');
+                        if (!statsEl) {
+                            statsEl = document.createElement('div');
+                            statsEl.id = 'profile-stats';
+                            statsEl.style.display = 'flex';
+                            statsEl.style.justifyContent = 'center';
+                            statsEl.style.gap = '12px';
+                            statsEl.style.marginTop = '15px';
+                            bioEl.parentNode.insertBefore(statsEl, bioEl.nextSibling);
+                        }
+                        const followersCount = user.followers ? user.followers.length : 0;
+                        const followingCount = user.following ? user.following.length : 0;
+                        statsEl.innerHTML = `
+                            <div class="profile-stat-btn" onclick="openFollowModal('followers', '${user._id}')" title="View Followers"><strong id="profile-followers-count">${followersCount}</strong> <span>Followers</span></div>
+                            <div class="profile-stat-btn" onclick="openFollowModal('following', '${user._id}')" title="View Following"><strong id="profile-following-count">${followingCount}</strong> <span>Following</span></div>
+                        `;
                     }
 
-                    document.getElementById('profile-role').innerText = (user.role || 'Reader').charAt(0).toUpperCase() + (user.role || 'reader').slice(1);
+                    const roleEl = document.getElementById('profile-role');
+                    if(roleEl) {
+                        roleEl.innerText = (user.role || 'Reader').charAt(0).toUpperCase() + (user.role || 'reader').slice(1);
+                    }
                     const initial = (user.username || 'U').charAt(0).toUpperCase();
                     const avatarEl = document.getElementById('profile-avatar');
 
@@ -1453,27 +1539,27 @@
                         const loadConnectionState = async () => {
                             if (!token) return;
                             try {
-                                const res = await fetch(`${API_URL}/users/connections`, {
+                                const res = await fetch(`${API_URL}/users/me/following`, {
                                     headers: { 'x-auth-token': token }
                                 });
                                 if (res.ok) {
-                                    const connections = await res.json();
-                                    isConnected = connections.some(c => c._id === user._id);
+                                    const following = await res.json();
+                                    isConnected = following.some(c => c._id === user._id);
                                     updateBtnUI();
                                 }
                             } catch (e) {
-                                console.error('Error fetching connections:', e);
+                                console.error('Error fetching following:', e);
                             }
                         };
 
                         const updateBtnUI = () => {
                             if (isConnected) {
-                                actionBtn.innerHTML = '<i class="fas fa-check"></i> Connected';
+                                actionBtn.innerHTML = '<i class="fas fa-user-check"></i> Following';
                                 actionBtn.style.background = '#10b981'; // Green to show success
                                 actionBtn.style.color = '#fff';
                                 actionBtn.style.border = 'none';
                             } else {
-                                actionBtn.innerHTML = '<i class="fas fa-user-plus"></i> Connect';
+                                actionBtn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
                                 actionBtn.style.background = '#f43f5e';
                                 actionBtn.style.color = '#fff';
                                 actionBtn.style.border = 'none';
@@ -1483,33 +1569,47 @@
                         // Initial State Render
                         updateBtnUI();
                         loadConnectionState(); // Pull live state asynchronously
-
                         actionBtn.onclick = async () => {
                             if (!token) {
-                                VylithraUI.showToast('Please login to connect with users!', 'error');
-                                setTimeout(() => window.location.href = 'login', 1500);
+                                VylithraUI.showToast('Please login to follow users!', 'error');
+                                setTimeout(() => window.location.href = 'auth', 1500);
                                 return;
                             }
+
+                            if (actionBtn.disabled) return;
+                            actionBtn.disabled = true;
+
+                            const method = isConnected ? 'DELETE' : 'POST';
+                            const url = isConnected ? `${API_URL}/users/${user._id}/unfollow` : `${API_URL}/users/${user._id}/follow`;
 
                             // Optimistic UI update
                             isConnected = !isConnected;
                             updateBtnUI();
 
                             try {
-                                const res = await fetch(`${API_URL}/users/connect/${user._id}`, {
-                                    method: 'POST',
+                                const res = await fetch(url, {
+                                    method: method,
                                     headers: { 'x-auth-token': token }
                                 });
 
                                 if (!res.ok) {
-                                    throw new Error('Connection failed');
+                                    throw new Error('Follow action failed');
+                                } else {
+                                    // Update counter locally if we just clicked it
+                                    const flwCountEl = document.getElementById('profile-followers-count');
+                                    if(flwCountEl) {
+                                        let c = parseInt(flwCountEl.innerText) || 0;
+                                        flwCountEl.innerText = isConnected ? c + 1 : Math.max(0, c - 1);
+                                    }
                                 }
                             } catch (e) {
-                                console.error(e);
+                                console.error('Follow action error:', e);
                                 // Revert optimistic update on failure
                                 isConnected = !isConnected;
                                 updateBtnUI();
-                                VylithraUI.showToast('An error occurred. Please try again later.', 'error');
+                                VylithraUI.showToast('An error occurred while following user.', 'error');
+                            } finally {
+                                actionBtn.disabled = false;
                             }
                         };
                         actionContainer.appendChild(actionBtn);
@@ -1550,6 +1650,62 @@
                     // ONLY render projects if NOT reader
                     if (user.role !== 'reader') {
                         renderProjects(user.projects || [], isMyProfile);
+                    }
+
+                    // Render Profile Content
+                    // (Connections list is no longer rendered here, we use Followers/Following counts instead)
+
+                    // Pull Network Data right after render for sidebar
+                    let tokenStr = localStorage.getItem('token');
+                    if (tokenStr) {
+                        fetchFollowingList(tokenStr);
+                    }
+                }
+
+                async function fetchFollowingList(token) {
+                    try {
+                        let url = `${API_URL}/users/me/following`; // fallback
+                        const currentUserId = JSON.parse(atob(token.split('.')[1])).user.id;
+
+                        // Check if we are viewing our own profile or someone else's
+                        const urlParams = new URLSearchParams(window.location.search);
+                        const viewingId = urlParams.get('user');
+
+                        if (viewingId && viewingId !== currentUserId) {
+                            // Currently we don't have a public endpoint to view ANOTHER user's following list easily without auth bypassing,
+                            // but ideally we'd hit `/api/users/:id/following`. For now let's just show the current logged-in user's network or hide it.
+                            return; 
+                        }
+
+                        const res = await fetch(url, { headers: { 'x-auth-token': token } });
+                        if (res.ok) {
+                            const connections = await res.json();
+                            const list = document.getElementById('network-list');
+                            if (!list) return;
+
+                            if (connections.length === 0) {
+                                list.innerHTML = '<span style="color:var(--text-muted); font-size:0.9rem;">Not following anyone yet.</span>';
+                                return;
+                            }
+
+                            list.innerHTML = connections.map(conn => `
+                                <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer;" onclick="window.location.href='profile.html?user=${conn._id}'">
+                                    <div style="display:flex; align-items:center;">
+                                        ${conn.profilePicture 
+                                            ? `<img src="${conn.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                            : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${conn.username.charAt(0).toUpperCase()}</div>`
+                                        }
+                                        <div>
+                                            <div style="font-weight:700; color:var(--text-main);">${conn.displayName || conn.username}</div>
+                                            <div style="font-size:0.8rem; color:var(--text-muted);">@${conn.username}</div>
+                                        </div>
+                                    </div>
+                                    <button class="btn-sm" onclick="event.stopPropagation(); window.location.href='messages.html?user=${conn._id}'">Message</button>
+                                </div>
+                            `).join('');
+                        }
+                    } catch (e) {
+                        console.error('Error fetching network:', e);
                     }
                 }
 
@@ -2427,7 +2583,64 @@
                 return '<a href="' + url + '" target="_blank">' + url + '</a>';
             });
         }
+
+        async function openFollowModal(type, targetUserId) {
+            const modal = document.getElementById('followListModal');
+            const title = document.getElementById('followModalTitle');
+            const list = document.getElementById('followModalList');
+            
+            title.innerText = type === 'followers' ? 'Followers' : 'Following';
+            list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted);"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            modal.style.display = 'block';
+            
+            try {
+                const res = await fetch(`${API_URL}/users/${targetUserId}/${type}`);
+                if (!res.ok) throw new Error('Failed to load');
+                const users = await res.json();
+                
+                if (users.length === 0) {
+                    list.innerHTML = `<span style="color:var(--text-muted); text-align:center; padding:20px; display:block;">No ${type} yet.</span>`;
+                    return;
+                }
+                
+                list.innerHTML = users.map(u => `
+                    <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer; padding: 10px 15px; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='var(--surface)'" onclick="window.location.href='profile.html?user=${u._id}'">
+                        <div style="display:flex; align-items:center; justify-content: space-between;">
+                            <div style="display:flex; align-items:center;">
+                                ${u.profilePicture 
+                                    ? `<img src="${u.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                    : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${u.username.charAt(0).toUpperCase()}</div>`
+                                }
+                                <div>
+                                    <div style="font-weight:700; color:var(--text-main); font-size:1rem;">${u.displayName || u.username}</div>
+                                    <div style="font-size:0.85rem; color:var(--text-muted);">@${u.username} • <span style="text-transform: capitalize;">${u.role || 'Reader'}</span></div>
+                                </div>
+                            </div>
+                            <button class="btn-sm" style="background:var(--primary); color:white; border:none; padding:6px 14px; border-radius:20px; cursor:pointer;" onclick="event.stopPropagation(); window.location.href='profile.html?user=${u._id}'">View</button>
+                        </div>
+                    </div>
+                `).join('');
+                
+            } catch (e) {
+                console.error(e);
+                list.innerHTML = '<div style="color:#ef4444; text-align:center; padding:20px;">Could not load list.</div>';
+            }
+        }
     </script>
+
+    <!-- Follow List Modal -->
+    <div id="followListModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
+        <div style="background-color: var(--surface); margin: 10% auto; padding: 25px; border: 1px solid var(--border); width: 90%; max-width: 450px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 id="followModalTitle" style="margin:0; font-size:1.5rem; color: var(--text-main);">List</h2>
+                <span onclick="document.getElementById('followListModal').style.display='none'" style="color: var(--text-muted); font-size: 28px; font-weight: 300; cursor: pointer;">&times;</span>
+            </div>
+            
+            <div id="followModalList" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; padding-right: 5px;">
+                <div style="text-align:center; padding:20px; color:var(--text-muted);">Loading...</div>
+            </div>
+        </div>
+    </div>
 
     <!-- READER OVERLAY -->
     <div id="reader-overlay" class="reader-overlay">
