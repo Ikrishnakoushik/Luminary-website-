@@ -117,8 +117,18 @@
             
             // Standard 1-on-1 peer events require a "to" field
             if (data && data.to) {
+                // Map outgoing events to receiver's expected incoming events (matching legacy server logic)
+                const eventMap = {
+                    'call-user': 'call-made',
+                    'make-answer': 'answer-made',
+                    'reject-call': 'call-rejected',
+                    'end-call': 'call-ended',
+                    'ice-candidate': 'ice-candidate'
+                };
+                const translatedEvent = eventMap[event] || event;
+
                 db.ref(`webrtc/signals/${data.to}`).push({
-                    type: event,
+                    type: translatedEvent,
                     payload: data
                 }).catch(e => console.error(e));
             } 

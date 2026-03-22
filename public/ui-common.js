@@ -151,6 +151,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 const firebaseConfig = {
                     apiKey: "AIzaSyBMe2R5iWYj_H4IZ5OpkXSsyc9ULM5Esbw",
                     authDomain: "luminary-eae16.firebaseapp.com",
+                    databaseURL: "https://luminary-eae16-default-rtdb.firebaseio.com",
                     projectId: "luminary-eae16",
                     storageBucket: "luminary-eae16.firebasestorage.app",
                     messagingSenderId: "271803460699",
