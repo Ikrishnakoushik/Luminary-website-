@@ -1,7 +1,6 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
-const { faker } = require('@faker-js/faker');
 
 const User = require('./models/User');
 const Post = require('./models/Post');
@@ -35,14 +34,22 @@ const professionalBookTitles = [
     "Building Scalable Systems", "The Comprehensive Guide to Design Systems", "Practical TypeScript", 
     "The Advanced Node.js Handbook", "Modern CSS Layouts: Grid & Flexbox", "The Minimalist UI Designer", 
     "Enterprise Product Management", "Micro Frontends in Action", "Designing with Accessibility",
-    "The Go Programming Handbook", "Kubernetes Native Microservices", "Psychology of Web Design",
-    "Advanced Animation with Framer Motion", "Serverless Architectures on AWS", "Leading Engineering Teams",
-    "The UX Researcher's Field Guide", "Zero to One: SaaS Strategies", "Refactoring Legacy Code",
-    "Tailwind CSS in Enterprise", "Building Secure Web Applications", "The Art of Typography",
-    "Web Performance Optimization"
+    "The Go Programming Handbook", "Kubernetes Native Microservices", "Psychology of Web Design"
 ];
 
 const imageThemes = ['workspace', 'technology', 'design', 'code', 'laptop', 'minimalist', 'office', 'computer', 'architecture', 'abstract'];
+
+// --- Native Web Generators to replace Faker ---
+const names = ['Alex Rivera', 'Jordan Lee', 'Taylor Smith', 'Sam Wilson', 'Casey Johnson', 'Riley Davis', 'Jamie Martinez', 'Morgan Garcia', 'Cameron Brown', 'Drew Miller', 'Jesse Taylor', 'Skyler Anderson', 'Quinn Thomas', 'Avery Jackson', 'Parker White'];
+const companies = ['Acme Corp', 'Globex', 'Soylent Corp', 'Initech', 'Umbrella Corp', 'Stark Industries', 'Wayne Enterprises', 'Massive Dynamic', 'Cyberdyne Systems', 'Aperture Science'];
+const getRandomElement = (arr) => arr[Math.floor(Math.random() * arr.length)];
+const getRandomName = () => getRandomElement(names);
+const getRandomCompany = () => getRandomElement(companies);
+const getRandomNumber = (max) => Math.floor(Math.random() * max);
+const getRecentDate = () => new Date(Date.now() - getRandomNumber(30 * 24 * 60 * 60 * 1000));
+const getPastDate = () => new Date(Date.now() - getRandomNumber(365 * 24 * 60 * 60 * 1000));
+const getLorem = () => "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.";
+const getLoremParagraphs = (n) => Array(n).fill(null).map(() => getLorem()).join('\n\n');
 
 async function seedDB() {
     try {
@@ -59,23 +66,25 @@ async function seedDB() {
         console.log('Generating 25 Professional Users (Readers)...');
         const readers = [];
         for (let i = 0; i < 25; i++) {
-            const job = faker.helpers.arrayElement(jobTitles);
-            const company = faker.company.name();
+            const job = getRandomElement(jobTitles);
+            const company = getRandomCompany();
+            const fullName = getRandomName();
+            const baseUsername = fullName.toLowerCase().replace(/\s+/g, '');
             readers.push({
-                username: faker.internet.username() + '_' + faker.string.numeric(4),
-                email: faker.internet.email(),
+                username: baseUsername + '_' + getRandomNumber(9999),
+                email: baseUsername + getRandomNumber(999) + '@example.com',
                 password: defaultPassword,
                 role: 'reader',
-                displayName: faker.person.fullName(),
+                displayName: fullName,
                 bio: `${job} at ${company}. Passionate about building great software.`,
-                profilePicture: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`
+                profilePicture: `https://i.pravatar.cc/150?u=${getRandomNumber(1000000)}`
             });
         }
         
         const createdReaders = await User.insertMany(readers);
         console.log(`Successfully created ${createdReaders.length} reader users.`);
 
-        console.log('Generating 100 Professional Posts...');
+        console.log('Generating 25 Professional Posts...');
         const posts = [];
         const categories = [
             'Global Affairs', 'Technology & Innovation', 'Business & Finance', 
@@ -87,17 +96,18 @@ async function seedDB() {
         for (let i = 0; i < createdReaders.length; i++) {
             const user = createdReaders[i];
             const theme = imageThemes[i % imageThemes.length];
-            const coreInsight = faker.helpers.arrayElement(postSentences);
+            const coreInsight = getRandomElement(postSentences);
+            const titleOptions = ['Innovating the Web', 'Design Solutions', 'The Future of Tech', 'Scale and Performance', 'User Centric Applications'];
             
             posts.push({
                 user: user._id,
                 username: user.username,
-                content: `${coreInsight} \n\n${faker.lorem.paragraphs(1)}`,
-                title: faker.company.catchPhrase(),
-                category: faker.helpers.arrayElement(categories),
+                content: `${coreInsight} \n\n${getLoremParagraphs(1)}`,
+                title: getRandomElement(titleOptions),
+                category: getRandomElement(categories),
                 type: 'article',
-                image: `https://loremflickr.com/800/600/${theme}?lock=${faker.string.numeric(5)}`,
-                createdAt: faker.date.recent({ days: 30 })
+                image: `https://loremflickr.com/800/600/${theme}?lock=${getRandomNumber(99999)}`,
+                createdAt: getRecentDate()
             });
         }
         await Post.insertMany(posts);
@@ -109,15 +119,17 @@ async function seedDB() {
         console.log('Generating 25 Professional Publisher Users...');
         const publishers = [];
         for (let i = 0; i < 25; i++) {
-            const job = faker.helpers.arrayElement(jobTitles);
+            const job = getRandomElement(jobTitles);
+            const fullName = getRandomName();
+            const baseUsername = fullName.toLowerCase().replace(/\s+/g, '');
             publishers.push({
-                username: faker.internet.username() + '_' + faker.string.numeric(4),
-                email: faker.internet.email(),
+                username: baseUsername + '_' + getRandomNumber(9999),
+                email: baseUsername + getRandomNumber(999) + '@example.com',
                 password: defaultPassword,
                 role: 'publisher',
-                displayName: faker.person.fullName(),
+                displayName: fullName,
                 bio: `Author and ${job}. Writing about systems and design.`,
-                profilePicture: `https://i.pravatar.cc/150?u=${faker.string.uuid()}`
+                profilePicture: `https://i.pravatar.cc/150?u=${getRandomNumber(1000000)}`
             });
         }
         const createdPublishers = await User.insertMany(publishers);
@@ -130,31 +142,31 @@ async function seedDB() {
             const user = createdPublishers[i];
             const title = professionalBookTitles[i % professionalBookTitles.length] + (i >= professionalBookTitles.length ? ` Vol. ${Math.floor(i / professionalBookTitles.length) + 1}` : '');
             const theme = imageThemes[i % imageThemes.length];
-            const price = i < 18 ? 0 : parseFloat(faker.commerce.price({ min: 10, max: 99 }));
+            const price = i < 18 ? 0 : parseFloat((Math.random() * 89 + 10).toFixed(2));
             
             let contentParts = [];
             for (let j = 0; j < 3; j++) {
-                const rawText = faker.lorem.paragraphs(5);
+                const rawText = getLoremParagraphs(5);
                 const paragraphChunk = `<p>${rawText.split('\n').join('</p><p>')}</p>`;
                 
-                const imageUrl = `https://picsum.photos/seed/${faker.string.uuid()}/800/600`;
+                const imageUrl = `https://picsum.photos/seed/${getRandomNumber(1000000)}/800/600`;
                 const imageChunk = `<div style="text-align:center; margin-bottom: 30px;"><img src="${imageUrl}" alt="${theme} illustration" style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:block; margin:0 auto;"></div>`;
                 contentParts.push(imageChunk + paragraphChunk);
             }
             const content = contentParts.join('\n<hr>\n');
-            const coverImageUrl = `https://picsum.photos/seed/${faker.string.uuid()}/400/600`;
+            const coverImageUrl = `https://picsum.photos/seed/${getRandomNumber(1000000)}/400/600`;
 
             books.push({
                 title: title,
                 author: user._id,
                 penName: user.displayName,
-                description: `${title} is a comprehensive guide to mastering modern workflows. \n\n${faker.lorem.paragraphs(1)}`,
+                description: `${title} is a comprehensive guide to mastering modern workflows. \n\n${getLoremParagraphs(1)}`,
                 coverImage: coverImageUrl,
-                category: faker.helpers.arrayElement(categories), 
+                category: getRandomElement(categories), 
                 price: price,
                 content: content,
                 isPublished: true,
-                createdAt: faker.date.past({ years: 1 })
+                createdAt: getPastDate()
             });
         }
         await Book.insertMany(books);
