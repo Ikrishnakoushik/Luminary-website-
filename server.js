@@ -355,9 +355,7 @@ app.get('/api/seed', async (req, res) => {
     }
     
     try {
-        console.log('[Seeder] Dropping database...');
-        await mongoose.connection.db.dropDatabase();
-        console.log('[Seeder] Running seed script...');
+        console.log('[Seeder] Initializing... Database wipe is safely handled internally by the script.');
         await seedDB();
         console.log('[Seeder] Seed complete!');
         res.status(200).json({ msg: 'Database successfully dropped and re-seeded with professional content!' });
