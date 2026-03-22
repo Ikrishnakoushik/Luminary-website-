@@ -71,9 +71,9 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
     family: 4, // Force IPv4 to prevent ENETUNREACH errors
-    connectionTimeout: 10000, // 10 seconds timeout
-    greetingTimeout: 5000,
-    socketTimeout: 10000
+    connectionTimeout: 3000, // 3 seconds timeout
+    greetingTimeout: 3000,
+    socketTimeout: 3000
 });
 
 // Verify Transporter Connection
@@ -648,8 +648,21 @@ app.post('/api/register', async (req, res) => {
                 html: emailHtml
             });
         } catch (emailError) {
-            console.error('[Warning] Email sending failed, but continuing registration:', emailError);
-            // Non-blocking in dev mode since we log OTP
+            console.error('[Warning] Email sending failed. Auto-verifying the user to prevent lockout on Vercel:', emailError.message);
+            // Critical fail-safe: Bypassing email OTP if SMTP is blocked by Vercel
+            user.isVerified = true;
+            user.verificationOtp = undefined;
+            await user.save();
+            
+            // Login automatically and send the frontend Bypass Token
+            const payload = { user: { id: user.id, role: user.role } };
+            const token = jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '30d' });
+            return res.status(200).json({ 
+                msg: 'Registration successful! (Auto-verified bypass)', 
+                token, 
+                username: user.username, 
+                role: user.role 
+            });
         }
         res.status(201).json({ msg: 'User registered. Please verify your email.', email });
     } catch (err) {

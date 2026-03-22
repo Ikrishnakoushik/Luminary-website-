@@ -937,6 +937,11 @@
                     registrationEmail = data.email;
                     document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
                     switchTab('verify');
+                } else if (res.status === 200 && data.token) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('username', data.username);
+                    localStorage.setItem('role', data.role);
+                    window.location.href = '/main';
                 } else {
                     errorMsg.innerText = data.msg || 'Registration failed';
                 }
