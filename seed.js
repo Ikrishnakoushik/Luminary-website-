@@ -130,19 +130,19 @@ async function seedDB() {
             const user = createdPublishers[i];
             const title = professionalBookTitles[i % professionalBookTitles.length] + (i >= professionalBookTitles.length ? ` Vol. ${Math.floor(i / professionalBookTitles.length) + 1}` : '');
             const theme = imageThemes[i % imageThemes.length];
-            const price = i < 30 ? 0 : parseFloat(faker.commerce.price({ min: 10, max: 99 }));
+            const price = i < 75 ? 0 : parseFloat(faker.commerce.price({ min: 10, max: 99 }));
             
             let contentParts = [];
             for (let j = 0; j < 15; j++) {
                 const rawText = faker.lorem.paragraphs(20);
                 const paragraphChunk = `<p>${rawText.split('\n').join('</p><p>')}</p>`;
                 
-                const imageUrl = `https://loremflickr.com/800/600/${theme},code?lock=${faker.string.numeric(5)}`;
-                const imageChunk = `<div style="text-align:center; margin: 40px 0;"><img src="${imageUrl}" alt="${theme} illustration" style="max-width:100%; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15);"></div>`;
-                contentParts.push(paragraphChunk + imageChunk);
+                const imageUrl = `https://picsum.photos/seed/${faker.string.uuid()}/800/600`;
+                const imageChunk = `<div style="text-align:center; margin-bottom: 30px;"><img src="${imageUrl}" alt="${theme} illustration" style="max-width:100%; height:auto; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.15); display:block; margin:0 auto;"></div>`;
+                contentParts.push(imageChunk + paragraphChunk);
             }
             const content = contentParts.join('\n<hr>\n');
-            const coverImageUrl = `https://loremflickr.com/400/600/${theme},abstract?lock=${faker.string.numeric(5)}`;
+            const coverImageUrl = `https://picsum.photos/seed/${faker.string.uuid()}/400/600`;
 
             books.push({
                 title: title,
