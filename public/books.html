@@ -27,7 +27,10 @@
             --border: #ccfbf1;
             --input-bg: var(--bg-color);
             --card-bg: var(--surface);
-            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);
+            --bg: var(--bg-color);
+            --text: var(--text-main);
+        }
 
         body {
             font-family: 'Outfit', -apple-system, sans-serif;
@@ -255,20 +258,23 @@
 
         .btn-outline {
             background: transparent;
-            color: var(--text) !important;
-            padding: 12px 35px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 1.05rem;
+            color: rgba(255, 255, 255, 0.7);
+            padding: 8px 20px;
+            border-radius: 50px;
             text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+            border: 1px solid rgba(255, 255, 255, 0.15);
             transition: all 0.3s;
-            border: 2px solid var(--border);
-            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-outline:hover {
-            border-color: var(--text-muted);
-            background: var(--surface);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         /* 3D Hero Book Showcase */
@@ -697,68 +703,63 @@
 
         /* Reader Modal */
         .reader-modal {
-            display: none;
+            display: none; /* Changed by JS */
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(10, 10, 15, 0.98);
-            z-index: 1000;
-            overflow-y: auto;
-            align-items: flex-start;
-            justify-content: center;
+            background: #fdfbf7;
+            z-index: 10000;
+            overflow: hidden;
+            flex-direction: column;
+            align-items: stretch;
+            justify-content: flex-start;
         }
 
         .reader-content-wrapper {
-            background: #ffffff;
-            color: #1a1a1a;
+            background: transparent;
+            color: #2b2b2b;
             width: 100%;
-            max-width: 750px;
-            min-height: 100vh;
-            padding: 80px 10%;
-            position: relative;
-            box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
-            text-shadow: none;
-            font-family: 'Merriweather', 'Georgia', serif;
-            line-height: 1.9;
-            font-size: 1.15rem;
-            box-sizing: border-box;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 10px 20px 30px 20px;
+            box-shadow: none;
+            overflow: hidden;
         }
 
         .close-reader {
-            position: fixed;
-            top: 25px;
-            right: 40px;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(5px);
-            color: white;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            font-size: 1.2rem;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
+            background: none;
+            border: none;
+            color: #1a1a1a;
+            font-size: 1.5rem;
             cursor: pointer;
-            z-index: 1001;
+            transition: all 0.3s;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
         }
 
         .close-reader:hover {
-            background: white;
-            color: #1a1a1a;
+            background: rgba(0,0,0,0.05);
             transform: rotate(90deg);
         }
 
         .reader-title {
             text-align: center;
-            font-size: 2.8rem;
+            font-size: 3rem;
             margin-bottom: 60px;
             font-weight: 800;
             line-height: 1.2;
-            color: var(--text-main);
+            color: #111111 !important; /* Force dark text regardless of theme */
+            font-family: 'Merriweather', serif;
+            letter-spacing: -1px;
         }
 
         .reader-title::after {
@@ -766,7 +767,7 @@
             display: block;
             width: 60px;
             height: 3px;
-            background: var(--primary);
+            background: #881337; /* Classic burgundy accent */
             margin: 30px auto 0;
         }
 
@@ -789,6 +790,136 @@
             100% {
                 transform: rotate(360deg);
             }
+        }
+
+        /* Paginated Book Aesthetics */
+        .reader-viewport {
+            width: 650px;
+            flex: 1; /* Stretch vertically to match screen height */
+            min-height: 0;
+            margin: 0 auto;
+            overflow: hidden;
+            position: relative;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            padding: 30px 0;
+            mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
+            -webkit-mask-image: linear-gradient(to bottom, transparent, black 1%, black 99%, transparent);
+        }
+
+        .reader-columns {
+            column-width: 650px;
+            column-gap: 60px; /* Distance between pages */
+            height: 100%;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .reader-text-body {
+            font-size: 1.15rem;
+            line-height: 1.9;
+            color: #2b2b2b;
+        }
+
+        .reader-text-body p {
+            margin-bottom: 0;
+            text-align: justify;
+            text-indent: 2.5em; /* Classic book indent */
+            break-inside: avoid-page; /* Try to avoid breaking mid-paragraph if possible */
+            orphans: 2;
+            widows: 2;
+        }
+
+        /* No indent for the first paragraph, instead use a Drop Cap */
+        .reader-text-body p:first-of-type {
+            text-indent: 0;
+        }
+
+        .reader-text-body p:first-of-type::first-letter {
+            float: left;
+            font-size: 4.5rem;
+            line-height: 0.85;
+            padding-right: 10px;
+            padding-top: 6px;
+            padding-bottom: 4px;
+            font-family: 'Merriweather', serif;
+            font-weight: 800;
+            color: #881337; /* Match the burgundy accent */
+        }
+
+        /* Subtle separator between sections if we use <hr> */
+        .reader-text-body hr {
+            border: none;
+            text-align: center;
+            margin: 2em 0;
+            column-span: all; /* If possible */
+            break-before: always;
+        }
+
+        .reader-text-body hr::after {
+            content: '✶ ✶ ✶';
+            display: inline-block;
+            color: #a1a1aa;
+            font-size: 1.2rem;
+            letter-spacing: 0.5em;
+        }
+
+        .reader-text-body img {
+            max-width: 100%;
+            max-height: 40vh; /* Don't overflow the page height */
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin: 2em auto;
+            display: block;
+            break-inside: avoid;
+        }
+
+        /* Page Controls */
+        .reader-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            width: 650px;
+            margin-inline: auto;
+        }
+
+        .page-btn {
+            background: transparent;
+            border: 1px solid #d1d5db;
+            padding: 10px 24px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            color: #2b2b2b;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .page-btn:hover:not(:disabled) {
+            background: #f3f4f6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+
+        .page-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+        }
+
+        .page-indicator {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            color: #6b7280;
+            background: #f3f4f6;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 500;
         }
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -901,24 +1032,36 @@
 
     <!-- Reader Modal -->
     <div id="readerModal" class="reader-modal">
-        <div class="reader-content-wrapper">
-            <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
-            <div class="reader-content" id="readerContent">
-                <h1 class="reader-title">Loading...</h1>
+        
+        <!-- Reader Top Bar -->
+        <div class="reader-topbar" style="height: 70px; min-height: 70px; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 1px solid rgba(0,0,0,0.1); background: transparent;">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <h2 id="reader-topbar-title" style="font-family: 'Merriweather', serif; font-size: 1.25rem; font-weight: 700; color: #111111; margin: 0; letter-spacing: -0.5px;">Book Title</h2>
             </div>
-
-            <!-- Book Rating Widget -->
-            <div class="rating-widget" id="ratingWidget"
-                style="display: none; text-align: center; padding: 40px 0; border-top: 1px solid var(--border); margin-top: 50px;">
-                <h3 style="margin-bottom: 20px;">Rate this book</h3>
-                <div class="stars-container"
-                    style="display: flex; justify-content: center; gap: 10px; font-size: 2rem; color: var(--border); cursor: pointer;">
-                    <i class="fas fa-star rating-star" data-rating="2"></i>
-                    <i class="fas fa-star rating-star" data-rating="4"></i>
-                    <i class="fas fa-star rating-star" data-rating="6"></i>
-                    <i class="fas fa-star rating-star" data-rating="8"></i>
-                    <i class="fas fa-star rating-star" data-rating="10"></i>
+            
+            <div style="display: flex; align-items: center; gap: 30px;">
+                <!-- Book Rating Widget (Always accessible in top bar) -->
+                <div class="rating-widget" id="ratingWidget" style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
+                    <span style="font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Rate Book</span>
+                    <div class="stars-container" style="display: flex; gap: 4px; font-size: 1.2rem; color: #d1d5db; cursor: pointer;">
+                        <i class="fas fa-star rating-star" data-rating="2"></i>
+                        <i class="fas fa-star rating-star" data-rating="4"></i>
+                        <i class="fas fa-star rating-star" data-rating="6"></i>
+                        <i class="fas fa-star rating-star" data-rating="8"></i>
+                        <i class="fas fa-star rating-star" data-rating="10"></i>
+                    </div>
                 </div>
+                
+                <div style="width: 1px; height: 30px; background: #e5e7eb;"></div> <!-- Divider -->
+                
+                <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
+            </div>
+        </div>
+
+        <!-- Render Content Wrapper (Body) -->
+        <div class="reader-content-wrapper" style="flex: 1; overflow-y: hidden; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 0;">
+            <div class="reader-content" id="readerContent" style="width: 100%; display: flex; flex-direction: column; flex: 1; align-items: center;">
+                <!-- dynamic content injected here -->
             </div>
         </div>
     </div>
@@ -1173,17 +1316,33 @@
 
             const modal = document.getElementById('readerModal');
             const content = document.getElementById('readerContent');
+            const topbarTitle = document.getElementById('reader-topbar-title');
             const widget = document.getElementById('ratingWidget');
 
             modal.style.display = 'flex';
             document.body.style.overflow = 'hidden';
+            
+            topbarTitle.innerText = book.title;
 
             content.innerHTML = `
-                < h1 class="reader-title" > ${book.title}</h1 >
-                    <div style="font-size: 1.15rem; line-height: 1.8;">
-                        ${book.content}
+                <div class="reader-viewport" id="reader-viewport">
+                    <div class="reader-columns" id="reader-columns">
+                        <div class="reader-text-body">
+                            ${book.content}
+                        </div>
                     </div>
+                </div>
+                <div class="reader-controls">
+                    <button class="page-btn" id="prevPageBtn" onclick="turnPage(-1)"><i class="fas fa-arrow-left"></i> Previous</button>
+                    <span class="page-indicator" id="page-indicator">Page 1</span>
+                    <button class="page-btn" id="nextPageBtn" onclick="turnPage(1)">Next <i class="fas fa-arrow-right"></i></button>
+                </div>
             `;
+
+            // Initialize pagination after a tiny delay to allow CSS columns to render
+            setTimeout(() => {
+                initPagination();
+            }, 100);
 
             // Reset stars and show widget
             widget.style.display = 'block';
@@ -1205,10 +1364,51 @@
         // Close Reader
         function closeReader() {
             document.getElementById('readerModal').style.display = 'none';
-            document.body.style.overflow = 'auto';
+            document.body.style.overflow = 'auto'; // Restore scroll
             document.getElementById('readerContent').innerHTML = '';
             document.getElementById('ratingWidget').style.display = 'none'; // Hide widget on close
             currentBookId = null;
+        }
+
+        // Pagination Logic
+        let currentReaderPage = 0;
+        let totalReaderPages = 1;
+
+        function initPagination() {
+            const columns = document.getElementById('reader-columns');
+            const viewport = document.getElementById('reader-viewport');
+            if(!columns || !viewport) return;
+
+            // column-width is 650, column-gap is 60. So each page transition is 650 + 60 = 710px.
+            // Scroll width gives total bounds.
+            const totalWidth = columns.scrollWidth;
+            const pageOffset = 650 + 60; 
+            
+            totalReaderPages = Math.ceil(totalWidth / pageOffset);
+            if(totalReaderPages < 1) totalReaderPages = 1;
+            
+            currentReaderPage = 0;
+            updatePageView();
+        }
+
+        function turnPage(direction) {
+            currentReaderPage += direction;
+            if (currentReaderPage < 0) currentReaderPage = 0;
+            if (currentReaderPage >= totalReaderPages) currentReaderPage = totalReaderPages - 1;
+            updatePageView();
+        }
+
+        function updatePageView() {
+            const columns = document.getElementById('reader-columns');
+            if(!columns) return;
+            
+            const pageOffset = 650 + 60; // 710px per page
+            columns.style.transform = `translateX(-${currentReaderPage * pageOffset}px)`;
+            
+            document.getElementById('page-indicator').innerText = `Page ${currentReaderPage + 1} of ${totalReaderPages}`;
+            
+            document.getElementById('prevPageBtn').disabled = currentReaderPage === 0;
+            document.getElementById('nextPageBtn').disabled = currentReaderPage >= totalReaderPages - 1;
         }
 
         // Close reader on escape key
@@ -1233,7 +1433,7 @@
                     }
 
                     try {
-                        const res = await fetch(`/ api / books / ${currentBookId}/rate`, {
+                        const res = await fetch(`${API_URL}/books/${currentBookId}/rate`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
