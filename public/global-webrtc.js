@@ -42,6 +42,11 @@
                 <i class="fas fa-phone-slash"></i>
             </button>
         </div>
+        
+        <!-- Native Audio Ringtone component -->
+        <audio id="global-ringtone" loop preload="auto">
+            <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+        </audio>
     </div>
     <style>
         .remote-video-peer { flex: 1 1 45%; min-width: 300px; max-width: 100%; height: auto; aspect-ratio: 16/9; object-fit: cover; border-radius: 12px; background: #222; border: 1px solid rgba(255,255,255,0.1); }
@@ -180,6 +185,7 @@
     let incomingCallData = null;
     let currentCallTarget = null;
     let currentCallStartTime = null;
+    let callTimeoutTimer = null;
 
     // Group state
     let activeGroupIdForCall = null;
@@ -223,6 +229,22 @@
         incomingCallData = data;
         currentCallTarget = data.from;
         isVideoCall = data.isVideo;
+
+        // Play Ringtone
+        const ringbox = document.getElementById('global-ringtone');
+        if (ringbox) {
+            ringbox.currentTime = 0;
+            ringbox.play().catch(e => console.log('Autoplay audio blocked', e));
+        }
+
+        // 40 second auto-miss timeout
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+        callTimeoutTimer = setTimeout(() => {
+            if (!isCallActive) {
+                window.globalRejectCall();
+                if(window.showToast) window.showToast('Missed call', 'info');
+            }
+        }, 40000);
     });
 
     window.globalSocket.on('answer-made', async data => {
@@ -238,6 +260,7 @@
         document.getElementById('global-call-title').innerText = activeGroupIdForCall ? 'Group Call Active' : 'Connected';
         document.getElementById('global-audio-avatar').classList.remove('pulsing');
         if (!currentCallStartTime) currentCallStartTime = Date.now();
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
     });
 
     window.globalSocket.on('call-rejected', data => {
@@ -366,6 +389,17 @@
                 isVideo: isVideo,
                 isGroupCall: isGroup
             });
+
+            // 40 second ring timeout for standard calls
+            if (!isGroup) {
+                if(callTimeoutTimer) clearTimeout(callTimeoutTimer);
+                callTimeoutTimer = setTimeout(() => {
+                    if(!isCallActive) {
+                        window.globalEndCall();
+                        if(window.showToast) window.showToast('User unavailable', 'info');
+                    }
+                }, 40000);
+            }
         } catch(e) { console.error('Failed to init PC', e); }
     }
 
@@ -445,6 +479,13 @@
     };
 
     function globalEndUI() {
+        if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+        const ringbox = document.getElementById('global-ringtone');
+        if (ringbox) {
+            ringbox.pause();
+            ringbox.currentTime = 0;
+        }
+
         isCallActive = false;
         incomingCallData = null;
         currentCallTarget = null;
