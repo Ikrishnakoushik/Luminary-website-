@@ -345,6 +345,28 @@ function checkFileType(file, cb) {
     }
 }
 
+// --- Database Seeder API ---
+app.get('/api/seed', async (req, res) => {
+    const key = req.query.key;
+    // Check against the ADMIN_SECRET_KEY configured in environment variables
+    if (key !== ADMIN_SECRET_KEY) {
+        return res.status(403).json({ msg: 'Unauthorized to run seeder' });
+    }
+    
+    try {
+        console.log('[Seeder] Dropping database...');
+        await mongoose.connection.db.dropDatabase();
+        console.log('[Seeder] Running seed script...');
+        const seedDB = require('./seed.js');
+        await seedDB();
+        console.log('[Seeder] Seed complete!');
+        res.status(200).json({ msg: 'Database successfully dropped and re-seeded with professional content!' });
+    } catch (error) {
+        console.error('[Seeder Error]', error);
+        res.status(500).json({ msg: 'Seeding failed', error: error.message });
+    }
+});
+
 // --- Followers API ---
 app.post('/api/users/:targetId/follow', auth, async (req, res) => {
     try {

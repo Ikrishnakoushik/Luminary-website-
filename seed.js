@@ -161,12 +161,18 @@ async function seedDB() {
         console.log(`Successfully created ${books.length} actual technical books and guides.`);
 
         console.log('Seed completed successfully! You can log in as any of these realistic users with password: password123');
-        process.exit(0);
+        return true;
 
     } catch (err) {
         console.error('Seed error:', err);
-        process.exit(1);
+        throw err;
     }
 }
 
-seedDB();
+if (require.main === module) {
+    seedDB()
+        .then(() => process.exit(0))
+        .catch(() => process.exit(1));
+} else {
+    module.exports = seedDB;
+}
