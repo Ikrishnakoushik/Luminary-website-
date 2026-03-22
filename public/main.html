@@ -2633,10 +2633,11 @@
             lastScrollTop = st <= 0 ? 0 : st;
         }, false);
 
-        // Initialize carousel
+        // Initialize carousel (legacy cleanup)
         document.addEventListener('DOMContentLoaded', () => {
-            // Reset interval is deferred until all scripts run.
-            setTimeout(resetInterval, 500);
+            if (typeof resetInterval === 'function') {
+                setTimeout(resetInterval, 500);
+            }
         });
     </script>
 </body>
