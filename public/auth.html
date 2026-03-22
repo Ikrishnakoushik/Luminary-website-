@@ -880,6 +880,11 @@
             const errorMsg = document.getElementById('loginError');
             errorMsg.innerText = '';
 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Signing in...';
+            submitBtn.disabled = true;
+
             try {
                 const res = await fetch(`${API_URL}/login`, {
                     method: 'POST',
@@ -911,6 +916,9 @@
             } catch (err) {
                 console.error(err);
                 errorMsg.innerText = 'Server error. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
@@ -924,6 +932,11 @@
             const role = document.getElementById('regRole').value;
             const errorMsg = document.getElementById('regError');
             errorMsg.innerText = '';
+
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Creating account...';
+            submitBtn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/register`, {
@@ -948,6 +961,9 @@
             } catch (err) {
                 console.error(err);
                 errorMsg.innerText = 'Server error. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
