@@ -64,6 +64,17 @@ async function seedDB() {
         const salt = await bcrypt.genSalt(10);
         const defaultPassword = await bcrypt.hash('password123', salt);
 
+        console.log('Injecting permanent Admin Owner account...');
+        await User.create({
+            username: 'admin_koushik',
+            email: 'ikowshikreddy800@gmail.com',
+            password: defaultPassword,
+            role: 'admin',
+            displayName: 'Ikowshik Reddy',
+            bio: 'Creator and Lead System Administrator of Vylithra.',
+            profilePicture: 'https://i.pravatar.cc/150?u=admin_koushik'
+        });
+
         // ==========================================
         // 1. Generate 25 Realistic Users & Posts
         // ==========================================
