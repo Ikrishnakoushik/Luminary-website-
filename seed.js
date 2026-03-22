@@ -55,8 +55,11 @@ async function seedDB() {
     try {
         console.log('Connecting to database...');
         await mongoose.connect(MONGO_URI);
-        console.log('Connected. Safely dropping legacy Vercel database...');
-        await mongoose.connection.db.dropDatabase();
+        console.log('Connected. Safely clearing collections...');
+        
+        await User.deleteMany({});
+        await Post.deleteMany({});
+        await Book.deleteMany({});
 
         const salt = await bcrypt.genSalt(10);
         const defaultPassword = await bcrypt.hash('password123', salt);
