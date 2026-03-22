@@ -58,29 +58,27 @@
 
         /* Header */
         header {
-            height: var(--header-height);
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 0 30px;
-            background: var(--surface);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-bottom: 1px solid var(--border);
-            z-index: 100;
             position: fixed;
             top: 0;
+            left: 0;
             width: 100%;
-        }
-
-        .header-left-group {
+            height: var(--header-height);
+            /* Glassmorphism Effect */
+            background: color-mix(in srgb, var(--surface, #ffffff), transparent 20%);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
             display: flex;
             align-items: center;
-            gap: 15px;
+            justify-content: space-between;
+            padding: 0 40px;
+            transition: background-color 0.3s, border-color 0.3s;
         }
 
         .logo {
-            font-size: 1.4rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: #5b62fa;
             text-decoration: none;
@@ -94,34 +92,35 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            width: 28px;
-            height: 28px;
+            width: 32px;
+            height: 32px;
             background: #5b62fa;
             color: #ffffff;
             border-radius: 50%;
-            font-size: 0.95rem;
+            font-size: 1.1rem;
         }
 
-        .header-divider {
-            height: 20px;
-            width: 2px;
-            background: var(--border);
-            margin: 0 5px;
-        }
-
-        .back-link {
-            color: var(--text-muted);
-            text-decoration: none;
-            font-weight: 500;
-            font-size: 0.95rem;
+        .back-btn {
             display: flex;
             align-items: center;
-            gap: 6px;
-            transition: color 0.2s;
+            gap: 8px;
+            padding: 8px 18px;
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-main);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
         }
 
-        .back-link:hover {
-            color: var(--primary);
+        .back-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
         }
 
         /* Layout Container */
@@ -493,10 +492,9 @@
 <body>
 
     <header>
-        <div class="header-left-group">
-            <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
-            <div class="header-divider"></div>
-            <a href="main" class="back-link"><i class="fas fa-arrow-left" style="font-size: 0.85rem;"></i> Back to Home</a>
+        <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
+        <div class="header-actions">
+            <a href="main" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
     </header>
 
