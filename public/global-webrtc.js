@@ -557,39 +557,30 @@
     window.globalInitiateCall = async function(targetUserId, targetUsername, isVideo) {
         currentCallTarget = targetUserId;
         isVideoCall = isVideo;
-        
-        // Check if online
-        window.globalSocket.emit('check-online', targetUserId, async (res) => {
-            if(!res.isOnline) {
-                if(window.showToast) window.showToast('User is offline. Unable to connect.', 'error');
-                logSystemMessage(targetUserId, `[SystemLog: Missed ${isVideo ? 'Video' : 'Audio'} Call]`);
-                return;
-            }
             
-            // Proceed to WebRTC setup
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
-                document.getElementById('global-local-video').srcObject = localStream;
-                document.getElementById('global-call-video-container').style.display = isVideo ? 'flex' : 'none';
-                document.getElementById('global-call-audio-container').style.display = isVideo ? 'none' : 'flex';
-                
-                document.getElementById('global-call-overlay').style.display = 'flex';
-                document.getElementById('global-call-controls-incoming').style.display = 'none';
-                document.getElementById('global-call-controls-active').style.display = 'flex';
-                document.getElementById('global-btn-toggle-cam').style.display = isVideo ? 'flex' : 'none';
-                
-                document.getElementById('global-call-name').innerText = targetUsername || 'User';
-                document.getElementById('global-call-title').innerText = 'Ringing...';
-                document.getElementById('global-audio-avatar').classList.add('pulsing');
+        // Proceed to WebRTC setup immediately without blocking for global online presence
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            document.getElementById('global-local-video').srcObject = localStream;
+            document.getElementById('global-call-video-container').style.display = isVideo ? 'flex' : 'none';
+            document.getElementById('global-call-audio-container').style.display = isVideo ? 'none' : 'flex';
+            
+            document.getElementById('global-call-overlay').style.display = 'flex';
+            document.getElementById('global-call-controls-incoming').style.display = 'none';
+            document.getElementById('global-call-controls-active').style.display = 'flex';
+            document.getElementById('global-btn-toggle-cam').style.display = isVideo ? 'flex' : 'none';
+            
+            document.getElementById('global-call-name').innerText = targetUsername || 'User';
+            document.getElementById('global-call-title').innerText = 'Connecting...';
+            document.getElementById('global-audio-avatar').classList.add('pulsing');
 
-                await initiatePeerConnection(targetUserId, isVideo, false);
-                isCallActive = true;
-            } catch(e) {
-                console.error(e);
-                window.globalEndUI();
-                if(window.showToast) window.showToast('Microphone/Camera access denied.', 'error');
-            }
-        });
+            await initiatePeerConnection(targetUserId, isVideo, false);
+            isCallActive = true;
+        } catch(e) {
+            console.error(e);
+            window.globalEndUI();
+            if(window.showToast) window.showToast('Microphone/Camera access denied.', 'error');
+        }
     };
 
     window.globalInitiateGroupCall = async function(groupId, groupName, isVideo) {
