@@ -54,11 +54,11 @@ async function seedDB() {
         const defaultPassword = await bcrypt.hash('password123', salt);
 
         // ==========================================
-        // 1. Generate 100 Realistic Users & Posts
+        // 1. Generate 25 Realistic Users & Posts
         // ==========================================
-        console.log('Generating 100 Professional Users (Readers)...');
+        console.log('Generating 25 Professional Users (Readers)...');
         const readers = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 25; i++) {
             const job = faker.helpers.arrayElement(jobTitles);
             const company = faker.company.name();
             readers.push({
@@ -104,11 +104,11 @@ async function seedDB() {
         console.log(`Successfully created ${posts.length} tech-focused posts.`);
 
         // ==============================================
-        // 2. Generate 100 Publisher Users & Technical Books
+        // 2. Generate 25 Publisher Users & Technical Books
         // ==============================================
-        console.log('Generating 100 Professional Publisher Users...');
+        console.log('Generating 25 Professional Publisher Users...');
         const publishers = [];
-        for (let i = 0; i < 100; i++) {
+        for (let i = 0; i < 25; i++) {
             const job = faker.helpers.arrayElement(jobTitles);
             publishers.push({
                 username: faker.internet.username() + '_' + faker.string.numeric(4),
@@ -123,18 +123,18 @@ async function seedDB() {
         const createdPublishers = await User.insertMany(publishers);
         console.log(`Successfully created ${createdPublishers.length} publisher users.`);
 
-        console.log('Generating 100 Professional Handbooks & Design Guides...');
+        console.log('Generating 25 Professional Handbooks & Design Guides...');
         const books = [];
         
         for (let i = 0; i < createdPublishers.length; i++) {
             const user = createdPublishers[i];
             const title = professionalBookTitles[i % professionalBookTitles.length] + (i >= professionalBookTitles.length ? ` Vol. ${Math.floor(i / professionalBookTitles.length) + 1}` : '');
             const theme = imageThemes[i % imageThemes.length];
-            const price = i < 75 ? 0 : parseFloat(faker.commerce.price({ min: 10, max: 99 }));
+            const price = i < 18 ? 0 : parseFloat(faker.commerce.price({ min: 10, max: 99 }));
             
             let contentParts = [];
-            for (let j = 0; j < 15; j++) {
-                const rawText = faker.lorem.paragraphs(20);
+            for (let j = 0; j < 3; j++) {
+                const rawText = faker.lorem.paragraphs(5);
                 const paragraphChunk = `<p>${rawText.split('\n').join('</p><p>')}</p>`;
                 
                 const imageUrl = `https://picsum.photos/seed/${faker.string.uuid()}/800/600`;
