@@ -61,34 +61,66 @@
             height: var(--header-height);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 0 30px;
             background: var(--surface);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border-bottom: 1px solid var(--border);
             z-index: 100;
+            position: fixed;
+            top: 0;
+            width: 100%;
+        }
+
+        .header-left-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
 
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             font-weight: 700;
-            color: var(--primary);
+            color: #5b62fa;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 10px;
+            letter-spacing: -0.5px;
         }
 
-        .header-actions a {
+        .logo i {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 28px;
+            height: 28px;
+            background: #5b62fa;
+            color: #ffffff;
+            border-radius: 50%;
+            font-size: 0.95rem;
+        }
+
+        .header-divider {
+            height: 20px;
+            width: 2px;
+            background: var(--border);
+            margin: 0 5px;
+        }
+
+        .back-link {
             color: var(--text-muted);
             text-decoration: none;
             font-weight: 500;
-            margin-left: 20px;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
             transition: color 0.2s;
         }
 
-        .header-actions a:hover {
+        .back-link:hover {
             color: var(--primary);
         }
 
@@ -461,9 +493,10 @@
 <body>
 
     <header>
-        <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
-        <div class="header-actions">
-            <a href="main" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        <div class="header-left-group">
+            <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
+            <div class="header-divider"></div>
+            <a href="main" class="back-link"><i class="fas fa-arrow-left" style="font-size: 0.85rem;"></i> Back to Home</a>
         </div>
     </header>
 
