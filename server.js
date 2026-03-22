@@ -31,6 +31,7 @@ const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
 const PlatformSetting = require('./models/PlatformSetting');
+const seedDB = require('./seed.js'); // Required globally so Vercel traces dependencies like @faker-js/faker
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -357,7 +358,6 @@ app.get('/api/seed', async (req, res) => {
         console.log('[Seeder] Dropping database...');
         await mongoose.connection.db.dropDatabase();
         console.log('[Seeder] Running seed script...');
-        const seedDB = require('./seed.js');
         await seedDB();
         console.log('[Seeder] Seed complete!');
         res.status(200).json({ msg: 'Database successfully dropped and re-seeded with professional content!' });
