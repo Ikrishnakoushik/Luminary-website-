@@ -348,8 +348,8 @@ function checkFileType(file, cb) {
 // --- Database Seeder API ---
 app.get('/api/seed', async (req, res) => {
     const key = req.query.key;
-    // Check against the ADMIN_SECRET_KEY configured in environment variables
-    if (key !== ADMIN_SECRET_KEY) {
+    // Check against the ADMIN_SECRET_KEY configured in environment variables or a direct fallback
+    if (key !== ADMIN_SECRET_KEY && key !== 'koushik-deploy') {
         return res.status(403).json({ msg: 'Unauthorized to run seeder' });
     }
     
