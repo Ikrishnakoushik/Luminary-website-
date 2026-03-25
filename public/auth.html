@@ -562,11 +562,11 @@
                 try {
                     const idToken = await result.user.getIdToken();
                     
-                    // Exchange Firebase token for our systems JWT session
-                    const res = await fetch('/api/auth/firebase', {
+                    // Exchange Firebase token for our robust hybrid session identity bridge
+                    const res = await fetch('/api/auth/sync', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ idToken })
+                        body: JSON.stringify({ idToken, requestedRole: localStorage.getItem('signupRole') || 'reader' })
                     });
                     
                     const data = await res.json();
