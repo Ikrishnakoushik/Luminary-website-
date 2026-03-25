@@ -11,9 +11,13 @@ const UserSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
-    password: {
+    firebaseUid: {
         type: String,
-        required: true
+        default: null,
+        index: true
+    },
+    password: {
+        type: String
     },
     role: {
         type: String,
@@ -35,6 +39,10 @@ const UserSchema = new mongoose.Schema({
     loginHistory: [{
         type: Date,
         default: Date.now
+    }],
+    unlockedDownloads: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Book'
     }],
     activeSessions: [{
         sessionId: { type: String, required: true },

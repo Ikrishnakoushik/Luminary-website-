@@ -1141,6 +1141,12 @@
                             <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">The default revenue cut taken from publisher sales.</p>
                             <input type="number" id="setting-fee" value="${settings.platformFee}" onchange="savePlatformSettings()" min="0" max="100" style="width: 100px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem;" />
                         </div>
+
+                        <div style="margin-bottom: 2rem;">
+                            <h3 style="margin: 0 0 0.5rem 0; font-size: 1rem;">Premium Download Fee (%)</h3>
+                            <p style="margin: 0 0 1rem 0; font-size: 0.875rem; color: var(--text-muted);">The dynamic percentage value charged to users to download books (max cap constraint: ₹249).</p>
+                            <input type="number" id="setting-download-fee" value="${settings.downloadFeePercentage !== undefined ? settings.downloadFeePercentage : 50}" onchange="savePlatformSettings()" min="0" max="100" style="width: 100px; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; outline: none; font-size: 1rem;" />
+                        </div>
                     </div>
 
                     <style>
@@ -1179,7 +1185,8 @@
             const payload = {
                 registrationEnabled: document.getElementById('setting-registration').checked,
                 maintenanceMode: document.getElementById('setting-maintenance').checked,
-                platformFee: parseFloat(document.getElementById('setting-fee').value)
+                platformFee: parseFloat(document.getElementById('setting-fee').value),
+                downloadFeePercentage: parseFloat(document.getElementById('setting-download-fee').value)
             };
 
             try {

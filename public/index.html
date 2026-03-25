@@ -541,7 +541,8 @@
             if (providerType === 'google') provider = googleProvider;
             else if (providerType === 'github') provider = githubProvider;
             else {
-                alert(providerType + " login is not fully configured yet.");
+                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                if(errDiv) errDiv.innerText = providerType + " login is not fully configured yet.";
                 return;
             }
 
@@ -550,7 +551,8 @@
                 await firebase.auth().signInWithRedirect(provider);
             } catch (error) {
                 console.error("Firebase Auth Error:", error);
-                alert('Authentication failed to start: ' + error.message);
+                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
             }
         }
 
@@ -574,7 +576,8 @@
                         localStorage.setItem('role', data.role);
                         window.location.href = '/main';
                     } else {
-                        alert('Login failed: ' + (data.msg || 'Unknown error'));
+                        const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                        if(errDiv) errDiv.innerText = 'Login failed: ' + (data.msg || 'Unknown error');
                     }
                 } catch(e) {
                     console.error('Session conversion error:', e);
@@ -582,7 +585,8 @@
             }
         }).catch((error) => {
             console.error("Firebase Redirect Error:", error);
-            alert('Authentication failed: ' + error.message);
+            const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+            if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
         });
     </script>
 </head>

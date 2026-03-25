@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout | Vylithra</title>
+    <script src="/theme-loader.js"></script>
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <style>
+                :root {
+            /* Vylithra Global 3-Color Mint Theme */
+            --bg-color: #f0fdfa; /* Base background */
+            --surface: #ffffff; /* Card backgrounds */
+            --primary: #14b8a6; /* Main accent (Buttons/Links) */
+            
+            /* Derived mapping for existing elements */
+            --accent: var(--primary);
+            --accent-hover: #0d9488;
+            --text-main: #134e4a;
+            --text-muted: #115e59;
+            --border: #ccfbf1;
+            --input-bg: var(--bg-color);
+            --card-bg: var(--surface);
+            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 10% 20%, rgba(212, 175, 55, 0.05), transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(59, 130, 246, 0.03), transparent 30%);
+        }
+
+        .checkout-container {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 900px;
+            /* Wider for 2 columns */
+            box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header-strip {
+            background: #000;
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand-logo {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-logo i {
+            color: var(--primary);
+        }
+
+        .back-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* Two Column Grid */
+        .checkout-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 500px;
+        }
+
+        /* Left Column: Product Details */
+        .product-col {
+            padding: 40px;
+            background: var(--surface);
+        }
+
+        .book-preview {
+            display: flex;
+            gap: 25px;
+            margin-bottom: 35px;
+        }
+
+        .book-cover {
+            width: 120px;
+            height: 180px;
+            border-radius: 8px;
+            object-fit: cover;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .book-details {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .book-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            margin: 0 0 8px 0;
+            color: #fff;
+            line-height: 1.2;
+        }
+
+        .book-author {
+            color: var(--primary);
+            font-size: 1rem;
+            margin: 0 0 15px 0;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 500;
+        }
+
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 25px;
+        }
+
+        .benefits-list li {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .benefits-list li i {
+            color: #10b981;
+            /* Green Check */
+            flex-shrink: 0;
+        }
+
+        /* Right Column: Order Summary & Pay */
+        .payment-col {
+            padding: 40px;
+            background: var(--surface-light);
+            border-left: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .payment-col h2 {
+            font-size: 1.2rem;
+            margin: 0 0 25px 0;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+        }
+
+        .price-breakdown {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .price-row.total {
+            color: #fff;
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 15px;
+            margin-bottom: 0;
+            padding-top: 15px;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            align-items: center;
+        }
+
+        .btn-pay {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #d4af37, #f3e5ab);
+            color: var(--text-main);
+            border: none;
+            border-radius: 12px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+
+        .btn-pay:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(212, 175, 55, 0.4);
+        }
+
+        .btn-pay:disabled {
+            background: #333;
+            color: var(--text-muted);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Trust Signals */
+        .trust-box {
+            background: rgba(16, 185, 129, 0.05);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .trust-box i {
+            color: #10b981;
+            font-size: 1.2rem;
+            margin-top: 2px;
+        }
+
+        .trust-box p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .payment-methods {
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 20px;
+            margin-top: auto;
+        }
+
+        .payment-methods p {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin: 0 0 10px 0;
+        }
+
+        .method-icons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+        }
+
+        #loadingState {
+            text-align: center;
+            padding: 100px 0;
+            color: var(--text-muted);
+        }
+
+        #checkoutContent {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .checkout-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-strip {
+                padding: 15px 20px;
+            }
+
+            .product-col,
+            .payment-col {
+                padding: 25px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
+</head>
+
+<body>
+
+    <div class="checkout-container">
+        <!-- Top Bar -->
+        <div class="header-strip">
+            <a href="/" class="brand-logo"><i class="fas fa-feather-alt"></i> Vylithra</a>
+            <a href="/books" class="back-link"><i class="fas fa-arrow-left"></i> Cancel</a>
+        </div>
+
+        <div id="loadingState">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+            <p style="margin-top: 15px;">Securing your connection...</p>
+        </div>
+
+        <div id="checkoutContent" class="checkout-grid">
+
+            <!-- Left Column: Product -->
+            <div class="product-col">
+                <div class="book-preview">
+                    <img src="" id="bookCover" class="book-cover" alt="Book Cover">
+                    <div class="book-details">
+                        <span style="color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;">Premium PDF Export</span>
+                        <h2 class="book-title" id="bookTitle">Loading...</h2>
+                        <p class="book-author" id="bookAuthor">By Author</p>
+                    </div>
+                </div>
+
+                <ul class="benefits-list">
+                    <li><i class="fas fa-check-circle"></i> Instant premium PDF compilation</li>
+                    <li><i class="fas fa-check-circle"></i> Download to any offline device natively</li>
+                    <li><i class="fas fa-check-circle"></i> High-definition publisher formatting</li>
+                    <li><i class="fas fa-check-circle"></i> One-time lifetime fee</li>
+                </ul>
+            </div>
+
+            <!-- Right Column: Payment -->
+            <div class="payment-col">
+                <h2>Order Summary</h2>
+
+                <!-- Promo Code explicitly hidden for download modules to enforce the global platform fee natively -->
+                <div class="promo-code-box" style="display: none;"></div>
+
+                <div class="price-breakdown">
+                    <div class="price-row">
+                        <span>Subtotal</span>
+                        <span id="subtotalPrice">₹0</span>
+                    </div>
+                    <div class="price-row" id="discountRow" style="display: none; color: #10b981;">
+                        <span>Discount <span id="discountPercentBadge" style="background: rgba(16,185,129,0.1); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; margin-left: 5px;"></span></span>
+                        <span id="discountAmount">-₹0</span>
+                    </div>
+                    <div class="price-row">
+                        <span>Transaction Fee (5%)</span>
+                        <span id="feePrice">₹0</span>
+                    </div>
+                    <div class="price-row total">
+                        <span>Total Due</span>
+                        <span id="totalPrice">₹0</span>
+                    </div>
+                </div>
+
+                <div class="gateway-selector" style="margin-bottom: 25px;">
+                    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px;">Select Payment Method</p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <button id="btnRazorpay" onclick="selectGateway('razorpay')" style="padding: 15px; border-radius: 12px; border: 2px solid var(--primary); background: rgba(20, 184, 166, 0.1); color: #fff; cursor: pointer; font-weight: 600; font-family: 'Outfit'; transition: 0.2s;">
+                            <i class="fas fa-credit-card"></i> Razorpay (INR)
+                        </button>
+                        <button id="btnPayPal" onclick="selectGateway('paypal')" style="padding: 15px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); background: transparent; color: var(--text-muted); cursor: pointer; font-weight: 600; font-family: 'Outfit'; transition: 0.2s;">
+                            <i class="fab fa-paypal"></i> PayPal (USD)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="trust-box">
+                    <i class="fas fa-shield-alt"></i>
+                    <p><strong>Secure Transaction</strong><br>Your payment is encrypted. Vylithra does not store your financial details.</p>
+                </div>
+
+                <div id="paymentMethodsContainer">
+                    <button class="btn-pay" id="payBtn" onclick="initiatePayment()">
+                        <i class="fas fa-lock"></i> Check Out Now
+                    </button>
+                    <div id="paypal-button-container" style="display: none; margin-top: 15px;"></div>
+                </div>
+
+                <div class="payment-methods" style="margin-top: 25px;">
+                    <p>Guaranteed Safe Checkout</p>
+                    <div class="method-icons">
+                        <i class="fab fa-cc-visa" title="Visa"></i>
+                        <i class="fab fa-cc-mastercard" title="Mastercard"></i>
+                        <i class="fab fa-cc-amex" title="Amex"></i>
+                        <i class="fab fa-paypal" title="PayPal"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+        <script>
+        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const token = localStorage.getItem('token');
+        let currentBook = null;
+        let currentUser = null;
+        let basePrice = 0;
+        let finalCharge = 0;
+        let appliedCoupon = null;
+        let selectedGateway = 'razorpay';
+        let paypalLoaded = false;
+
+        // Extract book ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const bookId = urlParams.get('bookId');
+
+        async function init() {
+            if (!token) {
+                VylithraUI.showToast("Please log in to checkout.", 'error');
+                setTimeout(() => window.location.href = '/auth', 1500);
+                return;
+            }
+            if (!bookId) {
+                VylithraUI.showToast("Invalid checkout link.", 'error');
+                setTimeout(() => window.location.href = '/books', 1500);
+                return;
+            }
+
+            try {
+                // Fetch Pricing Details from /api/books/:id/download-price
+                const priceRes = await fetch(`${API_URL}/books/${bookId}/download-price`, { headers: { 'x-auth-token': token } });
+                let downloadedPriceData = null;
+                if (priceRes.ok) {
+                    downloadedPriceData = await priceRes.json();
+                } else {
+                    throw new Error("Download pricing couldn't be loaded.");
+                }
+
+                // Fetch User Profile concurrently
+                const userRes = await fetch(`${API_URL}/users/profile`, {
+                    headers: { 'x-auth-token': token }
+                });
+                if (userRes.ok) currentUser = await userRes.json();
+
+                // Fetch Book Details bypass auth to get raw book data
+                const res = await fetch(`${API_URL}/books`);
+                if (res.ok) {
+                    const books = await res.json();
+                    currentBook = books.find(b => b._id === bookId);
+
+                    if (!currentBook) {
+                        VylithraUI.showToast("Book not found.", 'error');
+                        setTimeout(() => window.location.href = '/books', 1500);
+                        return;
+                    }
+
+                    // Populate UI
+                    const formattedTitle = currentBook.title.split(' ').join('+');
+                    const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
+
+                    const coverImgEl = document.getElementById('bookCover');
+                    coverImgEl.onerror = function () {
+                        this.onerror = null; // Prevent infinite loop if fallback also fails
+                        this.src = fallbackImageUrl;
+                    };
+                    coverImgEl.src = (currentBook.coverImage && currentBook.coverImage.trim() !== '') ? currentBook.coverImage : fallbackImageUrl;
+
+                    document.getElementById('bookTitle').innerText = currentBook.title;
+
+                    const authorName = currentBook.penName ? currentBook.penName : (currentBook.author ? (currentBook.author.displayName || currentBook.author.username || 'Unknown Author') : 'Unknown Author');
+                    document.getElementById('bookAuthor').innerText = `By ${authorName}`;
+
+                    basePrice = downloadedPriceData.amount || 0;
+                    updatePriceDisplay();
+
+                    if (basePrice === 0) {
+                        document.getElementById('payBtn').innerHTML = `<i class="fas fa-download"></i> Get for Free`;
+                        document.querySelector('.gateway-selector').style.display = 'none';
+                        document.querySelector('.promo-code-box').style.display = 'none';
+                    }
+
+                    // Pre-load PayPal Config
+                    fetch(`${API_URL}/config/paypal`).then(r => r.json()).then(data => {
+                        const script = document.createElement('script');
+                        script.src = `https://www.paypal.com/sdk/js?client-id=${data.clientId}&currency=USD&disable-funding=card,credit`;
+                        script.onload = () => {
+                            paypalLoaded = true;
+                            renderPayPalButtons();
+                        };
+                        script.onerror = () => {
+                            console.error("PayPal SDK failed to load. Check if the Client ID is valid.");
+                            VylithraUI.showToast("PayPal disabled: Invalid Gateway Credentials", "error");
+                        };
+                        document.body.appendChild(script);
+                    }).catch(e => console.error("PayPal config fetch failed"));
+
+                    // Reveal UI
+                    document.getElementById('loadingState').style.display = 'none';
+                    document.getElementById('checkoutContent').style.display = 'flex';
+
+                } else {
+                    throw new Error("Books couldn't be loaded.");
+                }
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast("Failed to load checkout details.", 'error');
+                setTimeout(() => window.location.href = '/books', 1500);
+            }
+        }
+
+        function updatePriceDisplay() {
+            let discount = 0;
+            let subtotalPostDiscount = basePrice - discount;
+            let fee = basePrice > 0 ? subtotalPostDiscount * 0.05 : 0;
+            finalCharge = subtotalPostDiscount + fee;
+
+            let displaySubtotal = basePrice;
+            let displayFee = fee;
+            let displayTotal = finalCharge;
+            let currencySymbol = '₹';
+
+            if (selectedGateway === 'paypal') {
+                displaySubtotal = basePrice / 83;
+                displayFee = fee / 83;
+                displayTotal = finalCharge / 83;
+                currencySymbol = '$';
+            }
+
+            document.getElementById('subtotalPrice').innerText = basePrice > 0 ? `${currencySymbol}${displaySubtotal.toFixed(2)}` : 'Free';
+            document.getElementById('feePrice').innerText = basePrice > 0 ? `${currencySymbol}${displayFee.toFixed(2)}` : `${currencySymbol}0`;
+            document.getElementById('totalPrice').innerText = finalCharge > 0 ? `${currencySymbol}${displayTotal.toFixed(2)}` : 'Free';
+
+            if (discount > 0) {
+                let displayDiscount = selectedGateway === 'paypal' ? (discount / 83) : discount;
+                document.getElementById('discountRow').style.display = 'flex';
+                document.getElementById('discountPercentBadge').innerText = `${appliedCoupon.discountPercentage}% OFF`;
+                document.getElementById('discountAmount').innerText = `-${currencySymbol}${displayDiscount.toFixed(2)}`;
+            } else {
+                document.getElementById('discountRow').style.display = 'none';
+            }
+        }
+
+        async function applyPromo() {
+            const code = document.getElementById('promoInput').value.trim();
+            if (!code) return;
+            
+            document.getElementById('applyPromoBtn').innerText = '...';
+            try {
+                const res = await fetch(`${API_URL}/coupons/validate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ code, bookPrice: basePrice })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    appliedCoupon = { code, discountPercentage: data.discountPercentage };
+                    VylithraUI.showToast('Promo code applied!', 'success');
+                    updatePriceDisplay();
+                } else {
+                    VylithraUI.showToast(data.msg, 'error');
+                    appliedCoupon = null;
+                    updatePriceDisplay();
+                }
+            } catch (e) {
+                VylithraUI.showToast('Failed to validate promo code', 'error');
+            }
+            document.getElementById('applyPromoBtn').innerText = 'Apply';
+        }
+
+        function selectGateway(gateway) {
+            selectedGateway = gateway;
+            document.getElementById('btnRazorpay').style.background = gateway === 'razorpay' ? 'rgba(20, 184, 166, 0.1)' : 'transparent';
+            document.getElementById('btnRazorpay').style.borderColor = gateway === 'razorpay' ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+            document.getElementById('btnRazorpay').style.color = gateway === 'razorpay' ? '#fff' : 'var(--text-muted)';
+            
+            document.getElementById('btnPayPal').style.background = gateway === 'paypal' ? 'rgba(20, 184, 166, 0.1)' : 'transparent';
+            document.getElementById('btnPayPal').style.borderColor = gateway === 'paypal' ? 'var(--primary)' : 'rgba(255,255,255,0.1)';
+            document.getElementById('btnPayPal').style.color = gateway === 'paypal' ? '#fff' : 'var(--text-muted)';
+
+            const payBtn = document.getElementById('payBtn');
+            payBtn.style.display = 'flex';
+            document.getElementById('paypal-button-container').style.display = 'none';
+
+            if (gateway === 'paypal') {
+                payBtn.innerHTML = `<i class="fas fa-external-link-alt"></i> Continue to PayPal`;
+                payBtn.style.background = '#0070ba';
+                payBtn.style.color = '#fff';
+            } else {
+                payBtn.innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
+                payBtn.style.background = 'var(--surface)';
+                payBtn.style.color = 'var(--primary)';
+            }
+
+            // Immediately recalculate totals for the correct currency format
+            updatePriceDisplay();
+        }
+
+        function renderPayPalButtons() {
+            paypal.Buttons({
+                style: {
+                    layout: 'vertical',
+                    color: 'black',
+                    shape: 'rect',
+                    label: 'pay',
+                    height: 50
+                },
+                createOrder: async function(data, actions) {
+                    try {
+                        const res = await fetch(`${API_URL}/books/${currentBook._id}/download-intent`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            body: JSON.stringify({ gateway: 'paypal' })
+                        });
+                        const orderData = await res.json();
+                        if (res.ok && orderData.type === 'paypal') {
+                            return orderData.order_id;
+                        } else {
+                            VylithraUI.showToast(orderData.msg || "PayPal initialization failed", 'error');
+                            throw new Error("Initialization failed");
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        throw err;
+                    }
+                },
+                onApprove: async function(data, actions) {
+                    VylithraUI.showToast("Verifying PayPal transaction...", "info");
+                    
+                    await verifyPurchase({
+                        gateway: 'paypal',
+                        paypal_order_id: data.orderID,
+                        book_id: currentBook._id,
+                        couponCode: appliedCoupon ? appliedCoupon.code : ''
+                    });
+                },
+                onError: function (err) {
+                    VylithraUI.showToast("PayPal checkout failed.", "error");
+                    console.error(err);
+                }
+            }).render('#paypal-button-container');
+        }
+
+        async function initiatePayment() {
+            if (!currentBook) return;
+            const btn = document.getElementById('payBtn');
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-circle-notch fa-spin"></i> Processing...`;
+
+            // Free Book Bypass
+            if (basePrice === 0) {
+                try {
+                    const res = await fetch(`${API_URL}/books/${currentBook._id}/download-free`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok) {
+                        VylithraUI.showToast("Library updated!", 'success');
+                        setTimeout(() => window.location.href = '/books', 2000);
+                    } else {
+                        VylithraUI.showToast(data.msg || "Error adding free book.", 'error');
+                    }
+                } catch (err) {
+                    VylithraUI.showToast("Network error.", 'error');
+                }
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-download"></i> Get for Free`;
+                return;
+            }
+
+            // PayPal Redirect Flow
+            if (selectedGateway === 'paypal') {
+                const params = new URLSearchParams({
+                    bookId: currentBook._id,
+                    type: 'download'
+                });
+                window.location.href = `/paypal-checkout.html?${params.toString()}`;
+                return;
+            }
+
+            // Razorpay Flow
+            if (selectedGateway === 'razorpay') {
+                try {
+                    const res = await fetch(`${API_URL}/books/${currentBook._id}/download-intent`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        body: JSON.stringify({ gateway: 'razorpay' })
+                    });
+
+                    let data = await res.json();
+
+                    if (res.ok && data.type === 'razorpay') {
+                        const options = {
+                            "key": data.key_id,
+                            "amount": data.amount,
+                            "currency": data.currency,
+                            "name": "Vylithra Library",
+                            "description": `Unlock PDF for ${currentBook.title}`,
+                            "image": "https://placehold.co/200x200/1a1a24/d4af37?text=V&font=Playfair+Display",
+                            "order_id": data.order_id,
+                            "handler": async function (response) {
+                                btn.innerHTML = `<i class="fas fa-check"></i> Verifying...`;
+                                await verifyPurchase({
+                                    gateway: 'razorpay',
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    book_id: currentBook._id
+                                });
+                            },
+                            "prefill": {
+                                "name": currentUser && currentUser.displayName ? currentUser.displayName : "Reader",
+                                "email": currentUser && currentUser.email ? currentUser.email : "reader@vylithra.in"
+                            },
+                            "theme": { "color": "#d4af37" },
+                            "modal": {
+                                "ondismiss": function () {
+                                    btn.disabled = false;
+                                    btn.innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
+                                }
+                            }
+                        };
+                        const rzp = new window.Razorpay(options);
+                        rzp.on('payment.failed', function (response) {
+                            VylithraUI.showToast('Payment failed.', 'error');
+                            btn.disabled = false;
+                            btn.innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
+                        });
+                        rzp.open();
+                    } else {
+                        throw new Error(data.msg || "Failed to initiate transaction.");
+                    }
+                } catch (err) {
+                    console.error(err);
+                    VylithraUI.showToast(err.message || 'Connection error.', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
+                }
+            }
+        }
+
+        async function verifyPurchase(paymentData) {
+            try {
+                const res = await fetch(`${API_URL}/books/verify-download`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify(paymentData)
+                });
+
+                if (res.ok) {
+                    VylithraUI.showToast("Payment successful! Redirecting...", "success");
+                    document.getElementById('payBtn').innerHTML = `<i class="fas fa-check-circle"></i> Success!`;
+                    setTimeout(() => window.location.href = '/books?download=success&bookId=' + currentBook._id, 2000);
+                } else {
+                    const data = await res.json();
+                    VylithraUI.showToast(data.msg || "Verification failed. Contact support.", "error");
+                    document.getElementById('payBtn').innerHTML = `<i class="fas fa-times-circle"></i> Failed`;
+                    document.getElementById('payBtn').disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast("Network Error during verification.", 'error');
+                document.getElementById('payBtn').disabled = false;
+                document.getElementById('payBtn').innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>

@@ -191,3 +191,7 @@
         color-scheme: dark;
     }
 }
+
+html {
+    background-color: var(--bg-color, #f0fdfa);
+}

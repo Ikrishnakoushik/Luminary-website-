@@ -12,6 +12,10 @@ const platformSettingSchema = new mongoose.Schema({
     platformFee: {
         type: Number,
         default: 10 // Percentage cut taken from publisher sales
+    },
+    downloadFeePercentage: {
+        type: Number,
+        default: 50 // Percentage calculation for dynamic Premium Book valid downloads
     }
 }, { timestamps: true });
 

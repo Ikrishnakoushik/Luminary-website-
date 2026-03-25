@@ -541,7 +541,8 @@
             if (providerType === 'google') provider = googleProvider;
             else if (providerType === 'github') provider = githubProvider;
             else {
-                alert(providerType + " login is not fully configured yet.");
+                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                if(errDiv) errDiv.innerText = providerType + " login is not fully configured yet.";
                 return;
             }
 
@@ -550,7 +551,8 @@
                 await firebase.auth().signInWithRedirect(provider);
             } catch (error) {
                 console.error("Firebase Auth Error:", error);
-                alert('Authentication failed to start: ' + error.message);
+                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
             }
         }
 
@@ -574,7 +576,8 @@
                         localStorage.setItem('role', data.role);
                         window.location.href = '/main';
                     } else {
-                        alert('Login failed: ' + (data.msg || 'Unknown error'));
+                        const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                        if(errDiv) errDiv.innerText = 'Login failed: ' + (data.msg || 'Unknown error');
                     }
                 } catch(e) {
                     console.error('Session conversion error:', e);
@@ -582,7 +585,8 @@
             }
         }).catch((error) => {
             console.error("Firebase Redirect Error:", error);
-            alert('Authentication failed: ' + error.message);
+            const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+            if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
         });
     </script>
 </head>
@@ -882,40 +886,38 @@
 
             const submitBtn = e.target.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerText;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Signing in...';
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Authenticating...';
             submitBtn.disabled = true;
 
             try {
-                const res = await fetch(`${API_URL}/login`, {
+                // 1. Native Firebase Login
+                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                const idToken = await userCredential.user.getIdToken();
+
+                // 2. Hybrid Backend Bridge
+                const res = await fetch(`${API_URL}/auth/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
+                    body: JSON.stringify({ idToken })
                 });
+                
                 const data = await res.json();
-
-                if (data.requires2FA) {
-                    pendingLoginEmail = email;
-                    pendingLoginPassword = password;
-                    switchTab('twofa');
-                    return;
-                }
-
+                
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
+                    localStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = '/main';
-                } else if (data.requiresVerification) {
-                    registrationEmail = email;
-                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
-                    switchTab('verify');
-                    document.getElementById('verifyError').innerText = data.msg;
                 } else {
-                    errorMsg.innerText = data.msg || 'Login failed';
+                    errorMsg.innerText = data.msg || 'Backend synchronization failed';
                 }
             } catch (err) {
                 console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
+                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
+                    errorMsg.innerText = 'Invalid email or password.';
+                } else {
+                    errorMsg.innerText = err.message || 'Authentication error.';
+                }
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -926,7 +928,7 @@
         let registrationEmail = '';
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('regUsername').value;
+            const displayName = document.getElementById('regUsername').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const role = document.getElementById('regRole').value;
@@ -939,28 +941,40 @@
             submitBtn.disabled = true;
 
             try {
-                const res = await fetch(`${API_URL}/register`, {
+                // 1. Native Firebase Registration
+                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                
+                // Append display name immediately so sync bridge can catch it
+                await userCredential.user.updateProfile({ displayName: displayName });
+
+                const idToken = await userCredential.user.getIdToken();
+
+                // 2. Hybrid Backend Bridge (Explicitly assign role request)
+                const res = await fetch(`${API_URL}/auth/sync`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, role })
+                    body: JSON.stringify({ idToken, requestedRole: role })
                 });
-                const data = await res.json();
 
-                if (res.status === 201) {
-                    registrationEmail = data.email;
-                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
-                    switchTab('verify');
-                } else if (res.status === 200 && data.token) {
+                const data = await res.json();
+                
+                if (res.ok) {
                     localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
+                    localStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = '/main';
                 } else {
-                    errorMsg.innerText = data.msg || 'Registration failed';
+                    errorMsg.innerText = data.msg || 'Backend registration failed';
                 }
             } catch (err) {
                 console.error(err);
-                errorMsg.innerText = 'Server error. Please try again.';
+                if (err.code === 'auth/email-already-in-use') {
+                    errorMsg.innerText = 'Email already registered. Try signing in.';
+                } else if (err.code === 'auth/weak-password') {
+                    errorMsg.innerText = 'Password should be at least 6 characters.';
+                } else {
+                    errorMsg.innerText = err.message || 'Registration error.';
+                }
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -1007,90 +1021,26 @@
             errorMsg.innerText = '';
 
             try {
-                const res = await fetch(`${API_URL}/auth/forgot-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    document.getElementById('forgotFormStep1').style.display = 'none';
-                    document.getElementById('forgotFormStep2').style.display = 'block';
-                } else {
-                    errorMsg.innerText = data.msg || 'Failed to send OTP';
-                    btn.disabled = false;
-                    btn.innerText = 'Send Instructions';
-                }
+                await firebase.auth().sendPasswordResetEmail(email);
+                document.getElementById('forgotFormStep1').style.display = 'none';
+                
+                // Show a simple success message since Firebase handles the full loop natively via email links
+                const step2 = document.getElementById('forgotFormStep2');
+                step2.innerHTML = '<div class="success-message" style="margin-top:20px;">A password reset link has been sent to your email. Please check your inbox and click the link to reset your password. <br><br><a href="#" onclick="switchTab(\'login\'); return false;" style="color:var(--glow-cyan);text-decoration:none;">Return to Login</a></div>';
+                step2.style.display = 'block';
             } catch (err) {
                 btn.disabled = false;
                 btn.innerText = 'Send Instructions';
-                errorMsg.innerText = 'Server error.';
-            }
-        });
-
-        // Forgot Step 2
-        document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value;
-            const otpCode = document.getElementById('forgotOtp').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const errorMsg = document.getElementById('forgotError2');
-            errorMsg.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/auth/reset-password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otpCode, newPassword })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    errorMsg.className = 'success-message';
-                    errorMsg.innerText = 'Password reset! Redirecting to login...';
-                    setTimeout(() => { switchTab('login'); }, 2000);
+                
+                if (err.code === 'auth/user-not-found') {
+                    errorMsg.innerText = 'No account found with this email.';
                 } else {
-                    errorMsg.className = 'error-message';
-                    errorMsg.innerText = data.msg || 'Reset failed';
+                    errorMsg.innerText = err.message || 'Error sending reset email.';
                 }
-            } catch (err) {
-                errorMsg.className = 'error-message';
-                errorMsg.innerText = 'Server error.';
             }
         });
 
-        // Verify Step
-        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const otp = document.getElementById('verifyOtp').value;
-            const errorMsg = document.getElementById('verifyError');
-            errorMsg.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/verify-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: registrationEmail, otp })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('role', data.role);
-                    errorMsg.className = 'success-message';
-                    errorMsg.innerText = 'Verified! Logging in...';
-                    setTimeout(() => window.location.href = '/main', 1500);
-                } else {
-                    errorMsg.className = 'error-message';
-                    errorMsg.innerText = data.msg || 'Verification failed';
-                }
-            } catch (err) {
-                errorMsg.className = 'error-message';
-                errorMsg.innerText = 'Server error.';
-            }
-        });
+        // Legacy custom verify and step 2 reset handlers removed. Firebase handles these natively.
         // Request Demo Logic
         function openDemoModal() {
             document.getElementById("demoModal").style.display = "flex";

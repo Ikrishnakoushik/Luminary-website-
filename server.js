@@ -134,10 +134,46 @@ if (!fs.existsSync(uploadDir)) {
 }
 
 // Middleware
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const mongoSanitize = require('express-mongo-sanitize');
+
+// --- High-Security Middleware ---
+// 1. Helmet headers (CSP relaxed temporarily to prevent blocking Firebase/Stripe CDNs without deep config)
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginEmbedderPolicy: false
+}));
+
+// 2. Prevent NoSQL Injection attacks perfectly
+app.use(mongoSanitize());
+
+// 3. Global DDoS Rate Limiter (1000 requests per 15 minutes)
+const globalLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, 
+    max: 1000, 
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: "Too many requests from this IP, please try again after 15 minutes" }
+});
+app.use(globalLimiter);
+
+// 4. Aggressive Auth Brute Force Prevention (50 requests per hour)
+const authLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 50,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { msg: "Too many authentication attempts from this IP, please try again after an hour" }
+});
+app.use('/api/auth/', authLimiter);
+app.use('/api/login', authLimiter);
+app.use('/api/register', authLimiter);
+
 app.use(cors({
     origin: '*', // Allow all origins (including file://)
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'x-auth-token']
+    allowedHeaders: ['Content-Type', 'x-auth-token', 'x-gateway-token']
 }));
 app.use(express.json());
 // Request Logger
@@ -560,6 +596,97 @@ app.post('/api/users/avatar', auth, (req, res) => {
             }
         }
     });
+});
+
+// Firebase Auto-Sync Route (Hybrid Identity Bridge)
+app.post('/api/auth/sync', async (req, res) => {
+    try {
+        const { idToken, requestedRole } = req.body;
+        if (!idToken) return res.status(400).json({ msg: 'No Firebase token provided' });
+
+        // Verify Firebase identity
+        const decodedToken = await admin.auth().verifyIdToken(idToken);
+        const { uid, email, name, picture } = decodedToken;
+
+        if (!email) {
+             return res.status(400).json({ msg: 'Email is required from Firebase provider' });
+        }
+
+        // Link Identity (uid first, then fallback to email matching for existing legacy users)
+        let user = await User.findOne({ $or: [{ firebaseUid: uid }, { email: email.toLowerCase() }] });
+
+        if (user) {
+            // Attach unique strict firebase identity if linking via email fallback
+            if (!user.firebaseUid) {
+                user.firebaseUid = uid;
+                user.isVerified = true; // Implicitly verified by Firebase taking over
+                await user.save();
+            }
+        } else {
+            // Seamless auto-provisioning
+            // Ensure unique username by appending small entropy if collision happens implicitly
+            let baseUsername = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, '');
+            let tryCount = 0;
+            let checkUnique = true;
+            let proposedUsername = baseUsername;
+            
+            while(checkUnique && tryCount < 5) {
+                let existing = await User.findOne({ username: proposedUsername });
+                if(!existing) checkUnique = false;
+                else proposedUsername = baseUsername + Math.floor(Math.random() * 10000);
+                tryCount++;
+            }
+
+            let finalRole = 'reader';
+            if (ADMIN_EMAIL && email.toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+                finalRole = 'admin';
+            } else if (requestedRole && ['publisher', 'reader'].includes(requestedRole)) {
+                finalRole = requestedRole;
+            }
+
+            user = new User({
+                username: proposedUsername,
+                email: email.toLowerCase(),
+                firebaseUid: uid,
+                displayName: name || proposedUsername,
+                profilePicture: picture || '',
+                isVerified: true,
+                role: finalRole
+            });
+            await user.save();
+        }
+
+        // Generate rapid Vylithra explicit session token (Standardizes backend calls without performance hit of Firebase SDK per route)
+        const payload = {
+            user: {
+                id: user.id,
+                role: user.role,
+                sessionId: crypto.randomBytes(16).toString('hex')
+            }
+        };
+
+        user.activeSessions = user.activeSessions || [];
+        user.activeSessions.push({
+            sessionId: payload.user.sessionId,
+            userAgent: req.headers['user-agent'] || 'FirebaseSync',
+            ip: req.ip || req.connection.remoteAddress,
+            lastActive: new Date()
+        });
+        await user.save();
+
+        jwt.sign(
+            payload,
+            JWT_SECRET,
+            { expiresIn: '7d' },
+            (err, token) => {
+                if (err) throw err;
+                res.json({ token, role: user.role, user: { id: user.id, username: user.username, displayName: user.displayName, email: user.email, profilePicture: user.profilePicture } });
+            }
+        );
+    } catch (err) {
+        console.error('[Firebase Sync Error]', err.message);
+        res.status(401).json({ msg: 'Unauthorized Firebase Token' });
+    }
 });
 
 // Register
@@ -2226,6 +2353,174 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
     }
 });
 
+// GET Dynamic Download Price calculation
+app.get('/api/books/:id/download-price', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        let settings = await PlatformSetting.findOne();
+        let multiplier = settings && settings.downloadFeePercentage !== undefined ? settings.downloadFeePercentage : 50;
+
+        let calculatedPrice = Math.min(book.price * (multiplier / 100), 249);
+        calculatedPrice = Math.round(calculatedPrice);
+        
+        if (book.price === 0) calculatedPrice = 0;
+
+        res.json({ amount: calculatedPrice, originalBookPrice: book.price });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Server error parsing dynamic price' });
+    }
+});
+
+// POST Initiate Payment for Premium Download Unlock
+app.post('/api/books/:id/download-intent', auth, async (req, res) => {
+    try {
+        const { gateway = 'razorpay' } = req.body;
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const user = await User.findById(req.user.id);
+        if (!user.unlockedDownloads) Object.assign(user, { unlockedDownloads: [] });
+        
+        if (user.unlockedDownloads.includes(book._id)) {
+            return res.status(400).json({ msg: 'You have already unlocked local downloads for this book.' });
+        }
+
+        let settings = await PlatformSetting.findOne();
+        let multiplier = settings && settings.downloadFeePercentage !== undefined ? settings.downloadFeePercentage : 50;
+
+        let calculatedPrice = Math.min(book.price * (multiplier / 100), 249);
+        calculatedPrice = Math.round(calculatedPrice);
+
+        if (calculatedPrice <= 0) {
+            return res.status(400).json({ msg: 'Download is free, bypass gateway.' });
+        }
+
+        const transactionFee = calculatedPrice * 0.05;
+        let totalAmountToCharge = calculatedPrice + transactionFee;
+
+        if (gateway === 'paypal') totalAmountToCharge += (calculatedPrice * 0.04);
+
+        if (gateway === 'razorpay') {
+            const amountInPaise = Math.round(totalAmountToCharge * 100);
+            const options = {
+                amount: amountInPaise,
+                currency: 'INR',
+                receipt: `receipt_dl_${Math.random().toString(36).substring(2, 10)}`,
+                notes: {
+                    bookId: book._id.toString(),
+                    userId: req.user.id.toString(),
+                    type: 'pdf_download_unlock'
+                }
+            };
+            const order = await razorpayInstance.orders.create(options);
+            return res.json({ type: 'razorpay', order_id: order.id, amount: amountInPaise, currency: 'INR', key_id: process.env.RAZORPAY_KEY_ID });
+        } else if (gateway === 'paypal') {
+            const totalUSD = (totalAmountToCharge / 83).toFixed(2);
+            const request = new paypal.orders.OrdersCreateRequest();
+            request.prefer("return=representation");
+            request.requestBody({
+                intent: 'CAPTURE',
+                purchase_units: [{
+                    amount: { currency_code: 'USD', value: totalUSD },
+                    custom_id: JSON.stringify({ bookId: book._id.toString(), userId: req.user.id.toString(), type: 'pdf_download_unlock' })
+                }]
+            });
+            const order = await paypalClient.execute(request);
+            return res.json({ type: 'paypal', order_id: order.result.id, amount: totalUSD, currency: 'USD' });
+        } else {
+            return res.status(400).json({ msg: 'Unsupported gateway' });
+        }
+    } catch (err) {
+        console.error('Download Intent Error:', err);
+        const errorMsg = (err.error && err.error.description) || err.description || err.message || JSON.stringify(err);
+        res.status(500).json({ msg: 'Payment Service Error: ' + errorMsg });
+    }
+});
+
+// POST Verify Download Payment
+app.post('/api/books/verify-download', auth, async (req, res) => {
+    try {
+        const { gateway = 'razorpay', razorpay_order_id, razorpay_payment_id, razorpay_signature, paypal_order_id, book_id } = req.body;
+        let isAuthentic = false;
+
+        if (gateway === 'razorpay') {
+            const secret = process.env.RAZORPAY_KEY_SECRET || 'secret_placeholder';
+            const generated_signature = crypto
+                .createHmac('sha256', secret)
+                .update(razorpay_order_id + "|" + razorpay_payment_id)
+                .digest('hex');
+            isAuthentic = (generated_signature === razorpay_signature);
+        } else if (gateway === 'paypal') {
+            const request = new paypal.orders.OrdersCaptureRequest(paypal_order_id);
+            request.requestBody({});
+            const capture = await paypalClient.execute(request);
+            isAuthentic = (capture.result.status === 'COMPLETED');
+        }
+
+        if (isAuthentic) {
+            const user = await User.findById(req.user.id);
+            if (!user.unlockedDownloads) user.unlockedDownloads = [];
+            
+            if (!user.unlockedDownloads.includes(book_id)) {
+                user.unlockedDownloads.push(book_id);
+                await user.save();
+
+                const book = await Book.findById(book_id);
+                if (book && book.price > 0) {
+                    const publisher = await User.findById(book.author);
+                    if (publisher) {
+                        let settings = await PlatformSetting.findOne();
+                        let multiplier = settings && settings.downloadFeePercentage !== undefined ? settings.downloadFeePercentage : 50;
+                        let calculatedPrice = Math.min(book.price * (multiplier / 100), 249);
+                        calculatedPrice = Math.round(calculatedPrice);
+                        
+                        publisher.walletBalance = (publisher.walletBalance || 0) + calculatedPrice;
+                        publisher.totalEarned = (publisher.totalEarned || 0) + calculatedPrice;
+                        await publisher.save();
+                    }
+                }
+            }
+            res.json({ msg: 'Download unlocked successfully' });
+        } else {
+            res.status(400).json({ msg: 'Payment verification failed' });
+        }
+    } catch (err) {
+        console.error('Verify Download Error:', err);
+        res.status(500).json({ msg: 'Server error parsing download verification' });
+    }
+});
+
+// POST Acquire Free Download
+app.post('/api/books/:id/download-free', auth, async (req, res) => {
+    try {
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        let settings = await PlatformSetting.findOne();
+        let multiplier = settings && settings.downloadFeePercentage !== undefined ? settings.downloadFeePercentage : 50;
+        let calculatedPrice = Math.min(book.price * (multiplier / 100), 249);
+        calculatedPrice = Math.round(calculatedPrice);
+
+        if (calculatedPrice > 0) return res.status(400).json({ msg: 'This book download requires payment.' });
+
+        const user = await User.findById(req.user.id);
+        if (!user.unlockedDownloads) user.unlockedDownloads = [];
+        if (user.unlockedDownloads.includes(book._id)) {
+            return res.status(400).json({ msg: 'Download already unlocked.' });
+        }
+
+        user.unlockedDownloads.push(book._id);
+        await user.save();
+        res.json({ msg: 'Download unlocked successfully for free.' });
+    } catch (err) {
+        console.error('Free Download Error:', err);
+        res.status(500).json({ msg: 'Server Error handling free allocation' });
+    }
+});
+
 // Acquire Free Book directly without payment gateway
 app.post('/api/books/:id/purchase-free', auth, async (req, res) => {
     try {
@@ -2799,7 +3094,7 @@ app.get('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
 // 6. Update Platform Settings
 app.post('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
     try {
-        const { registrationEnabled, maintenanceMode, platformFee } = req.body;
+        const { registrationEnabled, maintenanceMode, platformFee, downloadFeePercentage } = req.body;
         
         let settings = await PlatformSetting.findOne();
         if (!settings) {
@@ -2809,6 +3104,7 @@ app.post('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
         if (typeof registrationEnabled === 'boolean') settings.registrationEnabled = registrationEnabled;
         if (typeof maintenanceMode === 'boolean') settings.maintenanceMode = maintenanceMode;
         if (typeof platformFee === 'number') settings.platformFee = platformFee;
+        if (typeof downloadFeePercentage === 'number') settings.downloadFeePercentage = downloadFeePercentage;
 
         await settings.save();
         res.json({ msg: 'Global settings updated.', settings });
@@ -2966,94 +3262,9 @@ app.put('/api/admin/transactions/:userId/:transactionId', adminAuth, gatewayAuth
     }
 });
 
-// Socket.io WebRTC Signaling Server
-const http = require('http');
-const server = http.createServer(app);
-const { Server } = require("socket.io");
-const io = new Server(server, { cors: { origin: "*" } });
-
-// Global mapping of userId to socket.id for presence tracking
-const activeUsers = new Map();
-
-io.on('connection', (socket) => {
-    // Join a personal room based on their userId to receive calls
-    socket.on('join-room', (roomId) => {
-        socket.join(roomId);
-        activeUsers.set(roomId, socket.id);
-        console.log(`[Socket] User joined room: ${roomId}`);
-    });
-
-    socket.on('check-online', (userId, callback) => {
-        if (typeof callback === 'function') {
-            callback({ isOnline: activeUsers.has(String(userId)) });
-        }
-    });
-
-    socket.on('disconnect', () => {
-        for (let [userId, sockId] of activeUsers.entries()) {
-            if (sockId === socket.id) {
-                activeUsers.delete(userId);
-                break;
-            }
-        }
-    });
-
-    // WebRTC Signaling Events
-    socket.on('call-user', (data) => {
-        io.to(data.to).emit('call-made', {
-            offer: data.offer,
-            socket: socket.id,
-            from: data.from, // caller details
-            isVideo: data.isVideo
-        });
-    });
-
-    socket.on('make-answer', (data) => {
-        io.to(data.to).emit('answer-made', {
-            socket: socket.id,
-            answer: data.answer
-        });
-    });
-
-    socket.on('reject-call', (data) => {
-        io.to(data.to).emit('call-rejected', {
-            socket: socket.id
-        });
-    });
-
-    socket.on('end-call', (data) => {
-        io.to(data.to).emit('call-ended', {
-            socket: socket.id
-        });
-    });
-
-    socket.on('ice-candidate', (data) => {
-        io.to(data.to).emit('ice-candidate', {
-            candidate: data.candidate,
-            socket: socket.id,
-            from: data.from // Added so receiver knows which peer this candidate is for
-        });
-    });
-
-    // Group Call Signaling
-    socket.on('join-group-call', (data) => {
-        const roomName = `call_${data.groupId}`;
-        socket.join(roomName);
-        console.log(`[Socket] User ${data.userId} joined group call room: ${roomName}`);
-        // Notify others to initiate a connection to the new user
-        socket.to(roomName).emit('user-joined-call', { userId: data.userId });
-    });
-
-    socket.on('leave-group-call', (data) => {
-        const roomName = `call_${data.groupId}`;
-        socket.leave(roomName);
-        console.log(`[Socket] User ${data.userId} left group call room: ${roomName}`);
-        socket.to(roomName).emit('user-left-call', { userId: data.userId });
-    });
-});
-
-// Start Server
+// Start Server (Stateless Vercel Compatible)
+// WebSockets (socket.io) gracefully removed to prevent Vercel 10s Execution Timeouts. WebRTC is now natively handled by Firebase Realtime DB.
 if (process.env.NODE_ENV !== 'production') {
-    server.listen(PORT, () => console.error(`[Startup] Server started on port ${PORT} `));
+    app.listen(PORT, () => console.error(`[Startup] Vylithra Server started on port ${PORT} `));
 }
-module.exports = server;
+module.exports = app;

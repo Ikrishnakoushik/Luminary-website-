@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
         /* Premium Bookstore Theme (Aurora Press Aesthetic) */
                 :root {
@@ -1277,10 +1278,14 @@
                         <h3 class="book-title">${book.title}${book.isPublished === false ? ' (Unpublished)' : ''}</h3>
                         ${authorHtml}
                         
-                        <div class="price-row">
-                            <p class="book-price">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
+                        <div class="price-row" style="display:flex; align-items:center;">
+                            <p class="book-price" style="margin-right:auto;">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
                             ${(currentUser && currentUser.purchasedBooks && currentUser.purchasedBooks.includes(book._id)) ?
-                            `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>` :
+                            `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>
+                             ${(currentUser.unlockedDownloads && currentUser.unlockedDownloads.includes(book._id)) ?
+                                `<button class="book-action-btn" onclick="exportBookAsPDF('${book._id}', event)" style="background:transparent; color:var(--primary); border: 1px solid var(--primary); margin-left:10px;"><i class="fas fa-download"></i> PDF</button>` :
+                                `<button class="book-action-btn" onclick="window.location.href='/checkout-download.html?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
+                             }` :
                             `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
                         }
                         </div>
@@ -1305,6 +1310,62 @@
                 return;
             }
             window.location.href = `/checkout.html?bookId=${bookId}`;
+        }
+
+        // Generate Premium PDF
+        async function exportBookAsPDF(bookId, e) {
+            if (e) e.stopPropagation();
+            const btn = e.currentTarget;
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+            btn.disabled = true;
+
+            try {
+                // Fetch the full book content payload
+                const res = await fetch(`${API_URL}/books`);
+                if (!res.ok) throw new Error("Failed to sync structural data.");
+                const books = await res.json();
+                const bookToExport = books.find(b => b._id === bookId);
+                
+                if (!bookToExport || !bookToExport.content) {
+                    throw new Error("No physical content body located for export.");
+                }
+
+                VylithraUI.showToast("Compiling Document Stream. This may take a moment...", "info");
+
+                // Wrapper layout mimicking e-ink layout natively in Chrome
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = `
+                    <div style="font-family: 'Times New Roman', serif; padding: 40px; color: #000; background: #fff; width: 680px; margin: 0 auto;">
+                        <h1 style="text-align: center; font-size: 38px; margin-bottom: 25px; margin-top: 40px;">${bookToExport.title}</h1>
+                        <h3 style="text-align: center; color: #444; margin-bottom: 60px; font-style: italic;">By ${bookToExport.penName || 'Anonymous Publisher'}</h3>
+                        <div style="font-size: 16px; line-height: 1.8; text-align: justify;">
+                            ${bookToExport.content}
+                        </div>
+                        <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #888;">
+                            <i>Certified Authorized Export • Vylithra Platform</i>
+                        </div>
+                    </div>
+                `;
+
+                const opt = {
+                    margin:       0.6,
+                    filename:     `${bookToExport.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`,
+                    image:        { type: 'jpeg', quality: 0.98 },
+                    html2canvas:  { scale: 2 },
+                    jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+                };
+
+                await window.html2pdf().set(opt).from(wrapper).save();
+                VylithraUI.showToast("Export payload downloaded successfully!", "success");
+
+            } catch(error) {
+                console.error(error);
+                VylithraUI.showToast(error.message || "Engine failure parsing PDF headers", "error");
+            } finally {
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
         }
 
         // Open Reader

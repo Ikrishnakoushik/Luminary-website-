@@ -1,5 +1,5 @@
-const CACHE_NAME = 'vylithra-cache-v1';
-const API_CACHE_NAME = 'vylithra-api-cache-v1';
+const CACHE_NAME = 'vylithra-cache-v8';
+const API_CACHE_NAME = 'vylithra-api-cache-v8';
 
 // URLs to cache immediately upon installation
 const PRECACHE_URLS = [
