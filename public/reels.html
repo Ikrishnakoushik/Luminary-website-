@@ -103,23 +103,30 @@
         }
 
         @media (min-width: 768px) {
-            .reel-container { justify-content: center; }
+            .reel-container { 
+                justify-content: center;
+                padding: 40px 0;
+                height: calc(100vh - 80px); /* Account for padding, keeping total 100vh */
+            }
             .reel-video {
                 width: 100%;
-                max-width: 430px; /* Strict 9:16 mobile aspect constraint */
-                border-radius: 0;
-                height: 100vh;
+                max-width: 420px; 
+                height: 100%; /* Height scales to padded container */
+                border-radius: 20px; /* Gorgeous Phone-Like Corners */
+                border: 1px solid rgba(255,255,255,0.08); /* Frosted aesthetic rim light */
                 object-fit: cover;
-                box-shadow: 0 0 80px rgba(0,0,0,0.9);
+                box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 60px rgba(255,255,255,0.02);
                 z-index: 5;
             }
             .reel-overlay {
-                max-width: 430px;
+                max-width: 420px;
+                height: 100%; /* Overlay scales to padded container */
                 left: 50%;
                 transform: translateX(-50%);
-                padding-bottom: 30px; /* Less padding on desktop */
-                height: 100vh;
-                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 15%, transparent 40%);
+                padding-bottom: 25px;
+                border-radius: 0 0 20px 20px;
+                /* Extremely dark aggressive gradient ensuring white text visibility on white videos */
+                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 20%, rgba(0,0,0,0.4) 45%, transparent 70%);
             }
         }
 
@@ -127,13 +134,14 @@
             flex: 1;
             pointer-events: auto;
             z-index: 20;
+            padding-right: 60px; /* Prevent text colliding with right action stack */
         }
         
         .reel-author {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 12px;
         }
 
         .reel-author img {
@@ -197,7 +205,7 @@
             margin-bottom: 10px;
         }
 
-        /* Floating Actions - Perfect TikTok Re-creation */
+        /* Premium Floating Actions - Obsidian Style */
         .reel-actions {
             display: flex;
             flex-direction: column;
@@ -211,19 +219,19 @@
         @media (min-width: 768px) {
             .reel-actions {
                 position: absolute;
-                right: -80px; /* Snap to outside right edge of the video column */
+                right: 15px; /* Grounded INSIDE the video column securely */
                 bottom: 30px;
             }
         }
 
         .action-btn {
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(20, 20, 20, 0.5); /* Sleek translucent obsidian */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.12); /* Delicate glass rim */
             color: #fff;
-            width: 52px;
-            height: 52px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
@@ -231,23 +239,24 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
             position: relative;
         }
 
         .action-btn i {
-            font-size: 1.5rem;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+            font-size: 1.35rem; /* Slightly smaller for elegance */
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
         }
 
         .action-btn:hover {
-            transform: scale(1.15) translateY(-5px);
+            transform: scale(1.1) translateY(-3px);
             background: rgba(255, 255, 255, 0.15);
             border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
         }
 
         .action-btn i.fa-heart.liked {
-            color: #ff2a5f;
+            color: #ff2052;
             animation: heartBeat 0.8s ease-in-out infinite alternate;
         }
 
@@ -398,19 +407,10 @@
 
         /* Custom Audio Spinning Record Animation */
         .disc-wrapper {
-            position: absolute;
-            bottom: -50px;
-            right: 10px;
+            margin-top: 5px;
             animation: spinDisc 5s linear infinite;
         }
         @keyframes spinDisc { 100% { transform: rotate(360deg); } }
-        
-        @media (min-width: 768px) {
-            .disc-wrapper {
-                right: 20px; /* Inside video viewport */
-                bottom: -20px;
-            }
-        }
 
         /* Scrubber Bar Engine */
         .scrubber-track {
@@ -424,9 +424,12 @@
         }
         @media (min-width: 768px) {
             .scrubber-track {
-                width: 430px; /* Match video max-width */
+                width: 420px; /* Match new video max-width */
                 left: 50%;
                 transform: translateX(-50%);
+                bottom: 40px; /* Ride exactly on the bottom rim of the newly padded floating card */
+                border-radius: 0 0 20px 20px; /* Match bottom rim clipping */
+                overflow: hidden;
             }
         }
         .scrubber-track:hover { height: 8px; }
