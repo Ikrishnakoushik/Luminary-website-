@@ -37,16 +37,11 @@
             font-family: 'Outfit', sans-serif;
         }
 
-        /* Override Global Navs for Cinematic Feel */
+        /* Override Global Navs for Full Page Option 3 Immersion */
         .layout-container {
             display: flex;
             height: 100vh;
             width: 100vw;
-        }
-
-        .layout-sidebar {
-            background: rgba(0,0,0,0.9);
-            border-right: 1px solid rgba(255,255,255,0.1);
         }
 
         .layout-content {
@@ -56,6 +51,40 @@
             position: relative;
             background: #000;
         }
+
+        @media (min-width: 768px) {
+            .layout-sidebar, .top-nav, #globalAmbientGlow {
+                display: none !important; /* Force pure black Option 3 layout */
+            }
+        }
+
+        /* Elegant Back Button for Obsidian Mode */
+        .obsidian-back-btn {
+            position: fixed;
+            top: 30px;
+            left: 30px;
+            z-index: 9999;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: none; /* Desktop only */
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        @media (min-width: 768px) {
+            .obsidian-back-btn { display: flex; }
+        }
+        .obsidian-back-btn:hover { background: rgba(255,255,255,0.15); transform: scale(1.1); }
+        .obsidian-back-btn i { font-size: 1.2rem; }
 
         .top-nav {
             background: transparent !important;
@@ -712,6 +741,7 @@
         
         <!-- Main Content -->
         <main class="layout-content">
+            <a href="index.html" class="obsidian-back-btn" title="Back to Feed"><i class="fas fa-arrow-left"></i></a>
             <div id="reels-feed">
                 <div class="reels-loader">
                     <i class="fas fa-spinner fa-spin"></i>
