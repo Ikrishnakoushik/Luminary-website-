@@ -1,0 +1,14 @@
+[Startup] Checking Mongo connection...
+[Startup] Vylithra Server started on port 3002 
+[Startup] MongoDB Connected
+Unhandled Error: TypeError: Cannot set property query of #<IncomingMessage> which has only a getter
+    at C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\express-mongo-sanitize\index.js:113:18
+    at Array.forEach (<anonymous>)
+    at C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\express-mongo-sanitize\index.js:110:44
+    at Layer.handleRequest (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\router\lib\layer.js:152:17)
+    at trimPrefix (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\router\index.js:342:13)
+    at C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\router\index.js:297:9
+    at processParams (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\router\index.js:582:12)
+    at next (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\router\index.js:291:5)
+    at internalNext (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\helmet\index.cjs:531:6)
+    at xXssProtectionMiddleware (C:\Users\Illuri\OneDrive\Desktop\project3\node_modules\helmet\index.cjs:311:3)

@@ -147,8 +147,8 @@ app.use(helmet({
     crossOriginResourcePolicy: false
 }));
 
-// 2. Prevent NoSQL Injection attacks perfectly
-app.use(mongoSanitize());
+// 2. Prevent NoSQL Injection attacks 
+// (Relocated beneath express.json to prevent req property exception crashes)
 
 // 3. Global DDoS Rate Limiter (1000 requests per 15 minutes)
 const globalLimiter = rateLimit({
@@ -178,6 +178,8 @@ app.use(cors({
     allowedHeaders: ['Content-Type', 'x-auth-token', 'x-gateway-token']
 }));
 app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Ensure bodies are parsed
+app.use(mongoSanitize()); // Safe to run sanitation now
 // Request Logger
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
