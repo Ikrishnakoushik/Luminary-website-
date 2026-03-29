@@ -661,6 +661,9 @@
                                 <div class="scrubber-fill"></div>
                             </div>
 
+                            <!-- ADVANCED: Ambient Glow Canvas (Hidden beneath video, synced) -->
+                            <canvas class="ambient-glow" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; filter:blur(40px) saturate(2); opacity:0.6; pointer-events:none;"></canvas>
+
                             <div class="reel-overlay">
                                 <!-- Bottom Left: Info -->
                                 <div class="reel-info">
@@ -669,17 +672,29 @@
                                             ${authorAvatarHtml}
                                         </div>
                                         ${!isAuthor ? `<div class="follow-badge" onclick="toggleFollow(event, '${post.user ? post.user._id : ''}', this)"><i class="fas fa-plus"></i></div>` : ''}
-                                        <span style="cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">@${post.username}</span>
+                                        <span style="cursor:pointer; font-size:1.1rem; text-shadow:0 2px 4px rgba(0,0,0,0.8);" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">@${post.username}</span>
                                     </div>
-                                    <div class="reel-caption">${post.content}</div>
-                                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:20px; width:fit-content; border:1px solid rgba(255,255,255,0.1);">
-                                        <i class="fas fa-music fa-spin" style="animation-duration: 4s;"></i>
+                                    <div class="reel-caption" style="text-shadow:0 2px 4px rgba(0,0,0,0.8);">${post.content}</div>
+                                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; background:rgba(255,255,255,0.1); backdrop-filter:blur(5px); padding:6px 14px; border-radius:20px; width:fit-content; border:1px solid rgba(255,255,255,0.2);">
+                                        <i class="fas fa-record-vinyl fa-spin" style="animation-duration: 4s;"></i>
                                         <span>Original Audio - @${post.username}</span>
                                     </div>
                                 </div>
 
                                 <!-- Bottom Right: Actions -->
                                 <div class="reel-actions" style="position:relative;">
+                                    
+                                    <!-- ADVANCED NEW ACTIONS -->
+                                    <button class="action-btn" onclick="toggleFilter(this)" title="Cinematic Filters" style="margin-bottom:15px; color:#ffdd00;">
+                                        <i class="fas fa-magic"></i>
+                                    </button>
+                                    <button class="action-btn" onclick="triggerCoinRain(this)" title="Send Tip" style="margin-bottom:15px; color:#00e676;">
+                                        <i class="fas fa-coins"></i>
+                                    </button>
+                                    <button class="action-btn" onclick="togglePlaybackSpeed(this)" title="Playback Speed" style="margin-bottom:15px; font-size:1.1rem; font-weight:bold; width:45px; height:45px; background:rgba(0,0,0,0.5); border-radius:50%; border:1px solid rgba(255,255,255,0.2); display:flex; align-items:center; justify-content:center;">
+                                        1x
+                                    </button>
+
                                     ${isAuthor ? `
                                         <button class="action-btn" onclick="toggleContextMenu('${post._id}')" style="margin-bottom:10px;">
                                             <i class="fas fa-ellipsis-v"></i>
@@ -1059,6 +1074,118 @@
                 return null;
             }
         }
+
+        // ==========================
+        // IDEAL UX: NEXT-GEN FEATURES
+        // ==========================
+
+        // Feature 1: Toggle Cinematic Video Filters
+        const filterPresets = [
+            'none',
+            'sepia(0.8) contrast(1.2)', 
+            'grayscale(1) contrast(1.5)', 
+            'hue-rotate(90deg) saturate(2) contrast(1.2)',
+            'invert(0.8) saturate(3)'
+        ];
+        function toggleFilter(btnElement) {
+            const container = btnElement.closest('.reel-container');
+            const video = container.querySelector('video');
+            let currentFilterIdx = parseInt(video.dataset.filterIdx || '0');
+            currentFilterIdx = (currentFilterIdx + 1) % filterPresets.length;
+            video.dataset.filterIdx = currentFilterIdx;
+            video.style.filter = filterPresets[currentFilterIdx];
+            
+            // Haptic Flash
+            btnElement.style.transform = 'scale(1.3)';
+            setTimeout(() => btnElement.style.transform = 'scale(1)', 150);
+        }
+
+        // Feature 2: Playback Speed Shifter
+        const speeds = [1, 1.5, 2, 0.5];
+        function togglePlaybackSpeed(btnElement) {
+            const container = btnElement.closest('.reel-container');
+            const video = container.querySelector('video');
+            let currentSpeedIdx = parseInt(video.dataset.speedIdx || '0');
+            currentSpeedIdx = (currentSpeedIdx + 1) % speeds.length;
+            const newSpeed = speeds[currentSpeedIdx];
+            video.dataset.speedIdx = currentSpeedIdx;
+            video.playbackRate = newSpeed;
+            btnElement.innerText = newSpeed + 'x';
+        }
+
+        // Feature 3: Dynamic 3D Coin Rain (Tipping)
+        function triggerCoinRain(btnElement) {
+            const container = btnElement.closest('.reel-container');
+            for(let i=0; i<30; i++) {
+                const coin = document.createElement('i');
+                coin.className = 'fas fa-coins tip-coin';
+                const randomX = Math.random() * window.innerWidth;
+                const randomDelay = Math.random() * 0.5;
+                const randomDuration = 1 + Math.random();
+                
+                coin.style.cssText = `
+                    position: absolute;
+                    top: -50px;
+                    left: ${randomX}px;
+                    color: gold;
+                    font-size: ${Math.random() * 20 + 15}px;
+                    text-shadow: 0 0 10px rgba(255,215,0,0.8);
+                    z-index: 1000;
+                    animation: fall ${randomDuration}s linear ${randomDelay}s forwards, spin ${Math.random()*1 + 0.5}s infinite linear;
+                `;
+                container.appendChild(coin);
+                setTimeout(() => coin.remove(), (randomDuration + randomDelay) * 1000);
+            }
+            // Add Styles dynamically if missing
+            if(!document.getElementById('coinStyles')) {
+                const style = document.createElement('style');
+                style.id = 'coinStyles';
+                style.innerHTML = `
+                    @keyframes fall { to { top: 110vh; } }
+                    @keyframes spin { 0% { transform: rotateY(0deg); } 100% { transform: rotateY(360deg); } }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+
+        // Feature 4: Ambilight (Ambient Glow) Engine
+        // Runs via requestAnimationFrame continuously reading the active video and drawing to canvas
+        function startAmbilightEngine() {
+            const loop = () => {
+                if (currentPlayingVideo && !currentPlayingVideo.paused && !currentPlayingVideo.ended) {
+                    const container = currentPlayingVideo.closest('.reel-container');
+                    const canvas = container.querySelector('.ambient-glow');
+                    if(canvas) {
+                        const ctx = canvas.getContext('2d');
+                        // Scale down massive videos for performance internally to just a 4x4 color map
+                        canvas.width = 16; 
+                        canvas.height = 16;
+                        try {
+                            ctx.drawImage(currentPlayingVideo, 0, 0, 16, 16);
+                        } catch(e) { /* CORS block gracefully avoided */ }
+                    }
+                }
+                requestAnimationFrame(loop);
+            };
+            requestAnimationFrame(loop);
+        }
+        startAmbilightEngine();
+
+        // Feature 5: Cinematic Parallax (Desktop Gyro Mock)
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
+            const y = (e.clientY / window.innerHeight - 0.5) * 2;
+            document.querySelectorAll('.reel-container').forEach(container => {
+                // Determine if this container is heavily on screen
+                const rect = container.getBoundingClientRect();
+                if(rect.top < window.innerHeight && rect.bottom > 0) {
+                    // Slight perspective tilt targeting the active container
+                    container.style.transform = `perspective(1000px) rotateX(${-y * 2}deg) rotateY(${x * 2}deg) scale3d(1.02, 1.02, 1.02)`;
+                } else {
+                    container.style.transform = 'none';
+                }
+            });
+        });
     </script>
 </body>
 </html>
