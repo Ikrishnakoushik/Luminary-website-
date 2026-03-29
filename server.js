@@ -1505,8 +1505,8 @@ app.get('/api/posts', async (req, res) => {
 
         res.json(posts);
     } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Server Error');
+        console.error('[CRITICAL] /api/posts Error:', err.message, err.stack);
+        res.status(500).json({ error: err.message, stack: err.stack, type: err.name });
     }
 });
 
