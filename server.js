@@ -1496,6 +1496,14 @@ app.get('/api/posts', async (req, res) => {
         if (req.query.likedBy) {
             query.likes = req.query.likedBy;
         }
+        
+        // Secure Reels/Video Extraction Pipeline
+        if (req.query.hasVideo === 'true') {
+            query.$or = [
+                { videoUrl: { $exists: true, $ne: '' } },
+                { attachment: { $regex: /\.(mp4|webm|ogg|mov)$/i } }
+            ];
+        }
 
         const limit = parseInt(req.query.limit) || 20;
 

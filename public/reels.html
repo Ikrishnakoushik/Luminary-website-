@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Immersive App Color -->
+    <meta name="theme-color" content="#000000">
+    <title>Vylithra - Reels</title>
+    <script src="theme-loader.js"></script>
+    
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <style>
+        /* Cinematic Layout Force Dark Mode */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #000;
+            color: #fff;
+            overflow: hidden; /* Prevent body scroll, handle scroll in container */
+            font-family: 'Outfit', sans-serif;
+        }
+
+        /* Override Global Navs for Cinematic Feel */
+        .layout-container {
+            display: flex;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        .layout-sidebar {
+            background: rgba(0,0,0,0.9);
+            border-right: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .layout-content {
+            padding: 0 !important;
+            flex: 1;
+            height: 100vh;
+            position: relative;
+            background: #000;
+        }
+
+        .top-nav {
+            background: transparent !important;
+            border: none !important;
+            backdrop-filter: none !important;
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+
+        /* Snap Scrolling Magic */
+        #reels-feed {
+            height: 100vh;
+            width: 100%;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+            /* Hide Scrollbar */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        #reels-feed::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Reel Container */
+        .reel-container {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: center;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #000;
+        }
+
+        .reel-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain; /* Don't crop, show full video */
+            background: #111;
+        }
+
+        @media (min-width: 768px) {
+            .reel-video {
+                width: 100%;
+                max-width: 500px;
+                border-radius: 12px; /* Desktop aesthetic */
+                height: 90vh;
+                object-fit: cover;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            }
+        }
+
+        /* Overlays */
+        .reel-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for Bottom Nav on mobile */
+            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
+            pointer-events: none;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            z-index: 10;
+        }
+
+        @media (min-width: 768px) {
+            .reel-overlay {
+                max-width: 500px;
+                left: 50%;
+                transform: translateX(-50%);
+                padding-bottom: 60px;
+            }
+        }
+
+        .reel-info {
+            flex: 1;
+            pointer-events: auto;
+        }
+        
+        .reel-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .reel-author img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--primary);
+            object-fit: cover;
+        }
+
+        .reel-author span {
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+        }
+
+        .reel-caption {
+            font-size: 0.95rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            margin-bottom: 10px;
+        }
+
+        /* Floating Actions */
+        .reel-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            pointer-events: auto;
+            margin-bottom: 20px;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 1.8rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            transition: transform 0.2s;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+        }
+
+        .action-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .action-btn i.fa-heart.liked {
+            color: #ff3b30;
+        }
+
+        .action-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        /* Play/Pause indicator Native */
+        .play-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.5);
+            font-size: 4rem;
+            color: rgba(255,255,255,0.7);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .play-indicator.show {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        /* Loader */
+        .reels-loader {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: var(--primary);
+            font-size: 2rem;
+            width: 100%;
+        }
+
+        /* Bottom Nav Override for Dark Mode */
+        .bottom-nav {
+            background: rgba(0,0,0,0.9) !important;
+            border-top: 1px solid rgba(255,255,255,0.1) !important;
+        }
+        .bottom-nav .nav-item {
+            color: rgba(255,255,255,0.7) !important;
+        }
+        .bottom-nav .nav-item.active {
+            color: var(--primary) !important;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation (Transparent) -->
+    <nav class="top-nav">
+        <a href="main.html" class="logo">
+            <span class="logo-icon"><i class="fas fa-play-circle"></i></span>
+            <span>Reels</span>
+        </a>
+        <div class="nav-right">
+            <!-- Space for top right icons -->
+        </div>
+    </nav>
+
+    <div class="layout-container">
+        <!-- Sidebar will be injected here automatically by ui-common.js -->
+        
+        <!-- Main Content -->
+        <main class="layout-content">
+            <div id="reels-feed">
+                <div class="reels-loader">
+                    <i class="fas fa-spinner fa-spin"></i>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation will be injected automatically -->
+
+    <!-- API Logic -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+            const currentUserId = parseJwt(localStorage.getItem('token'));
+            const feedContainer = document.getElementById('reels-feed');
+            
+            let posts = [];
+            let currentPlayingVideo = null;
+
+            // Initialize Intersection Observer for Auto-Play 
+            const observerOptions = {
+                root: feedContainer,
+                rootMargin: '0px',
+                threshold: 0.6 // Trigger when 60% of the video is vertically inside the frame
+            };
+
+            const videoObserver = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    const video = entry.target.querySelector('video');
+                    if (!video) return;
+
+                    if (entry.isIntersecting) {
+                        // Play the video when snapped into view
+                        if (currentPlayingVideo && currentPlayingVideo !== video) {
+                            currentPlayingVideo.pause();
+                        }
+                        video.play().catch(e => console.log('Autoplay blocked gracefully by browser', e));
+                        currentPlayingVideo = video;
+                    } else {
+                        // Pause heavily when strictly out of view to radically save resources
+                        video.pause();
+                    }
+                });
+            }, observerOptions);
+
+            async function loadReels() {
+                try {
+                    const res = await fetch(`${API_URL}/posts?hasVideo=true`, {
+                        headers: {
+                            'x-auth-token': localStorage.getItem('token') || ''
+                        }
+                    });
+
+                    if (res.ok) {
+                        posts = await res.json();
+                        renderReels();
+                    } else {
+                        feedContainer.innerHTML = `<div class="reels-loader" style="color:red; font-size:1rem;">Failed to extract Video payloads.</div>`;
+                    }
+                } catch (error) {
+                    console.error("Reel Sync Error", error);
+                    feedContainer.innerHTML = `<div class="reels-loader" style="color:red; font-size:1rem;">Server connection lost.</div>`;
+                }
+            }
+
+            function renderReels() {
+                feedContainer.innerHTML = '';
+                
+                if (posts.length === 0) {
+                    feedContainer.innerHTML = `
+                        <div style="height:100vh; display:flex; align-items:center; justify-content:center; flex-direction:column; text-align:center;">
+                            <i class="fas fa-video-slash" style="font-size:3rem; margin-bottom:20px; color:rgba(255,255,255,0.3);"></i>
+                            <h3 style="margin:0; font-weight:500;">No Reels Found</h3>
+                            <p style="color:rgba(255,255,255,0.5); font-size:0.9rem;">Upload an .mp4 file to start watching!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                posts.forEach((post, index) => {
+                    const videoSrc = post.videoUrl || post.attachment;
+                    let initial = (post.username || 'U').charAt(0).toUpperCase();
+                    let authorAvatarHtml = post.user && post.user.profilePicture 
+                        ? `<img src="${post.user.profilePicture}" alt="Avatar">` 
+                        : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); display:flex; align-items:center; justify-content:center; font-weight:bold;">${initial}</div>`;
+                    
+                    const isLiked = post.likes && currentUserId && post.likes.includes(currentUserId);
+                    const likeCount = post.likes ? post.likes.length : 0;
+                    const commentCount = post.comments ? post.comments.length : 0;
+
+                    const reelHtml = `
+                        <div class="reel-container" data-id="${post._id}">
+                            <video 
+                                class="reel-video" 
+                                src="${videoSrc}" 
+                                loop 
+                                playsinline 
+                                ${index === 0 ? 'autoplay muted' : ''} 
+                                onclick="togglePlayPause(this)"
+                            ></video>
+                            
+                            <i class="fas fa-play play-indicator"></i>
+
+                            <div class="reel-overlay">
+                                <!-- Bottom Left: Info -->
+                                <div class="reel-info">
+                                    <div class="reel-author" style="cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">
+                                        ${authorAvatarHtml}
+                                        <span>@${post.username}</span>
+                                    </div>
+                                    <div class="reel-caption">${post.content}</div>
+                                    <!-- Sound Tracker/Badge Mock -->
+                                    <div style="display:flex; align-items:center; gap:8px; font-size:0.8rem; background:rgba(0,0,0,0.5); padding:5px 12px; border-radius:20px; width:fit-content; border:1px solid rgba(255,255,255,0.1);">
+                                        <i class="fas fa-music"></i>
+                                        <span>Original Audio - @${post.username}</span>
+                                    </div>
+                                </div>
+
+                                <!-- Bottom Right: Actions -->
+                                <div class="reel-actions">
+                                    <button class="action-btn" onclick="toggleLike('${post._id}', this)">
+                                        <i class="fa-heart ${isLiked ? 'fas liked' : 'far'}"></i>
+                                        <span class="action-label">${likeCount}</span>
+                                    </button>
+                                    <button class="action-btn" onclick="alert('Comments opening natively soon!')">
+                                        <i class="far fa-comment-dots"></i>
+                                        <span class="action-label">${commentCount}</span>
+                                    </button>
+                                    <button class="action-btn" onclick="shareReel('${post._id}')">
+                                        <i class="far fa-paper-plane"></i>
+                                        <span class="action-label">Share</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    feedContainer.insertAdjacentHTML('beforeend', reelHtml);
+                });
+
+                // Attach robust Intersection Observer to absolutely all spawned reels
+                document.querySelectorAll('.reel-container').forEach(container => {
+                    videoObserver.observe(container);
+                });
+            }
+
+            // Initialization Block
+            loadReels();
+        });
+
+        // Global Handlers
+        function togglePlayPause(videoElement) {
+            const container = videoElement.closest('.reel-container');
+            const indicator = container.querySelector('.play-indicator');
+            
+            if (videoElement.paused) {
+                videoElement.play();
+                indicator.classList.remove('show');
+            } else {
+                videoElement.pause();
+                indicator.classList.add('show');
+            }
+        }
+
+        async function toggleLike(postId, btnElement) {
+            const token = localStorage.getItem('token');
+            if (!token) return alert('Please login to like reels!');
+
+            const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+            const icon = btnElement.querySelector('i');
+            const label = btnElement.querySelector('.action-label');
+            const isCurrentlyLiked = icon.classList.contains('fas');
+
+            // Optimistic UI Swap
+            if (isCurrentlyLiked) {
+                icon.className = 'far fa-heart';
+                label.innerText = parseInt(label.innerText) - 1;
+            } else {
+                icon.className = 'fas fa-heart liked';
+                label.innerText = parseInt(label.innerText) + 1;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/posts/${postId}/like`, {
+                    method: 'PUT',
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (!res.ok) throw new Error('API Sync Fault');
+                const data = await res.json();
+                
+                // Final State Correction
+                const newLikeCount = data.post.likes.length;
+                label.innerText = newLikeCount;
+                if (data.post.likes.includes(parseJwt(token))) {
+                    icon.className = 'fas fa-heart liked';
+                } else {
+                    icon.className = 'far fa-heart';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function shareReel(postId) {
+            const shareUrl = window.location.origin + '/reels.html?id=' + postId;
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                alert('Reel link copied to clipboard!');
+            });
+        }
+
+        function parseJwt(token) {
+            try {
+                if(!token) return null;
+                const base64Url = token.split('.')[1];
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                return JSON.parse(window.atob(base64)).user.id;
+            } catch (e) {
+                return null;
+            }
+        }
+    </script>
+</body>
+</html>
