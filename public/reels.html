@@ -52,6 +52,72 @@
             background: #000;
         }
 
+        /* Videlo Exact Top Navigation */
+        .videlo-top-nav {
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 9999;
+            background: transparent;
+            pointer-events: auto;
+        }
+        
+        .videlo-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+        
+        .videlo-nav-links {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+        }
+        
+        .videlo-nav-links a {
+            text-decoration: none;
+            color: rgba(255,255,255,0.5);
+            font-weight: 600;
+            font-size: 1.05rem;
+            transition: color 0.2s;
+        }
+        .videlo-nav-links a.active, .videlo-nav-links a:hover {
+            color: #fff;
+        }
+
+        .videlo-nav-icons {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+        
+        .videlo-nav-icons i {
+            font-size: 1.2rem;
+            color: rgba(255,255,255,0.7);
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .videlo-nav-icons i:hover { color: #fff; }
+
+        .v-nav-avatar {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer;
+        }
+
+        @media (max-width: 768px) {
+            .videlo-top-nav { display: none; } /* Mobile uses app-like bottom nav mostly */
+        }
+
         @media (min-width: 768px) {
             .layout-sidebar, .top-nav, #globalAmbientGlow {
                 display: none !important; /* Force pure black Option 3 layout */
@@ -147,199 +213,225 @@
             z-index: 10;
         }
 
+        /* --- VIDELO 1:1 CLONE ARCHITECTURE --- */
+        
         @media (min-width: 768px) {
             .reel-container { 
                 justify-content: center;
+                align-items: center;
                 padding: 40px 0;
-                height: calc(100vh - 80px); /* Account for padding, keeping total 100vh */
+                height: 100vh;
             }
             .reel-video {
                 width: 100%;
-                max-width: 420px; 
-                height: 100%; /* Height scales to padded container */
-                border-radius: 20px; /* Gorgeous Phone-Like Corners */
-                border: 1px solid rgba(255,255,255,0.08); /* Frosted aesthetic rim light */
+                max-width: 400px; /* Precise phone width */
+                height: calc(100vh - 120px) !important; /* Proper phone height */
+                max-height: 850px;
+                border-radius: 40px !important; /* Hardware Bezels */
+                border: 6px solid #1c1c1e !important; /* Thick phone bezel */
                 object-fit: cover;
-                box-shadow: 0 40px 80px rgba(0,0,0,0.8), 0 0 60px rgba(255,255,255,0.02);
+                /* The Deep Glowing Aura from the reference image */
+                box-shadow: 0 0 140px 40px rgba(50, 70, 180, 0.4), inset 0 0 20px rgba(0,0,0,0.5);
                 z-index: 5;
+                position: relative;
             }
-            .reel-overlay {
-                width: 100%;
-                max-width: 420px;
-                height: 100%; /* Overlay scales to padded container */
-                top: auto;
+            .videlo-layout {
+                max-width: 400px;
+                height: calc(100vh - 120px);
+                max-height: 850px;
+                top: 50% !important;
+                bottom: auto !important;
                 left: 50%;
-                right: auto; /* Kill mobile right-stretch inheritance */
-                transform: translateX(-50%);
+                right: auto;
+                transform: translate(-50%, -50%) !important;
+                border-radius: 40px;
                 padding-bottom: 25px;
-                border-radius: 0 0 20px 20px;
-                /* Extremely dark aggressive gradient ensuring white text visibility on white videos */
-                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.8) 20%, rgba(0,0,0,0.4) 45%, transparent 70%);
+                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.7) 30%, rgba(0,0,0,0) 60%), linear-gradient(to bottom, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0) 20%) !important;
+                pointer-events: none;
             }
         }
 
-        .reel-info {
-            flex: 1;
-            pointer-events: auto;
-            z-index: 20;
-            padding-right: 60px; /* Prevent text colliding with right action stack */
+        .videlo-layout {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            top: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+            padding: 20px;
+            pointer-events: none;
         }
-        
-        .reel-author {
+
+        .videlo-top-title {
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 500;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.8);
+            margin-top: 30px;
+        }
+
+        .videlo-bottom-block {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            pointer-events: auto;
+        }
+
+        /* Scrubber Row directly above info block */
+        .videlo-scrubber-row {
             display: flex;
             align-items: center;
             gap: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+            padding-right: 15px;
+        }
+
+        .vid-time {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            font-family: monospace;
+        }
+
+        .videlo-scrubber-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: height 0.2s;
+        }
+        .videlo-scrubber-track:hover { height: 6px; }
+
+        .videlo-scrubber-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            width: 0%;
+            pointer-events: none;
+            position: relative;
+        }
+        .videlo-scrubber-fill::after {
+            content: '';
+            position: absolute;
+            right: -4px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Info and Actions Side-by-Side */
+        .videlo-info-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+        }
+
+        .videlo-info {
+            flex: 1;
+            padding-right: 20px;
+        }
+
+        .videlo-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 12px;
         }
 
-        .reel-author img {
-            width: 40px;
-            height: 40px;
+        .videlo-avatar img, .videlo-avatar .c-avatar {
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            border: 2px solid var(--primary);
+            border: 2px solid rgba(255,255,255,0.8);
             object-fit: cover;
+            cursor: pointer;
         }
 
-        .reel-author span {
-            font-weight: 700;
-            font-size: 1.15rem;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.9);
-            background: linear-gradient(90deg, #fff, #ddd);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        /* Audio Scrolling Marquee */
-        .audio-marquee-container {
+        .videlo-author-text {
             display: flex;
-            align-items: center;
-            gap: 12px;
+            flex-direction: column;
+            cursor: pointer;
+        }
+        .videlo-author-text strong {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+        }
+        .videlo-author-text small {
             font-size: 0.85rem;
-            font-weight: 500;
-            background: rgba(0,0,0,0.4);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            padding: 8px 16px;
-            border-radius: 30px;
-            width: fit-content;
-            border: 1px solid rgba(255,255,255,0.15);
-            max-width: 200px;
-            overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            margin-top: 5px;
-        }
-        
-        .audio-marquee {
-            white-space: nowrap;
-            animation: marqueeScroll 8s linear infinite;
-        }
-        
-        @keyframes marqueeScroll {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
+            color: rgba(255,255,255,0.7);
         }
 
-        .reel-caption {
+        .videlo-caption {
             font-size: 0.95rem;
             line-height: 1.4;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+            margin-bottom: 10px;
             display: -webkit-box;
             -webkit-line-clamp: 3;
             line-clamp: 3;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
-            margin-bottom: 10px;
         }
 
-        /* Premium Floating Actions - Obsidian Style */
-        .reel-actions {
+        .videlo-audio {
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .videlo-actions {
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 16px;
             align-items: center;
-            pointer-events: auto;
-            margin-bottom: 20px;
-            z-index: 20;
         }
 
-        @media (min-width: 768px) {
-            .reel-actions {
-                position: absolute;
-                right: 15px; /* Grounded INSIDE the video column securely */
-                bottom: 30px;
-            }
-        }
-
-        .action-btn {
-            background: rgba(20, 20, 20, 0.5); /* Sleek translucent obsidian */
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.12); /* Delicate glass rim */
+        .v-btn {
+            background: rgba(255, 255, 255, 0.15); /* Videlo frosted aesthetic */
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
             color: #fff;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+            transition: transform 0.2s;
             position: relative;
         }
-
-        .action-btn i {
-            font-size: 1.35rem; /* Slightly smaller for elegance */
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.6));
-        }
-
-        .action-btn:hover {
-            transform: scale(1.1) translateY(-3px);
-            background: rgba(255, 255, 255, 0.15);
-            border-color: rgba(255, 255, 255, 0.3);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
-        }
-
-        .action-btn i.fa-heart.liked {
-            color: #ff2052;
-            animation: heartBeat 0.8s ease-in-out infinite alternate;
-        }
-
-        @keyframes heartBeat {
-            0% { transform: scale(1); filter: drop-shadow(0 0 10px rgba(255,42,95,0.4)); }
-            100% { transform: scale(1.1); filter: drop-shadow(0 0 20px rgba(255,42,95,0.8)); }
-        }
-
-        .action-label {
+        .v-btn:hover { transform: scale(1.1); background: rgba(255,255,255,0.25); }
+        .v-btn i { font-size: 1.25rem; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        
+        .v-label {
             position: absolute;
-            bottom: -22px;
-            font-size: 0.85rem;
+            bottom: -18px;
+            font-size: 0.8rem;
             font-weight: 600;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-            letter-spacing: 0.5px;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
-        /* Play/Pause indicator Native */
-        .play-indicator {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%) scale(0.5);
-            font-size: 4rem;
-            color: rgba(255,255,255,0.7);
-            opacity: 0;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            pointer-events: none;
-            z-index: 5;
-        }
-
-        .play-indicator.show {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
+        .v-btn i.fa-heart.liked { color: #ff2a5f; }
 
         /* Loader */
         .reels-loader {
@@ -741,7 +833,25 @@
         
         <!-- Main Content -->
         <main class="layout-content">
-            <a href="index.html" class="obsidian-back-btn" title="Back to Feed"><i class="fas fa-arrow-left"></i></a>
+            <!-- Full Videlo Nav Desktop Framework -->
+            <div class="videlo-top-nav">
+                <div class="videlo-logo" style="cursor:pointer;" onclick="window.location.href='index.html'">
+                    <i class="fas fa-play" style="color:#5064ff;"></i>
+                    <span>VYLITHRA</span>
+                </div>
+                <div class="videlo-nav-links">
+                    <a href="index.html">For You</a>
+                    <a href="index.html">Following</a>
+                    <a href="reels.html" class="active">Discover</a>
+                    <a href="profile.html">Profile</a>
+                </div>
+                <div class="videlo-nav-icons">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-bell"></i>
+                    <div class="v-nav-avatar" onclick="window.location.href='profile.html'"><i class="fas fa-user"></i></div>
+                </div>
+            </div>
+            
             <div id="reels-feed">
                 <div class="reels-loader">
                     <i class="fas fa-spinner fa-spin"></i>
@@ -882,61 +992,66 @@
                             <!-- 2x Speed Indicator -->
                             <div class="ff-overlay"><i class="fas fa-forward"></i> 2x Speed</div>
 
-                            <div class="scrubber-track" onclick="seekVideo(event, this)">
-                                <div class="scrubber-fill"></div>
-                            </div>
-
-                            <div class="reel-overlay">
-                                <!-- Bottom Left: Info -->
-                                <div class="reel-info">
-                                    <div class="reel-author" style="margin-bottom:8px;">
-                                        <span style="font-size:1.15rem; font-weight:700; text-shadow:0 2px 4px rgba(0,0,0,0.8); cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">@${post.username}</span>
-                                    </div>
-                                    <div class="reel-caption" style="text-shadow:0 2px 6px rgba(0,0,0,0.9); font-weight:400; font-size:0.95rem; line-height:1.4; margin-bottom:12px;">${post.content}</div>
-                                    <div class="audio-marquee-container" style="background:rgba(0,0,0,0.2); padding:4px 10px; border-radius:12px; width:max-content; backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.1);">
-                                        <i class="fas fa-music" style="margin-right:8px; font-size:0.8rem; color: rgba(255,255,255,0.8);"></i>
-                                        <div class="audio-marquee">Original Audio - @${post.username}</div>
-                                    </div>
+                            <!-- Videlo Layout Overlay -->
+                            <div class="reel-overlay videlo-layout">
+                                <!-- Top Center Floating Title -->
+                                <div class="videlo-top-title">
+                                    ${post.content.substring(0, 15)}${post.content.length > 15 ? '...' : ''} | ${post.username}
                                 </div>
 
-                                <!-- Bottom Right: Actions -->
-                                <div class="reel-actions">
-                                    
-                                    <!-- Avatar Top Stack (TikTok Style) -->
-                                    <div style="position:relative; width:48px; height:48px; margin-bottom:15px; cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">
-                                        <div style="width:100%; height:100%; border-radius:50%; border:2px solid #fff; overflow:hidden;">
-                                            ${authorAvatarHtml}
+                                <div class="videlo-bottom-block">
+                                    <!-- Embedded Horizontal Scrubber -->
+                                    <div class="videlo-scrubber-row">
+                                        <span class="vid-time current">0:00</span>
+                                        <div class="videlo-scrubber-track" onclick="seekVideo(event, this)">
+                                            <div class="videlo-scrubber-fill"></div>
                                         </div>
-                                        ${!isAuthor ? `<div class="follow-badge" onclick="toggleFollow(event, '${post.user ? post.user._id : ''}', this)" style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); background:#ff2052; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; border:2px solid #000; cursor:pointer;"><i class="fas fa-plus"></i></div>` : ''}
+                                        <span class="vid-time total">0:15</span>
                                     </div>
-
-                                    ${isAuthor ? `
-                                        <button class="action-btn" onclick="toggleContextMenu('${post._id}')">
-                                            <i class="fas fa-ellipsis-v"></i>
-                                        </button>
-                                        <div class="context-menu" id="ctx-${post._id}">
-                                            <button class="context-btn" onclick="openEditModal('${post._id}', \`${post.content.replace(/`/g, '\\`')}\`)"><i class="fas fa-pen"></i> Edit</button>
-                                            <button class="context-btn danger" onclick="deleteReel('${post._id}')"><i class="fas fa-trash"></i> Delete</button>
-                                        </div>
-                                    ` : ''}
                                     
-                                    <button class="action-btn like-btn" onclick="toggleLike('${post._id}', this)">
-                                        <i class="fa-heart ${isLiked ? 'fas liked' : 'fas'}"></i>
-                                        <span class="action-label">${likeCount}</span>
-                                    </button>
-                                    <button class="action-btn" onclick="openCommentDrawer('${post._id}')">
-                                        <i class="fas fa-comment-dots"></i>
-                                        <span class="action-label">${commentCount}</span>
-                                    </button>
-                                    <button class="action-btn" onclick="shareReel('${post._id}')">
-                                        <i class="fas fa-share"></i>
-                                        <span class="action-label">Share</span>
-                                    </button>
+                                    <div class="videlo-info-actions">
+                                        <!-- Bottom Left: Info -->
+                                        <div class="videlo-info">
+                                            <div class="videlo-author">
+                                                <div class="videlo-avatar" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">${authorAvatarHtml}</div>
+                                                <div class="videlo-author-text" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">
+                                                    <strong>${post.username}</strong>
+                                                    <small>@${post.username.toLowerCase()}</small>
+                                                </div>
+                                            </div>
+                                            <div class="videlo-caption">${post.content}</div>
+                                            <div class="videlo-audio"><i class="fas fa-music"></i> Original Audio - Explore...</div>
+                                        </div>
 
-                                    <!-- Spinning Vinyl Disc -->
-                                    <div class="disc-wrapper">
-                                        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #111, #333); border:2px solid #222; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.8);">
-                                            <div style="width:16px; height:16px; border-radius:50%; overflow:hidden;">${authorAvatarHtml}</div>
+                                        <!-- Bottom Right: 5 Action Circles -->
+                                        <div class="videlo-actions">
+                                            <button class="v-btn like-btn" onclick="toggleLike('${post._id}', this)">
+                                                <i class="fa-heart ${isLiked ? 'fas liked' : 'fas'}"></i>
+                                                <span class="v-label">${likeCount >= 1000 ? (likeCount/1000).toFixed(1)+'k' : likeCount}</span>
+                                            </button>
+                                            <button class="v-btn" onclick="openCommentDrawer('${post._id}')">
+                                                <i class="fas fa-comment"></i>
+                                                <span class="v-label">${commentCount}</span>
+                                            </button>
+                                            <button class="v-btn" onclick="shareReel('${post._id}')">
+                                                <i class="fas fa-arrow-up-from-bracket"></i>
+                                            </button>
+                                            <button class="v-btn">
+                                                <i class="fas fa-bookmark"></i>
+                                            </button>
+                                            ${isAuthor ? `
+                                            <button class="v-btn" onclick="toggleContextMenu('${post._id}')">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            <div class="context-menu" id="ctx-${post._id}">
+                                                <button class="context-btn" onclick="openEditModal('${post._id}', \`${post.content.replace(/`/g, '\\`')}\`)"><i class="fas fa-pen"></i> Edit</button>
+                                                <button class="context-btn danger" onclick="deleteReel('${post._id}')"><i class="fas fa-trash"></i> Delete</button>
+                                            </div>
+                                            ` : `
+                                            <button class="v-btn">
+                                                <i class="fas fa-ellipsis-h"></i>
+                                            </button>
+                                            `}
                                         </div>
                                     </div>
                                 </div>
@@ -1213,6 +1328,46 @@
                 btn.disabled = false;
                 btn.innerText = 'Publish Reel';
             }
+        }
+
+        // ==========================
+        //  VIDELO SCRUBBER ENGINE
+        // ==========================
+        function formatTime(seconds) {
+            if (isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+
+        function updateScrubber(video) {
+            const container = video.closest('.reel-container');
+            if(!container) return;
+            const fill = container.querySelector('.videlo-scrubber-fill');
+            const currentLabel = container.querySelector('.vid-time.current');
+            const totalLabel = container.querySelector('.vid-time.total');
+            
+            if(fill && video.duration) {
+                const percentage = (video.currentTime / video.duration) * 100;
+                fill.style.width = `${percentage}%`;
+                
+                if (currentLabel) currentLabel.innerText = formatTime(video.currentTime);
+                if (totalLabel && totalLabel.innerText === "0:15" && video.duration > 1) {
+                    totalLabel.innerText = formatTime(video.duration);
+                }
+            }
+        }
+
+        function seekVideo(event, track) {
+            const container = track.closest('.reel-container');
+            const video = container.querySelector('video');
+            if(!video) return;
+            
+            const rect = track.getBoundingClientRect();
+            const clickPos = (event.clientX - rect.left) / rect.width;
+            
+            video.currentTime = clickPos * video.duration;
+            updateScrubber(video);
         }
 
         // ==========================
