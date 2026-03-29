@@ -525,18 +525,87 @@
             100% { transform: translateY(-100px) scale(1); opacity: 0; }
         }
 
+        /* 2x Fast Forward Overlay */
+        .ff-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+            z-index: 50;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .ff-overlay.active {
+            opacity: 1;
+        }
+
+        /* Global Canvas Ambilight */
+        .global-ambient-glow {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            filter: blur(80px) saturate(2);
+            opacity: 0.8;
+            pointer-events: none;
+            transition: background 0.5s ease-in-out;
+        }
+
+        /* Auto-Scroll Toggle UI */
+        .auto-scroll-toggle {
+            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.3s;
+        }
+        .auto-scroll-toggle.active {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #10b981;
+            color: #10b981;
+        }
+
     </style>
 </head>
 
 <body>
+    <!-- Global Ambient Glow Canvas (Moved out of individual reels) -->
+    <canvas id="globalAmbientGlow" class="global-ambient-glow"></canvas>
+
     <!-- Top Navigation (Transparent) -->
     <nav class="top-nav" style="padding: 15px 20px; display:flex; justify-content:space-between; align-items:center;">
         <a href="main.html" class="logo" style="text-decoration:none; color:white; font-size:1.5rem; font-weight:bold; display:flex; align-items:center; gap:10px; text-shadow:0 2px 5px rgba(0,0,0,0.5);">
             <span class="logo-icon" style="color:var(--primary);"><i class="fas fa-play-circle"></i></span>
             <span>Reels</span>
         </a>
-        <div class="nav-right" style="display:flex; gap:15px; align-items:center;">
-            <button id="globalMuteToggle" class="action-btn" style="font-size:1.2rem; margin:0;" onclick="toggleGlobalMute()">
+        <div class="nav-right" style="display:flex; gap:12px; align-items:center;">
+            <button id="autoScrollBtn" class="auto-scroll-toggle" onclick="toggleAutoScroll()">
+                <i class="fas fa-robot"></i> Auto
+            </button>
+            <button id="globalMuteToggle" class="action-btn" style="font-size:1.2rem; margin:0; width:40px; height:40px;" onclick="toggleGlobalMute()">
                 <i class="fas fa-volume-up"></i>
             </button>
             <button class="studio-nav-btn" onclick="openStudioModal()">
@@ -715,16 +784,21 @@
                                 onclick="togglePlayPause(this)"
                                 ondblclick="triggerDoubleTapLike(event, '${post._id}', this)"
                                 ontimeupdate="updateScrubber(this)"
+                                onpointerdown="startFastForward(this)"
+                                onpointerup="stopFastForward(this)"
+                                onpointerleave="stopFastForward(this)"
+                                onpointercancel="stopFastForward(this)"
+                                oncontextmenu="return false;"
                             ></video>
                             
                             <i class="fas fa-play play-indicator"></i>
+                            
+                            <!-- 2x Speed Indicator -->
+                            <div class="ff-overlay"><i class="fas fa-forward"></i> 2x Speed</div>
 
                             <div class="scrubber-track" onclick="seekVideo(event, this)">
                                 <div class="scrubber-fill"></div>
                             </div>
-
-                            <!-- ADVANCED: Ambient Glow Canvas (Hidden beneath video, synced) -->
-                            <canvas class="ambient-glow" style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:-1; filter:blur(40px) saturate(2); opacity:0.6; pointer-events:none;"></canvas>
 
                             <div class="reel-overlay">
                                 <!-- Bottom Left: Info -->
@@ -1210,22 +1284,20 @@
             }
         }
 
-        // Feature 4: Ambilight (Ambient Glow) Engine
-        // Runs via requestAnimationFrame continuously reading the active video and drawing to canvas
+        // Feature 4: Global Ambilight Engine
+        // Runs continuously reading active video and projecting it huge across the entire page body
         function startAmbilightEngine() {
+            const canvas = document.getElementById('globalAmbientGlow');
+            if(!canvas) return;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            
             const loop = () => {
                 if (currentPlayingVideo && !currentPlayingVideo.paused && !currentPlayingVideo.ended) {
-                    const container = currentPlayingVideo.closest('.reel-container');
-                    const canvas = container.querySelector('.ambient-glow');
-                    if(canvas) {
-                        const ctx = canvas.getContext('2d');
-                        // Scale down massive videos for performance internally to just a 4x4 color map
-                        canvas.width = 16; 
-                        canvas.height = 16;
-                        try {
-                            ctx.drawImage(currentPlayingVideo, 0, 0, 16, 16);
-                        } catch(e) { /* CORS block gracefully avoided */ }
-                    }
+                    canvas.width = 32; 
+                    canvas.height = 32;
+                    try {
+                        ctx.drawImage(currentPlayingVideo, 0, 0, 32, 32);
+                    } catch(e) { /* CORS block gracefully avoided */ }
                 }
                 requestAnimationFrame(loop);
             };
@@ -1233,15 +1305,51 @@
         }
         startAmbilightEngine();
 
-        // Feature 5: Cinematic Parallax (Desktop Gyro Mock)
+        // Feature 5: Native Auto-Scroll Mechanism
+        let isAutoScrollEnabled = false;
+        function toggleAutoScroll() {
+            isAutoScrollEnabled = !isAutoScrollEnabled;
+            const btn = document.getElementById('autoScrollBtn');
+            btn.classList.toggle('active', isAutoScrollEnabled);
+        }
+
+        // Global watcher for video ending to trigger Auto-Scroll
+        document.getElementById('reels-feed').addEventListener('ended', (e) => {
+            if (e.target.tagName === 'VIDEO' && isAutoScrollEnabled) {
+                const currentContainer = e.target.closest('.reel-container');
+                const nextContainer = currentContainer.nextElementSibling;
+                if(nextContainer) nextContainer.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, true); // Capture phase because 'ended' doesn't bubble naturally
+
+        // Feature 6: Hold-to-Fast-Forward (TikTok interaction)
+        let ffHoldTimer;
+        function startFastForward(videoElement) {
+            const container = videoElement.closest('.reel-container');
+            const overlay = container.querySelector('.ff-overlay');
+            ffHoldTimer = setTimeout(() => {
+                videoElement.playbackRate = 2;
+                if(overlay) overlay.classList.add('active');
+            }, 350); // 350ms deep-press triggers 2x Speed
+        }
+
+        function stopFastForward(videoElement) {
+            clearTimeout(ffHoldTimer);
+            if(videoElement.playbackRate === 2) videoElement.playbackRate = 1;
+            const container = videoElement.closest('.reel-container');
+            if(container) {
+                const overlay = container.querySelector('.ff-overlay');
+                if(overlay) overlay.classList.remove('active');
+            }
+        }
+
+        // Feature 7: Cinematic Parallax (Desktop Gyro Mock)
         document.addEventListener('mousemove', (e) => {
             const x = (e.clientX / window.innerWidth - 0.5) * 2; // -1 to 1
             const y = (e.clientY / window.innerHeight - 0.5) * 2;
             document.querySelectorAll('.reel-container').forEach(container => {
-                // Determine if this container is heavily on screen
                 const rect = container.getBoundingClientRect();
                 if(rect.top < window.innerHeight && rect.bottom > 0) {
-                    // Slight perspective tilt targeting the active container
                     container.style.transform = `perspective(1000px) rotateX(${-y * 2}deg) rotateY(${x * 2}deg) scale3d(1.02, 1.02, 1.02)`;
                 } else {
                     container.style.transform = 'none';
