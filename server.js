@@ -1469,6 +1469,33 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
     }
 });
 
+// Edit Post
+app.put('/api/posts/:id', auth, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        // Verify ownership
+        if (post.user.toString() !== req.user.id) {
+            return res.status(401).json({ msg: 'User not authorized to edit this post' });
+        }
+        
+        // Update content
+        if (req.body.text !== undefined) {
+            post.text = req.body.text;
+        }
+        await post.save();
+        res.json(post);
+    } catch (err) {
+        console.error(err.message);
+        if (err.kind === 'ObjectId') {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+        res.status(500).send('Server Error');
+    }
+});
+
 // Delete Post
 app.delete('/api/posts/:id', auth, async (req, res) => {
     try {
