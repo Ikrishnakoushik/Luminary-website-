@@ -136,7 +136,7 @@ if (!fs.existsSync(uploadDir)) {
 // Middleware
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
-const mongoSanitize = require('express-mongo-sanitize');
+const sanitize = require('mongo-sanitize');
 
 // --- High-Security Middleware ---
 // 1. Helmet headers (CSP, COOP relaxed to guarantee Firebase Google SSO iframe redirects don't fail silently)
@@ -179,7 +179,17 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Ensure bodies are parsed
-app.use(mongoSanitize()); // Safe to run sanitation now
+// 2. Prevent NoSQL Injection deeply and securely without breaking Express 5 Object Getters
+app.use((req, res, next) => {
+    if (req.body) req.body = sanitize(req.body);
+    if (req.params) req.params = sanitize(req.params);
+    if (req.query) {
+        for (let key in req.query) {
+            req.query[key] = sanitize(req.query[key]);
+        }
+    }
+    next();
+});
 // Request Logger
 app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
