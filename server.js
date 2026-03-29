@@ -139,10 +139,12 @@ const rateLimit = require('express-rate-limit');
 const mongoSanitize = require('express-mongo-sanitize');
 
 // --- High-Security Middleware ---
-// 1. Helmet headers (CSP relaxed temporarily to prevent blocking Firebase/Stripe CDNs without deep config)
+// 1. Helmet headers (CSP, COOP relaxed to guarantee Firebase Google SSO iframe redirects don't fail silently)
 app.use(helmet({
     contentSecurityPolicy: false,
-    crossOriginEmbedderPolicy: false
+    crossOriginEmbedderPolicy: false,
+    crossOriginOpenerPolicy: false,
+    crossOriginResourcePolicy: false
 }));
 
 // 2. Prevent NoSQL Injection attacks perfectly
