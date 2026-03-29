@@ -135,10 +135,12 @@
                 z-index: 5;
             }
             .reel-overlay {
+                width: 100%;
                 max-width: 420px;
                 height: 100%; /* Overlay scales to padded container */
                 top: auto;
                 left: 50%;
+                right: auto; /* Kill mobile right-stretch inheritance */
                 transform: translateX(-50%);
                 padding-bottom: 25px;
                 border-radius: 0 0 20px 20px;
