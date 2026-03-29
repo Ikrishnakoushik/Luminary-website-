@@ -103,44 +103,30 @@
         }
 
         @media (min-width: 768px) {
+            .reel-container { justify-content: center; }
             .reel-video {
                 width: 100%;
-                max-width: 500px;
-                border-radius: 12px; /* Desktop aesthetic */
-                height: 90vh;
+                max-width: 430px; /* Strict 9:16 mobile aspect constraint */
+                border-radius: 0;
+                height: 100vh;
                 object-fit: cover;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                box-shadow: 0 0 80px rgba(0,0,0,0.9);
+                z-index: 5;
             }
-        }
-
-        /* Overlays */
-        .reel-overlay {
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            padding: 20px;
-            padding-bottom: 80px; /* Space for Bottom Nav on mobile */
-            background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, transparent 100%);
-            pointer-events: none;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            z-index: 10;
-        }
-
-        @media (min-width: 768px) {
             .reel-overlay {
-                max-width: 500px;
+                max-width: 430px;
                 left: 50%;
                 transform: translateX(-50%);
-                padding-bottom: 60px;
+                padding-bottom: 30px; /* Less padding on desktop */
+                height: 100vh;
+                background: linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 15%, transparent 40%);
             }
         }
 
         .reel-info {
             flex: 1;
             pointer-events: auto;
+            z-index: 20;
         }
         
         .reel-author {
@@ -215,18 +201,26 @@
         .reel-actions {
             display: flex;
             flex-direction: column;
-            gap: 16px;
+            gap: 20px;
             align-items: center;
             pointer-events: auto;
             margin-bottom: 20px;
             z-index: 20;
         }
 
+        @media (min-width: 768px) {
+            .reel-actions {
+                position: absolute;
+                right: -80px; /* Snap to outside right edge of the video column */
+                bottom: 30px;
+            }
+        }
+
         .action-btn {
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
             color: #fff;
             width: 52px;
             height: 52px;
@@ -237,7 +231,7 @@
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
             position: relative;
         }
 
@@ -402,22 +396,61 @@
         }
         .studio-nav-btn:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* Scrubber Bar */
+        /* Custom Audio Spinning Record Animation */
+        .disc-wrapper {
+            position: absolute;
+            bottom: -50px;
+            right: 10px;
+            animation: spinDisc 5s linear infinite;
+        }
+        @keyframes spinDisc { 100% { transform: rotate(360deg); } }
+        
+        @media (min-width: 768px) {
+            .disc-wrapper {
+                right: 20px; /* Inside video viewport */
+                bottom: -20px;
+            }
+        }
+
+        /* Scrubber Bar Engine */
         .scrubber-track {
             position: absolute;
             bottom: 0; left: 0; right: 0;
             height: 4px;
             background: rgba(255,255,255,0.2);
-            z-index: 20;
+            z-index: 50; /* Above all overlays */
             cursor: pointer;
+            transition: height 0.2s;
         }
+        @media (min-width: 768px) {
+            .scrubber-track {
+                width: 430px; /* Match video max-width */
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+        .scrubber-track:hover { height: 8px; }
         .scrubber-fill {
             height: 100%;
-            background: var(--primary);
+            background: #fff; /* Pure white TikTok style */
             width: 0%;
-            border-radius: 0 2px 2px 0;
+            border-radius: 0 4px 4px 0;
             pointer-events: none;
+            box-shadow: 0 0 10px rgba(255,255,255,0.8);
+            position: relative;
         }
+        .scrubber-fill::after {
+            content: '';
+            position: absolute;
+            right: -4px; top: 50%;
+            transform: translateY(-50%);
+            width: 8px; height: 8px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: 0.2s;
+        }
+        .scrubber-track:hover .scrubber-fill::after { opacity: 1; }
 
         /* Follow Badge */
         .follow-badge {
@@ -804,34 +837,39 @@
                             <div class="reel-overlay">
                                 <!-- Bottom Left: Info -->
                                 <div class="reel-info">
-                                    <div class="reel-author" style="position:relative; width:max-content;">
-                                        <div style="width:40px; height:40px; border-radius:50%; border:2px solid var(--primary); overflow:hidden; cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">
-                                            ${authorAvatarHtml}
-                                        </div>
-                                        ${!isAuthor ? `<div class="follow-badge" onclick="toggleFollow(event, '${post.user ? post.user._id : ''}', this)"><i class="fas fa-plus"></i></div>` : ''}
-                                        <span style="cursor:pointer; font-size:1.1rem; text-shadow:0 2px 4px rgba(0,0,0,0.8);" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">@${post.username}</span>
+                                    <div class="reel-author" style="margin-bottom:8px;">
+                                        <span style="font-size:1.15rem; font-weight:700; text-shadow:0 2px 4px rgba(0,0,0,0.8); cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">@${post.username}</span>
                                     </div>
-                                    <div class="reel-caption" style="text-shadow:0 2px 6px rgba(0,0,0,0.9); font-weight:600;">${post.content}</div>
-                                    <div class="audio-marquee-container">
-                                        <i class="fas fa-music fa-spin" style="animation-duration: 4s; color:#1cd05d;"></i>
-                                        <div class="audio-marquee">Original Audio - @${post.username} 🎵</div>
+                                    <div class="reel-caption" style="text-shadow:0 2px 6px rgba(0,0,0,0.9); font-weight:400; font-size:0.95rem; line-height:1.4; margin-bottom:12px;">${post.content}</div>
+                                    <div class="audio-marquee-container" style="background:rgba(0,0,0,0.2); padding:4px 10px; border-radius:12px; width:max-content; backdrop-filter:blur(5px); border:1px solid rgba(255,255,255,0.1);">
+                                        <i class="fas fa-music" style="margin-right:8px; font-size:0.8rem; color: rgba(255,255,255,0.8);"></i>
+                                        <div class="audio-marquee">Original Audio - @${post.username}</div>
                                     </div>
                                 </div>
 
                                 <!-- Bottom Right: Actions -->
-                                <div class="reel-actions" style="position:relative;">
+                                <div class="reel-actions">
+                                    
+                                    <!-- Avatar Top Stack (TikTok Style) -->
+                                    <div style="position:relative; width:48px; height:48px; margin-bottom:15px; cursor:pointer;" onclick="window.location.href='profile.html?user=${post.user ? post.user._id : ''}'">
+                                        <div style="width:100%; height:100%; border-radius:50%; border:2px solid #fff; overflow:hidden;">
+                                            ${authorAvatarHtml}
+                                        </div>
+                                        ${!isAuthor ? `<div class="follow-badge" onclick="toggleFollow(event, '${post.user ? post.user._id : ''}', this)" style="position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); background:#ff2052; color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:0.7rem; border:2px solid #000; cursor:pointer;"><i class="fas fa-plus"></i></div>` : ''}
+                                    </div>
 
                                     ${isAuthor ? `
                                         <button class="action-btn" onclick="toggleContextMenu('${post._id}')">
-                                            <i class="fas fa-cog fa-spin-hover"></i>
+                                            <i class="fas fa-ellipsis-v"></i>
                                         </button>
                                         <div class="context-menu" id="ctx-${post._id}">
                                             <button class="context-btn" onclick="openEditModal('${post._id}', \`${post.content.replace(/`/g, '\\`')}\`)"><i class="fas fa-pen"></i> Edit</button>
                                             <button class="context-btn danger" onclick="deleteReel('${post._id}')"><i class="fas fa-trash"></i> Delete</button>
                                         </div>
                                     ` : ''}
+                                    
                                     <button class="action-btn like-btn" onclick="toggleLike('${post._id}', this)">
-                                        <i class="fa-heart ${isLiked ? 'fas liked' : 'far'}"></i>
+                                        <i class="fa-heart ${isLiked ? 'fas liked' : 'fas'}"></i>
                                         <span class="action-label">${likeCount}</span>
                                     </button>
                                     <button class="action-btn" onclick="openCommentDrawer('${post._id}')">
@@ -842,6 +880,13 @@
                                         <i class="fas fa-share"></i>
                                         <span class="action-label">Share</span>
                                     </button>
+
+                                    <!-- Spinning Vinyl Disc -->
+                                    <div class="disc-wrapper">
+                                        <div style="width:40px; height:40px; border-radius:50%; background:linear-gradient(45deg, #111, #333); border:2px solid #222; display:flex; align-items:center; justify-content:center; box-shadow: 0 0 10px rgba(0,0,0,0.8);">
+                                            <div style="width:16px; height:16px; border-radius:50%; overflow:hidden;">${authorAvatarHtml}</div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
