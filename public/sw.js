@@ -4,10 +4,10 @@ const API_CACHE_NAME = 'vylithra-api-cache-v8';
 // URLs to cache immediately upon installation
 const PRECACHE_URLS = [
     '/',
-    '/main.html',
-    '/profile.html',
-    '/messages.html',
-    '/books.html',
+    '/main',
+    '/profile',
+    '/messages',
+    '/books',
     '/ui-common.css',
     '/ui-common.js',
     '/vylithra_logo.svg',

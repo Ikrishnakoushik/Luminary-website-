@@ -1,0 +1,4 @@
+[dotenv@17.3.1] injecting env (14) from .env -- tip: 🔐 prevent building .env in docker: https://dotenvx.com/prebuild
+[Startup] Firebase Admin SDK Initialized
+[dotenv@17.3.1] injecting env (0) from .env -- tip: 🛠️  run anywhere with `dotenvx run -- yourcommand`
+[Nodemailer] Server is ready to take our messages

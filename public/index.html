@@ -4,7 +4,9 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vylithra | Your Digital Canvas</title>
+    <title>Vylithra | The Ultimate Digital Creator Studio & Library</title>
+    <meta name="description" content="Explore curated collections and masterpieces on Vylithra. The premier digital ecosystem for creators, enthusiasts, and visionaries.">
+    <meta name="keywords" content="Vylithra, Vylithra Books, digital collections, creator studio, digital ecosystem, creative community">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -712,19 +714,10 @@
                                 <input type="password" id="regPassword" class="input-field" placeholder="Create Password" required>
                             </div>
                         </div>
-                         <div class="input-group">
-                            <label>Account Type</label>
-                            <div class="input-wrapper">
-                                <i class="fas fa-shield"></i>
-                                <select id="regRole" class="input-field">
-                                    <option value="reader">Read content (Reader)</option>
-                                    <option value="publisher">Publish content (Publisher)</option>
-                                </select>
-                            </div>
-                        </div>
+                        <input type="hidden" id="regRole" value="reader">
                         <div class="checkbox-group" style="margin-bottom: 2rem; margin-top: 1.5rem;">
                             <input type="checkbox" id="regTerms" required>
-                            <label for="regTerms">I agree to the <a href="/terms.html" style="color:var(--glow-cyan);text-decoration:none;">Terms & Conditions</a></label>
+                            <label for="regTerms">I agree to the <a href="/terms" style="color:var(--glow-cyan);text-decoration:none;">Terms & Conditions</a></label>
                         </div>
                         <button type="submit" class="submit-btn" style="margin-top: 10px;">Create Account</button>
                         <div class="error-message" id="regError"></div>
@@ -1117,6 +1110,25 @@
                 }
             });
         }
+
+        // Auto-fill Magic Link for Password Reset
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const action = urlParams.get('action');
+            const email = urlParams.get('email');
+            const otp = urlParams.get('otp');
+            
+            if (action === 'reset' && email && otp) {
+                switchTab('forgot');
+                document.getElementById('forgotFormStep1').style.display = 'none';
+                document.getElementById('forgotFormStep2').style.display = 'block';
+                document.getElementById('forgotEmail').value = email;
+                document.getElementById('forgotOtp').value = otp;
+                
+                // Clear URL to prevent re-triggering and for cleaner UX
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        });
     </script>
 
     <!-- Request Demo Modal -->

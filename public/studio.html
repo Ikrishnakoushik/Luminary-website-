@@ -436,7 +436,7 @@
         <div class="nav-links">
             <a href="/main" class="nav-link"><i class="fas fa-home"></i> Home</a>
             <a href="/books" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
-            <a href="/reels.html" class="nav-link"><i class="fas fa-play-circle" style="color:var(--primary);"></i> Reels</a>
+            <a href="/reels" class="nav-link"><i class="fas fa-play-circle" style="color:var(--primary);"></i> Reels</a>
             <a href="/publisher" class="nav-link active" id="studioLink" style="display:none;"><i
                     class="fas fa-pen-nib"></i> Publisher</a>
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
@@ -532,13 +532,6 @@
 
             await fetchUserProfile();
 
-            if (currentUser && (currentUser.role === 'publisher' || currentUser.role === 'admin')) {
-                document.getElementById('studioLink').style.display = 'flex';
-                fetchEarningsData();
-                fetchMyBooks();
-            } else {
-                VylithraUI.showToast("Only Publishers can access the Studio.", 'error');
-                setTimeout(() => window.location.href = '/books', 1500);
             }
 
             document.getElementById('logoutBtn').addEventListener('click', (e) => {
@@ -556,6 +549,12 @@
                 });
                 if (res.ok) {
                     currentUser = await res.json();
+                    if (currentUser) {
+                        const studioLink = document.getElementById('studioLink');
+                        if (studioLink) studioLink.style.display = 'flex';
+                        fetchEarningsData();
+                        fetchMyBooks();
+                    }
                 } else if (res.status === 401) {
                     localStorage.removeItem('token');
                     window.location.href = '/auth';
@@ -613,7 +612,7 @@
                     : `<span class="status-badge status-unpublished">Unpublished</span>`;
 
                 const coverUrl = book.coverImage || '';
-                const coverImg = coverUrl ? `<img src="${coverUrl}" class="book-thumb" onerror="this.src=''; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
+                const coverImg = coverUrl ? `<img src="/${coverUrl}" class="book-thumb" onerror="this.src="/'; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
 
                 const date = new Date(book.createdAt).toLocaleDateString();
 

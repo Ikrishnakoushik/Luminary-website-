@@ -3,23 +3,23 @@ require('dotenv').config();
 const User = require('./models/User');
 const Post = require('./models/Post');
 
-// 15 High-Speed Global CDN MP4s
+// 15 High-Speed Global HTTPS CDN MP4s (W3C / Zen CDN / Archive.org)
 const videos = [
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', desc: "The legendary Big Buck Bunny returns! 🐰✨ #cinema #animation" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4', desc: "A surreal dive into Elephant's Dream. 🐘💭 #surreal #dreams" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', desc: "Ignite your passion with Bigger Blazes! 🔥 #fire #vfx" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', desc: "The ultimate escape. Watch till the end. 🏃‍♂️💨 #action #thriller" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', desc: "Having fun yet? Enjoy this classic cut! 🎉 #classic #movies" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4', desc: "Take a joyride into the digital cosmos. 🚗🌌 #neon #cyberpunk" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', desc: "Absolutely melting down! Insane visual fidelity. 🤯 #vfxbreakdown" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', desc: "Sintel's quest for her dragon. A masterpiece. 🐉🗡️ #fantasy #sintel" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4', desc: "Racing through the outback! Pure adrenaline! 🏎️🏜️ #drifting #jdm" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4', desc: "Tears of Steel: Cyberpunk Sci-Fi showcase! 🦾🤖 #scifi #blender" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4', desc: "Cruising in style. VROOM VROOM. 🚘🌴 #carguy #review" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WeAreGoingOnBullrun.mp4', desc: "The ultimate rally! Bullrun madness! 🏎️🔥 #racing" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4', desc: "What can you get for a grand? Let's find out. 💸🚗 #budget #cars" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4', desc: "Wait... is that a giant butterfly? 🦋😲 #nature #wild" },
-    { url: 'http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4', desc: "Finding the dragon nest... truly breathtaking. 🏔️🐲 #epic" }
+    { url: 'https://vjs.zencdn.net/v/oceans.mp4', desc: "Diving into the deep blue... 🌊🐢 #nature #ocean" },
+    { url: 'https://media.w3.org/2010/05/sintel/trailer.mp4', desc: "Sintel Trailer - The search for her dragon! 🐉🗡️ #animation #epic" },
+    { url: 'https://media.w3.org/2010/05/bunny/trailer.mp4', desc: "Big Buck Bunny Trailer - Classic! 🐰✨ #blender #funny" },
+    { url: 'https://media.w3.org/2010/05/bunny/movie.mp4', desc: "Big Buck Bunny Full Cut - Don't mess with him! 🐻💥 #classic #action" },
+    { url: 'https://media.w3.org/2010/05/video/movie_300.mp4', desc: "Bear in the woods... 🐻🌲 #wildlife #nature" },
+    { url: 'https://vjs.zencdn.net/v/oceans.mp4', desc: "Pelicans taking flight! 🕊️🌅 #birds #sunset" },
+    { url: 'https://media.w3.org/2010/05/sintel/trailer.mp4', desc: "The fight scene from Sintel... insane choreography! ⚔️🔥 #vfx #scifi" },
+    { url: 'https://media.w3.org/2010/05/bunny/trailer.mp4', desc: "When the squirrels attack... pure chaos 😂🐿️ #comedy" },
+    { url: 'https://media.w3.org/2010/05/bunny/movie.mp4', desc: "Revenge of the Bunny! 🐇💣 #shortfilm" },
+    { url: 'https://media.w3.org/2010/05/video/movie_300.mp4', desc: "Just a relaxing stream... 🏞️💧 #aesthetic" },
+    { url: 'https://vjs.zencdn.net/v/oceans.mp4', desc: "Coral reef beauty perfectly captured. 🐠🐡 #underwater" },
+    { url: 'https://media.w3.org/2010/05/sintel/trailer.mp4', desc: "Wait for the drop... Sintel's journey is unmatched 🏔️❄️" },
+    { url: 'https://media.w3.org/2010/05/bunny/trailer.mp4', desc: "Mashing up my favorite Blender shorts today! 🎬🎨" },
+    { url: 'https://media.w3.org/2010/05/bunny/movie.mp4', desc: "The animation quality on this is still incredible. #render" },
+    { url: 'https://media.w3.org/2010/05/video/movie_300.mp4', desc: "Ending the day with some nature vibes. 🌿🍃 #chill" }
 ];
 
 async function runSeed() {

@@ -5,7 +5,9 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Books | Vylithra</title>
+    <title>Curated Library | Explore Vylithra Collections</title>
+    <meta name="description" content="Immerse yourself in Vylithra's extensive digital library. Find your next transformative experience across diverse curated collections.">
+    <meta name="keywords" content="Vylithra books, curated library, digital collections, read online, creative masterpieces">
     <!-- Use same theme-loader as the rest of the app -->
     <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
@@ -940,7 +942,7 @@
         </a>
         <div class="nav-links">
             <a href="/books" class="nav-link active">Library</a>
-            <a href="/reels.html" class="nav-link" style="color:var(--primary); font-weight:600;"><i class="fas fa-play-circle" style="margin-right:5px;"></i>Reels</a>
+            <a href="/reels" class="nav-link" style="color:var(--primary); font-weight:600;"><i class="fas fa-play-circle" style="margin-right:5px;"></i>Reels</a>
             <a href="#" class="nav-link" onclick="VylithraUI.showToast('Author directory coming soon!', 'info'); return false;">Authors</a>
             <a href="/studio" class="nav-link" id="studioLink" style="display: none;"> Studio</a>
             <a href="/settings" class="nav-link">Account</a>
@@ -980,16 +982,16 @@
             <div class="hero-showcase">
                 <!-- 3D Stacked Books -->
                 <div class="hero-book book-pos-1" id="heroBook0">
-                    <img src="" class="hero-book-cover" id="heroCover0" alt="Featured Book">
+                    <img src="/" class="hero-book-cover" id="heroCover0" alt="Featured Book">
                 </div>
                 <div class="hero-book book-pos-2" id="heroBook1">
-                    <img src="" class="hero-book-cover" id="heroCover1" alt="Next Book">
+                    <img src="/" class="hero-book-cover" id="heroCover1" alt="Next Book">
                 </div>
                 <div class="hero-book book-pos-3" id="heroBook2">
-                    <img src="" class="hero-book-cover" id="heroCover2" alt="Upcoming Book">
+                    <img src="/" class="hero-book-cover" id="heroCover2" alt="Upcoming Book">
                 </div>
                 <div class="hero-book book-pos-hidden" id="heroBook3">
-                    <img src="" class="hero-book-cover" id="heroCover3" alt="Hidden Book">
+                    <img src="/" class="hero-book-cover" id="heroCover3" alt="Hidden Book">
                 </div>
 
                 <div class="scroll-indicators">
@@ -1251,8 +1253,8 @@
                     const formattedTitle = book.title.split(' ').join('+');
                     const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
                     const coverHtml = book.coverImage
-                        ? `<img src="${book.coverImage}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src='${fallbackImageUrl}'; this.style.backgroundColor='#1e2235';">`
-                        : `<img src="${fallbackImageUrl}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
+                        ? `<img src="/${book.coverImage}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src="/${fallbackImageUrl}"; this.style.backgroundColor='#1e2235';">`
+                        : `<img src="/${fallbackImageUrl}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
 
                     let actionHtml = '';
                     if (canRead) {
@@ -1267,7 +1269,7 @@
                     // Author Link Logic
                     const authorId = book.author ? (book.author._id || book.author) : null;
                     const authorHtml = authorId
-                        ? `<p class="book-author clickable" onclick="event.stopPropagation(); window.location.href='profile?user=${authorId}'" title="View Author Profile">${authorNameDisplay} <i class="fas fa-external-link-alt" style="font-size: 0.75rem; margin-left: 5px; opacity: 0.7;"></i></p>`
+                        ? `<p class="book-author clickable" onclick="event.stopPropagation(); window.location.href="/profile?user=${authorId}"" title="View Author Profile">${authorNameDisplay} <i class="fas fa-external-link-alt" style="font-size: 0.75rem; margin-left: 5px; opacity: 0.7;"></i></p>`
                         : `<p class="book-author">${authorNameDisplay}</p>`;
 
                     card.innerHTML = `
@@ -1285,7 +1287,7 @@
                             `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>
                              ${(currentUser.unlockedDownloads && currentUser.unlockedDownloads.includes(book._id)) ?
                                 `<button class="book-action-btn" onclick="exportBookAsPDF('${book._id}', event)" style="background:transparent; color:var(--primary); border: 1px solid var(--primary); margin-left:10px;"><i class="fas fa-download"></i> PDF</button>` :
-                                `<button class="book-action-btn" onclick="window.location.href='/checkout-download.html?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
+                                `<button class="book-action-btn" onclick="window.location.href='/checkout-download?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
                              }` :
                             `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
                         }

@@ -5,8 +5,10 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vylithra - Home</title>
-    <script src="theme-loader.js"></script>
+    <title>Community Feed | Vylithra Creative Ecosystem</title>
+    <meta name="description" content="Discover the latest digital releases, trending collections, and visionary content within the Vylithra community.">
+    <meta name="keywords" content="Vylithra feed, community content, digital releases, trending collections">
+    <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -1298,7 +1300,7 @@
 
     <!-- Header -->
     <header id="main-header">
-        <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
+        <a href="main" class="logo" style="text-decoration:none;"><img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;"> Vylithra</a>
 
         <div class="search-bar">
             <i class="fa-solid fa-search"></i>
@@ -1306,7 +1308,7 @@
         </div>
 
         <div class="header-right" id="auth-section">
-            <a href="auth" class="btn" style="text-decoration: none;">Log In</a>
+            <a href="/auth" class="btn" style="text-decoration: none;">Log In</a>
         </div>
     </header>
 
@@ -1335,7 +1337,7 @@
                     <span>Trending</span>
                 </a>
 
-                <a href="profile" class="nav-item" id="nav-profile-link" data-type="core"
+                <a href="/profile" class="nav-item" id="nav-profile-link" data-type="core"
                     onclick="return enforceLogin(event)">
                     <i class="fas fa-user"></i>
                     <span>Profile</span>
@@ -1346,7 +1348,7 @@
                     <span>Books</span>
                 </a>
 
-                <a href="publisher" class="nav-item" id="publisher-link" data-type="core" style="display: none;">
+                <a href="/publisher" class="nav-item" id="publisher-link" data-type="core" style="display: none;">
                     <i class="fas fa-pen-nib"></i>
                     <span>Publisher Studio</span>
                 </a>
@@ -1356,13 +1358,13 @@
             <a href="documentation" class="nav-item">
                 <i class="fas fa-book"></i> <span>Documentation</span>
             </a>
-            <a href="creator-kit" class="nav-item">
+            <a href="/creator-kit" class="nav-item">
                 <i class="fas fa-palette"></i> <span>Creator Kit</span>
             </a>
-            <a href="community" class="nav-item">
+            <a href="/community" class="nav-item">
                 <i class="fas fa-shield-alt"></i> <span>Community</span>
             </a>
-            <a href="reels.html" class="nav-item">
+            <a href="/reels" class="nav-item">
                 <i class="fas fa-play-circle" style="color:var(--primary);"></i> <span>Reels</span>
             </a>
 
@@ -1743,7 +1745,7 @@
                         <div class="avatar-sm" style="width: 32px; height: 32px; font-size: 0.8rem;">JD</div>
                         <div class="spreader-info">
                             <span class="spreader-name">Loading Spreaders...</span>
-                            <span class="spreader-role">Publisher</span>
+ 
                         </div>
                         <span class="follow-btn">View</span>
                     </div>
@@ -1778,7 +1780,7 @@
                         </a>
                     </li>
                     <li style="margin-bottom: 12px;">
-                        <a href="creator-kit"
+                        <a href="/creator-kit"
                             style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
                             onmouseover="this.style.color='var(--accent)'"
                             onmouseout="this.style.color='var(--text-main)'">
@@ -1793,7 +1795,7 @@
                         </a>
                     </li>
                     <li style="margin-bottom: 12px;">
-                        <a href="community"
+                        <a href="/community"
                             style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
                             onmouseover="this.style.color='var(--secondary)'"
                             onmouseout="this.style.color='var(--text-main)'">
@@ -1808,7 +1810,7 @@
                         </a>
                     </li>
                     <li style="margin-bottom: 0;">
-                        <a href="legal"
+                        <a href="/legal"
                             style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
                             onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='var(--text-main)'">
                             <div
@@ -1895,7 +1897,7 @@
                 list.innerHTML = users.map(user => {
                     const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
                     const avatar = user.profilePicture
-                        ? `<img src="${user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
+                        ? `<img src="/${user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
                         : `<div class="avatar-sm" style="font-size: 0.8rem;">${initial}</div>`;
 
                     const role = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Reader';
@@ -1905,9 +1907,9 @@
                 ${avatar}
                 <div class="spreader-info">
                     <span class="spreader-name">${user.displayName || user.username}</span>
-                    <span class="spreader-role">${role}</span>
+ 
                 </div>
-                <a href="profile?user=${user._id}" class="follow-btn" style="text-decoration: none;">View</a>
+                <a href="/profile?user=${user._id}" class="follow-btn" style="text-decoration: none;">View</a>
             </div>`;
                 }).join('');
 
@@ -2055,7 +2057,7 @@
 
                     // Post Avatar logic
                     const postAvatar = post.user?.profilePicture
-                        ? `<img src="${post.user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
+                        ? `<img src="/${post.user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
                         : `<div class="avatar-sm">${initial}</div>`;
 
                     // Build Post Content HTML
@@ -2070,7 +2072,7 @@
                     if (post.image) {
                         postContentHTML += `
                     <div style="width: 100%; margin: 15px 0 20px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.03); max-height: 480px; background: var(--input-bg); display: flex; justify-content: center; align-items: center;">
-                        <img src="${post.image}" alt="Post Attached Photo" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
+                        <img src="/${post.image}" alt="Post Attached Photo" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
                     </div>`;
                     }
 
@@ -2145,7 +2147,7 @@
                     if (post.attachment) {
                         const fileName = post.attachment.split('/').pop().replace(/^\d+-/, '');
                         postContentHTML += `
-                                                                        <a href="${post.attachment}" download class="attachment-btn" style="
+                                                                        <a href="/${post.attachment}" download class="attachment-btn" style="
                         display: inline-flex; align-items: center; gap: 8px; 
                         background: var(--bg-color); padding: 10px 16px; border-radius: 8px; 
                         text-decoration: none; color: var(--text-main); font-weight: 600; margin-bottom: 15px;">
@@ -2161,7 +2163,7 @@
                         const cProfilePic = c.user?.profilePicture;
 
                         const commentAvatar = cProfilePic
-                            ? `<img src="${cProfilePic}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
+                            ? `<img src="/${cProfilePic}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
                             : `<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">${cInitial}</div>`;
 
                         return `
@@ -2169,7 +2171,7 @@
                                                                                 ${commentAvatar}
                                                                                 <div>
                                                                                     <div style="font-size: 0.9rem;">
-                                                                                        <a href="profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
+                                                                                        <a href="/profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
                                                                                         <span style="font-size: 0.8rem; color: var(--text-muted);">â€¢ Commented</span>
                                                                                     </div>
                                                                                     <div style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
@@ -2201,7 +2203,7 @@
                                                                             <div class="post-card" id="post-${post._id}">
                                                                                 <div class="post-header">
                                                                                     <div class="post-user-info">
-                                                                                        <a href="profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                                                                                        <a href="/profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
                                                                                             ${postAvatar}
                                                                                             <div>
                                                                                                 <div class="post-author">${authorName}</div>
@@ -2589,7 +2591,7 @@
             const composerIcon = document.querySelector('.dv-composer-icon');
             if (composerIcon && user) {
                 if (user.profilePicture) {
-                    composerIcon.innerHTML = `<img src="${user.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">`;
+                    composerIcon.innerHTML = `<img src="/${user.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">`;
                 } else {
                     const initial = (user.displayName || user.username || 'U').charAt(0).toUpperCase();
                     composerIcon.innerHTML = `<span style="font-weight:bold; font-size:1.1rem; color:#1e293b;">${initial}</span>`;
@@ -2602,11 +2604,13 @@
             if (!authSection) return;
 
             if (token) {
+                const createCard = document.getElementById('create-post-card');
+                if(createCard) createCard.style.display = 'block';
                 // Logged in: show messages icon, profile avatar, and logout
                 let publisherLink = '';
                 if (role === 'publisher' || role === 'admin') {
                     publisherLink = `
-                        <a href="publisher" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publisher Page">
+                        <a href="/publisher" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publisher Page">
                             <i class="fas fa-pen-nib"></i> <span style="font-size: 0.95rem;">Publisher</span>
                         </a>
                     `;
@@ -2614,11 +2618,14 @@
 
                 authSection.innerHTML = `
                     <div style="display: flex; gap: 15px; align-items: center;">
+                        <a href="/studio" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.4); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='rgba(99, 102, 241, 0.2)'" onmouseout="this.style.background='rgba(99, 102, 241, 0.1)'" title="Upload Content">
+                            <i class="fas fa-plus"></i> Upload
+                        </a>
                         ${publisherLink}
                         <a href="messages" style="color: var(--text-muted); font-size: 1.2rem; text-decoration: none; transition: 0.2s;" title="Messages" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
                             <i class="fa-regular fa-envelope"></i>
                         </a>
-                        <a href="profile" class="avatar-sm" style="text-decoration: none;" title="Profile">
+                        <a href="/profile" class="avatar-sm" style="text-decoration: none;" title="Profile">
                             <i class="fa-regular fa-user"></i>
                         </a>
                         <a href="#" onclick="logoutUser(event)" style="color: #ef4444; font-size: 1.2rem; text-decoration: none; transition: 0.2s;" title="Logout">
@@ -2629,7 +2636,7 @@
             } else {
                 // Not logged in: Show Login button
                 authSection.innerHTML = `
-                    <a href="auth" class="btn" style="text-decoration: none; padding: 8px 20px; background: var(--primary); color: white; border-radius: 20px;">Log In</a>
+                    <a href="/auth" class="btn" style="text-decoration: none; padding: 8px 20px; background: var(--primary); color: white; border-radius: 20px;">Log In</a>
                 `;
             }
         }

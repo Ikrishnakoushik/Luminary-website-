@@ -5,8 +5,10 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vylithra - Profile</title>
-    <script src="theme-loader.js"></script>
+    <title>Creator Profile | Vylithra</title>
+    <meta name="description" content="Build your digital presence. Showcase your portfolios, followers, and curated collections on Vylithra.">
+    <meta name="keywords" content="Vylithra profile, creator portfolio, digital presence">
+    <script src="/theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -1387,7 +1389,7 @@
 
                     const roleEl = document.getElementById('profile-role');
                     if(roleEl) {
-                        roleEl.innerText = (user.role || 'Reader').charAt(0).toUpperCase() + (user.role || 'reader').slice(1);
+                        roleEl.style.display = 'none';
                     }
                     const initial = (user.username || 'U').charAt(0).toUpperCase();
                     const avatarEl = document.getElementById('profile-avatar');
@@ -1400,9 +1402,9 @@
                         const linkedinUrl = user.socials && user.socials.linkedin ? user.socials.linkedin : '#';
 
                         socialLinksContainer.innerHTML = `
-                            <a href="${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-                            <a href="${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-                            <a href="${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                            <a href="/${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="/${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                            <a href="/${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
                         `;
                     }
 
@@ -1646,11 +1648,7 @@
 
                     // Render Projects
                     const isMyProfile = user.isMe;
-
-                    // ONLY render projects if NOT reader
-                    if (user.role !== 'reader') {
-                        renderProjects(user.projects || [], isMyProfile);
-                    }
+                    renderProjects(user.projects || [], isMyProfile);
 
                     // Render Profile Content
                     // (Connections list is no longer rendered here, we use Followers/Following counts instead)
@@ -1689,10 +1687,10 @@
                             }
 
                             list.innerHTML = connections.map(conn => `
-                                <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer;" onclick="window.location.href='profile.html?user=${conn._id}'">
+                                <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer;" onclick="window.location.href='/profile?user=${conn._id}'">
                                     <div style="display:flex; align-items:center;">
                                         ${conn.profilePicture 
-                                            ? `<img src="${conn.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                            ? `<img src="/${conn.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
                                             : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${conn.username.charAt(0).toUpperCase()}</div>`
                                         }
                                         <div>
@@ -1700,7 +1698,7 @@
                                             <div style="font-size:0.8rem; color:var(--text-muted);">@${conn.username}</div>
                                         </div>
                                     </div>
-                                    <button class="btn-sm" onclick="event.stopPropagation(); window.location.href='messages.html?user=${conn._id}'">Message</button>
+                                    <button class="btn-sm" onclick="event.stopPropagation(); window.location.href='/messages?user=${conn._id}'">Message</button>
                                 </div>
                             `).join('');
                         }
@@ -1800,7 +1798,7 @@
 
                     const btn = document.createElement('a');
                     btn.id = 'settings-btn';
-                    btn.href = 'settings.html';
+                    btn.href = '/settings';
                     btn.className = 'auth-btn secondary';
                     btn.style.marginTop = '20px';
                     btn.style.marginBottom = '20px';
@@ -2332,7 +2330,7 @@
                 // Avatar
                 const postAvatarUrl = post.user?.profilePicture;
                 const authorAvatar = postAvatarUrl
-                    ? `<img src="${postAvatarUrl}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
+                    ? `<img src="/${postAvatarUrl}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
                     : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
 
 
@@ -2345,7 +2343,7 @@
 
                     let imageHtml = '';
                     if (post.image) {
-                        imageHtml = `<img src="${post.image}" class="compact-img" alt="${safeTitle}">`;
+                        imageHtml = `<img src="/${post.image}" class="compact-img" alt="${safeTitle}">`;
                     } else {
                         // Placeholder
                         imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); display:flex; align-items:center; justify-content:center; color:#bae6fd; font-size:2rem;"><i class="fas fa-feather-alt"></i></div>`;
@@ -2376,7 +2374,7 @@
                 } else {
                     // STANDARD LIST HTML (Previous Logic)
                     const postAvatar = post.user?.profilePicture
-                        ? `<img src="${post.user.profilePicture}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+                        ? `<img src="/${post.user.profilePicture}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
                         : `<div class="avatar" style="width:40px;height:40px;font-size:1.2rem;margin:0;">${initial}</div>`;
 
                     const isLong = (post.content || '').length > 500;
@@ -2406,7 +2404,7 @@
                     <article class="post-card" id="post-${post._id}">
                         <div class="post-header">
                             <div class="post-user-info">
-                                <a href="profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                                <a href="/profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
                                     ${postAvatar}
                                     <div>
                                         <div class="post-author">@${authorName}</div>
@@ -2420,7 +2418,7 @@
                         <div class="post-content" style="margin-bottom:15px;">
                             ${isLong ? `<div class="blog-excerpt">${fullContent.substring(0, 300)}...</div>` : `<div class="blog-excerpt">${fullContent}</div>`}
                         </div>
-                        ${post.image ? `<img src="${post.image}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
+                        ${post.image ? `<img src="/${post.image}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
                         <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
                             <div class="action-btn"><i class="far fa-heart"></i> ${likesCount}</div>
                             <div class="action-btn"><i class="far fa-comment"></i> ${post.comments ? post.comments.length : 0}</div>
@@ -2604,11 +2602,11 @@
                 }
                 
                 list.innerHTML = users.map(u => `
-                    <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer; padding: 10px 15px; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='var(--surface)'" onclick="window.location.href='profile.html?user=${u._id}'">
+                    <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer; padding: 10px 15px; border-radius: 12px; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='var(--surface)'" onclick="window.location.href='/profile?user=${u._id}'">
                         <div style="display:flex; align-items:center; justify-content: space-between;">
                             <div style="display:flex; align-items:center;">
                                 ${u.profilePicture 
-                                    ? `<img src="${u.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                    ? `<img src="/${u.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
                                     : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${u.username.charAt(0).toUpperCase()}</div>`
                                 }
                                 <div>
@@ -2616,7 +2614,7 @@
                                     <div style="font-size:0.85rem; color:var(--text-muted);">@${u.username} • <span style="text-transform: capitalize;">${u.role || 'Reader'}</span></div>
                                 </div>
                             </div>
-                            <button class="btn-sm" style="background:var(--primary); color:white; border:none; padding:6px 14px; border-radius:20px; cursor:pointer;" onclick="event.stopPropagation(); window.location.href='profile.html?user=${u._id}'">View</button>
+                            <button class="btn-sm" style="background:var(--primary); color:white; border:none; padding:6px 14px; border-radius:20px; cursor:pointer;" onclick="event.stopPropagation(); window.location.href='/profile?user=${u._id}'">View</button>
                         </div>
                     </div>
                 `).join('');
@@ -2659,7 +2657,7 @@
     </div>
     <!-- Footer -->
     <div style="text-align: center; padding: 40px 0; color: var(--text-muted); font-size: 0.9rem;">
-        <img src="vylithra_logo.svg" alt="Vylithra"
+        <img src="/vylithra_logo.svg" alt="Vylithra"
             style="width: 20px; height: 20px; vertical-align: middle; opacity: 0.7;">
         <span style="vertical-align: middle; margin-left: 5px;">Powered by Vylithra</span>
         <!-- Offline Indicator & SW Registration -->

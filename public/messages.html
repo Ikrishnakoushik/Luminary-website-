@@ -6,7 +6,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vylithra - Messages</title>
-    <script src="theme-loader.js"></script>
+    <script src="/theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
@@ -481,7 +481,7 @@
 <body>
 
     <header>
-        <a href="main" class="logo"><i class="fa-solid fa-compass"></i> Vylithra</a>
+        <a href="main" class="logo" style="text-decoration:none;"><img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;"> Vylithra</a>
         <div class="header-actions">
             <a href="main" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
@@ -723,7 +723,7 @@
                         
                         const initial = (c.name || 'G').charAt(0).toUpperCase();
                         let avatarHtml = c.avatar
-                            ? `<img src="${c.avatar}" alt="Avatar">`
+                            ? `<img src="/${c.avatar}" alt="Avatar">`
                             : initial;
                             
                         if(c.type === 'group' && !c.avatar) {
@@ -759,7 +759,7 @@
                         fetch(`${API_URL}/users/${activeChatUserId}`).then(r => r.json()).then(user => {
                             if (user && user._id) {
                                 const initial = (user.username || 'U').charAt(0).toUpperCase();
-                                const avatarHtml = user.profilePicture ? `<img src="${user.profilePicture}">` : initial;
+                                const avatarHtml = user.profilePicture ? `<img src="/${user.profilePicture}">` : initial;
                                 list.innerHTML = `
                                     <div class="conversation-item active" onclick="openChat('${user._id}', '${user.username}', '${user.profilePicture || ''}')">
                                         <div class="avatar">${avatarHtml}</div>
@@ -799,7 +799,7 @@
             // UI Updates
             const initial = (groupName || 'G').charAt(0).toUpperCase();
             document.getElementById('chat-header').style.display = 'flex';
-            document.getElementById('active-avatar').innerHTML = profilePic ? `<img src="${profilePic}">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface);"><i class="fas fa-users" style="font-size:1.2rem; color:var(--accent);"></i></div>`;
+            document.getElementById('active-avatar').innerHTML = profilePic ? `<img src="/${profilePic}">` : `<div style="width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:var(--surface);"><i class="fas fa-users" style="font-size:1.2rem; color:var(--accent);"></i></div>`;
             document.getElementById('active-name').innerText = groupName;
 
             document.getElementById('chat-input-area').style.opacity = '1';
@@ -844,7 +844,7 @@
             // UI Updates
             const initial = (username || 'U').charAt(0).toUpperCase();
             document.getElementById('chat-header').style.display = 'flex';
-            document.getElementById('active-avatar').innerHTML = profilePic ? `<img src="${profilePic}">` : initial;
+            document.getElementById('active-avatar').innerHTML = profilePic ? `<img src="/${profilePic}">` : initial;
             document.getElementById('active-name').innerText = `@${username}`;
 
             document.getElementById('chat-input-area').style.opacity = '1';
@@ -915,11 +915,11 @@
             let attachmentHtml = '';
             if (msg.attachmentUrl) {
                 if (msg.attachmentType === 'image') {
-                    attachmentHtml = `<div class="message-attachment"><img src="${msg.attachmentUrl}"></div>`;
+                    attachmentHtml = `<div class="message-attachment"><img src="/${msg.attachmentUrl}"></div>`;
                 } else if (msg.attachmentType === 'video') {
-                    attachmentHtml = `<div class="message-attachment"><video src="${msg.attachmentUrl}" controls></video></div>`;
+                    attachmentHtml = `<div class="message-attachment"><video src="/${msg.attachmentUrl}" controls></video></div>`;
                 } else if (msg.attachmentType === 'file') {
-                    attachmentHtml = `<a href="${msg.attachmentUrl}" target="_blank" class="attachment-file-link"><i class="fas fa-file"></i> Download File</a>`;
+                    attachmentHtml = `<a href="/${msg.attachmentUrl}" target="_blank" class="attachment-file-link"><i class="fas fa-file"></i> Download File</a>`;
                 }
             }
 
@@ -966,7 +966,7 @@
                     else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
                     else pendingAttachmentType = 'file';
 
-                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="${pendingAttachmentUrl}">` : `<i class="fas fa-file"></i>`;
+                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="/${pendingAttachmentUrl}">` : `<i class="fas fa-file"></i>`;
                     previewContainer.innerHTML = `
                         <div class="attachment-preview">
                             ${iconHtml}

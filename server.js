@@ -71,9 +71,9 @@ const transporter = nodemailer.createTransport({
         pass: process.env.EMAIL_PASS,
     },
     family: 4, // Force IPv4 to prevent ENETUNREACH errors
-    connectionTimeout: 3000, // 3 seconds timeout
-    greetingTimeout: 3000,
-    socketTimeout: 3000
+    connectionTimeout: 20000, // 20 seconds timeout for Vercel cold starts
+    greetingTimeout: 20000,
+    socketTimeout: 20000
 });
 
 // Verify Transporter Connection
@@ -883,13 +883,19 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                 <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center; letter-spacing: -0.5px;">Vylithra</h1>
                 <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600;">Account Recovery</h2>
                 <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
-                    We received a request to reset the password for your Vylithra account. Use the authorization code below to proceed:
+                    We received a request to reset the password for your Vylithra account. Click the secure link below to reset your password instantly:
                 </p>
-                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
-                    <span style="font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #d4af37; text-shadow: 0 0 20px rgba(212, 175, 55, 0.3);">${otp}</span>
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <a href="https://vylithra.in/?action=reset&email=${encodeURIComponent(email)}&otp=${otp}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(90deg, #00c6ff, #0072ff); color: #ffffff; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);">Reset My Password</a>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 15px;">
+                    Alternatively, manually enter this 6-digit authorization code:
+                </p>
+                <div style="background-color: #12121a; padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <span style="font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #d4af37;">${otp}</span>
                 </div>
                 <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 40px;">
-                    This code will expire in <b>10 minutes</b>. If you did not request a password reset, your account is safe and you can ignore this email.
+                    This link and code will expire securely in <b>10 minutes</b>. If you did not request a password reset, your account is safe and you can ignore this email.
                 </p>
                 <hr style="border: none; border-top: 1px solid #1a1a24; margin-bottom: 25px;">
                 <p style="color: #666; font-size: 12px; text-align: center;">

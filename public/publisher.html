@@ -7,12 +7,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Publisher Studio | Vylithra</title>
     <link rel="manifest" href="/manifest.json">
-    <script src="theme-loader.js"></script>
+    <script src="/theme-loader.js"></script>
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="/style.css">
     <style>
         :root {
             --bg-color: #f8fafc;
@@ -517,7 +517,7 @@
         <!-- Sidebar -->
         <aside class="sidebar">
             <div class="logo">
-                <img src="vylithra_logo.svg" alt="Vylithra"
+                <img src="/vylithra_logo.svg" alt="Vylithra"
                     style="width: 32px; height: 32px; vertical-align: middle; margin-right: 2px;">
                 <div>Publisher<br>Studio</div>
             </div>
@@ -712,7 +712,7 @@
                     const data = await res.json();
 
                     if (data.url) {
-                        const imgHtml = `<img src="${data.url}" class="editor-image">`;
+                        const imgHtml = `<img src="/${data.url}" class="editor-image">`;
                         document.execCommand('insertHTML', false, imgHtml);
                     } else {
                         VylithraUI.showToast('Upload failed', 'error');
@@ -747,7 +747,7 @@
                                      <i class="fas fa-file-pdf" style="color: #be123c; margin-right: 8px;"></i>${file.name}
                                  </span>
                              </div>
-                             <iframe src="${pdfDataUrl}" width="100%" height="600px" style="border: none; display: block;" title="PDF Document Viewer"></iframe>
+                             <iframe src="/${pdfDataUrl}" width="100%" height="600px" style="border: none; display: block;" title="PDF Document Viewer"></iframe>
                          </div><br>`;
                         document.execCommand('insertHTML', false, pdfHtml);
                     };
@@ -785,7 +785,7 @@
                                 <div style="font-family: 'Outfit', sans-serif; font-weight: 600; font-size: 0.9rem; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${file.name}</div>
                                 <div style="font-family: 'Outfit', sans-serif; font-size: 0.75rem; color: #64748b;">Attachment</div>
                             </div>
-                            <a href="${data.url}" target="_blank" download style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
+                            <a href="/${data.url}" target="_blank" download style="color: #d946ef; text-decoration: none;"><i class="fas fa-download"></i></a>
                         </div><br>`;
 
                         document.execCommand('insertHTML', false, fileHtml);
@@ -1065,7 +1065,7 @@
 
         // Handle Payout Config Redirect
         document.getElementById('payoutConfigBtn').addEventListener('click', () => {
-            window.location.href = 'settings.html#publisher-tools';
+            window.location.href = '/settings#publisher-tools';
         });
 
         // Initialize Call
