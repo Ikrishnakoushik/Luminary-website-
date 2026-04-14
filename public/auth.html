@@ -549,19 +549,9 @@
             }
 
             try {
-                // Use redirect for maximum compatibility on mobile devices and cross-origin
-                await firebase.auth().signInWithRedirect(provider);
-            } catch (error) {
-                console.error("Firebase Auth Error:", error);
-                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
-                if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
-            }
-        }
-
-        // Check for redirect result on page load
-        firebase.auth().getRedirectResult().then(async (result) => {
-            if (result && result.user) {
-                try {
+                // Use popup for maximum reliability cross-device/browser instead of redirects.
+                const result = await firebase.auth().signInWithPopup(provider);
+                if (result && result.user) {
                     const idToken = await result.user.getIdToken();
                     
                     // Exchange Firebase token for our robust hybrid session identity bridge
@@ -581,15 +571,13 @@
                         const errDiv = document.getElementById('loginError') || document.getElementById('regError');
                         if(errDiv) errDiv.innerText = 'Login failed: ' + (data.msg || 'Unknown error');
                     }
-                } catch(e) {
-                    console.error('Session conversion error:', e);
                 }
+            } catch (error) {
+                console.error("Firebase Auth Error:", error);
+                const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
             }
-        }).catch((error) => {
-            console.error("Firebase Redirect Error:", error);
-            const errDiv = document.getElementById('loginError') || document.getElementById('regError');
-            if(errDiv) errDiv.innerText = 'Authentication failed: ' + error.message;
-        });
+        }
     </script>
 </head>
 <body>
