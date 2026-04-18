@@ -1362,7 +1362,7 @@
 
         <div class="search-bar">
             <i class="fa-solid fa-search"></i>
-            <input type="text" placeholder="Search creators, topics, or ideas...">
+            <input type="text" id="searchInput" placeholder="Search creators, topics, or ideas...">
         </div>
 
         <div class="header-right" id="auth-section">
@@ -1955,7 +1955,7 @@
                 list.innerHTML = users.map(user => {
                     const initial = user.username ? user.username.charAt(0).toUpperCase() : 'U';
                     const avatar = user.profilePicture
-                        ? `<img src="/${user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
+                        ? `<img src="${(user.profilePicture) && String(user.profilePicture).startsWith('http') ? (user.profilePicture) : '/' + (user.profilePicture)}" class="avatar-sm" style="object-fit: cover;">`
                         : `<div class="avatar-sm" style="font-size: 0.8rem;">${initial}</div>`;
 
                     const role = user.role ? (user.role.charAt(0).toUpperCase() + user.role.slice(1)) : 'Reader';
@@ -1986,6 +1986,7 @@
             fetchPosts();
             fetchTopSpreaders(); // Fetch sidebar users
             updateAuthLink();
+            setupSearch(); // Initialize search bar listener
         });
 
         async function fetchPosts() {
@@ -2115,7 +2116,7 @@
 
                     // Post Avatar logic
                     const postAvatar = post.user?.profilePicture
-                        ? `<img src="/${post.user.profilePicture}" class="avatar-sm" style="object-fit: cover;">`
+                        ? `<img src="${(post.user.profilePicture) && String(post.user.profilePicture).startsWith('http') ? (post.user.profilePicture) : '/' + (post.user.profilePicture)}" class="avatar-sm" style="object-fit: cover;">`
                         : `<div class="avatar-sm">${initial}</div>`;
 
                     // Build Post Content HTML
@@ -2130,7 +2131,7 @@
                     if (post.image) {
                         postContentHTML += `
                     <div style="width: 100%; margin: 15px 0 20px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.03); max-height: 480px; background: var(--input-bg); display: flex; justify-content: center; align-items: center;">
-                        <img src="/${post.image}" alt="Post Attached Photo" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
+                        <img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" alt="Post Attached Photo" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
                     </div>`;
                     }
 
@@ -2221,7 +2222,7 @@
                         const cProfilePic = c.user?.profilePicture;
 
                         const commentAvatar = cProfilePic
-                            ? `<img src="/${cProfilePic}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
+                            ? `<img src="${(cProfilePic) && String(cProfilePic).startsWith('http') ? (cProfilePic) : '/' + (cProfilePic)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
                             : `<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">${cInitial}</div>`;
 
                         return `
@@ -2537,14 +2538,35 @@
 
         function setupSearch() {
             const input = document.getElementById('searchInput');
-            if (!input) return;
+            if (!input) {
+                console.log("Search input not found!");
+                return;
+            }
+            
             input.addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                const filtered = allPosts.filter(post =>
-                    post.content.toLowerCase().includes(term) ||
-                    post.username.toLowerCase().includes(term) ||
-                    (post.tag && post.tag.toLowerCase().includes(term))
-                );
+                const term = e.target.value.toLowerCase().trim();
+                if (!term) {
+                    renderPosts(allPosts); // Reset to all posts if empty
+                    return;
+                }
+                
+                const filtered = allPosts.filter(post => {
+                    // Safe evaluation to prevent 'toLowerCase of undefined' crashes
+                    const content = post.content ? post.content.toLowerCase() : '';
+                    const title = post.title ? post.title.toLowerCase() : '';
+                    const username = post.user && post.user.username ? post.user.username.toLowerCase() : '';
+                    const displayName = post.user && post.user.displayName ? post.user.displayName.toLowerCase() : '';
+                    const category = post.category ? post.category.toLowerCase() : '';
+                    const tags = post.tags ? post.tags.join(' ').toLowerCase() : '';
+                    
+                    return content.includes(term) || 
+                           title.includes(term) || 
+                           username.includes(term) || 
+                           displayName.includes(term) || 
+                           category.includes(term) ||
+                           tags.includes(term);
+                });
+                console.log(`Found ${filtered.length} posts for term: ${term}`);
                 renderPosts(filtered);
             });
         }
@@ -2649,7 +2671,7 @@
             const composerIcon = document.querySelector('.dv-composer-icon');
             if (composerIcon && user) {
                 if (user.profilePicture) {
-                    composerIcon.innerHTML = `<img src="/${user.profilePicture}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">`;
+                    composerIcon.innerHTML = `<img src="${(user.profilePicture) && String(user.profilePicture).startsWith('http') ? (user.profilePicture) : '/' + (user.profilePicture)}" style="width:100%; height:100%; border-radius:50%; object-fit:cover; border:2px solid rgba(255,255,255,0.1);">`;
                 } else {
                     const initial = (user.displayName || user.username || 'U').charAt(0).toUpperCase();
                     composerIcon.innerHTML = `<span style="font-weight:bold; font-size:1.1rem; color:#1e293b;">${initial}</span>`;

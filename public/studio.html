@@ -610,7 +610,7 @@
                     : `<span class="status-badge status-unpublished">Unpublished</span>`;
 
                 const coverUrl = book.coverImage || '';
-                const coverImg = coverUrl ? `<img src="/${coverUrl}" class="book-thumb" onerror="this.src="/'; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
+                const coverImg = coverUrl ? `<img src="${(coverUrl) && String(coverUrl).startsWith('http') ? (coverUrl) : '/' + (coverUrl)}" class="book-thumb" onerror="this.src="/'; this.style.opacity=0;">` : `<div class="book-thumb"><i class="fas fa-book" style="margin-top:20px; text-align:center; display:block; color:#555;"></i></div>`;
 
                 const date = new Date(book.createdAt).toLocaleDateString();
 

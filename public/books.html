@@ -1253,8 +1253,8 @@
                     const formattedTitle = book.title.split(' ').join('+');
                     const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
                     const coverHtml = book.coverImage
-                        ? `<img src="/${book.coverImage}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src="/${fallbackImageUrl}"; this.style.backgroundColor='#1e2235';">`
-                        : `<img src="/${fallbackImageUrl}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
+                        ? `<img src="${(book.coverImage) && String(book.coverImage).startsWith('http') ? (book.coverImage) : '/' + (book.coverImage)}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src="${(fallbackImageUrl) && String(fallbackImageUrl).startsWith('http') ? (fallbackImageUrl) : '/' + (fallbackImageUrl)}"; this.style.backgroundColor='#1e2235';">`
+                        : `<img src="${(fallbackImageUrl) && String(fallbackImageUrl).startsWith('http') ? (fallbackImageUrl) : '/' + (fallbackImageUrl)}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
 
                     let actionHtml = '';
                     if (canRead) {

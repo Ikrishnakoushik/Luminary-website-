@@ -638,7 +638,7 @@
             showPrompt("Insert Image", "Enter the image URL (e.g. https://...)", (url) => {
                 if (url) {
                     // Ensure image is responsive and visually appealing with standard HTML insertion
-                    const imgHtml = `<img src="/${url}" alt="Embedded Image" style="max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">`;
+                    const imgHtml = `<img src="${(url) && String(url).startsWith('http') ? (url) : '/' + (url)}" alt="Embedded Image" style="max-width: 100%; border-radius: 8px; margin: 20px 0; display: block; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">`;
                     document.execCommand('insertHTML', false, imgHtml);
                     document.getElementById('bookContent').focus();
                 }

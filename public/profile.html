@@ -1819,7 +1819,7 @@
                                 <div class="social-connect-box connected" style="margin-bottom:0; cursor:pointer;" onclick="window.location.href='/profile?user=${conn._id}'">
                                     <div style="display:flex; align-items:center;">
                                         ${conn.profilePicture 
-                                            ? `<img src="/${conn.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                            ? `<img src="${(conn.profilePicture) && String(conn.profilePicture).startsWith('http') ? (conn.profilePicture) : '/' + (conn.profilePicture)}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
                                             : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${conn.username.charAt(0).toUpperCase()}</div>`
                                         }
                                         <div>
@@ -2459,7 +2459,7 @@
                 // Avatar
                 const postAvatarUrl = post.user?.profilePicture;
                 const authorAvatar = postAvatarUrl
-                    ? `<img src="/${postAvatarUrl}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
+                    ? `<img src="${(postAvatarUrl) && String(postAvatarUrl).startsWith('http') ? (postAvatarUrl) : '/' + (postAvatarUrl)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
                     : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
 
 
@@ -2472,7 +2472,7 @@
 
                     let imageHtml = '';
                     if (post.image) {
-                        imageHtml = `<img src="/${post.image}" class="compact-img" alt="${safeTitle}">`;
+                        imageHtml = `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" class="compact-img" alt="${safeTitle}">`;
                     } else {
                         // Placeholder
                         imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${initial}</div>`;
@@ -2503,7 +2503,7 @@
                 } else {
                     // STANDARD LIST HTML (Previous Logic)
                     const postAvatar = post.user?.profilePicture
-                        ? `<img src="/${post.user.profilePicture}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+                        ? `<img src="${(post.user.profilePicture) && String(post.user.profilePicture).startsWith('http') ? (post.user.profilePicture) : '/' + (post.user.profilePicture)}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
                         : `<div class="avatar" style="width:40px;height:40px;font-size:1.2rem;margin:0;">${initial}</div>`;
 
                     const isLong = (post.content || '').length > 500;
@@ -2547,7 +2547,7 @@
                         <div class="post-content" style="margin-bottom:15px;">
                             ${isLong ? `<div class="blog-excerpt">${fullContent.substring(0, 300)}...</div>` : `<div class="blog-excerpt">${fullContent}</div>`}
                         </div>
-                        ${post.image ? `<img src="/${post.image}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
+                        ${post.image ? `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
                         <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
                             <div class="action-btn"><i class="far fa-heart"></i> ${likesCount}</div>
                             <div class="action-btn"><i class="far fa-comment"></i> ${post.comments ? post.comments.length : 0}</div>
@@ -2735,7 +2735,7 @@
                         <div style="display:flex; align-items:center; justify-content: space-between;">
                             <div style="display:flex; align-items:center;">
                                 ${u.profilePicture 
-                                    ? `<img src="/${u.profilePicture}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
+                                    ? `<img src="${(u.profilePicture) && String(u.profilePicture).startsWith('http') ? (u.profilePicture) : '/' + (u.profilePicture)}" style="width:40px; height:40px; border-radius:50%; margin-right:15px; object-fit:cover;">` 
                                     : `<div style="width:40px; height:40px; border-radius:50%; background:var(--primary); color:white; display:flex; align-items:center; justify-content:center; margin-right:15px; font-weight:bold;">${u.username.charAt(0).toUpperCase()}</div>`
                                 }
                                 <div>

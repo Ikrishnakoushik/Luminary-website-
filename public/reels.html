@@ -1000,7 +1000,7 @@
                     const videoSrc = post.videoUrl || post.attachment;
                     let initial = (post.username || 'U').charAt(0).toUpperCase();
                     let authorAvatarHtml = post.user && post.user.profilePicture 
-                        ? `<img src="/${post.user.profilePicture}" alt="Avatar">` 
+                        ? `<img src="${(post.user.profilePicture) && String(post.user.profilePicture).startsWith('http') ? (post.user.profilePicture) : '/' + (post.user.profilePicture)}" alt="Avatar">` 
                         : `<div class="c-avatar" style="width:100%; height:100%;">${initial}</div>`;
                     
                     const isLiked = post.likes && currentUserId && post.likes.includes(currentUserId);
@@ -1014,7 +1014,7 @@
                         <div class="reel-container" data-id="${post._id}">
                             <video 
                                 class="reel-video" 
-                                src="/${videoSrc}" 
+                                src="${(videoSrc) && String(videoSrc).startsWith('http') ? (videoSrc) : '/' + (videoSrc)}" 
                                 loop playsinline 
                                 ${index === 0 && isGlobalMuted ? 'muted' : ''} 
                                 onclick="togglePlayPause(this)"
@@ -1272,7 +1272,7 @@
             }
             comments.forEach(c => {
                 let initial = (c.username || 'U').charAt(0).toUpperCase();
-                let avatar = c.user && c.user.profilePicture ? `<img src="/${c.user.profilePicture}">` : `<span>${initial}</span>`;
+                let avatar = c.user && c.user.profilePicture ? `<img src="${(c.user.profilePicture) && String(c.user.profilePicture).startsWith('http') ? (c.user.profilePicture) : '/' + (c.user.profilePicture)}">` : `<span>${initial}</span>`;
                 feed.innerHTML += `
                     <div class="c-item">
                         <div class="c-avatar">${avatar}</div>
