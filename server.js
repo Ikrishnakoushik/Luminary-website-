@@ -34,6 +34,17 @@ const PlatformSetting = require('./models/PlatformSetting');
 const seedDB = require('./seed.js'); // Required globally so Vercel traces dependencies like @faker-js/faker
 
 const app = express();
+const http = require('http');
+const socketIo = require('socket.io');
+const server = http.createServer(app);
+const io = socketIo(server, { cors: { origin: '*' } });
+app.set('io', io);
+
+io.on('connection', (socket) => {
+    console.log('New Real-time Connection:', socket.id);
+    socket.on('join_chat', (userId) => socket.join(userId));
+    socket.on('disconnect', () => console.log('Client disconnected'));
+});
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL;
@@ -1430,6 +1441,57 @@ app.post('/api/posts', auth, (req, res) => {
     });
 });
 
+// Create dedicated POST endpoint for Reels Video uploading
+app.post('/api/posts/reel', auth, (req, res) => {
+    upload.single('video')(req, res, async (err) => {
+        if (err) {
+            return res.status(400).json({ msg: err });
+        }
+
+        try {
+            const { title, content, category } = req.body;
+            let videoUrl = '';
+
+            if (req.file) {
+                const file = req.file;
+                const ext = path.extname(file.originalname).toLowerCase();
+                
+                if (!['.mp4', '.webm', '.mov'].includes(ext)) {
+                    return res.status(400).json({ msg: 'Only mp4, webm, and mov video files are allowed' });
+                }
+
+                // Hard limit 50MB for reels
+                if (file.buffer.length > 50 * 1024 * 1024) {
+                    return res.status(400).json({ msg: 'Video size exceeds 50MB' });
+                }
+
+                const filename = `reel-${Date.now()}${ext}`;
+                const blob = await put(filename, file.buffer, { access: 'public', contentType: file.mimetype });
+                videoUrl = blob.url;
+            } else {
+                return res.status(400).json({ msg: 'No video file provided' });
+            }
+
+            // Create new reel post
+            const newPost = new Post({
+                user: req.user.id,
+                username: req.user.username,
+                title: title || '',
+                content: content || '',
+                category: category || 'General',
+                tag: category || 'General',
+                videoUrl: videoUrl,
+                type: 'reel'
+            });
+
+            const post = await newPost.save();
+            res.json(post);
+        } catch (err) {
+            console.error('[Reel Upload Error]', err.message);
+            res.status(500).send('Server Error during Reel Upload');
+        }
+    });
+});
 
 // Like/Unlike Post
 app.put('/api/posts/:id/like', auth, async (req, res) => {
@@ -3220,6 +3282,6 @@ app.put('/api/admin/transactions/:userId/:transactionId', adminAuth, gatewayAuth
 // Start Server (Stateless Vercel Compatible)
 // WebSockets (socket.io) gracefully removed to prevent Vercel 10s Execution Timeouts. WebRTC is now natively handled by Firebase Realtime DB.
 if (process.env.NODE_ENV !== 'production') {
-    app.listen(PORT, () => console.error(`[Startup] Vylithra Server started on port ${PORT} `));
+    server.listen(PORT, () => console.error(`[Startup] Vylithra Server started on port ${PORT} `));
 }
 module.exports = app;

@@ -657,8 +657,8 @@
             }
 
             /* Hide Desktop Right Sidebar completely */
-            .sidebar-right {
-                display: none;
+            .sidebar-right, .sidebar-left {
+                display: none !important;
             }
 
             /* Show Mobile Categories Ribbon under header */
@@ -699,9 +699,7 @@
             }
 
             /* Transform Left Sidebar into Bottom Nav */
-            .sidebar-left {
-                position: fixed;
-                bottom: 0;
+            .sidebar-left-hidden {
                 top: auto;
                 left: 0;
                 width: 100%;
@@ -1291,6 +1289,66 @@
             transform: scale(1.05);
             color: var(--accent);
         }
+    
+        /* === PROFESSIONAL NATIVE MOBILE REDESIGN (MAIN FEED) === */
+        @media (max-width: 768px) {
+            /* 1. Structural Overrides for Grid */
+            .container, .container.sidebar-hidden-layout {
+                grid-template-columns: 1fr !important;
+                padding: 0 0 90px 0 !important; /* Eliminate side padding */
+                margin: 0 !important;
+                max-width: 100vw !important;
+                width: 100vw !important;
+                overflow-x: hidden !important;
+                gap: 0 !important;
+            }
+
+            /* 2. Edge-To-Edge Timeline Cards */
+            .post-card {
+                background: var(--surface) !important;
+                border: none !important;
+                border-radius: 0 !important;
+                box-shadow: none !important;
+                padding: 18px 15px !important;
+                margin-bottom: 6px !important;
+                border-top: 1px solid var(--border) !important;
+                border-bottom: 1px solid var(--border) !important;
+            }
+
+            /* Adjust card headers to stretch */
+            .post-header {
+                margin-bottom: 12px !important;
+            }
+
+            /* Mobile Categories Ribbon alignment */
+            .mobile-categories {
+                padding: 10px 15px !important;
+                width: 100vw !important;
+                border-bottom: none !important;
+            }
+
+            /* Hero Carousel alignment */
+            .carousel-section {
+                border-radius: 0 !important;
+                margin-bottom: 10px !important;
+            }
+            .carousel-container {
+                border-radius: 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+            }
+            
+            /* General spacing limits */
+            .feed {
+                gap: 0 !important;
+                width: 100vw !important;
+            }
+
+            html, body {
+                overflow-x: hidden !important;
+            }
+        }
+
     </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
@@ -2670,6 +2728,23 @@
             }
         });
     </script>
+
+    <!-- Global Mobile Bottom Nav -->
+    <nav class="v-mobile-nav">
+        <a href="main" class="nav-item">
+            <i class="fas fa-home"></i><span>Home</span>
+        </a>
+        <a href="reels" class="nav-item">
+            <i class="fas fa-play"></i><span>Reels</span>
+        </a>
+        <a href="messages" class="nav-item">
+            <i class="fas fa-paper-plane"></i><span>Messages</span>
+        </a>
+        <a href="profile" class="nav-item">
+            <i class="fas fa-user-circle"></i><span>Profile</span>
+        </a>
+    </nav>
+
 </body>
 
 </html>

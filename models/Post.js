@@ -50,7 +50,7 @@ const PostSchema = new mongoose.Schema({
     },
     type: {
         type: String,
-        enum: ['quick', 'article'],
+        enum: ['quick', 'article', 'reel'],
         default: 'quick'
     },
     likes: [{

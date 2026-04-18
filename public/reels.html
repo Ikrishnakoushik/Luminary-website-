@@ -820,7 +820,8 @@
                     <h3 style="margin:0 0 5px 0; font-size:1.1rem; font-weight:600;">Select video to upload</h3>
                     <p style="margin:0; font-size:0.85rem; color:rgba(255,255,255,0.5);">Or drag and drop a file</p>
                     <p style="margin:10px 0 0 0; font-size:0.75rem; color:rgba(255,255,255,0.4);">MP4 or WebM • Up to 10 minutes</p>
-                    <input type="file" id="reelFile" accept="video/mp4,video/webm" required style="display:none;" onchange="document.getElementById('file-name-display').innerText = this.files[0] ? this.files[0].name : ''">
+                    <input type="file" id="reelFile" accept="video/mp4,video/webm,video/quicktime" required style="display:none;" onchange="const file = this.files[0]; if(file){ document.getElementById('file-name-display').innerText = file.name; const preview = document.getElementById('reelPreview'); preview.style.display = 'block'; preview.src = URL.createObjectURL(file); } else { document.getElementById('reelPreview').style.display = 'none'; }">
+                    <video id="reelPreview" style="display:none; width:100%; border-radius:12px; margin-top:10px; max-height:300px; background:#000;" controls></video>
                     <div id="file-name-display" style="margin-top:15px; font-weight:600; color:#10b981; font-size:0.9rem;"></div>
                 </div>
 
@@ -1344,7 +1345,7 @@
 
             const formData = new FormData();
             formData.append('content', caption);
-            formData.append('media', file);
+            formData.append('video', file);
 
             try {
                 const res = await fetch(`${API_URL}/posts`, {
@@ -1568,5 +1569,22 @@
             });
         });
     </script>
+
+    <!-- Global Mobile Bottom Nav -->
+    <nav class="v-mobile-nav">
+        <a href="main" class="nav-item">
+            <i class="fas fa-home"></i><span>Home</span>
+        </a>
+        <a href="reels" class="nav-item">
+            <i class="fas fa-play"></i><span>Reels</span>
+        </a>
+        <a href="messages" class="nav-item">
+            <i class="fas fa-paper-plane"></i><span>Messages</span>
+        </a>
+        <a href="profile" class="nav-item">
+            <i class="fas fa-user-circle"></i><span>Profile</span>
+        </a>
+    </nav>
+
 </body>
 </html>

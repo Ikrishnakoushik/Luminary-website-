@@ -422,7 +422,7 @@
 
             .chat-main {
                 border-radius: 15px;
-                height: 500px;
+                height: calc(100vh - 160px); display: flex; flex-direction: column; overflow: hidden;
                 /* fixed height layout on mobile or flex */
             }
 
@@ -476,6 +476,7 @@
         </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 
 <body>
@@ -1119,6 +1120,23 @@
             }
         }
     </script>
+
+    <!-- Global Mobile Bottom Nav -->
+    <nav class="v-mobile-nav">
+        <a href="main" class="nav-item">
+            <i class="fas fa-home"></i><span>Home</span>
+        </a>
+        <a href="reels" class="nav-item">
+            <i class="fas fa-play"></i><span>Reels</span>
+        </a>
+        <a href="messages" class="nav-item">
+            <i class="fas fa-paper-plane"></i><span>Messages</span>
+        </a>
+        <a href="profile" class="nav-item">
+            <i class="fas fa-user-circle"></i><span>Profile</span>
+        </a>
+    </nav>
+
 </body>
 
 </html>
