@@ -4,7 +4,7 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Join Vylithra | Unlock Your Digital Canvas</title>
+    <title>Join Vylithra | Join the Community</title>
     <meta name="description" content="Sign in to access your Creator Studio, curated collections, and the complete Vylithra ecosystem.">
     <meta name="keywords" content="Vylithra login, sign up, join creator community">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -594,12 +594,7 @@
             <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));">
             Vylithra
         </a>
-        <div class="nav-links">
-            <a href="/main">Feed</a>
-            <a href="/profile">Profile</a>
-            <a href="/publisher"> Publisher</a>
-            <a href="/creator-kit">Creator Kit</a>
-        </div>
+        
         <div class="nav-right">
             <a href="#" onclick="switchTab('login')" style="color:var(--text-muted);text-decoration:none;font-size:0.95rem;font-weight:500;">Sign In</a>
             <a href="#" onclick="switchTab('register')" class="btn-gradient">Get Started</a>
@@ -608,10 +603,10 @@
 
     <main class="hero">
         <div class="hero-left">
-            <h1>Your Digital<br>Canvas</h1>
-            <p>Architect, Collaborate, and Deliver. Transform ideas into reality with our intuitive enterprise workspace.</p>
+            <h1>Curate. Publish.<br>Inspire.</h1>
+            <p>The premier destination for visual storytelling. Discover incredible creators, dive into immersive books, and curate your own creative identity.</p>
             <div class="cta-group">
-                <a href="#" onclick="switchTab('register')" class="btn-gradient">Explore the Canvas &rarr;</a>
+                <a href="#" onclick="switchTab('register')" class="btn-gradient">Become a Creator &rarr;</a>
                 <a href="#" onclick="openDemoModal(); return false;" class="btn-outline">Request Demo</a>
             </div>
             <div class="hero-mockup-wrapper">
@@ -651,7 +646,7 @@
                         <div class="input-group">
                             <label>
                                 Password 
-                                <a href="#" onclick="switchTab('forgot'); return false;">Forgot password?</a>
+                                <a href="/forgot-password.html">Forgot password?</a>
                             </label>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
@@ -991,61 +986,24 @@
             }
         });
 
-        // Forgot Step 1
-        document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('forgotEmail').value;
-            const btn = document.getElementById('btnSendOtp');
-            const errorMsg = document.getElementById('forgotError1');
-            btn.disabled = true;
-            btn.innerText = 'Sending...';
-            errorMsg.innerText = '';
-
-            try {
-                await firebase.auth().sendPasswordResetEmail(email);
-                document.getElementById('forgotFormStep1').style.display = 'none';
-                
-                // Show a simple success message since Firebase handles the full loop natively via email links
-                const step2 = document.getElementById('forgotFormStep2');
-                step2.innerHTML = '<div class="success-message" style="margin-top:20px;">A password reset link has been sent to your email. Please check your inbox and click the link to reset your password. <br><br><a href="#" onclick="switchTab(\'login\'); return false;" style="color:var(--glow-cyan);text-decoration:none;">Return to Login</a></div>';
-                step2.style.display = 'block';
-            } catch (err) {
-                btn.disabled = false;
-                btn.innerText = 'Send Instructions';
-                
-                if (err.code === 'auth/user-not-found') {
-                    errorMsg.innerText = 'No account found with this email.';
-                } else {
-                    errorMsg.innerText = err.message || 'Error sending reset email.';
-                }
-            }
-        });
-
-        // Legacy custom verify and step 2 reset handlers removed. Firebase handles these natively.
-        // Request Demo Logic
-        function openDemoModal() {
-            document.getElementById("demoModal").style.display = "flex";
-        }
-        function closeDemoModal() {
-            document.getElementById("demoModal").style.display = "none";
-            document.getElementById("demoError").innerText = "";
-        }
-        const demoForm = document.getElementById("demoForm");
-        if(demoForm) {
-            demoForm.addEventListener("submit", async (e) => {
+        const demoForm = document.getElementById('demoForm');
+        if (demoForm) {
+            demoForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const btn = document.getElementById("demoBtn");
-                const errorMsg = document.getElementById("demoError");
-                btn.innerText = "Sending..."; btn.disabled = true; errorMsg.innerText = "";
+                const name = document.getElementById('demoName').value;
+                const email = document.getElementById('demoEmail').value;
+                const company = document.getElementById('demoCompany').value;
+                const btn = demoForm.querySelector('button[type="submit"]');
+                const errorMsg = document.getElementById('demoError');
+                
+                btn.innerText = "Sending...";
+                btn.disabled = true;
+                
                 try {
-                    const res = await fetch(API_URL + "/request-demo", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name: document.getElementById("demoName").value,
-                            email: document.getElementById("demoEmail").value,
-                            company: document.getElementById("demoCompany").value
-                        })
+                    const res = await fetch('/api/request-demo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, company })
                     });
                     if (res.ok) {
                         errorMsg.className = "success-message";

@@ -1290,6 +1290,89 @@
             color: var(--accent);
         }
     
+        /* === MOBILE STORIES RAIL (OPTION 9) === */
+        .mobile-stories-rail {
+            display: none;
+        }
+        @media (max-width: 768px) {
+            .mobile-stories-rail {
+                display: flex;
+                overflow-x: auto;
+                scroll-snap-type: x mandatory;
+                gap: 15px;
+                padding: 15px 15px 10px 15px;
+                margin-bottom: 5px;
+                scrollbar-width: none; /* Firefox */
+                background: transparent;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }
+            body[data-theme='dark'] .mobile-stories-rail {
+                border-bottom: 1px solid rgba(255,255,255,0.05);
+            }
+            .mobile-stories-rail::-webkit-scrollbar {
+                display: none; /* Chrome/Safari */
+            }
+            .story-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 6px;
+                scroll-snap-align: start;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+            .story-avatar-wrapper {
+                width: 65px;
+                height: 65px;
+                border-radius: 50%;
+                background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+                padding: 3px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                transition: transform 0.2s;
+            }
+            .story-item:active .story-avatar-wrapper {
+                transform: scale(0.95);
+            }
+            .story-avatar-wrapper.add-story {
+                background: transparent;
+                border: 2px dashed #94a3b8;
+                padding: 0;
+            }
+            body[data-theme='dark'] .story-avatar-wrapper.add-story {
+                border-color: #475569;
+            }
+            .story-avatar {
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                background-color: #f8fafc;
+                border: 2px solid #fff;
+                object-fit: cover;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.5rem;
+                font-weight: 700;
+                color: #fff;
+            }
+            body[data-theme='dark'] .story-avatar {
+                border-color: #0f172a;
+                background-color: #1e293b;
+            }
+            .story-username {
+                font-size: 0.75rem;
+                color: var(--text-main);
+                font-weight: 600;
+                max-width: 70px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                text-align: center;
+            }
+        }
+        
         /* === PROFESSIONAL NATIVE MOBILE REDESIGN (MAIN FEED) === */
         @media (max-width: 768px) {
             /* 1. Structural Overrides for Grid */
@@ -1444,6 +1527,11 @@
 
 <!-- Main Feed -->
 <main class="feed">
+    <!-- MOBILE STORIES RAIL -->
+    <div class="mobile-stories-rail" id="stories-rail">
+        <!-- JS will populate -->
+    </div>
+
     <!-- Premium Dashboard Overlay -->
     <style>
         .dashboard-layout {
@@ -2749,7 +2837,59 @@
                 setTimeout(resetInterval, 500);
             }
         });
-    </script>
+    
+        // === MOBILE STORIES RAIL LOGIC ===
+        async function renderStories() {
+            const rail = document.getElementById('stories-rail');
+            if(!rail) return;
+            
+            // 1. My Story (Add)
+            let htmlContent = `
+                <div class="story-item" onclick="alert('Stories uploading coming soon!')">
+                    <div class="story-avatar-wrapper add-story">
+                        <div class="story-avatar" style="color: #64748b; background: transparent; border: none;">
+                            <i class="fas fa-plus"></i>
+                        </div>
+                    </div>
+                    <div class="story-username">Your Story</div>
+                </div>
+            `;
+            
+            // 2. Fetch Active Users
+            try {
+                const res = await fetch('/api/users');
+                if (res.ok) {
+                    const users = await res.json();
+                    const activeUsers = users.slice(0, 10);
+                    
+                    activeUsers.forEach(u => {
+                        if(u.username === localStorage.getItem('username')) return;
+                        
+                        const initial = u.name ? u.name.charAt(0).toUpperCase() : u.username.charAt(0).toUpperCase();
+                        const color = `hsl(${(u.username.charCodeAt(0) * 20) % 360}, 70%, 50%)`;
+                        
+                        htmlContent += `
+                            <div class="story-item" onclick="window.location.href='/profile.html?user=${u._id}'">
+                                <div class="story-avatar-wrapper">
+                                    <div class="story-avatar" style="background-color: ${color};">${initial}</div>
+                                </div>
+                                <div class="story-username">${u.name || u.username}</div>
+                            </div>
+                        `;
+                    });
+                }
+            } catch(e) {
+                console.error("Could not fetch users for stories");
+            }
+            
+            rail.innerHTML = htmlContent;
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            renderStories();
+        });
+        
+</script>
 
     <!-- Global Mobile Bottom Nav -->
     <nav class="v-mobile-nav">

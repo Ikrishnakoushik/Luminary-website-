@@ -897,7 +897,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
                     We received a request to reset the password for your Vylithra account. Click the secure link below to reset your password instantly:
                 </p>
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <a href="https://vylithra.in/?action=reset&email=${encodeURIComponent(email)}&otp=${otp}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(90deg, #00c6ff, #0072ff); color: #ffffff; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);">Reset My Password</a>
+                    <a href="https://vylithra.in/reset-password.html?email=${encodeURIComponent(email)}&otp=${otp}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(90deg, #00c6ff, #0072ff); color: #ffffff; text-decoration: none; font-size: 18px; font-weight: bold; border-radius: 8px; box-shadow: 0 4px 15px rgba(0, 114, 255, 0.4);">Reset My Password</a>
                 </div>
                 <p style="color: #a0a0ab; font-size: 14px; text-align: center; margin-bottom: 15px;">
                     Alternatively, manually enter this 6-digit authorization code:

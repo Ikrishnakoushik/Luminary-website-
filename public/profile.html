@@ -128,1289 +128,242 @@
 
         /* Mobile Layout */
         @media (max-width: 768px) {
-            .avatar { width: 100px; height: 100px; margin-top: -60px; }
-
-            .container {
-                grid-template-columns: 1fr;
-                gap: 20px;
-                padding: 15px;
-            }
-
-            .profile-card {
-                position: relative !important;
-                top: auto !important;
-                height: auto !important;
-                overflow-y: visible !important;
-                margin-bottom: 0px;
-                display: block !important;
-                padding: 25px 20px;
-            }
-
-            .avatar {
-                width: 100px;
-                height: 100px;
-                margin-bottom: 15px;
-            }
-
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .bio {
-                font-size: 0.95rem;
-            }
-
-            .projects-grid,
-            .favorites-grid {
-                grid-template-columns: 1fr;
-                /* 1 column on mobile */
-                gap: 15px;
-            }
-
-            .nav-links {
-                padding: 10px;
-                gap: 10px;
-            }
-
-            .nav-links a {
-                padding: 8px 15px;
-                font-size: 0.9rem;
-            }
-        }
-
-        /* --- LEFT COLUMN: PROFILE HEADER --- */
-        .profile-card {
-            background: rgba(25, 25, 30, 0.75);
-            backdrop-filter: blur(25px);
-            background-image: linear-gradient(145deg, rgba(255,255,255,0.05) 0%, rgba(0,0,0,0.5) 100%);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 35px 25px;
-            border-radius: 24px;
-            text-align: center;
-            position: relative;
-            height: fit-content;
-            display: flex;
-            flex-direction: column;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 800px;
-            margin: 0 auto;
-            margin-top: -60px;
-        }
-
-        .avatar {
-            width: 140px;
-            height: 140px;
-            border: 5px solid #0d0d12;
-            margin-top: -80px;
-            aspect-ratio: 1 / 1;
-            /* Force square ratio */
-            flex-shrink: 0;
-            /* Prevent shrinking */
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            border: 4px solid white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-            object-fit: cover;
-            /* For img tags if used */
-        }
-
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--text-main);
-            margin: 0 0 5px 0;
-            letter-spacing: -0.01em;
-        }
-
-        .handle {
-            color: var(--accent);
-            font-weight: 600;
-            font-size: 0.95rem;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        .bio {
-            color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 25px;
-            line-height: 1.6;
-            padding: 0 10px;
-        }
-
-        /* Tech Stack Tags */
-        .tags {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 8px;
-            margin-bottom: 25px;
-        }
-
-        .tag {
-            background: var(--bg-color);
-            color: var(--text-muted);
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.02em;
-            transition: all 0.2s;
-        }
-
-        .tag:hover {
-            background: var(--border);
-            color: var(--text-main);
-        }
-
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        .social-btn {
-            text-decoration: none;
-            color: var(--text-main);
-            background: var(--bg-color);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-            font-size: 1.2rem;
-        }
-
-        .social-btn:hover {
-            background: var(--accent);
-            color: white;
-            transform: translateY(-3px);
-        }
-
-        /* Auth Buttons */
-        .auth-buttons {
-            border-top: 1px solid var(--border);
-            padding-top: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-top: auto;
-            /* Pushes to bottom of flex container */
-        }
-
-        .auth-btn {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-            width: 100%;
-        }
-
-        .auth-btn.secondary {
-            background: transparent;
-            color: var(--text-light);
-            border: 1px solid var(--border);
-        }
-
-        .auth-btn:hover {
-            opacity: 0.9;
-        }
-
-        .auth-btn.secondary:hover {
-            background: var(--bg-color);
-            color: var(--text-main);
-        }
-
-        #user-greeting {
-            display: none;
-            font-weight: 600;
-            color: var(--accent);
-            margin-bottom: 10px;
-        }
-
-        /* --- RIGHT COLUMN: FEED --- */
-        .feed {
-            display: flex;
-            flex-direction: column;
-            gap: 40px;
-        }
-
-        /* SECTION HEADERS */
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 25px;
-            border-bottom: 2px solid var(--border);
-            padding-bottom: 10px;
-        }
-
-        .section-title {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text-main);
-            margin: 0;
-            letter-spacing: -0.01em;
-        }
-
-        .view-all {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: color 0.2s;
-        }
-
-        .view-all:hover {
-            color: var(--primary);
-        }
-
-        .projects-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 24px;
-        }
-
-        .project-card {
-            background: var(--surface);
-            border-radius: var(--border-radius);
-            overflow: hidden;
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            transition: all 0.25s ease;
-            text-decoration: none;
-            color: inherit;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-
-        .project-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--text-muted);
-        }
-
-        .project-img {
-            height: 160px;
-            background: var(--bg-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.5rem;
-            color: var(--text-muted);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .project-content {
-            padding: 24px;
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .profile-stat-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 8px 18px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.03);
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .profile-stat-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 255, 255, 0.15);
-            transform: translateY(-2px);
-        }
-
-        .profile-stat-btn strong {
-            font-size: 1.1rem;
-            color: var(--text-main);
-        }
-
-        .profile-stat-btn span {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .social-links {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-top: 25px;
-        }
-
-        .social-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.08); /* light translucent surface */
-            color: var(--text-main);
-            font-size: 1.25rem;
-            text-decoration: none;
-            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
-
-        .social-btn:hover {
-            transform: translateY(-4px);
-            background: var(--text-main);
-            color: var(--bg-color); /* Invert color */
-            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            border-color: transparent;
-        }
-
-        .project-title {
-            font-size: 1.15rem;
-            font-weight: 700;
-            margin: 0 0 8px 0;
-            color: var(--text-main);
-            letter-spacing: -0.01em;
-        }
-
-        .project-desc {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-            margin: 0;
-            flex-grow: 1;
-        }
-
-
-
-        .post-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-top: 1px solid var(--border);
-            padding-top: 15px;
-        }
-
-        .post-tag-select {
-            padding: 5px 10px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-            font-size: 0.85rem;
-            color: var(--text-light);
-            outline: none;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 0.9rem;
-        }
-
-        /* Blog Section */
-        .blog-list {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .blog-card {
-            background: var(--surface);
-            padding: 28px;
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow-sm);
-            border: 1px solid var(--border);
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            transition: all 0.2s ease;
-        }
-
-        .blog-card:hover {
-            box-shadow: var(--shadow);
-            border-color: var(--text-muted);
-            transform: translateY(-2px);
-        }
-
-        .blog-meta {
-            font-size: 0.8rem;
-            color: var(--text-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 600;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .blog-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            color: var(--text-main);
-            text-decoration: none;
-        }
-
-        .blog-excerpt {
-            font-size: 0.95rem;
-            color: var(--text-light);
-            line-height: 1.5;
-            white-space: pre-wrap;
-        }
-
-        .blog-author {
-            color: var(--accent);
-        }
-
-        /* --- FORMATTED CONTENT STYLES --- */
-        .blog-excerpt h2,
-        .blog-excerpt h3 {
-            margin-top: 20px;
-            margin-bottom: 10px;
-            font-size: 1.15rem;
-            color: var(--text-main);
-            font-weight: 700;
-        }
-
-        .blog-excerpt p {
-            margin-bottom: 12px;
-            line-height: 1.7;
-        }
-
-        .blog-excerpt a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 500;
-        }
-
-        .blog-excerpt a:hover {
-            text-decoration: underline;
-        }
-
-        .blog-excerpt blockquote {
-            border-left: 4px solid var(--accent);
-            margin: 20px 0;
-            padding: 15px 20px;
-            color: var(--text-light);
-            font-style: italic;
-            background: var(--bg-color);
-            border-radius: 0 8px 8px 0;
-        }
-
-        .blog-excerpt strong {
-            color: var(--text-main);
-            font-weight: 700;
-        }
-
-        .blog-excerpt img {
-            max-width: 100%;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-
-        /* Newsletter */
-        .newsletter {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            color: var(--text-main);
-            padding: 40px;
-            border-radius: var(--border-radius);
-            text-align: center;
-        }
-
-        .newsletter h3 {
-            font-size: 1.5rem;
-            margin-bottom: 10px;
-        }
-
-        .newsletter p {
-            opacity: 0.8;
-            margin-bottom: 20px;
-            font-size: 0.95rem;
-        }
-
-        .input-group {
-            display: flex;
-            gap: 10px;
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .newsletter input {
-            flex: 1;
-            padding: 12px 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg-color);
-            color: var(--text-main);
-            outline: none;
-            font-family: inherit;
-        }
-
-        .newsletter button {
-            background: var(--accent);
-            color: white;
-            border: none;
-            padding: 0 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: 0.2s;
-        }
-
-        .newsletter button:hover {
-            background: var(--accent-hover);
-        }
-
-        /* Footer */
-        footer {
-            text-align: center;
-            margin-top: 40px;
-            font-size: 0.85rem;
-            color: var(--text-light);
-            border-top: 1px solid var(--border);
-            padding-top: 20px;
-        }
-
-        /* --- MODAL --- */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow-y: auto;
-            background-color: rgba(0, 0, 0, 0.5);
-            backdrop-filter: blur(5px);
-            align-items: flex-start;
-            /* Changed from center to flex-start to allow scrolling if too tall */
-            justify-content: center;
-            padding: 20px 0;
-            /* Add padding so it doesn't touch the very top/bottom */
-        }
-
-        .modal-content {
-            background-color: var(--surface);
-            padding: 30px;
-            border: 1px solid #888;
-            border-radius: var(--border-radius);
-            width: 90%;
-            max-width: 520px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-            animation: fadeIn 0.3s ease-out;
-            margin: auto;
-            /* Required when parent is align-items: flex-start */
-            position: relative;
-            /* Needed for positioning the close button */
-        }
-
-        .close {
-            color: var(--text-muted);
-            position: absolute;
-            right: 20px;
-            top: 15px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-            line-height: 1;
-        }
-
-        .close:hover,
-        .close:focus {
-            color: var(--accent);
-            text-decoration: none;
-            cursor: pointer;
-        }
-
-        .modal h2 {
-            margin-top: 0;
-            margin-bottom: 20px;
-            font-size: 1.5rem;
-            padding-right: 30px;
-            /* Prevent text overlapping with close button */
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-
-
-        .form-group input {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            outline: none;
-        }
-
-        .form-btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--accent);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 10px;
-        }
-
-        .form-btn:hover {
-            background: var(--accent-hover);
-        }
-
-        .switch-auth {
-            text-align: center;
-            margin-top: 15px;
-            font-size: 0.9rem;
-        }
-
-        .switch-auth a {
-            color: var(--accent);
-            text-decoration: none;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        /* --- POST CARD & ACTIONS (Ported from Main) --- */
-        .post-card {
-            background: var(--surface);
-            border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: var(--shadow);
-            transition: transform 0.2s;
-            border: 1px solid rgba(0, 0, 0, 0.03);
-        }
-
-        .post-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-        }
-
-        .post-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 15px;
-        }
-
-        .post-user-info {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-
-        .post-author {
-            font-weight: 700;
-            color: var(--text-main);
-        }
-
-        .post-time {
-            font-size: 0.8rem;
-            color: var(--text-light);
-        }
-
-        .post-tag {
-            font-size: 0.75rem;
-            background: var(--border);
-            padding: 4px 10px;
-            border-radius: 12px;
-            color: var(--text-muted);
-        }
-
-        .post-actions {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid var(--border);
-            display: flex;
-            justify-content: space-around;
-            color: var(--text-muted);
-        }
-
-
-
-        /* Reader Overlay */
-        .reader-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 255, 255, 0.98);
-            z-index: 2000;
-            overflow-y: auto;
-            display: none;
-            animation: fadeIn 0.3s ease-out;
-        }
-
-        .reader-overlay.active {
-            display: block;
-        }
-
-        .reader-content {
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 40px;
-            position: relative;
-        }
-
-        .reader-close {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: var(--bg-color);
-            border: none;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            font-size: 1.2rem;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-
-        .reader-close:hover {
-            background: var(--border);
-            transform: rotate(90deg);
-        }
-
-        .reader-title {
-            font-size: 2.5rem;
-            font-family: 'Outfit', sans-serif;
-            margin-bottom: 10px;
-            line-height: 1.2;
-        }
-
-        .reader-meta {
-            color: var(--text-muted);
-            font-size: 1rem;
-            margin-bottom: 40px;
-            padding-bottom: 20px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 20px;
-        }
-
-        .reader-body {
-            font-family: 'Georgia', serif;
-            font-size: 1.25rem;
-            line-height: 1.8;
-            color: var(--text-main);
-        }
-
-        .reader-body p {
-            margin-bottom: 1.5em;
-        }
-
-        .reader-body h2 {
-            font-size: 1.8rem;
-            margin-top: 1.5em;
-            margin-bottom: 0.8em;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .reader-body blockquote {
-            border-left: 4px solid var(--accent);
-            padding: 15px 25px;
-            margin: 2em 0;
-            font-style: italic;
-            background: var(--bg-color);
-        }
-
-        /* Skeleton Loader */
-        .skeleton-loader {
-            width: 100%;
-        }
-
-        .skeleton-post {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 16px;
+        /* --- NEUMORPHISM BASE --- */
+        body {
+            background-color: #e0e5ec !important;
+        }
+        .unified-container {
             padding: 20px;
-            margin-bottom: 20px;
+            margin-top: 0;
+            background: transparent;
         }
-
-        .skeleton-header {
-            display: flex;
+        
+        /* Hide banner to fit the clean material aesthetic */
+        .profile-banner {
+            display: none !important;
+        }
+        
+        /* Neumorphic Slab */
+        .profile-header-card {
+            border-radius: 20px;
+            border: none;
+            background: #e0e5ec;
+            box-shadow: 9px 9px 18px rgba(163,177,198,0.5), -9px -9px 18px rgba(255,255,255, 0.8);
+            padding-top: 30px;
+        }
+        
+        .profile-header-top-row {
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-top: 0;
+        }
+        
+        .profile-avatar-wrapper {
+            flex-direction: column;
             align-items: center;
             gap: 15px;
-            margin-bottom: 15px;
         }
-
-        .skeleton-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            background-size: 200% 100%;
-            animation: pulse 1.5s infinite ease-in-out;
+        
+        /* Extruded Avatar */
+        .profile-avatar-large {
+            width: 100px;
+            height: 100px;
+            border: none;
+            background: #e0e5ec;
+            box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.8);
+            color: #64748b;
         }
-
-        .skeleton-text {
-            flex: 1;
+        
+        .profile-name-title {
+            font-size: 1.8rem;
+            color: #334155;
         }
-
-        .skeleton-line {
-            height: 10px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            background-size: 200% 100%;
-            border-radius: 4px;
-            margin-bottom: 8px;
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        .skeleton-line.short {
-            width: 40%;
-        }
-
-        .skeleton-line.shorter {
-            width: 25%;
-        }
-
-        .skeleton-content {
-            height: 80px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            background-size: 200% 100%;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        .skeleton-footer {
-            height: 20px;
-            width: 30%;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            background-size: 200% 100%;
-            border-radius: 4px;
-            animation: pulse 1.5s infinite ease-in-out;
-        }
-
-        @keyframes pulse {
-            0% {
-                background-position: 200% 0;
-            }
-
-            100% {
-                background-position: -200% 0;
-            }
-        }
-
-        /* Grid Layout for Favorite Spreads */
-        .posts-grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        
+        .profile-actions {
+            margin-top: 25px;
+            justify-content: center;
+            width: 100%;
             gap: 20px;
         }
-
-        .post-card.compact {
-            padding: 0;
-            border: 1px solid #eee;
-            transition: transform 0.2s, box-shadow 0.2s;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-
-        .post-card.compact:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
-        }
-
-        .compact-img-container {
-            width: 100%;
-            height: 160px;
-            background: var(--bg-color);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .compact-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .compact-body {
-            padding: 15px;
+        
+        /* Extruded Buttons */
+        .btn-edit-profile, .btn-share-profile {
             flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .compact-tag {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            color: var(--accent);
-            font-weight: 700;
-            margin-bottom: 5px;
-        }
-
-        .compact-title {
-            font-size: 1.1rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            line-height: 1.4;
-            color: var(--text-main);
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .compact-excerpt {
-            font-size: 0.9rem;
-            color: var(--text-light);
-            margin-bottom: 15px;
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .compact-footer {
-            margin-top: auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-top: 1px solid #f0f0f0;
-            padding-top: 10px;
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Professional Log Out Button */
-        .logout-btn {
-            width: 100%;
-            margin-top: 25px;
-            padding: 12px;
-            border: 1px solid var(--border);
-            background: var(--surface);
-            color: #ef4444;
-            border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            gap: 8px;
-            font-size: 0.95rem;
-        }
-
-        .logout-btn:hover {
-            background: var(--bg-color);
-            border-color: #fca5a5;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
-        }
-
-        /* --- Social Connections UI Customizations --- */
-        .social-connect-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 16px 20px;
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 16px;
-            margin-bottom: 15px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
-        }
-
-        .social-connect-box:hover {
-            border-color: var(--accent);
-            background: var(--surface);
-            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .social-connect-box i {
-            font-size: 1.4rem;
-            margin-right: 12px;
-            color: var(--text-muted);
-            transition: color 0.3s ease;
-        }
-
-        .social-connect-box.connected i {
-            color: var(--primary);
-            text-shadow: 0 2px 10px rgba(99, 102, 241, 0.2);
-        }
-
-        .social-connect-box.connected span {
-            color: var(--text-main);
+            border: none;
+            background: #e0e5ec;
+            color: #64748b;
+            box-shadow: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.8);
+            border-radius: 12px;
+            padding: 12px 0;
             font-weight: 600;
         }
-
-        .social-connect-box span {
-            font-size: 1rem;
-            color: var(--text-muted);
+        
+        /* Strip original gradient */
+        .btn-share-profile {
+            background: #e0e5ec !important;
+            color: #7c5cff !important;
+        }
+        
+        .btn-edit-profile:active, .btn-share-profile:active {
+            box-shadow: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.8);
         }
 
-        .social-connect-box .btn-sm {
-            padding: 10px 20px;
-            font-size: 0.9rem;
-            border-radius: 10px;
-            background: var(--bg-color);
-            color: var(--text-main);
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .social-connect-box .btn-sm:hover {
-            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff;
-            color: white;
-            border-color: transparent;
-            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
-        }
-
-        .social-connect-box.connected .btn-sm {
-            background: var(--bg-color);
-            color: #ef4444;
-            border-color: rgba(239, 68, 68, 0.1);
-        }
-
-        .social-connect-box.connected .btn-sm:hover {
-            background: #ef4444;
-            color: white;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
-        }
-
-        /* Simulated OAuth Popup Center Overlay */
-        #oauthPopup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -45%) scale(0.95);
-            background: rgba(255, 255, 255, 0.95);
-            padding: 40px 30px;
-            border-radius: 24px;
-            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
-            z-index: 2000;
+        .profile-bio-text {
             text-align: center;
-            width: 90%;
-            max-width: 380px;
-            opacity: 0;
-            pointer-events: none;
-            transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            display: flex;
+            font-size: 1rem;
+            padding: 0 15px;
+            color: #64748b;
+        }
+        
+        .profile-footer-row {
             flex-direction: column;
             align-items: center;
-            gap: 15px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            gap: 25px;
+            padding: 25px 15px 15px 15px;
+            border-top: none;
+            box-shadow: inset 0px 4px 6px -6px rgba(163,177,198,0.4);
         }
-
-        #oauthPopup.active {
-            opacity: 1;
-            pointer-events: auto;
-            transform: translate(-50%, -50%) scale(1);
-        }
-
-        .oauth-loader {
-            width: 45px;
-            height: 45px;
-            border: 3px solid var(--border);
-            border-top: 3px solid var(--primary);
-            border-right: 3px solid #8b5cf6;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-
-        #oauthOverlay {
-            position: fixed;
-            top: 0;
-            left: 0;
+        
+        .profile-stats-group {
+            justify-content: space-around;
             width: 100%;
-            height: 100%;
-            background: rgba(15, 23, 42, 0.6);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            z-index: 1999;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
+            gap: 10px;
+        }
+        
+        .stat-val {
+            color: #334155;
+        }
+        
+        /* Extruded Socials */
+        .social-circle-btn {
+            border: none;
+            background: #e0e5ec;
+            box-shadow: 4px 4px 8px rgba(163,177,198,0.5), -4px -4px 8px rgba(255,255,255,0.8);
+            color: #64748b;
+        }
+        .social-circle-btn:active {
+            box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.8);
+        }
+        
+        .feed-heading {
+            padding-left: 5px;
+            font-size: 1.5rem;
+            color: #334155;
         }
 
-        #oauthOverlay.active {
-            opacity: 1;
-            pointer-events: auto;
+        /* --- DARK MODE NEUMORPHISM --- */
+        body[data-theme='dark'] {
+            background-color: #1e293b !important;
         }
-    
-        /* === PROFESSIONAL NATIVE MOBILE REDESIGN === */
-        @media (max-width: 768px) {
-            /* 1. Structural Fluidity */
-            .hero-cover {
-                height: 220px;
-                position: absolute;
-            }
-            .container {
-                margin-top: 150px !important;
-                padding: 0 !important;
-                gap: 0 !important;
-                width: 100vw;
-                max-width: 100vw;
-                overflow-x: hidden;
-            }
-
-            /* 2. Erase the "Web Card" wrapper - Make it invisible */
-            .profile-card {
-                background: transparent !important;
-                backdrop-filter: none !important;
-                border: none !important;
-                box-shadow: none !important;
-                padding: 0 25px 25px !important;
-                display: flex !important;
-                flex-direction: column !important;
-                align-items: flex-start !important; /* X-style left alignment */
-                text-align: left !important;
-                margin-bottom: 0 !important;
-                margin-top: -60px !important;
-            }
-
-            /* 3. Creative Avatar Offset Mapping */
-            .avatar {
-                width: 85px !important;
-                height: 85px !important;
-                border: 4px solid var(--bg-color) !important;
-                margin: 0 0 15px 0 !important; /* Push margin to bottom, clear top constraint */
-                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
-            }
-
-            /* 4. Flush Text Layout */
-            #profile-name {
-                font-size: 1.6rem !important;
-                margin-bottom: 2px !important;
-            }
-            .social-links {
-                justify-content: flex-start !important;
-                margin-top: 15px !important;
-            }
-            #profile-stats {
-                justify-content: flex-start !important;
-                margin-top: 15px !important;
-                width: 100%;
-                gap: 20px !important;
-            }
-
-            /* 5. Edge-to-Edge Feed Timelines */
-            #projects-section, .feed > section {
-                padding: 0 !important;
-                background: transparent !important;
-                border: none !important;
-                box-shadow: none !important;
-                margin-bottom: 0 !important;
-            }
-            .section-header {
-                padding: 15px 25px;
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-                margin: 0 !important;
-                background: var(--bg-color);
-            }
-            .projects-grid {
-                padding: 15px 20px;
-                gap: 15px;
-            }
-
-            /* 6. True Mobile Blog Card (Edge-to-Edge) */
-            .blog-card {
-                border-radius: 0 !important;
-                border-left: none !important;
-                border-right: none !important;
-                margin-bottom: 8px !important;
-                box-shadow: none !important;
-                background: var(--surface) !important;
-                border-top: 1px solid var(--border) !important;
-                border-bottom: 1px solid var(--border) !important;
-            }
-            .blog-list {
-                padding: 0 !important;
-            }
+        body[data-theme='dark'] .profile-header-card,
+        body[data-theme='dark'] .profile-avatar-large,
+        body[data-theme='dark'] .btn-edit-profile,
+        body[data-theme='dark'] .btn-share-profile,
+        body[data-theme='dark'] .social-circle-btn {
+            background: #1e293b !important;
+            border: none !important;
+            color: #cbd5e1 !important;
         }
-
-    </style>
+        
+        body[data-theme='dark'] .profile-header-card {
+            box-shadow: 9px 9px 18px #0f172a, -9px -9px 18px #334155 !important;
+        }
+        
+        body[data-theme='dark'] .profile-avatar-large,
+        body[data-theme='dark'] .btn-edit-profile,
+        body[data-theme='dark'] .btn-share-profile,
+        body[data-theme='dark'] .social-circle-btn {
+            box-shadow: 5px 5px 10px #0f172a, -5px -5px 10px #334155 !important;
+        }
+        
+        body[data-theme='dark'] .btn-share-profile {
+            color: #00d2ff !important;
+        }
+        
+        body[data-theme='dark'] .btn-edit-profile:active, 
+        body[data-theme='dark'] .btn-share-profile:active,
+        body[data-theme='dark'] .social-circle-btn:active {
+            box-shadow: inset 4px 4px 8px #0f172a, inset -4px -4px 8px #334155 !important;
+        }
+        
+        body[data-theme='dark'] .profile-name-title,
+        body[data-theme='dark'] .stat-val,
+        body[data-theme='dark'] .feed-heading {
+            color: #f8fafc;
+        }
+        
+        body[data-theme='dark'] .profile-footer-row {
+            box-shadow: inset 0px 4px 6px -6px #0f172a !important;
+        }
+    }
+</style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
     <!-- HERO BACKGROUND -->
-    <div class="hero-cover"></div>
-
-
-    <div class="container">
-
-        <!-- LEFT SIDEBAR -->
-        <aside class="profile-card fade-in" style="animation-delay: 0.1s;">
-            <a href="main"
-                style="position: absolute; top: 15px; left: 15px; color: var(--accent); text-decoration: none; font-size: 0.9rem; font-weight: 600;"><i
-                    class="fas fa-arrow-left"></i> Home</a>
-            <div class="avatar" id="profile-avatar">👨‍💻</div>
-            <h1 id="profile-name">Loading...</h1>
-            <span class="handle" id="profile-handle">@...</span>
-            <p class="bio" id="profile-bio">Digital Craftsman & Writer. Building things for the web and sharing what I
-                learn along the
-                way.</p>
-
-            <!-- Tags removed per user request -->
-
-            <div class="social-links">
-                <a href="#" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-                <a href="#" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-                <a href="#" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+    
+    <!-- UNIFIED PROFILE UI -->
+    <a href="main" style="position: absolute; top: 20px; left: 20px; z-index: 100; color: #fff; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px);"><i class="fas fa-arrow-left"></i> Home</a>
+    
+    <div class="unified-container">
+        
+        <!-- TOP HEADER CARD -->
+        <div class="profile-header-card fade-in">
+            <div class="profile-banner" id="profile-banner"></div>
+            
+            <div class="profile-header-content">
+                <div class="profile-header-top-row">
+                    <div class="profile-avatar-wrapper">
+                        <div class="profile-avatar-large" id="profile-avatar">U</div>
+                        <div class="profile-name-block">
+                            <h1 class="profile-name-title" id="profile-name">Loading...</h1>
+                            <div class="profile-handle-text" id="profile-handle">@... &middot; Joined...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-actions" id="profile-action-container">
+                        <button class="btn-edit-profile" id="edit-profile-btn" style="display:none;" onclick="openSettings()"><i class="fas fa-cog"></i> Edit profile</button>
+                        <button class="btn-share-profile" id="profile-share-btn"><i class="fas fa-share-alt"></i> Share</button>
+                    </div>
+                </div>
+                
+                <p class="profile-bio-text" id="profile-bio">Loading bio...</p>
+                
+                <div class="profile-footer-row">
+                    <div class="profile-stats-group" id="profile-stats">
+                        <div class="stat-item" onclick="openFollowModal('followers', '')">
+                            <span class="stat-val" id="profile-followers-count">0</span>
+                            <span class="stat-label">Followers</span>
+                        </div>
+                        <div class="stat-item" onclick="openFollowModal('following', '')">
+                            <span class="stat-val" id="profile-following-count">0</span>
+                            <span class="stat-label">Following</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-val" id="profile-spreads-count">0</span>
+                            <span class="stat-label">Spreads</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-socials-group social-links">
+                        <a href="#" class="social-circle-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+                        <a href="#" class="social-circle-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                        <a href="#" class="social-circle-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            <div class="auth-buttons" id="auth-section">
-                <!-- Auth buttons/Greeting managed by JS -->
-            </div>
-        </aside>
+        <!-- RIGHT CONTENT (NOW BOTTOM CONTENT) -->
+        <main class="feed" style="width: 100%; max-width: 100%;">
+            <h2 class="feed-heading" id="spreads-title">Recent spreads</h2>
 
-        <!-- RIGHT CONTENT -->
-        <main class="feed">
 
             <!-- SETTINGS MODAL REMOVED - NOW A DEDICATED PAGE -->
 
@@ -1492,29 +445,26 @@
                     document.getElementById('profile-name').innerText = user.displayName || user.username || 'User';
                     document.getElementById('profile-handle').innerText = '@' + (user.username || 'user').toLowerCase().replace(/\s/g, '');
 
-                    // FIX: Check if bio element exists before setting innerText
+                    
+                    // Handle Profile Handle & Joined Date
+                    const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {month: 'short', year: 'numeric'}) : 'Apr 2026';
+                    document.getElementById('profile-handle').innerHTML = '@' + (user.username || 'user').toLowerCase().replace(/\s/g, '') + ' &middot; Joined ' + joinDate;
+
+                    // Bio Update
                     const bioEl = document.getElementById('profile-bio');
                     if (bioEl) {
                         bioEl.innerText = user.bio || "Digital Craftsman & Writer. Building things for the web and sharing what I learn along the way.";
-                        
-                        // Render Social Stats
-                        let statsEl = document.getElementById('profile-stats');
-                        if (!statsEl) {
-                            statsEl = document.createElement('div');
-                            statsEl.id = 'profile-stats';
-                            statsEl.style.display = 'flex';
-                            statsEl.style.justifyContent = 'center';
-                            statsEl.style.gap = '12px';
-                            statsEl.style.marginTop = '15px';
-                            bioEl.parentNode.insertBefore(statsEl, bioEl.nextSibling);
-                        }
-                        const followersCount = user.followers ? user.followers.length : 0;
-                        const followingCount = user.following ? user.following.length : 0;
-                        statsEl.innerHTML = `
-                            <div class="profile-stat-btn" onclick="openFollowModal('followers', '${user._id}')" title="View Followers"><strong id="profile-followers-count">${followersCount}</strong> <span>Followers</span></div>
-                            <div class="profile-stat-btn" onclick="openFollowModal('following', '${user._id}')" title="View Following"><strong id="profile-following-count">${followingCount}</strong> <span>Following</span></div>
-                        `;
                     }
+
+                    // Stat Updates
+                    const followersCount = user.followers ? user.followers.length : 0;
+                    const followingCount = user.following ? user.following.length : 0;
+                    
+                    const fCountEl = document.getElementById('profile-followers-count');
+                    const followingCountEl = document.getElementById('profile-following-count');
+                    
+                    if (fCountEl) fCountEl.innerText = followersCount >= 1000 ? (followersCount/1000).toFixed(1) + 'k' : followersCount;
+                    if (followingCountEl) followingCountEl.innerText = followingCount;
 
                     const roleEl = document.getElementById('profile-role');
                     if(roleEl) {
@@ -1531,9 +481,9 @@
                         const linkedinUrl = user.socials && user.socials.linkedin ? user.socials.linkedin : '#';
 
                         socialLinksContainer.innerHTML = `
-                            <a href="/${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-                            <a href="/${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="GitHub"><i class="fab fa-github"></i></a>
-                            <a href="/${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                            <a href="/${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="/${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                            <a href="/${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
                         `;
                     }
 
@@ -2403,6 +1353,8 @@
 
 
         function renderPosts(posts, layout = 'list', showAll = false) {
+            const spreadsCountEl = document.getElementById('profile-spreads-count');
+            if(spreadsCountEl && posts) spreadsCountEl.innerText = posts.length;
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
 
