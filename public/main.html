@@ -1432,7 +1432,136 @@
             }
         }
 
-    </style>
+    
+        /* === NATIVE BOTTOM NAVIGATION (OPTION 9 EXACT MATCH) === */
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-bottom-nav {
+                display: flex;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 60px;
+                background: linear-gradient(180deg, rgba(255, 255, 255, 0.8) 0%, rgba(226, 238, 255, 0.95) 100%);
+                backdrop-filter: blur(15px);
+                -webkit-backdrop-filter: blur(15px);
+                border-top: 1px solid rgba(255, 255, 255, 0.8);
+                z-index: 1000;
+                align-items: center;
+                justify-content: space-evenly;
+                padding-bottom: env(safe-area-inset-bottom);
+                box-shadow: 0 -4px 20px rgba(0,0,0,0.03);
+            }
+
+            body[data-theme='dark'] .mobile-bottom-nav {
+                background: linear-gradient(180deg, rgba(15, 23, 42, 0.8) 0%, rgba(10, 15, 30, 0.95) 100%);
+                border-top: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .bottom-nav-item {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #a0a8b9; /* The solid grey from the photo */
+                text-decoration: none;
+                font-size: 1.65rem;
+                flex: 1;
+                height: 100%;
+                transition: color 0.2s, transform 0.1s;
+            }
+
+            .bottom-nav-item.active {
+                color: #4a5568; /* Darker grey for active */
+            }
+            body[data-theme='dark'] .bottom-nav-item.active {
+                color: #ffffff;
+            }
+
+            .bottom-nav-item:active {
+                transform: scale(0.9);
+            }
+
+            /* Adjust spacing to prevent content from hiding behind nav */
+            .container {
+                padding-bottom: 80px !important;
+            }
+
+            /* Hide Desktop Clutter on Mobile */
+            #main-header .search-bar {
+                display: none !important;
+            }
+            .mobile-categories {
+                display: none !important;
+            }
+
+            /* === PURE MOBILE AESTHETICS (OPTION 9) === */
+            
+            /* 1. Hide Desktop Clutter */
+            .dashboard-layout, .dv-composer {
+                display: none !important;
+            }
+
+            /* 2. Pure Backgrounds */
+            body, .container, .feed {
+                background: #ffffff !important;
+            }
+            body[data-theme='dark'], body[data-theme='dark'] .container, body[data-theme='dark'] .feed {
+                background: #0f172a !important;
+            }
+
+            /* 3. Edge-to-Edge Cards */
+            .post-card {
+                border-radius: 0 !important;
+                border-left: none !important;
+                border-right: none !important;
+                box-shadow: none !important;
+                margin-bottom: 0 !important;
+                border-bottom: 1px solid rgba(0,0,0,0.08) !important;
+                padding: 18px 15px !important;
+                background: transparent !important;
+            }
+            body[data-theme='dark'] .post-card {
+                border-bottom: 1px solid rgba(255,255,255,0.08) !important;
+            }
+
+            /* 4. Minimalist Action Icons (Instagram Style) */
+            .post-actions {
+                border-top: none !important;
+                justify-content: flex-start !important;
+                gap: 20px !important;
+                padding-top: 10px !important;
+                margin-top: 10px !important;
+            }
+            
+            .post-actions .action-btn {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                color: var(--text-color) !important;
+                font-size: 0.95rem !important; /* Text size */
+                display: flex !important;
+                align-items: center !important;
+                gap: 6px !important;
+            }
+
+            .post-actions .action-btn i {
+                font-size: 1.4rem !important; /* Larger icons */
+            }
+
+            /* Profile Avatars on Posts - Slightly larger for mobile */
+            .post-header .avatar-sm, .post-header img.avatar-sm {
+                width: 42px !important;
+                height: 42px !important;
+                flex: 0 0 42px !important;
+            }
+
+        }
+</style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
 </head>
@@ -2907,6 +3036,22 @@
         </a>
     </nav>
 
+
+    <!-- MOBILE BOTTOM NAVIGATION (OPTION 9 EXACT MATCH) -->
+    <nav class="mobile-bottom-nav">
+        <a href="/main" class="bottom-nav-item active">
+            <i class="fas fa-home"></i>
+        </a>
+        <a href="/reels" class="bottom-nav-item">
+            <i class="fas fa-play"></i>
+        </a>
+        <a href="/messages" class="bottom-nav-item">
+            <i class="fas fa-paper-plane"></i>
+        </a>
+        <a href="/profile" class="bottom-nav-item" onclick="return enforceLogin(event)">
+            <i class="fas fa-user-circle"></i>
+        </a>
+    </nav>
 </body>
 
 </html>

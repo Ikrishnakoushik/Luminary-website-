@@ -16,7 +16,24 @@ const platformSettingSchema = new mongoose.Schema({
     downloadFeePercentage: {
         type: Number,
         default: 50 // Percentage calculation for dynamic Premium Book valid downloads
-    }
+    },
+    // WAF Firewall Settings
+    firewallEnabled: {
+        type: Boolean,
+        default: true
+    },
+    firewallStrictness: {
+        type: String,
+        enum: ['low', 'medium', 'high', 'paranoid'],
+        default: 'high'
+    },
+    ipBlacklist: [{
+        ip: String,
+        reason: String,
+        bannedAt: { type: Date, default: Date.now },
+        expiresAt: { type: Date }
+    }],
+    ipWhitelist: [{ type: String }]
 }, { timestamps: true });
 
 // We enforce a singleton pattern by providing a fixed ID when creating/querying this document

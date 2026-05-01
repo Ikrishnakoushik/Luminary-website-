@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "271803460699",
+    "firebase_url": "https://luminary-eae16-default-rtdb.firebaseio.com",
+    "project_id": "luminary-eae16",
+    "storage_bucket": "luminary-eae16.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:271803460699:android:ed16004b24e915c37de37e",
+        "android_client_info": {
+          "package_name": "com.example.vylithra_mobile"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "271803460699-6ead6j4v0h7h7mc3n4mgs1kg4elfgt0f.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFtTtULBO8ioDV9rCeu-DvaK_Kp3DNpWQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "271803460699-6ead6j4v0h7h7mc3n4mgs1kg4elfgt0f.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "271803460699-mglrv9rt6gf71lngk3v7e42mkphcqttd.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.vylithraMobile"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

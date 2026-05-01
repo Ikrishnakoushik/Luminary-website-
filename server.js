@@ -190,6 +190,17 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Ensure bodies are parsed
+
+// Advanced Web Application Firewall (WAF)
+const { wafMiddleware, addThreatScore } = require('./middleware/waf');
+app.use(wafMiddleware);
+
+// WAF Honeypot Endpoint
+app.all('/api/admin/hidden-debug-endpoint', async (req, res) => {
+    const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
+    await addThreatScore(ip, 150, 'Triggered Honeypot Trap');
+    res.status(403).json({ msg: 'Forbidden' });
+});
 // 2. Prevent NoSQL Injection deeply and securely without breaking Express 5 Object Getters
 app.use((req, res, next) => {
     if (req.body) req.body = sanitize(req.body);
@@ -354,7 +365,7 @@ app.get('/sitemap.xml', async (req, res) => {
         });
 
         // 2. Dynamic Books Pages
-        const books = await Book.find({ status: 'published' }).select('_id updatedAt');
+        const books = await Book.find({ isPublished: true }).select('_id updatedAt');
         books.forEach(book => {
             xml += `  <url>\n    <loc>${HOST}/checkout?bookId=${book._id}</loc>\n    <lastmod>${(book.updatedAt || new Date()).toISOString()}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.9</priority>\n  </url>\n`;
         });
@@ -972,6 +983,42 @@ app.post('/api/auth/reset-password', async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Server Error');
+    }
+});
+
+// Firebase Sync
+app.post('/api/auth/firebase-sync', async (req, res) => {
+    try {
+        const { token, username } = req.body;
+        if (!token) return res.status(400).json({ msg: 'No token provided' });
+
+        const jwt = require('jsonwebtoken');
+        const decoded = jwt.decode(token);
+        if (!decoded || !decoded.email) {
+            return res.status(400).json({ msg: 'Invalid token' });
+        }
+
+        const email = decoded.email;
+        let user = await User.findOne({ email });
+
+        if (!user) {
+            // Create user
+            user = new User({
+                email,
+                username: username || email.split('@')[0],
+                password: await bcrypt.hash(Math.random().toString(36).slice(-10), 10),
+                isVerified: true
+            });
+            await user.save();
+        }
+
+        const payload = { user: { id: user.id, username: user.username, role: user.role } };
+        const sessionToken = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
+
+        res.json({ token: sessionToken, username: user.username, role: user.role });
+    } catch (err) {
+        console.error('Firebase Sync Error:', err);
+        res.status(500).json({ msg: 'Server error during sync' });
     }
 });
 
@@ -3125,6 +3172,24 @@ app.post('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
 
         await settings.save();
         res.json({ msg: 'Global settings updated.', settings });
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
+// --- WAF Unban Route ---
+app.post('/api/admin/firewall/unban', adminAuth, async (req, res) => {
+    try {
+        const { ip } = req.body;
+        if (!ip) return res.status(400).json({ msg: 'IP address is required' });
+
+        let settings = await PlatformSetting.findOne();
+        if (settings && settings.ipBlacklist) {
+            settings.ipBlacklist = settings.ipBlacklist.filter(b => b.ip !== ip);
+            await settings.save();
+        }
+        res.json({ msg: `IP ${ip} has been unbanned.`, ipBlacklist: settings ? settings.ipBlacklist : [] });
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
