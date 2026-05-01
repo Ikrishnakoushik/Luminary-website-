@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
@@ -21,20 +22,28 @@ class ApiService {
   }
 
   Future<dynamic> get(String endpoint) async {
-    final response = await http.get(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: await _getHeaders(),
-    );
-    return _handleResponse(response);
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection or server IP.');
+    }
   }
 
   Future<dynamic> post(String endpoint, Map<String, dynamic> data) async {
-    final response = await http.post(
-      Uri.parse('$baseUrl$endpoint'),
-      headers: await _getHeaders(),
-      body: jsonEncode(data),
-    );
-    return _handleResponse(response);
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+        body: jsonEncode(data),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection or server IP.');
+    }
   }
 
   dynamic _handleResponse(http.Response response) {
@@ -54,7 +63,7 @@ class ApiService {
           throw Exception(errorData['msg']);
         }
       } catch (e) {
-        if (e.toString().contains('Oops!')) throw e;
+        if (e.toString().contains('Oops!')) rethrow;
         // Ignore json decoding errors
       }
       throw Exception('Oops! Our servers took a quick nap. Please try again. (Code: ${response.statusCode})');

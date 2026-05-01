@@ -270,12 +270,13 @@ class _LoginScreenState extends State<LoginScreen> {
         width: double.infinity,
         height: double.infinity,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF0F172A), const Color(0xFF1E1B4B), const Color(0xFF0F172A)]
-              : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark 
+                ? [const Color(0xFF0F172A), const Color(0xFF3B82F6).withValues(alpha: 0.15), const Color(0xFF8B5CF6).withValues(alpha: 0.15), const Color(0xFF0F172A)]
+                : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
+              stops: isDark ? [0.0, 0.4, 0.6, 1.0] : null,
           ),
         ),
         child: Center(
@@ -288,10 +289,10 @@ class _LoginScreenState extends State<LoginScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(32.0),
                   decoration: BoxDecoration(
-                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.4),
+                    color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.4),
                     borderRadius: BorderRadius.circular(30),
                     border: Border.all(
-                      color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.8),
+                      color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                   child: Column(
@@ -440,9 +441,9 @@ class _LoginScreenState extends State<LoginScreen> {
         labelText: label,
         labelStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
         filled: true,
-        fillColor: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.03),
+        fillColor: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.03),
         enabledBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.1)),
+          borderSide: BorderSide(color: isDark ? Colors.white.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.1)),
           borderRadius: BorderRadius.circular(28),
         ),
         focusedBorder: OutlineInputBorder(
