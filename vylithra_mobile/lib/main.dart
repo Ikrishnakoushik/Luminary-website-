@@ -27,21 +27,25 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system, // Automatically matches device theme
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFFFFFFF),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC), // Light slate
         colorScheme: const ColorScheme.light(
-          primary: Colors.blue,
+          primary: Color(0xFF3B82F6), // Vibrant blue
+          secondary: Color(0xFF8B5CF6), // Purple
           surface: Color(0xFFFFFFFF),
-          onSurface: Colors.black,
+          onSurface: Color(0xFF0F172A), // Dark text
         ),
+        fontFamily: 'Roboto', // Modern system font fallback
       ),
       darkTheme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFF0F172A),
+        scaffoldBackgroundColor: const Color(0xFF0B0F19), // Deep slate/navy
         colorScheme: const ColorScheme.dark(
-          primary: Colors.blue,
-          surface: Color(0xFF0F172A),
-          onSurface: Colors.white,
+          primary: Color(0xFF3B82F6), // Vibrant blue
+          secondary: Color(0xFF8B5CF6), // Purple
+          surface: Color(0xFF1E293B), // Card background
+          onSurface: Color(0xFFF8FAFC), // Light text
         ),
+        fontFamily: 'Roboto',
       ),
       home: Consumer<AuthProvider>(
         builder: (context, auth, _) {

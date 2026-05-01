@@ -634,7 +634,7 @@
                 }
             } catch (e) {
                 console.error(e);
-                list.innerHTML = '<div style="color:red; text-align:center;">Failed to load connections</div>';
+                list.innerHTML = '<div style="color:red; text-align:center;">Oops! Our servers took a quick nap. Please try again.</div>';
             }
         }
 
@@ -785,7 +785,7 @@
                     }
 
                 } else {
-                    list.innerHTML = '<div style="padding: 20px; text-align:center; color: #ef4444;">Failed to load chats.</div>';
+                    list.innerHTML = '<div style="padding: 20px; text-align:center; color: #ef4444;">Oops! Our servers took a quick nap. Please try again.</div>';
                 }
             } catch (e) {
                 console.error(e);
@@ -835,7 +835,7 @@
                 }
             } catch(e) {
                 console.error(e);
-                stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Failed to load messages</div>';
+                stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Oops! Our servers took a quick nap. Please try again.</div>';
             }
         }
 
@@ -976,7 +976,7 @@
                         </div>
                     `;
                 } else {
-                    previewContainer.innerHTML = `<div style="color:red; font-size:0.85rem; padding: 10px;">Upload failed.</div>`;
+                    previewContainer.innerHTML = `<div style="color:red; font-size:0.85rem; padding: 10px;">Oops! Our servers took a quick nap. Please try again.</div>`;
                     setTimeout(cancelAttachment, 2000);
                 }
             } catch (e) {
@@ -1039,7 +1039,7 @@
                 if (res.ok) {
                     loadConversations();
                 } else {
-                    VylithraUI.showToast("Failed to send message!", 'error');
+                    VylithraUI.showToast("Oops! Our servers took a quick nap. Please try again.", 'error');
                 }
             } catch (e) {
                 console.error(e);

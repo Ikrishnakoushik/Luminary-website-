@@ -1207,7 +1207,7 @@
                     VylithraUI.showToast(data.msg || 'Failed to revoke', 'error');
                 }
             } catch(e) {
-                VylithraUI.showToast('Server error', 'error');
+                VylithraUI.showToast('Oops! Our servers took a quick nap. Please try again.', 'error');
             }
         }
         
@@ -1275,7 +1275,7 @@
                             VylithraUI.showToast(data.msg || 'Error disabling 2FA', 'error');
                         }
                     } catch(err) {
-                        VylithraUI.showToast('Server error', 'error');
+                        VylithraUI.showToast('Oops! Our servers took a quick nap. Please try again.', 'error');
                     }
                 }
             }
@@ -1310,7 +1310,7 @@
                     VylithraUI.showToast(data.msg || 'Invalid code', 'error');
                 }
             } catch(err) {
-                VylithraUI.showToast('Server error', 'error');
+                VylithraUI.showToast('Oops! Our servers took a quick nap. Please try again.', 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerText = 'Verify & Enable';

@@ -9,14 +9,107 @@ class PostCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
+    if (post.image != null) {
+      return Container(
+        margin: const EdgeInsets.only(bottom: 2), // small separator
+        width: double.infinity,
+        constraints: const BoxConstraints(
+          minHeight: 450,
+          maxHeight: 650,
+        ),
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: NetworkImage(post.image!),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Gradient Scrim for readability
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: 0,
+              height: 300,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      Colors.black87,
+                      Colors.black54,
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Content overlaid
+            Positioned(
+              left: 16,
+              right: 16,
+              bottom: 24,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const CircleAvatar(
+                        radius: 20,
+                        backgroundColor: Colors.white24,
+                        child: Icon(Icons.person, color: Colors.white),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        post.authorName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    post.content,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 15,
+                      shadows: [Shadow(color: Colors.black45, blurRadius: 4)],
+                    ),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      _buildActionButton(Icons.favorite_border, true),
+                      const SizedBox(width: 24),
+                      _buildActionButton(Icons.chat_bubble_outline, true),
+                      const SizedBox(width: 24),
+                      _buildActionButton(Icons.send_outlined, true),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // No image fallback (text only)
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 18),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: BoxDecoration(
-        color: Colors.transparent,
+        color: isDark ? const Color(0xFF1E293B) : Colors.white,
         border: Border(
           bottom: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
+            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
             width: 1,
           ),
         ),
@@ -24,71 +117,46 @@ class PostCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               CircleAvatar(
-                radius: 21, // 42px diameter
+                radius: 20,
                 backgroundColor: isDark ? Colors.white12 : Colors.black12,
-                backgroundImage: post.image != null ? NetworkImage(post.image!) : null,
-                child: post.image == null ? const Icon(Icons.person, color: Colors.grey) : null,
+                child: const Icon(Icons.person, color: Colors.grey),
               ),
               const SizedBox(width: 12),
               Text(
                 post.authorName,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          
-          // Body
-          Text(
-            post.content,
-            style: const TextStyle(fontSize: 15),
-          ),
-          
-          // Image (if any)
-          if (post.image != null) ...[
-             const SizedBox(height: 12),
-             ClipRRect(
-               borderRadius: BorderRadius.circular(8),
-               child: Image.network(
-                 post.image!,
-                 width: double.infinity,
-                 fit: BoxFit.cover,
-               ),
-             )
-          ],
-
-          const SizedBox(height: 10),
-
-          // Actions
+          const SizedBox(height: 16),
+          Text(post.content, style: const TextStyle(fontSize: 15)),
+          const SizedBox(height: 20),
           Row(
             children: [
-              _buildActionButton(Icons.favorite_border),
-              const SizedBox(width: 20),
-              _buildActionButton(Icons.chat_bubble_outline),
-              const SizedBox(width: 20),
-              _buildActionButton(Icons.send_outlined),
+              _buildActionButton(Icons.favorite_border, false),
+              const SizedBox(width: 24),
+              _buildActionButton(Icons.chat_bubble_outline, false),
+              const SizedBox(width: 24),
+              _buildActionButton(Icons.send_outlined, false),
             ],
-          )
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon) {
+  Widget _buildActionButton(IconData icon, bool overlayOnImage) {
     return InkWell(
       onTap: () {},
       splashColor: Colors.transparent,
       highlightColor: Colors.transparent,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Icon(icon, size: 26), // 1.4rem approx 22-26px
+      child: Icon(
+        icon,
+        size: 28,
+        color: overlayOnImage ? Colors.white : null,
       ),
     );
   }

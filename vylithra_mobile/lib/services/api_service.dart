@@ -4,8 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
 
 class ApiService {
-  // Use 192.168.0.3 for physical device testing on the same Wi-Fi network
-  static const String baseUrl = 'http://192.168.0.3:3000';
+  // Use https://vylithra.in for production
+  static const String baseUrl = 'https://vylithra.in';
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();
@@ -42,7 +42,22 @@ class ApiService {
       if (response.body.isEmpty) return null;
       return jsonDecode(response.body);
     } else {
-      throw Exception('API Error: ${response.statusCode} - ${response.body}');
+      try {
+        final errorData = jsonDecode(response.body);
+        if (errorData['msg'] != null) {
+          // If the server returns 500, we might still want to override it with our friendly message, 
+          // but usually the server returns the friendly message itself now.
+          // For 400/403/404, we definitely want the real error message.
+          if (response.statusCode == 500) {
+            throw Exception('Oops! Our servers took a quick nap. Please try again.');
+          }
+          throw Exception(errorData['msg']);
+        }
+      } catch (e) {
+        if (e.toString().contains('Oops!')) throw e;
+        // Ignore json decoding errors
+      }
+      throw Exception('Oops! Our servers took a quick nap. Please try again. (Code: ${response.statusCode})');
     }
   }
 

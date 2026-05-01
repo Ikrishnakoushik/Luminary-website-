@@ -34,16 +34,27 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Scaffold(
       extendBody: true, // Crucial for bottom nav blur effect
+      extendBodyBehindAppBar: true, // Allow content to flow under the app bar
+      backgroundColor: isDark ? const Color(0xFF0B0F19) : const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: const Text('Vylithra', style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
+        title: const Text('Vylithra', style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1.0)),
+        backgroundColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0, // Prevents Material 3 scroll tint
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.08),
-            height: 1,
+        scrolledUnderElevation: 0,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                color: isDark ? const Color(0xFF0B0F19).withValues(alpha: 0.6) : Colors.white.withValues(alpha: 0.7),
+                border: Border(
+                  bottom: BorderSide(
+                    color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                    width: 1,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
@@ -78,20 +89,14 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildBottomNav(bool isDark) {
     return ClipRRect(
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+        filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
         child: Container(
           height: 60 + MediaQuery.of(context).padding.bottom,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDark 
-                ? [const Color(0xCC0F172A), const Color(0xF20A0F1E)] // Dark mode gradient
-                : [const Color(0xCCFFFFFF), const Color(0xF2E2EEFF)], // Light mode gradient
-            ),
+            color: isDark ? const Color(0xFF0B0F19).withValues(alpha: 0.75) : Colors.white.withValues(alpha: 0.8),
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.8),
+                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
                 width: 1,
               ),
             ),
@@ -116,9 +121,8 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _navItem(IconData icon, int index, bool isDark) {
     final isActive = _currentIndex == index;
     
-    // Colors from the CSS
-    final activeColor = isDark ? const Color(0xFFFFFFFF) : const Color(0xFF4A5568);
-    final inactiveColor = const Color(0xFFA0A8B9);
+    final activeColor = const Color(0xFF3B82F6); // Vibrant Blue
+    final inactiveColor = isDark ? Colors.white38 : Colors.black38;
 
     return Expanded(
       child: InkWell(
@@ -128,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Center(
           child: Icon(
             icon,
-            size: 28, // 1.65rem
+            size: 28,
             color: isActive ? activeColor : inactiveColor,
           ),
         ),

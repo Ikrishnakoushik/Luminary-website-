@@ -464,7 +464,7 @@ app.post('/api/users/:targetId/follow', auth, async (req, res) => {
         res.json({ msg: 'Followed successfully', following: currentUser.following });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -485,7 +485,7 @@ app.delete('/api/users/:targetId/unfollow', auth, async (req, res) => {
         res.json({ msg: 'Unfollowed successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -496,7 +496,7 @@ app.get('/api/users/me/following', auth, async (req, res) => {
         res.json(user.following || []);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -508,7 +508,7 @@ app.get('/api/users/:targetId/followers', async (req, res) => {
         res.json(user.followers || []);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -519,7 +519,7 @@ app.get('/api/users/:targetId/following', async (req, res) => {
         res.json(user.following || []);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -544,7 +544,7 @@ app.post('/api/groups', auth, async (req, res) => {
         res.json(group);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -554,7 +554,7 @@ app.get('/api/groups', auth, async (req, res) => {
         res.json(groups);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -569,7 +569,7 @@ app.get('/api/messages/group/:groupId', auth, async (req, res) => {
         res.json(messages);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -595,7 +595,7 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
         res.json(msg);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -627,7 +627,7 @@ app.post('/api/users/avatar', auth, (req, res) => {
                     });
                 } catch (error) {
                     console.error(error);
-                    res.status(500).send('Server Error');
+                    res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
                 }
             }
         }
@@ -830,7 +830,7 @@ app.post('/api/register', async (req, res) => {
         res.status(201).json({ msg: 'User registered. Please verify your email.', email });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: 'Server error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -858,7 +858,7 @@ app.post('/api/verify-email', async (req, res) => {
 
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: 'Server error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -939,7 +939,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 
     } catch (err) {
         console.error('[DEBUG] Server Error in Forgot Password:', err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -982,7 +982,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1114,7 +1114,7 @@ app.post('/api/login', async (req, res) => {
         );
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1137,7 +1137,7 @@ app.get('/api/user/sessions', auth, async (req, res) => {
         res.json(sessions);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1162,7 +1162,7 @@ app.delete('/api/user/sessions/:sessionId', auth, async (req, res) => {
         res.json({ msg: 'Session revoked successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1189,7 +1189,7 @@ app.post('/api/user/2fa/setup', auth, async (req, res) => {
         });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1220,7 +1220,7 @@ app.post('/api/user/2fa/verify', auth, async (req, res) => {
         }
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1248,7 +1248,7 @@ app.post('/api/user/2fa/disable', auth, async (req, res) => {
         }
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1262,7 +1262,7 @@ app.get('/api/users/profile', auth, async (req, res) => {
         res.json(user);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1299,7 +1299,7 @@ app.put('/api/users/profile', auth, async (req, res) => {
         res.json(user);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1324,7 +1324,7 @@ app.put('/api/users/password', auth, async (req, res) => {
         res.json({ msg: 'Password updated successfully' });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1340,7 +1340,7 @@ app.put('/api/users/preferences', auth, async (req, res) => {
         res.json({ msg: 'Preferences updated', preferences: user.preferences });
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1363,7 +1363,7 @@ app.get('/api/users/top', async (req, res) => {
         res.json(users);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 // Toggle Connection (Follow/Unfollow)
@@ -1395,7 +1395,7 @@ app.post('/api/users/connect/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ msg: 'User not found' });
         }
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1410,7 +1410,7 @@ app.get('/api/users/connections', auth, async (req, res) => {
         res.json(user.connections);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1423,7 +1423,7 @@ app.get('/api/users/:id', async (req, res) => {
     } catch (err) {
         console.error("Error fetching user:", err.message);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'User not found' });
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1483,7 +1483,7 @@ app.post('/api/posts', auth, (req, res) => {
             res.json(post);
         } catch (err) {
             console.error(err.message);
-            res.status(500).send('Server Error');
+            res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
         }
     });
 });
@@ -1559,7 +1559,7 @@ app.put('/api/posts/:id/like', auth, async (req, res) => {
         res.json(post.likes);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1580,7 +1580,7 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
         res.json(post.comments);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1607,7 +1607,7 @@ app.put('/api/posts/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ msg: 'Post not found' });
         }
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1633,7 +1633,7 @@ app.delete('/api/posts/:id', auth, async (req, res) => {
         if (err.kind === 'ObjectId') {
             return res.status(404).json({ msg: 'Post not found' });
         }
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1681,7 +1681,7 @@ app.get('/ping', (req, res) => {
 // Global Error Handler
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
-    res.status(500).send('Something broke!');
+    res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
 });
 
 // --- MESSAGES API ---
@@ -1725,7 +1725,7 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
 
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1751,7 +1751,7 @@ app.get('/api/messages/:userId', auth, async (req, res) => {
         res.json(messages);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -1786,7 +1786,7 @@ app.get('/api/search', async (req, res) => {
         res.json({ users, posts, books });
     } catch (err) {
         console.error('Search error:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -1820,7 +1820,7 @@ app.get('/api/books', async (req, res) => {
         res.json(filteredBooks);
     } catch (err) {
         console.error('Error fetching books:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -1848,7 +1848,7 @@ app.get('/api/books/:id', auth, async (req, res) => {
         res.json(book);
     } catch (err) {
         console.error('Error fetching book:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -1896,7 +1896,7 @@ app.post('/api/books', auth, (req, res) => {
             res.json(savedBook);
         } catch (err) {
             console.error('Error creating book:', err);
-            res.status(500).json({ msg: 'Server Error' });
+            res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
         }
     });
 });
@@ -1942,7 +1942,7 @@ app.put('/api/books/:id', auth, (req, res) => {
             res.json(book);
         } catch (err) {
             console.error('Error updating book:', err);
-            res.status(500).json({ msg: 'Server Error' });
+            res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
         }
     });
 });
@@ -1963,7 +1963,7 @@ app.put('/api/books/:id/unpublish', auth, async (req, res) => {
         res.json({ msg: book.isPublished ? 'Book published successfully!' : 'Book unpublished successfully', book });
     } catch (err) {
         console.error('Error unpublishing book:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2009,7 +2009,7 @@ app.delete('/api/books/:id', auth, async (req, res) => {
     } catch (err) {
         console.error('Error deleting book:', err);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2049,7 +2049,7 @@ app.post('/api/books/:id/rate', auth, async (req, res) => {
     } catch (err) {
         console.error('Error rating book:', err);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2255,7 +2255,7 @@ app.post('/api/coupons/validate', auth, async (req, res) => {
         res.json({ valid: true, discountType: coupon.discountType, discountPercentage: coupon.discountPercentage, discountAmount, minPurchaseAmount: coupon.minPurchaseAmount, newPrice: bookPrice - discountAmount });
     } catch (err) {
         console.error(err);
-        res.status(500).json({ msg: 'Server error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2413,7 +2413,7 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
         }
     } catch (err) {
         console.error('Verify Order Error:', err);
-        res.status(500).json({ msg: 'Server error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2607,7 +2607,7 @@ app.post('/api/books/:id/purchase-free', auth, async (req, res) => {
 
     } catch (err) {
         console.error('Free Purchase Error:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2625,7 +2625,7 @@ app.get('/api/publishers/earnings', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Error fetching earnings:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2695,7 +2695,7 @@ app.post('/api/publishers/withdraw', auth, async (req, res) => {
 
     } catch (err) {
         console.error('Error processing withdrawal:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2770,7 +2770,7 @@ app.put('/api/users/upgrade-to-publisher', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Upgrade Error:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2804,7 +2804,7 @@ app.put('/api/users/downgrade-to-reader', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Downgrade Error:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2836,7 +2836,7 @@ app.post('/api/publisher/onboard', auth, async (req, res) => {
         });
     } catch (err) {
         console.error('Error onboarding publisher:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2850,7 +2850,7 @@ app.get('/api/publisher/balance', auth, async (req, res) => {
         res.json({ balance: user.balance || 0, razorpayAccountId: user.razorpayAccountId });
     } catch (err) {
         console.error('Error fetching balance:', err);
-        res.status(500).json({ msg: 'Server Error' });
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
     }
 });
 
@@ -2877,7 +2877,7 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
         res.json(savedMessage);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -2931,7 +2931,7 @@ app.post('/api/users/projects', auth, async (req, res) => {
         res.json(user.projects);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -2948,7 +2948,7 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
         res.json(user.projects);
     } catch (err) {
         console.error(err.message);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3018,7 +3018,7 @@ app.post('/api/admin/gateway-request', adminAuth, async (req, res) => {
         res.json({ msg: 'OTP sent to Master Email. Check your inbox.' });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3062,7 +3062,7 @@ app.post('/api/admin/gateway-verify', adminAuth, async (req, res) => {
         });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3082,7 +3082,7 @@ app.get('/api/admin/stats', adminAuth, gatewayAuth, async (req, res) => {
         res.json({ totalUsers, totalBooks, totalRevenue });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3137,7 +3137,7 @@ app.post('/api/admin/broadcast', adminAuth, gatewayAuth, async (req, res) => {
         res.json({ msg: `Broadcast complete: ${successCount} sent, ${failCount} failed.` });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3151,7 +3151,7 @@ app.get('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
         res.json(settings);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3174,7 +3174,7 @@ app.post('/api/admin/settings', adminAuth, gatewayAuth, async (req, res) => {
         res.json({ msg: 'Global settings updated.', settings });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3192,7 +3192,7 @@ app.post('/api/admin/firewall/unban', adminAuth, async (req, res) => {
         res.json({ msg: `IP ${ip} has been unbanned.`, ipBlacklist: settings ? settings.ipBlacklist : [] });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3203,7 +3203,7 @@ app.get('/api/admin/users', adminAuth, gatewayAuth, async (req, res) => {
         res.json(users);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3224,7 +3224,7 @@ app.put('/api/admin/users/:id/role', adminAuth, gatewayAuth, async (req, res) =>
         res.json({ msg: 'User role updated', user });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3235,7 +3235,7 @@ app.delete('/api/admin/users/:id', adminAuth, gatewayAuth, async (req, res) => {
         res.json({ msg: 'User deleted' });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3246,7 +3246,7 @@ app.get('/api/admin/books', adminAuth, gatewayAuth, async (req, res) => {
         res.json(books);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3263,7 +3263,7 @@ app.put('/api/admin/books/:id/status', adminAuth, gatewayAuth, async (req, res) 
         res.json({ msg: `Book ${book.isPublished ? 'published' : 'unpublished'} successfully`, book });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3274,7 +3274,7 @@ app.delete('/api/admin/books/:id', adminAuth, gatewayAuth, async (req, res) => {
         res.json({ msg: 'Book deleted' });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3307,7 +3307,7 @@ app.get('/api/admin/transactions', adminAuth, gatewayAuth, async (req, res) => {
         res.json(allTransactions);
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
@@ -3340,7 +3340,7 @@ app.put('/api/admin/transactions/:userId/:transactionId', adminAuth, gatewayAuth
         res.json({ msg: `Withdrawal marked as ${status}` });
     } catch (err) {
         console.error(err);
-        res.status(500).send('Server Error');
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 
