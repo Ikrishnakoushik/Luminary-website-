@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -152,114 +153,6 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Future<void> _showResetPasswordDialog(String email) async {
-    final otpController = TextEditingController();
-    final newPasswordController = TextEditingController();
-    await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Reset Password', style: TextStyle(color: Colors.white)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Enter the 6-digit code sent to $email', style: const TextStyle(color: Colors.white70)),
-            const SizedBox(height: 16),
-            TextField(
-              controller: otpController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'Enter 6-digit OTP',
-                hintStyle: TextStyle(color: Colors.white54),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-              ),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: newPasswordController,
-              style: const TextStyle(color: Colors.white),
-              decoration: const InputDecoration(
-                hintText: 'New Password',
-                hintStyle: TextStyle(color: Colors.white54),
-                enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-                focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-              ),
-              obscureText: true,
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-            onPressed: () async {
-              try {
-                await Provider.of<AuthProvider>(context, listen: false).resetPassword(email, otpController.text.trim(), newPasswordController.text);
-                if (ctx.mounted) Navigator.of(ctx).pop();
-                setState(() => _successMessage = 'Password reset successfully! You can now log in.');
-              } catch (e) {
-                setState(() => _errorMessage = e.toString().replaceFirst('Exception: ', ''));
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              }
-            },
-            child: const Text('Reset'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showForgotPasswordDialog() async {
-    final resetEmailController = TextEditingController();
-    await showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: const Color(0xFF1E293B),
-        title: const Text('Recover Account', style: TextStyle(color: Colors.white)),
-        content: TextField(
-          controller: resetEmailController,
-          style: const TextStyle(color: Colors.white),
-          decoration: const InputDecoration(
-            hintText: 'Enter your email',
-            hintStyle: TextStyle(color: Colors.white54),
-            enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white24)),
-            focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.blue)),
-          ),
-          keyboardType: TextInputType.emailAddress,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
-            onPressed: () async {
-              try {
-                await Provider.of<AuthProvider>(context, listen: false).forgotPassword(resetEmailController.text.trim());
-                if (ctx.mounted) Navigator.of(ctx).pop();
-                if (mounted) await _showResetPasswordDialog(resetEmailController.text.trim());
-              } catch (e) {
-                setState(() {
-                  _errorMessage = e.toString().replaceFirst('Exception: ', '');
-                  _successMessage = null;
-                });
-                if (ctx.mounted) Navigator.of(ctx).pop();
-              }
-            },
-            child: const Text('Send Link'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -351,7 +244,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         Align(
                           alignment: Alignment.centerRight,
                           child: TextButton(
-                            onPressed: _showForgotPasswordDialog,
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()));
+                            },
                             child: const Text('Forgot Password?', style: TextStyle(color: Colors.blueAccent)),
                           ),
                         )

@@ -51,22 +51,20 @@ class ApiService {
       if (response.body.isEmpty) return null;
       return jsonDecode(response.body);
     } else {
+      String errorMessage = 'Oops! Our servers took a quick nap. Please try again. (Code: ${response.statusCode})';
       try {
         final errorData = jsonDecode(response.body);
         if (errorData['msg'] != null) {
-          // If the server returns 500, we might still want to override it with our friendly message, 
-          // but usually the server returns the friendly message itself now.
-          // For 400/403/404, we definitely want the real error message.
           if (response.statusCode == 500) {
-            throw Exception('Oops! Our servers took a quick nap. Please try again.');
+            errorMessage = 'Oops! Our servers took a quick nap. Please try again.';
+          } else {
+            errorMessage = errorData['msg'];
           }
-          throw Exception(errorData['msg']);
         }
       } catch (e) {
-        if (e.toString().contains('Oops!')) rethrow;
-        // Ignore json decoding errors
+        // Ignore json decoding errors, fallback to default errorMessage
       }
-      throw Exception('Oops! Our servers took a quick nap. Please try again. (Code: ${response.statusCode})');
+      throw Exception(errorMessage);
     }
   }
 
