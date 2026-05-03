@@ -5,8 +5,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
 
 class ApiService {
-  // Use https://vylithra.in for production
-  static const String baseUrl = 'https://vylithra.in';
+  // Use https://www.vylithra.in for production (must include www to avoid 307 redirects)
+  static const String baseUrl = 'https://www.vylithra.in';
 
   Future<Map<String, String>> _getHeaders() async {
     final prefs = await SharedPreferences.getInstance();

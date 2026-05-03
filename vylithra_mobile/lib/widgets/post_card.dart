@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../models/post.dart';
 
@@ -87,11 +88,11 @@ class PostCard extends StatelessWidget {
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      _buildActionButton(Icons.favorite_border, true),
+                      _buildActionButton(Icons.favorite_border, true, isDark),
                       const SizedBox(width: 24),
-                      _buildActionButton(Icons.chat_bubble_outline, true),
+                      _buildActionButton(Icons.chat_bubble_outline, true, isDark),
                       const SizedBox(width: 24),
-                      _buildActionButton(Icons.send_outlined, true),
+                      _buildActionButton(Icons.send_outlined, true, isDark),
                     ],
                   ),
                 ],
@@ -104,51 +105,58 @@ class PostCard extends StatelessWidget {
 
     // No image fallback (text only)
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF1E293B) : Colors.white,
-        border: Border(
-          bottom: BorderSide(
-            color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
-            width: 1,
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+            decoration: BoxDecoration(
+              color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.white.withValues(alpha: 0.6),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: isDark ? Colors.white.withValues(alpha: 0.15) : Colors.black.withValues(alpha: 0.05),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CircleAvatar(
+                      radius: 20,
+                      backgroundColor: isDark ? Colors.white12 : Colors.black12,
+                      child: const Icon(Icons.person, color: Colors.grey),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      post.authorName,
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Text(post.content, style: const TextStyle(fontSize: 15)),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    _buildActionButton(Icons.favorite_border, false, isDark),
+                    const SizedBox(width: 24),
+                    _buildActionButton(Icons.chat_bubble_outline, false, isDark),
+                    const SizedBox(width: 24),
+                    _buildActionButton(Icons.send_outlined, false, isDark),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: isDark ? Colors.white12 : Colors.black12,
-                child: const Icon(Icons.person, color: Colors.grey),
-              ),
-              const SizedBox(width: 12),
-              Text(
-                post.authorName,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(post.content, style: const TextStyle(fontSize: 15)),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              _buildActionButton(Icons.favorite_border, false),
-              const SizedBox(width: 24),
-              _buildActionButton(Icons.chat_bubble_outline, false),
-              const SizedBox(width: 24),
-              _buildActionButton(Icons.send_outlined, false),
-            ],
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildActionButton(IconData icon, bool overlayOnImage) {
+  Widget _buildActionButton(IconData icon, bool overlayOnImage, bool isDark) {
     return InkWell(
       onTap: () {},
       splashColor: Colors.transparent,
@@ -156,7 +164,9 @@ class PostCard extends StatelessWidget {
       child: Icon(
         icon,
         size: 28,
-        color: overlayOnImage ? Colors.white : null,
+        color: overlayOnImage 
+          ? Colors.white 
+          : (isDark ? Colors.white70 : Colors.black54),
       ),
     );
   }

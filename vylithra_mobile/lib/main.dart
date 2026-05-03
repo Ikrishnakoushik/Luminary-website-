@@ -24,6 +24,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Vylithra',
+      debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.system, // Automatically matches device theme
       theme: ThemeData(
         useMaterial3: true,
