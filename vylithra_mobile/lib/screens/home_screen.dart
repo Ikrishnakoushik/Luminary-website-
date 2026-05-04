@@ -50,9 +50,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: isDark 
-                  ? [const Color(0xFF0F172A), const Color(0xFF3B82F6).withValues(alpha: 0.15), const Color(0xFF8B5CF6).withValues(alpha: 0.15), const Color(0xFF0F172A)]
-                  : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0), const Color(0xFFCBD5E1)],
-                stops: isDark ? [0.0, 0.4, 0.6, 1.0] : null,
+                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
+                  : [const Color(0xFFF0FDFA), const Color(0xFFE6F8F5)],
+                stops: isDark ? [0.0, 1.0] : [0.0, 1.0],
               ),
             ),
           ),
@@ -332,7 +332,11 @@ class _HomeScreenState extends State<HomeScreen> {
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 200),
             curve: Curves.easeInOut,
-            transform: Matrix4.identity()..scaleByDouble(isActive ? 1.15 : 1.0),
+            transform: Matrix4.diagonal3Values(
+              isActive ? 1.15 : 1.0,
+              isActive ? 1.15 : 1.0,
+              1.0,
+            ),
             child: Icon(
               icon,
               size: 28,

@@ -591,7 +591,10 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
 
         const msg = await newMessage.save();
         await msg.populate('sender', 'username profilePicture displayName');
-        
+        const io = req.app.get('io');
+        if (io) {
+            io.to(req.params.groupId).emit('new_group_message', msg);
+        }
         res.json(msg);
     } catch (err) {
         console.error(err.message);
@@ -2874,6 +2877,12 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
         });
 
         const savedMessage = await newMessage.save();
+        await savedMessage.populate('sender', 'username profilePicture displayName');
+        const io = req.app.get('io');
+        if (io) {
+            io.to(receiver).emit('new_message', savedMessage);
+            io.to(sender).emit('new_message', savedMessage);
+        }
         res.json(savedMessage);
     } catch (err) {
         console.error(err.message);
