@@ -133,10 +133,9 @@
         }
         .unified-container {
             padding: 20px;
-            margin-top: 60px; /* offset for hero cover */
             background: transparent;
             max-width: 800px;
-            margin: 60px auto 0 auto;
+            margin: 100px auto 0 auto;
             position: relative;
             z-index: 10;
         }
@@ -155,101 +154,39 @@
             padding-top: 30px;
         }
         
-        .profile-header-top-row {
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-top: 0;
-        }
-        
-        .profile-avatar-wrapper {
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        /* Extruded Avatar */
-        .profile-avatar-large {
-            width: 100px;
-            height: 100px;
-            border: none;
-            background: #e0e5ec;
-            box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.8);
-            color: #64748b;
-        }
-        
-        .profile-name-title {
-            font-size: 1.8rem;
-            color: #334155;
-        }
-        
-        .profile-actions {
-            margin-top: 25px;
-            justify-content: center;
-            width: 100%;
-            gap: 20px;
-        }
-        
-        /* Extruded Buttons */
-        .btn-edit-profile, .btn-share-profile {
-            flex: 1;
-            justify-content: center;
-            border: none;
-            background: #e0e5ec;
-            color: #64748b;
-            box-shadow: 5px 5px 10px rgba(163,177,198,0.5), -5px -5px 10px rgba(255,255,255,0.8);
-            border-radius: 12px;
-            padding: 12px 0;
-            font-weight: 600;
-        }
-        
-        /* Strip original gradient */
-        .btn-share-profile {
-            background: #e0e5ec !important;
-            color: #7c5cff !important;
-        }
-        
-        .btn-edit-profile:active, .btn-share-profile:active {
-            box-shadow: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.8);
-        }
+        .profile-header-top-row { display: flex; flex-direction: column; align-items: center; text-align: center; margin-top: -60px; }
+        .profile-avatar-wrapper { display: flex; flex-direction: column; align-items: center; gap: 15px; margin-bottom: 20px; }
+        .profile-avatar-large { width: 120px; height: 120px; border-radius: 50%; border: 4px solid #e0e5ec; background: #e0e5ec; box-shadow: 8px 8px 16px rgba(163,177,198,0.5), -8px -8px 16px rgba(255,255,255,0.8); color: #64748b; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; overflow: hidden; }
+        body[data-theme='dark'] .profile-avatar-large { border-color: #1e293b; background: #1e293b; box-shadow: 6px 6px 12px #0f172a, -6px -6px 12px #334155; color: #cbd5e1; }
+        .profile-name-block { display: flex; flex-direction: column; gap: 5px; }
+        .profile-name-title { font-size: 2.2rem; color: #334155; margin: 0; font-family: 'Playfair Display', serif; font-weight: 800; }
+        body[data-theme='dark'] .profile-name-title { color: #f8fafc; }
+        .profile-handle-text { color: #7c5cff; font-weight: 600; font-size: 1.1rem; }
+        body[data-theme='dark'] .profile-handle-text { color: #00d2ff; }
+        .profile-actions { display: flex; justify-content: center; width: 100%; gap: 20px; margin-top: 20px; }
+        .btn-edit-profile, .btn-share-profile { display: flex; align-items: center; justify-content: center; gap: 8px; border: none; background: #e0e5ec; color: #64748b; box-shadow: 6px 6px 12px rgba(163,177,198,0.5), -6px -6px 12px rgba(255,255,255,0.8); border-radius: 30px; padding: 12px 30px; font-weight: 700; cursor: pointer; transition: all 0.3s ease; }
+        .btn-share-profile { color: #7c5cff; }
+        body[data-theme='dark'] .btn-edit-profile, body[data-theme='dark'] .btn-share-profile { background: #1e293b; box-shadow: 4px 4px 8px #0f172a, -4px -4px 8px #334155; }
+        body[data-theme='dark'] .btn-share-profile { color: #00d2ff; }
+        .btn-edit-profile:hover, .btn-share-profile:hover { transform: translateY(-2px); box-shadow: 8px 8px 16px rgba(163,177,198,0.6), -8px -8px 16px rgba(255,255,255,0.9); }
+        .btn-edit-profile:active, .btn-share-profile:active { box-shadow: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.8); transform: translateY(1px); }
+        .profile-bio-text { text-align: center; font-size: 1.1rem; padding: 0 30px; color: #64748b; line-height: 1.6; margin: 25px 0; }
+        body[data-theme='dark'] .profile-bio-text { color: #94a3b8; }
+        .profile-footer-row { display: flex; flex-direction: column; align-items: center; gap: 25px; padding: 30px 15px; border-top: 1px solid rgba(255,255,255,0.3); width: 100%; box-sizing: border-box; }
+        body[data-theme='dark'] .profile-footer-row { border-top: 1px solid rgba(255,255,255,0.05); }
+        .profile-stats-group { display: flex; justify-content: center; width: 100%; gap: 40px; }
+        .stat-item { display: flex; flex-direction: column; align-items: center; gap: 5px; cursor: pointer; transition: transform 0.3s ease; }
+        .stat-item:hover { transform: translateY(-2px); }
+        .stat-val { font-size: 1.8rem; font-weight: 800; color: #334155; font-family: 'Playfair Display', serif; }
+        body[data-theme='dark'] .stat-val { color: #f8fafc; }
+        .stat-label { font-size: 0.9rem; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; }
+        .profile-socials-group { display: flex; gap: 15px; }
+        .social-circle-btn { display: flex; align-items: center; justify-content: center; width: 45px; height: 45px; border-radius: 50%; border: none; background: #e0e5ec; box-shadow: 4px 4px 8px rgba(163,177,198,0.5), -4px -4px 8px rgba(255,255,255,0.8); color: #64748b; font-size: 1.2rem; transition: all 0.3s ease; text-decoration: none; }
+        body[data-theme='dark'] .social-circle-btn { background: #1e293b; box-shadow: 4px 4px 8px #0f172a, -4px -4px 8px #334155; color: #94a3b8; }
+        .social-circle-btn:hover { color: #7c5cff; transform: translateY(-2px); box-shadow: 6px 6px 12px rgba(163,177,198,0.6), -6px -6px 12px rgba(255,255,255,0.9); }
+        body[data-theme='dark'] .social-circle-btn:hover { color: #00d2ff; }
+        .social-circle-btn:active { box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.8); transform: translateY(1px); }
 
-        .profile-bio-text {
-            text-align: center;
-            font-size: 1rem;
-            padding: 0 15px;
-            color: #64748b;
-        }
-        
-        .profile-footer-row {
-            flex-direction: column;
-            align-items: center;
-            gap: 25px;
-            padding: 25px 15px 15px 15px;
-            border-top: none;
-            box-shadow: inset 0px 4px 6px -6px rgba(163,177,198,0.4);
-        }
-        
-        .profile-stats-group {
-            justify-content: space-around;
-            width: 100%;
-            gap: 10px;
-        }
-        
-        .stat-val {
-            color: #334155;
-        }
-        
-        /* Extruded Socials */
-        .social-circle-btn {
-            border: none;
-            background: #e0e5ec;
-            box-shadow: 4px 4px 8px rgba(163,177,198,0.5), -4px -4px 8px rgba(255,255,255,0.8);
-            color: #64748b;
-        }
-        .social-circle-btn:active {
-            box-shadow: inset 3px 3px 6px rgba(163,177,198,0.5), inset -3px -3px 6px rgba(255,255,255,0.8);
-        }
-        
         .feed-heading {
             padding-left: 5px;
             font-size: 1.5rem;
@@ -319,6 +256,121 @@
         
         body[data-theme='dark'] .modal-content, body[data-theme='dark'] #oauthPopup { background: #1e293b; border-color: #334155; color: #f8fafc; }
         body[data-theme='dark'] .form-group input, body[data-theme='dark'] .form-group textarea, body[data-theme='dark'] .form-group select { background: #0f172a; border-color: #334155; color: #f8fafc; }
+
+        /* --- PREMIUM NEUMORPHIC SECTIONS --- */
+        .section-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 40px; margin-bottom: 20px; padding-bottom: 10px;
+            border-bottom: 2px solid rgba(163,177,198,0.3);
+        }
+        .section-title {
+            font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 800;
+            color: #334155; margin: 0; text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+        }
+        body[data-theme='dark'] .section-header { border-bottom: 2px solid rgba(15,23,42,0.6); }
+        body[data-theme='dark'] .section-title { color: #f8fafc; text-shadow: 2px 2px 4px rgba(0,0,0,0.5); }
+        .view-all { color: #7c5cff; text-decoration: none; font-weight: 700; font-size: 14px; transition: all 0.3s ease; }
+        .view-all:hover { color: #5b3dcf; text-shadow: 0 0 8px rgba(124,92,255,0.4); }
+        body[data-theme='dark'] .view-all { color: #00d2ff; }
+        body[data-theme='dark'] .view-all:hover { color: #00a8cc; text-shadow: 0 0 8px rgba(0,210,255,0.4); }
+
+        .projects-grid, .blog-list {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 25px; margin-top: 20px;
+        }
+        .post-card.compact {
+            background: #e0e5ec; border-radius: 20px; overflow: hidden;
+            box-shadow: 8px 8px 16px rgba(163,177,198,0.5), -8px -8px 16px rgba(255,255,255,0.8);
+            transition: transform 0.3s ease, box-shadow 0.3s ease; border: none; display: flex; flex-direction: column;
+        }
+        .post-card.compact:hover { transform: translateY(-5px); box-shadow: 12px 12px 20px rgba(163,177,198,0.6), -12px -12px 20px rgba(255,255,255,0.9); }
+        .compact-img-container { width: 100%; height: 180px; overflow: hidden; position: relative; background: #cbd5e1; }
+        .compact-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.5s ease; }
+        .post-card.compact:hover .compact-img { transform: scale(1.05); }
+        .compact-content { padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .compact-title { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 700; color: #334155; margin: 0; line-height: 1.3; }
+        .compact-meta { font-size: 13px; color: #64748b; display: flex; align-items: center; }
+        
+        body[data-theme='dark'] .post-card.compact { background: #1e293b; box-shadow: 6px 6px 12px #0f172a, -6px -6px 12px #334155; }
+        body[data-theme='dark'] .post-card.compact:hover { box-shadow: 8px 8px 16px #0f172a, -8px -8px 16px #334155; }
+        body[data-theme='dark'] .compact-img-container { background: #0f172a; }
+        body[data-theme='dark'] .compact-title { color: #f8fafc; }
+        body[data-theme='dark'] .compact-meta { color: #94a3b8; }
+
+        .newsletter {
+            background: #e0e5ec; border-radius: 24px; padding: 40px; text-align: center; margin-top: 60px; margin-bottom: 40px;
+            box-shadow: inset 6px 6px 12px rgba(163,177,198,0.5), inset -6px -6px 12px rgba(255,255,255,0.8);
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        .newsletter h3 { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 800; color: #334155; margin-bottom: 12px; margin-top: 0; }
+        .newsletter p { color: #64748b; font-size: 15px; margin-bottom: 25px; max-width: 500px; margin-left: auto; margin-right: auto; }
+        .input-group { display: flex; max-width: 450px; margin: 0 auto; gap: 15px; }
+        .input-group input {
+            flex: 1; padding: 14px 20px; border: none; border-radius: 30px; background: #e0e5ec;
+            box-shadow: inset 4px 4px 8px rgba(163,177,198,0.5), inset -4px -4px 8px rgba(255,255,255,0.8);
+            color: #334155; font-size: 15px; outline: none; transition: all 0.3s ease;
+        }
+        .input-group input:focus { box-shadow: inset 6px 6px 12px rgba(163,177,198,0.6), inset -6px -6px 12px rgba(255,255,255,0.9); }
+        .input-group button {
+            padding: 14px 28px; border: none; border-radius: 30px; background: linear-gradient(135deg, #7c5cff, #00d2ff);
+            color: white; font-weight: 700; font-size: 15px; cursor: pointer;
+            box-shadow: 4px 4px 8px rgba(124,92,255,0.3); transition: all 0.3s ease;
+        }
+        .input-group button:hover { transform: translateY(-2px); box-shadow: 6px 6px 12px rgba(124,92,255,0.4); filter: brightness(1.1); }
+        
+        body[data-theme='dark'] .newsletter { background: #1e293b; box-shadow: inset 6px 6px 12px #0f172a, inset -6px -6px 12px #334155; border: 1px solid rgba(255,255,255,0.05); }
+        body[data-theme='dark'] .newsletter h3 { color: #f8fafc; }
+        body[data-theme='dark'] .newsletter p { color: #94a3b8; }
+        body[data-theme='dark'] .input-group input { background: #1e293b; box-shadow: inset 4px 4px 8px #0f172a, inset -4px -4px 8px #334155; color: #f8fafc; }
+        body[data-theme='dark'] .input-group input:focus { box-shadow: inset 6px 6px 12px #0f172a, inset -6px -6px 12px #334155; }
+
+        /* --- PREMIUM TOP NAVBAR --- */
+        .profile-navbar {
+            position: fixed; top: 0; left: 0; right: 0; height: 70px;
+            background: rgba(224, 229, 236, 0.85); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+            display: flex; align-items: center; justify-content: space-between; padding: 0 30px;
+            z-index: 1000; border-bottom: 1px solid rgba(255,255,255,0.4); box-shadow: 0 4px 15px rgba(163,177,198,0.2);
+        }
+        body[data-theme='dark'] .profile-navbar {
+            background: rgba(15, 23, 42, 0.85); border-bottom: 1px solid rgba(255,255,255,0.05); box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        .nav-back-btn {
+            display: flex; align-items: center; gap: 8px; color: #64748b; text-decoration: none; font-weight: 700; font-size: 15px;
+            padding: 10px 20px; border-radius: 30px; background: #e0e5ec;
+            box-shadow: 4px 4px 8px rgba(163,177,198,0.5), -4px -4px 8px rgba(255,255,255,0.8); transition: all 0.3s ease;
+        }
+        .nav-back-btn:hover { color: #7c5cff; box-shadow: 2px 2px 5px rgba(163,177,198,0.5), -2px -2px 5px rgba(255,255,255,0.8); transform: translateY(1px); }
+        body[data-theme='dark'] .nav-back-btn { background: #1e293b; color: #cbd5e1; box-shadow: 4px 4px 8px #0f172a, -4px -4px 8px #334155; }
+        body[data-theme='dark'] .nav-back-btn:hover { color: #00d2ff; box-shadow: 2px 2px 5px #0f172a, -2px -2px 5px #334155; }
+        .nav-brand { font-family: 'Playfair Display', serif; font-size: 22px; font-weight: 800; color: #334155; letter-spacing: 0.5px; }
+        body[data-theme='dark'] .nav-brand { color: #f8fafc; }
+
+        /* --- READER MODAL --- */
+        .reader-overlay {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(224, 229, 236, 0.95); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+            z-index: 3000; overflow-y: auto; padding: 40px 20px;
+        }
+        body[data-theme='dark'] .reader-overlay {
+            background: rgba(15, 23, 42, 0.95);
+        }
+        .reader-content {
+            max-width: 800px; margin: 0 auto; background: #e0e5ec; padding: 40px;
+            border-radius: 20px; box-shadow: 10px 10px 20px rgba(163,177,198,0.5), -10px -10px 20px rgba(255,255,255,0.8);
+            position: relative;
+        }
+        body[data-theme='dark'] .reader-content {
+            background: #1e293b; box-shadow: 10px 10px 20px #0f172a, -10px -10px 20px #334155; color: #f8fafc;
+        }
+        .reader-close {
+            position: absolute; top: 20px; right: 20px; background: transparent; border: none; font-size: 24px;
+            color: #64748b; cursor: pointer; transition: 0.3s;
+        }
+        .reader-close:hover { color: #ef4444; }
+        .reader-title { font-family: 'Playfair Display', serif; font-size: 36px; color: #334155; margin-bottom: 10px; }
+        body[data-theme='dark'] .reader-title { color: #f8fafc; }
+        .reader-meta { color: #94a3b8; font-size: 14px; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid rgba(163,177,198,0.3); }
+        body[data-theme='dark'] .reader-meta { border-bottom: 1px solid rgba(255,255,255,0.1); }
 </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
@@ -329,8 +381,14 @@
 
     <!-- HERO BACKGROUND -->
     
-    <!-- UNIFIED PROFILE UI -->
-    <a href="main" style="position: absolute; top: 20px; left: 20px; z-index: 100; color: #fff; background: rgba(0,0,0,0.3); padding: 8px 15px; border-radius: 20px; text-decoration: none; font-size: 0.9rem; font-weight: 600; backdrop-filter: blur(5px);"><i class="fas fa-arrow-left"></i> Home</a>
+    <!-- PREMIUM TOP NAVIGATION -->
+    <nav class="profile-navbar">
+        <a href="main" class="nav-back-btn">
+            <i class="fas fa-arrow-left"></i> <span>Back to Home</span>
+        </a>
+        <div class="nav-brand">Vylithra Profile</div>
+        <div style="width: 140px;"></div> <!-- Spacer to center the brand -->
+    </nav>
     
     <div class="unified-container">
         
@@ -350,6 +408,8 @@
                     
                     <div class="profile-actions" id="profile-action-container">
                         <button class="btn-edit-profile" id="edit-profile-btn" style="display:none;" onclick="openSettings()"><i class="fas fa-cog"></i> Edit profile</button>
+                        <button class="btn-edit-profile" id="follow-profile-btn" style="display:none;" onclick="toggleFollow()"><i class="fas fa-user-plus"></i> Follow</button>
+                        <button class="btn-share-profile" id="message-profile-btn" style="display:none;" onclick="messageUser()"><i class="fas fa-envelope"></i> Message</button>
                         <button class="btn-share-profile" id="profile-share-btn"><i class="fas fa-share-alt"></i> Share</button>
                     </div>
                 </div>
@@ -358,11 +418,11 @@
                 
                 <div class="profile-footer-row">
                     <div class="profile-stats-group" id="profile-stats">
-                        <div class="stat-item" onclick="openFollowModal('followers', '')">
+                        <div class="stat-item" id="followers-stat-btn">
                             <span class="stat-val" id="profile-followers-count">0</span>
                             <span class="stat-label">Followers</span>
                         </div>
-                        <div class="stat-item" onclick="openFollowModal('following', '')">
+                        <div class="stat-item" id="following-stat-btn">
                             <span class="stat-val" id="profile-following-count">0</span>
                             <span class="stat-label">Following</span>
                         </div>
@@ -383,46 +443,6 @@
 
         <!-- RIGHT CONTENT (NOW BOTTOM CONTENT) -->
         <main class="feed" style="width: 100%; max-width: 100%;">
-            <h2 class="feed-heading" id="spreads-title">Recent spreads</h2>
-
-            <!-- Projects Section -->
-            <section id="projects-section" style="display: none; background: var(--surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; margin-top: 20px;">
-                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                    <h2 class="section-title" style="font-size: 1.25rem;">Projects</h2>
-                    <button class="auth-btn btn-sm" id="add-project-btn" style="display:none; width: auto;" onclick="openModal('projectModal')"><i class="fas fa-plus"></i> Add Project</button>
-                </div>
-                <div id="projects-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px;">
-                    <!-- Projects injected here -->
-                </div>
-            </section>
-
-            <!-- Interests Section -->
-            <section id="interests-section" style="display: none; background: var(--surface); padding: 25px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 25px; margin-top: 20px;">
-                <div class="section-header">
-                    <h2 class="section-title" style="font-size: 1.25rem;">Interests</h2>
-                </div>
-                <div id="interests-list" style="display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px;">
-                    <!-- Interests injected here -->
-                </div>
-            </section>
-
-            <!-- POSTS CONTAINER -->
-            <div id="posts-container" style="margin-top: 20px; width: 100%;"></div>
-
-
-
-            <!-- SETTINGS MODAL REMOVED - NOW A DEDICATED PAGE -->
-
-            <!-- Connections Section -->
-            <section id="connections-section" style="display: none; background: var(--surface); padding: 25px; border-radius: var(--border-radius); border: 1px solid var(--border); box-shadow: var(--shadow); margin-bottom: 25px;">
-                <div class="section-header">
-                    <h2 class="section-title">Network</h2>
-                </div>
-                <div id="connections-list" style="display: flex; flex-direction: column; gap: 15px;">
-                    <!-- Connection items injected here -->
-                </div>
-            </section>
-
             <!-- Simulated OAuth Overlay -->
             <div id="oauthOverlay"></div>
             <div id="oauthPopup">
@@ -618,159 +638,61 @@
                         if (!user.email) fetchMeData();
                     }
 
-                    // Add Connect/Share Button
-                    const authSection = document.getElementById('auth-section');
-                    // Existing auth buttons are cleared by updateAuthUI, but let's inject our profile specific actions here or in the profile card
-
-                    // Let's add it below social links
-                    const existingActionContainer = document.getElementById('profile-action-container');
-                    if (existingActionContainer) existingActionContainer.remove();
-
-                    const actionContainer = document.createElement('div');
-                    actionContainer.id = 'profile-action-container';
-                    actionContainer.style.width = '100%';
-                    actionContainer.style.marginTop = '15px';
-
-                    const actionBtn = document.createElement('button');
-                    actionBtn.id = 'profile-action-btn';
-                    actionBtn.className = 'form-btn';
-                    actionBtn.style.width = '100%';
-
+                    // Update Action Buttons Visibility
+                    const editBtn = document.getElementById('edit-profile-btn');
+                    const followBtn = document.getElementById('follow-profile-btn');
+                    const msgBtn = document.getElementById('message-profile-btn');
+                    const shareBtn = document.getElementById('profile-share-btn');
+                    
                     if (user.isMe) {
-                        actionBtn.innerHTML = '<i class="fas fa-share-alt"></i> Share Profile';
-                        actionBtn.onclick = () => {
+                        if (editBtn) editBtn.style.display = 'flex';
+                        if (followBtn) followBtn.style.display = 'none';
+                        if (msgBtn) msgBtn.style.display = 'none';
+                    } else {
+                        if (editBtn) editBtn.style.display = 'none';
+                        if (followBtn) followBtn.style.display = 'flex';
+                        if (msgBtn) msgBtn.style.display = 'flex';
+                        
+                        // Set up Message routing
+                        if (msgBtn) {
+                            msgBtn.onclick = () => {
+                                window.location.href = 'messages.html?user=' + user._id;
+                            };
+                        }
+                        
+                        // Set up Follow state logic
+                        window.currentProfileId = user._id;
+                        window.isConnected = false;
+                        
+                        const loadConnectionState = async () => {
+                            const token = localStorage.getItem('token');
+                            if (!token) return;
+                            try {
+                                const res = await fetch(`${API_URL}/users/me/following`, { headers: { 'x-auth-token': token } });
+                                if (res.ok) {
+                                    const following = await res.json();
+                                    window.isConnected = following.some(c => c._id === user._id);
+                                    updateFollowUI();
+                                }
+                            } catch (e) { console.error(e); }
+                        };
+                        
+                        loadConnectionState();
+                    // Bind stat clicks
+                    const fBtn = document.getElementById('followers-stat-btn');
+                    const followingBtn = document.getElementById('following-stat-btn');
+                    if (fBtn) fBtn.onclick = () => openFollowModal('followers', user._id || myId);
+                    if (followingBtn) followingBtn.onclick = () => openFollowModal('following', user._id || myId);
+                    }
+                    
+                    if (shareBtn) {
+                        shareBtn.onclick = () => {
                             const url = window.location.href.split('?')[0] + '?user=' + (user._id || '');
                             navigator.clipboard.writeText(url).then(() => {
                                 VylithraUI.showToast('Profile link copied to clipboard!', 'success');
                             });
                         };
-                        actionBtn.style.background = 'var(--surface)';
-                        actionBtn.style.color = 'var(--accent)';
-                        actionBtn.style.border = '1px solid var(--border)';
-                        actionBtn.style.fontWeight = '600';
-                        actionBtn.onmouseover = () => {
-                            actionBtn.style.background = 'var(--accent)';
-                            actionBtn.style.color = 'white';
-                        };
-                        actionBtn.onmouseout = () => {
-                            actionBtn.style.background = 'var(--surface)';
-                            actionBtn.style.color = 'var(--accent)';
-                        };
-                        actionContainer.appendChild(actionBtn);
-                    } else {
-                        // Real Connect Functionality
-                        const token = localStorage.getItem('token');
-                        let isConnected = false;
-
-                        // Check if current user is following this profile
-                        const loadConnectionState = async () => {
-                            if (!token) return;
-                            try {
-                                const res = await fetch(`${API_URL}/users/me/following`, {
-                                    headers: { 'x-auth-token': token }
-                                });
-                                if (res.ok) {
-                                    const following = await res.json();
-                                    isConnected = following.some(c => c._id === user._id);
-                                    updateBtnUI();
-                                }
-                            } catch (e) {
-                                console.error('Error fetching following:', e);
-                            }
-                        };
-
-                        const updateBtnUI = () => {
-                            if (isConnected) {
-                                actionBtn.innerHTML = '<i class="fas fa-user-check"></i> Following';
-                                actionBtn.style.background = '#10b981'; // Green to show success
-                                actionBtn.style.color = '#fff';
-                                actionBtn.style.border = 'none';
-                            } else {
-                                actionBtn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
-                                actionBtn.style.background = '#f43f5e';
-                                actionBtn.style.color = '#fff';
-                                actionBtn.style.border = 'none';
-                            }
-                        };
-
-                        // Initial State Render
-                        updateBtnUI();
-                        loadConnectionState(); // Pull live state asynchronously
-                        actionBtn.onclick = async () => {
-                            if (!token) {
-                                VylithraUI.showToast('Please login to follow users!', 'error');
-                                setTimeout(() => window.location.href = 'auth', 1500);
-                                return;
-                            }
-
-                            if (actionBtn.disabled) return;
-                            actionBtn.disabled = true;
-
-                            const method = isConnected ? 'DELETE' : 'POST';
-                            const url = isConnected ? `${API_URL}/users/${user._id}/unfollow` : `${API_URL}/users/${user._id}/follow`;
-
-                            // Optimistic UI update
-                            isConnected = !isConnected;
-                            updateBtnUI();
-
-                            try {
-                                const res = await fetch(url, {
-                                    method: method,
-                                    headers: { 'x-auth-token': token }
-                                });
-
-                                if (!res.ok) {
-                                    throw new Error('Follow action failed');
-                                } else {
-                                    // Update counter locally if we just clicked it
-                                    const flwCountEl = document.getElementById('profile-followers-count');
-                                    if(flwCountEl) {
-                                        let c = parseInt(flwCountEl.innerText) || 0;
-                                        flwCountEl.innerText = isConnected ? c + 1 : Math.max(0, c - 1);
-                                    }
-                                }
-                            } catch (e) {
-                                console.error('Follow action error:', e);
-                                // Revert optimistic update on failure
-                                isConnected = !isConnected;
-                                updateBtnUI();
-                                VylithraUI.showToast('An error occurred while following user.', 'error');
-                            } finally {
-                                actionBtn.disabled = false;
-                            }
-                        };
-                        actionContainer.appendChild(actionBtn);
-
-                        // Messages Button underneath Connect
-                        const msgBtn = document.createElement('a');
-                        msgBtn.id = 'profile-msg-btn';
-                        msgBtn.href = `messages.html?user=${user._id}`;
-                        msgBtn.className = 'form-btn';
-                        msgBtn.style.marginTop = '15px';
-                        msgBtn.style.display = 'block';
-                        msgBtn.style.textAlign = 'center';
-                        msgBtn.style.textDecoration = 'none';
-                        msgBtn.style.background = '#fff1f2';
-                        msgBtn.style.color = '#be123c';
-                        msgBtn.style.border = '1px solid #fecdd3';
-                        msgBtn.innerHTML = '<i class="fa-regular fa-envelope"></i> Messages';
-
-                        // Hover interactions to match button
-                        msgBtn.onmouseover = () => msgBtn.style.background = '#ffe4e6';
-                        msgBtn.onmouseout = () => msgBtn.style.background = '#fff1f2';
-
-                        actionContainer.appendChild(msgBtn);
                     }
-
-                    // Append to profile card
-                    const profileCard = document.querySelector('.profile-card');
-                    // Insert before auth-buttons if exists, or at end
-                    if (authSection) {
-                        profileCard.insertBefore(actionContainer, authSection);
-                    } else {
-                        profileCard.appendChild(actionContainer);
-                    }
-
                     // Render Projects
                     const isMyProfile = user.isMe;
                     renderProjects(user.projects || [], isMyProfile);
@@ -1093,6 +1015,7 @@
 
                 <div class="projects-grid" id="projects-grid">
                     <!-- Projects injected via JS -->
+                </div>
             </section>
 
 
@@ -1710,6 +1633,69 @@
         }
 
         async function openFollowModal(type, targetUserId) {
+
+                function updateFollowUI() {
+                    const btn = document.getElementById('follow-profile-btn');
+                    if (!btn) return;
+                    if (window.isConnected) {
+                        btn.innerHTML = '<i class="fas fa-user-check"></i> Following';
+                        btn.style.background = '#10b981';
+                        btn.style.color = '#fff';
+                        btn.style.border = 'none';
+                    } else {
+                        btn.innerHTML = '<i class="fas fa-user-plus"></i> Follow';
+                        btn.style.background = 'var(--surface)';
+                        btn.style.color = 'var(--text)';
+                        btn.style.border = '1px solid var(--border)';
+                    }
+                }
+
+                async function toggleFollow() {
+                    const token = localStorage.getItem('token');
+                    if (!token) {
+                        VylithraUI.showToast('Please login to follow users!', 'error');
+                        setTimeout(() => window.location.href = 'auth', 1500);
+                        return;
+                    }
+
+                    const btn = document.getElementById('follow-profile-btn');
+                    if (btn.disabled) return;
+                    btn.disabled = true;
+
+                    const method = window.isConnected ? 'DELETE' : 'POST';
+                    const url = window.isConnected ? `${API_URL}/users/${window.currentProfileId}/unfollow` : `${API_URL}/users/${window.currentProfileId}/follow`;
+
+                    // Optimistic update
+                    window.isConnected = !window.isConnected;
+                    updateFollowUI();
+
+                    try {
+                        const res = await fetch(url, {
+                            method: method,
+                            headers: { 'x-auth-token': token }
+                        });
+
+                        if (!res.ok) throw new Error('Action failed');
+
+                        // Update stats
+                        const fCountEl = document.getElementById('profile-followers-count');
+                        if (fCountEl) {
+                            let c = parseInt(fCountEl.innerText) || 0;
+                            fCountEl.innerText = window.isConnected ? c + 1 : Math.max(0, c - 1);
+                        }
+                    } catch (e) {
+                        window.isConnected = !window.isConnected;
+                        updateFollowUI();
+                        VylithraUI.showToast('Error following user', 'error');
+                    } finally {
+                        btn.disabled = false;
+                    }
+                }
+
+                function closeFollowModal() {
+                    document.getElementById('followListModal').style.display = 'none';
+                }
+
             const modal = document.getElementById('followListModal');
             const title = document.getElementById('followModalTitle');
             const list = document.getElementById('followModalList');
@@ -1839,6 +1825,16 @@
         </a>
     </nav>
 
+    <!-- FOLLOW LIST MODAL -->
+    <div id="followListModal" class="reader-overlay">
+        <div class="reader-content" style="max-width: 500px; max-height: 80vh; display: flex; flex-direction: column;">
+            <button class="reader-close" onclick="closeFollowModal()"><i class="fas fa-times"></i></button>
+            <h2 id="followModalTitle" class="section-title" style="text-align: center; margin-bottom: 20px;">Loading...</h2>
+            <div id="followModalList" style="overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                <!-- Users injected here -->
+            </div>
+        </div>
+    </div>
 </body>
 
 </html>

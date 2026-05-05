@@ -67,7 +67,34 @@ class ApiService {
       throw Exception(errorMessage);
     }
   }
+  Future<dynamic> delete(String endpoint) async {
+    try {
+      final response = await http.delete(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection or server IP.');
+    }
+  }
 
+  Future<dynamic> toggleFollow(String userId, bool currentlyFollowing) async {
+    final endpoint = currentlyFollowing ? '/api/users/$userId/unfollow' : '/api/users/$userId/follow';
+    if (currentlyFollowing) {
+        return await delete(endpoint);
+    } else {
+        return await post(endpoint, {});
+    }
+  }
+
+  Future<List<dynamic>> getFollowers(String userId) async {
+    return await get('/api/users/$userId/followers');
+  }
+
+  Future<List<dynamic>> getFollowing(String userId) async {
+    return await get('/api/users/$userId/following');
+  }
   Future<List<Post>> fetchPosts() async {
     final List<dynamic> data = await get('/api/posts');
     return data.map((json) => Post.fromJson(json)).toList();

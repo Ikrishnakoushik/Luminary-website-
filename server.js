@@ -962,7 +962,7 @@ app.post('/api/auth/reset-password', async (req, res) => {
         }
 
         const user = await User.findOne({
-            email,
+            email: email.toLowerCase(),
             resetPasswordOtp: otp,
             resetPasswordExpires: { $gt: Date.now() } // Check if not expired
         });
@@ -976,9 +976,10 @@ app.post('/api/auth/reset-password', async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
 
-        // Clear OTP fields
+        // Clear OTP fields and invalidate all active sessions
         user.resetPasswordOtp = undefined;
         user.resetPasswordExpires = undefined;
+        user.activeSessions = [];
         await user.save();
 
         res.json({ msg: 'Password reset successful. Please login.' });
@@ -1031,7 +1032,7 @@ app.post('/api/login', async (req, res) => {
         const { email, password, totpCode } = req.body;
 
         // Check if user exists
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email.toLowerCase() });
         if (!user) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
@@ -1319,9 +1320,10 @@ app.put('/api/users/password', auth, async (req, res) => {
             return res.status(400).json({ msg: 'Incorrect current password' });
         }
 
-        // Hash new password
+        // Hash new password and invalidate active sessions
         const salt = await bcrypt.genSalt(10);
         user.password = await bcrypt.hash(newPassword, salt);
+        user.activeSessions = [];
         await user.save();
 
         res.json({ msg: 'Password updated successfully' });
