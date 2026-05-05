@@ -126,7 +126,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   borderRadius: BorderRadius.circular(30),
                   borderSide: BorderSide.none,
                 ),
-                contentPadding: const EdgeInsets.symmetric(vertical: 0),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14), // FIXED PADDING
               ),
             ),
           ),
@@ -165,8 +165,14 @@ class _MessagesScreenState extends State<MessagesScreen> {
                 : null,
           ),
           title: Text(user['displayName'] ?? user['username'] ?? 'User', style: TextStyle(color: isDark ? Colors.white : Colors.black)),
-          subtitle: Text('@${user['username']}', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
-          onTap: () => _navigateToChat(user['_id'], user['displayName'] ?? user['username']),
+          subtitle: Text('@${user['username'] ?? 'unknown'}', style: TextStyle(color: isDark ? Colors.white54 : Colors.black54)),
+          onTap: () {
+             final String uid = user['_id'] ?? '';
+             final String uname = user['displayName'] ?? user['username'] ?? 'User';
+             if (uid.isNotEmpty) {
+               _navigateToChat(uid, uname);
+             }
+          },
         );
       },
     );

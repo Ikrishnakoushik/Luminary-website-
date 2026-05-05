@@ -9,6 +9,11 @@ import 'profile_screen.dart';
 import 'create_post_screen.dart';
 import 'create_reel_screen.dart';
 import 'reels_camera_screen.dart';
+import '../services/webrtc_service.dart';
+import 'call_screen.dart';
+import 'dart:convert';
+import 'package:provider/provider.dart';
+import '../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -21,11 +26,57 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late Future<List<Post>> _postsFuture;
   final ApiService _apiService = ApiService();
+  late WebRTCService _webrtcService;
 
   @override
   void initState() {
     super.initState();
     _postsFuture = _apiService.fetchPosts();
+    _initWebRTC();
+  }
+
+  void _initWebRTC() {
+    _webrtcService = WebRTCService();
+    final auth = Provider.of<AuthProvider>(context, listen: false);
+    final token = auth.token;
+    if (token != null) {
+      try {
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+          final data = jsonDecode(payload);
+          final userId = data['user']?['id'];
+          if (userId != null) {
+            _webrtcService.initialize(userId);
+            _webrtcService.onIncomingCall = (incomingData) {
+              if (mounted) {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => CallScreen(
+                      webrtcService: _webrtcService,
+                      isIncoming: true,
+                      targetUserId: incomingData['from'],
+                      targetUsername: 'Incoming Call',
+                      isVideoCall: incomingData['isVideo'] ?? false,
+                      incomingData: incomingData,
+                    ),
+                  ),
+                );
+              }
+            };
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    _webrtcService.dispose();
+    super.dispose();
   }
 
   Future<void> _refreshPosts() async {
@@ -68,13 +119,14 @@ class _HomeScreenState extends State<HomeScreen> {
             ],
           ),
 
-          // Custom Edge-to-Edge Glass Header Overlay
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _buildGlassHeader(isDark),
-          ),
+          // Custom Edge-to-Edge Glass Header Overlay (Only on Home tab)
+          if (_currentIndex == 0)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _buildGlassHeader(isDark),
+            ),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(isDark),
@@ -93,7 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
             right: 20,
           ),
           decoration: BoxDecoration(
-            color: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.5),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDark 
+                ? [Colors.black.withValues(alpha: 0.4), Colors.black.withValues(alpha: 0.1)] 
+                : [Colors.white.withValues(alpha: 0.6), Colors.white.withValues(alpha: 0.2)],
+            ),
             border: Border(
               bottom: BorderSide(
                 color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),

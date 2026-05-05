@@ -3,8 +3,12 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:socket_io_client/socket_io_client.dart' as io_client;
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
 import '../services/api_service.dart';
+import '../services/webrtc_service.dart';
 import '../providers/auth_provider.dart';
+import 'call_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String targetUserId;
@@ -154,6 +158,87 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _pickAndUploadMedia(bool isVideo) async {
+    final picker = ImagePicker();
+    final XFile? pickedFile = isVideo 
+        ? await picker.pickVideo(source: ImageSource.gallery) 
+        : await picker.pickImage(source: ImageSource.gallery);
+        
+    if (pickedFile == null || _currentUserId == null) return;
+
+    File file = File(pickedFile.path);
+    
+    // Show uploading indicator (optimistic ui with a loader)
+    final optimisticMsg = {
+      '_id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'sender': {'_id': _currentUserId},
+      'content': 'Uploading media...',
+      'createdAt': DateTime.now().toIso8601String(),
+    };
+    
+    setState(() => _messages.add(optimisticMsg));
+    _scrollToBottom();
+
+    try {
+      final uploadRes = await _apiService.uploadFile('/api/messages/upload', file);
+      final fileUrl = uploadRes['fileUrl']; 
+      
+      if (fileUrl == null) throw Exception("Failed to get file URL from server.");
+
+      final savedMsg = await _apiService.post('/api/messages/${widget.targetUserId}', {
+        'content': isVideo ? 'Sent a video' : 'Sent an image',
+        'attachmentUrl': fileUrl,
+        'attachmentType': isVideo ? 'video' : 'image',
+      });
+      
+      setState(() {
+        final index = _messages.indexWhere((m) => m['_id'] == optimisticMsg['_id']);
+        if (index != -1) _messages[index] = savedMsg;
+      });
+    } catch (e) {
+      setState(() => _messages.removeWhere((m) => m['_id'] == optimisticMsg['_id']));
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+    }
+  }
+
+  void _showAttachmentMenu() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        return Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.image, color: Colors.blue),
+                title: Text('Image', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadMedia(false);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam, color: Colors.red),
+                title: Text('Video', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadMedia(true);
+                },
+              ),
+            ],
+          ),
+        );
+      }
+    );
+  }
+
   @override
   void dispose() {
     socket.disconnect();
@@ -179,6 +264,42 @@ class _ChatScreenState extends State<ChatScreen> {
         ),
         title: Text(widget.targetUsername, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.phone),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CallScreen(
+                    webrtcService: WebRTCService(),
+                    isIncoming: false,
+                    targetUserId: widget.targetUserId,
+                    targetUsername: widget.targetUsername,
+                    isVideoCall: false,
+                  ),
+                ),
+              );
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.videocam),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => CallScreen(
+                    webrtcService: WebRTCService(),
+                    isIncoming: false,
+                    targetUserId: widget.targetUserId,
+                    targetUsername: widget.targetUsername,
+                    isVideoCall: true,
+                  ),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Container(
         decoration: BoxDecoration(
@@ -224,12 +345,36 @@ class _ChatScreenState extends State<ChatScreen> {
                                 bottomLeft: !isMe ? const Radius.circular(0) : null,
                               ),
                             ),
-                            child: Text(
-                              msg['content'] ?? '',
-                              style: TextStyle(
-                                color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
-                                fontSize: 16,
-                              ),
+                            child: Column(
+                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                              children: [
+                                if (msg['attachmentUrl'] != null && msg['attachmentUrl'].toString().isNotEmpty)
+                                  Container(
+                                    margin: const EdgeInsets.only(bottom: 8),
+                                    child: msg['attachmentType'] == 'image'
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(12),
+                                          child: Image.network(
+                                            msg['attachmentUrl'], 
+                                            width: 200, 
+                                            height: 200, 
+                                            fit: BoxFit.cover,
+                                          )
+                                        )
+                                      : Container(
+                                          width: 200, height: 100,
+                                          decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
+                                          child: const Center(child: Icon(Icons.play_circle_fill, size: 50, color: Colors.white)),
+                                        ),
+                                  ),
+                                Text(
+                                  msg['content'] ?? '',
+                                  style: TextStyle(
+                                    color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
@@ -252,6 +397,10 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               child: Row(
                 children: [
+                  IconButton(
+                    icon: Icon(Icons.add_circle_outline, color: isDark ? Colors.white54 : Colors.black54),
+                    onPressed: _showAttachmentMenu,
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _messageController,

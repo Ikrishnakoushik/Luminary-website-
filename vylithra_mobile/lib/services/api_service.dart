@@ -72,4 +72,26 @@ class ApiService {
     final List<dynamic> data = await get('/api/posts');
     return data.map((json) => Post.fromJson(json)).toList();
   }
+
+  Future<dynamic> uploadFile(String endpoint, File file) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl$endpoint'));
+      
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+        request.headers['x-auth-token'] = token;
+      }
+
+      request.files.add(await http.MultipartFile.fromPath('file', file.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection.');
+    }
+  }
 }
