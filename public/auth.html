@@ -906,10 +906,6 @@
 
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
-        // ----------------------------------------
-        // Form submissions (cloned from auth.html)
-        // ----------------------------------------
-        
         let pendingLoginEmail = '';
         let pendingLoginPassword = '';
 
@@ -927,34 +923,37 @@
             submitBtn.disabled = true;
 
             try {
-                // 1. Native Firebase Login
-                const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-                const idToken = await userCredential.user.getIdToken();
-
-                // 2. Hybrid Backend Bridge
-                const res = await fetch(`${API_URL}/auth/sync`, {
+                const res = await fetch(`${API_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken })
+                    body: JSON.stringify({ email, password })
                 });
                 
                 const data = await res.json();
                 
                 if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('role', data.role);
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/main';
+                    if (data.requires2FA) {
+                        pendingLoginEmail = email;
+                        pendingLoginPassword = password;
+                        switchTab('twofa');
+                    } else {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('role', data.role);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        window.location.href = '/main';
+                    }
                 } else {
-                    errorMsg.innerText = data.msg || 'Backend synchronization failed';
+                    if (data.requiresVerification) {
+                        pendingLoginEmail = email;
+                        document.getElementById('verifyEmailDisplay').innerText = email;
+                        switchTab('verify');
+                    } else {
+                        errorMsg.innerText = data.msg || 'Invalid email or password.';
+                    }
                 }
             } catch (err) {
                 console.error(err);
-                if (err.code === 'auth/invalid-credential' || err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-                    errorMsg.innerText = 'Invalid email or password.';
-                } else {
-                    errorMsg.innerText = err.message || 'Authentication error.';
-                }
+                errorMsg.innerText = 'Authentication error or server is down.';
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -962,7 +961,6 @@
         });
 
         // Handle Registration
-        let registrationEmail = '';
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const displayName = document.getElementById('regUsername').value;
@@ -978,40 +976,61 @@
             submitBtn.disabled = true;
 
             try {
-                // 1. Native Firebase Registration
-                const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                
-                // Append display name immediately so sync bridge can catch it
-                await userCredential.user.updateProfile({ displayName: displayName });
-
-                const idToken = await userCredential.user.getIdToken();
-
-                // 2. Hybrid Backend Bridge (Explicitly assign role request)
-                const res = await fetch(`${API_URL}/auth/sync`, {
+                const res = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ idToken, requestedRole: role })
+                    body: JSON.stringify({ email, password, displayName, role })
                 });
 
                 const data = await res.json();
                 
+                if (res.ok) {
+                    pendingLoginEmail = email;
+                    document.getElementById('verifyEmailDisplay').innerText = email;
+                    switchTab('verify');
+                } else {
+                    errorMsg.innerText = data.msg || 'Registration failed';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.innerText = 'Registration error or server is down.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Verify Email Submit
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otpCode = document.getElementById('verifyOtp').value;
+            const errorMsg = document.getElementById('verifyError');
+            errorMsg.innerText = '';
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Verifying...';
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingLoginEmail, otp: otpCode })
+                });
+                const data = await res.json();
+
                 if (res.ok) {
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('role', data.role);
                     localStorage.setItem('user', JSON.stringify(data.user));
                     window.location.href = '/main';
                 } else {
-                    errorMsg.innerText = data.msg || 'Backend registration failed';
+                    errorMsg.innerText = data.msg || 'Invalid code.';
                 }
             } catch (err) {
                 console.error(err);
-                if (err.code === 'auth/email-already-in-use') {
-                    errorMsg.innerText = 'Email already registered. Try signing in.';
-                } else if (err.code === 'auth/weak-password') {
-                    errorMsg.innerText = 'Password should be at least 6 characters.';
-                } else {
-                    errorMsg.innerText = err.message || 'Registration error.';
-                }
+                errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
             } finally {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -1044,6 +1063,91 @@
             } catch (err) {
                 console.error(err);
                 errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            }
+        });
+
+        // Handle Forgot Password - Step 1 (Send OTP)
+        document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value;
+            const errorMsg = document.getElementById('forgotError1');
+            const submitBtn = document.getElementById('btnSendOtp');
+            errorMsg.innerText = '';
+            
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Sending...';
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    errorMsg.className = "success-message";
+                    errorMsg.innerText = "OTP sent to your email!";
+                    setTimeout(() => {
+                        document.getElementById('forgotFormStep1').style.display = 'none';
+                        document.getElementById('forgotFormStep2').style.display = 'block';
+                    }, 1500);
+                } else {
+                    errorMsg.className = "error-message";
+                    errorMsg.innerText = data.msg || 'Failed to send OTP.';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.className = "error-message";
+                errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Handle Forgot Password - Step 2 (Reset Password)
+        document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('forgotEmail').value; // from step 1
+            const otp = document.getElementById('forgotOtp').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const errorMsg = document.getElementById('forgotError2');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            errorMsg.innerText = '';
+
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Resetting...';
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/auth/reset-password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp, newPassword })
+                });
+                
+                const data = await res.json();
+                
+                if (res.ok) {
+                    errorMsg.className = "success-message";
+                    errorMsg.innerText = "Password reset successful! You can now sign in.";
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 2000);
+                } else {
+                    errorMsg.className = "error-message";
+                    errorMsg.innerText = data.msg || 'Failed to reset password.';
+                }
+            } catch (err) {
+                console.error(err);
+                errorMsg.className = "error-message";
+                errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
