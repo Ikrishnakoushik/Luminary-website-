@@ -158,11 +158,24 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  Future<void> _logCall(bool isVideo) async {
+    try {
+      final savedMsg = await _apiService.post('/api/messages/${widget.targetUserId}', {
+        'content': isVideo ? 'Video Call' : 'Voice Call',
+        'attachmentType': 'call',
+      });
+      setState(() => _messages.add(savedMsg));
+      _scrollToBottom();
+    } catch (e) {
+      debugPrint('Failed to log call: $e');
+    }
+  }
+
   Future<void> _pickAndUploadMedia(bool isVideo) async {
     final picker = ImagePicker();
     final XFile? pickedFile = isVideo 
         ? await picker.pickVideo(source: ImageSource.gallery) 
-        : await picker.pickImage(source: ImageSource.gallery);
+        : await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
         
     if (pickedFile == null || _currentUserId == null) return;
 
@@ -181,7 +194,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
     try {
       final uploadRes = await _apiService.uploadFile('/api/messages/upload', file);
-      final fileUrl = uploadRes['fileUrl']; 
+      final fileUrl = uploadRes['url'] ?? uploadRes['fileUrl']; 
       
       if (fileUrl == null) throw Exception("Failed to get file URL from server.");
 
@@ -268,6 +281,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.phone),
             onPressed: () {
+              _logCall(false);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -285,6 +299,7 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.videocam),
             onPressed: () {
+              _logCall(true);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -348,32 +363,54 @@ class _ChatScreenState extends State<ChatScreen> {
                             child: Column(
                               crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
                               children: [
-                                if (msg['attachmentUrl'] != null && msg['attachmentUrl'].toString().isNotEmpty)
-                                  Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    child: msg['attachmentType'] == 'image'
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(12),
-                                          child: Image.network(
-                                            msg['attachmentUrl'], 
-                                            width: 200, 
-                                            height: 200, 
-                                            fit: BoxFit.cover,
-                                          )
-                                        )
-                                      : Container(
-                                          width: 200, height: 100,
-                                          decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
-                                          child: const Center(child: Icon(Icons.play_circle_fill, size: 50, color: Colors.white)),
+                                if (msg['attachmentType'] == 'call')
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        msg['content'] == 'Video Call' ? Icons.videocam : Icons.phone,
+                                        color: isMe ? Colors.white : const Color(0xFF3B82F6),
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        msg['content'] ?? '',
+                                        style: TextStyle(
+                                          color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
                                         ),
+                                      ),
+                                    ],
+                                  )
+                                else ...[
+                                  if (msg['attachmentUrl'] != null && msg['attachmentUrl'].toString().isNotEmpty)
+                                    Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      child: msg['attachmentType'] == 'image'
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: Image.network(
+                                              msg['attachmentUrl'], 
+                                              width: 200, 
+                                              height: 200, 
+                                              fit: BoxFit.cover,
+                                            )
+                                          )
+                                        : Container(
+                                            width: 200, height: 100,
+                                            decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
+                                            child: const Center(child: Icon(Icons.play_circle_fill, size: 50, color: Colors.white)),
+                                          ),
+                                    ),
+                                  Text(
+                                    msg['content'] ?? '',
+                                    style: TextStyle(
+                                      color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                      fontSize: 16,
+                                    ),
                                   ),
-                                Text(
-                                  msg['content'] ?? '',
-                                  style: TextStyle(
-                                    color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
-                                    fontSize: 16,
-                                  ),
-                                ),
+                                ],
                               ],
                             ),
                           ),

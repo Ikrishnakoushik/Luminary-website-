@@ -393,7 +393,7 @@ const storage = multer.memoryStorage();
 const upload = multer({
     storage: storage,
     limits: {
-        fileSize: 5000000, // 5MB limit for files
+        fileSize: 50000000, // 50MB limit for files
         fieldSize: 25 * 1024 * 1024 // 25MB limit for text fields (allows full book manuscripts)
     },
     fileFilter: function (req, file, cb) {
@@ -1334,6 +1334,22 @@ app.put('/api/users/password', auth, async (req, res) => {
 });
 
 // Update Preferences
+// Update FCM Token
+app.put('/api/users/fcm-token', auth, async (req, res) => {
+    try {
+        const { fcmToken } = req.body;
+        if (!fcmToken) {
+            return res.status(400).json({ msg: 'FCM Token is required' });
+        }
+        
+        await User.findByIdAndUpdate(req.user.id, { fcmToken });
+        res.json({ msg: 'FCM Token updated successfully' });
+    } catch (err) {
+        console.error('FCM Token Update Error:', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 app.put('/api/users/preferences', auth, async (req, res) => {
     try {
         const { preferences } = req.body;
@@ -1687,6 +1703,15 @@ app.get('/ping', (req, res) => {
 app.use((err, req, res, next) => {
     console.error('Unhandled Error:', err);
     res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+});
+
+// --- APP METADATA API ---
+app.get('/api/app/version', (req, res) => {
+    res.json({
+        latestVersion: '1.0.1',
+        apkUrl: 'https://vylithra.onrender.com/app-release.apk',
+        updateMessage: 'A new version of Vylithra is available! Please update for bug fixes and new features.'
+    });
 });
 
 // --- MESSAGES API ---
@@ -2884,6 +2909,48 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
         if (io) {
             io.to(receiver).emit('new_message', savedMessage);
             io.to(sender).emit('new_message', savedMessage);
+        }
+
+        // Dispatch FCM Push Notification
+        try {
+            const targetUser = await User.findById(receiver);
+            if (targetUser && targetUser.fcmToken) {
+                const isCall = attachmentType === 'call';
+                const messagePayload = {
+                    token: targetUser.fcmToken,
+                    data: {
+                        type: isCall ? 'call' : 'chat',
+                        senderId: sender,
+                        senderName: savedMessage.sender.displayName || savedMessage.sender.username,
+                        content: isCall ? 'Incoming Call' : savedMessage.content,
+                        // CallKit specifically looks for these keys
+                        uuid: savedMessage._id.toString(),
+                        callerName: savedMessage.sender.displayName || savedMessage.sender.username,
+                        hasVideo: content.includes('Video').toString() // e.g. "🎥 Video Call"
+                    },
+                    // We only show a standard notification if it's NOT a call, 
+                    // because calls are handled entirely by CallKit in the background data handler.
+                    ...(isCall ? {} : {
+                        notification: {
+                            title: savedMessage.sender.displayName || savedMessage.sender.username,
+                            body: savedMessage.content
+                        }
+                    }),
+                    android: {
+                        priority: 'high'
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                'content-available': 1
+                            }
+                        }
+                    }
+                };
+                await admin.messaging().send(messagePayload);
+            }
+        } catch (fcmErr) {
+            console.error('FCM Dispatch Error:', fcmErr.message);
         }
         res.json(savedMessage);
     } catch (err) {

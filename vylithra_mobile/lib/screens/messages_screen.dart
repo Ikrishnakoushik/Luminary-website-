@@ -191,7 +191,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
       itemCount: _conversations.length,
       itemBuilder: (context, index) {
         final chat = _conversations[index];
-        final user = chat['withUser'] ?? {};
+        final user = chat['user'] ?? chat['withUser'] ?? {};
         final username = user['displayName'] ?? user['username'] ?? 'Unknown User';
         final lastMsg = chat['lastMessage'] ?? '...';
         final userId = user['_id'];

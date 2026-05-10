@@ -1,24 +1,44 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/api_service.dart';
 
 class AuthProvider with ChangeNotifier {
   bool _isAuthenticated = false;
+  bool _isInitialized = false;
   String? _vylithraToken;
   final ApiService _apiService = ApiService();
 
   bool get isAuthenticated => _isAuthenticated;
+  bool get isInitialized => _isInitialized;
   String? get token => _vylithraToken;
 
   AuthProvider() {
     _loadToken();
   }
 
+  Future<void> syncFcmToken() async {
+    try {
+      if (_isAuthenticated) {
+        String? fcmToken = await FirebaseMessaging.instance.getToken();
+        if (fcmToken != null) {
+          await _apiService.put('/api/users/fcm-token', {'fcmToken': fcmToken});
+        }
+      }
+    } catch (e) {
+      debugPrint('Failed to sync FCM Token: $e');
+    }
+  }
+
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
     _vylithraToken = prefs.getString('auth_token');
     _isAuthenticated = _vylithraToken != null;
+    _isInitialized = true;
     notifyListeners();
+    if (_isAuthenticated) {
+      syncFcmToken();
+    }
   }
 
   Future<Map<String, dynamic>> signIn(String email, String password, [String? totpCode]) async {
@@ -42,6 +62,7 @@ class AuthProvider with ChangeNotifier {
 
         if (response['token'] != null) {
           await _saveToken(response['token']);
+          await syncFcmToken();
           return {'success': true};
         }
       }

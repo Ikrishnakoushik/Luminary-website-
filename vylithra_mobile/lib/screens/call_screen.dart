@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../services/webrtc_service.dart';
 import 'dart:ui';
+import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class CallScreen extends StatefulWidget {
   final WebRTCService webrtcService;
@@ -31,14 +32,58 @@ class _CallScreenState extends State<CallScreen> {
   bool _isMicOn = true;
   bool _isCamOn = true;
   bool _isConnected = false;
+  bool _isTargetOnline = true; // Assume online until checked
+  bool _isRinging = false;
 
   @override
   void initState() {
     super.initState();
     _initRenderers();
     _setupCallbacks();
-    if (!widget.isIncoming) {
-      widget.webrtcService.initiateCall(widget.targetUserId, widget.isVideoCall);
+    
+    if (widget.isIncoming) {
+      // Incoming call: Play ringtone
+      _playRingtone(true);
+    } else {
+      // Outgoing call: check if target is online
+      _checkStatusAndCall();
+    }
+  }
+
+  Future<void> _checkStatusAndCall() async {
+    final isOnline = await widget.webrtcService.isUserOnline(widget.targetUserId);
+    if (mounted) {
+      setState(() {
+        _isTargetOnline = isOnline;
+      });
+      if (mounted) {
+        // ALWAYS initiate call regardless of "online" status in DB
+        // The background service will catch it on their end!
+        widget.webrtcService.initiateCall(widget.targetUserId, widget.isVideoCall);
+        _playRingtone(false);
+      }
+    }
+  }
+
+  void _playRingtone(bool isIncoming) {
+    _isRinging = true;
+    if (isIncoming) {
+      FlutterRingtonePlayer().playRingtone(looping: true);
+    } else {
+      // Play a dialing tone or generic notification for outgoing
+      FlutterRingtonePlayer().play(
+        android: AndroidSounds.notification,
+        ios: IosSounds.glass,
+        looping: true,
+        volume: 0.5,
+      );
+    }
+  }
+
+  void _stopRingtone() {
+    if (_isRinging) {
+      FlutterRingtonePlayer().stop();
+      _isRinging = false;
     }
   }
 
@@ -61,17 +106,20 @@ class _CallScreenState extends State<CallScreen> {
         setState(() {
           _remoteRenderer.srcObject = stream;
           _isConnected = true;
+          _stopRingtone();
         });
       }
     };
 
     widget.webrtcService.onCallEnded = () {
+      _stopRingtone();
       if (mounted) {
         Navigator.pop(context);
       }
     };
 
     widget.webrtcService.onCallAccepted = () {
+      _stopRingtone();
       if (mounted) {
         setState(() {
           _isConnected = true;
@@ -82,6 +130,7 @@ class _CallScreenState extends State<CallScreen> {
 
   @override
   void dispose() {
+    _stopRingtone();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     super.dispose();
@@ -107,13 +156,22 @@ class _CallScreenState extends State<CallScreen> {
     } else {
       widget.webrtcService.endCall();
     }
+    _stopRingtone();
     Navigator.pop(context);
   }
 
   void _acceptCall() {
+    _stopRingtone();
     if (widget.incomingData != null) {
       widget.webrtcService.acceptCall(widget.incomingData!);
     }
+  }
+
+  String _getStatusText() {
+    if (_isConnected) return 'Connected';
+    if (widget.isIncoming) return 'Incoming Call...';
+    if (!_isTargetOnline) return 'Offline';
+    return 'Ringing...';
   }
 
   @override
@@ -155,7 +213,7 @@ class _CallScreenState extends State<CallScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _isConnected ? 'Connected' : (widget.isIncoming ? 'Incoming Call...' : 'Calling...'),
+                      _getStatusText(),
                       style: const TextStyle(color: Colors.white54, fontSize: 16),
                     ),
                   ],

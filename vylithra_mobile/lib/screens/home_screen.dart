@@ -1,5 +1,8 @@
 import 'dart:ui';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/post.dart';
 import '../widgets/post_card.dart';
 import '../services/api_service.dart';
@@ -23,17 +26,99 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+
   int _currentIndex = 0;
-  late Future<List<Post>> _postsFuture;
+  List<Post> _posts = [];
+  bool _isLoadingPosts = true;
+  String? _postsError;
   final ApiService _apiService = ApiService();
   late WebRTCService _webrtcService;
 
   @override
   void initState() {
     super.initState();
-    _postsFuture = _apiService.fetchPosts();
+    _loadPosts();
     _initWebRTC();
+    _checkForUpdates();
   }
+
+  Future<void> _checkForUpdates() async {
+    try {
+      final res = await _apiService.get('/api/app/version');
+      if (res != null && res['latestVersion'] != null) {
+        final packageInfo = await PackageInfo.fromPlatform();
+        if (packageInfo.version != res['latestVersion']) {
+          if (mounted) {
+            showDialog(
+              context: context,
+              barrierDismissible: false,
+              builder: (context) => AlertDialog(
+                title: const Text('Update Available'),
+                content: Text(res['updateMessage'] ?? 'A new version is available.'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Later'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      final url = Uri.parse(res['apkUrl']);
+                      if (await canLaunchUrl(url)) {
+                        await launchUrl(url, mode: LaunchMode.externalApplication);
+                      }
+                    },
+                    child: const Text('Update'),
+                  ),
+                ],
+              ),
+            );
+          }
+        }
+      }
+    } catch (e) {
+      // Ignore errors silently
+    }
+  }
+
+  Future<void> _loadPosts() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cachedStr = prefs.getString('cached_posts');
+      if (cachedStr != null) {
+        final List<dynamic> decoded = jsonDecode(cachedStr);
+        if (mounted) {
+          setState(() {
+            _posts = decoded.map((j) => Post.fromJson(j)).toList();
+            _isLoadingPosts = false;
+          });
+        }
+      }
+    } catch (e) {
+      // Ignore cache errors
+    }
+
+    try {
+      final posts = await _apiService.fetchPosts();
+      if (mounted) {
+        setState(() {
+          _posts = posts;
+          _isLoadingPosts = false;
+          _postsError = null;
+        });
+      }
+      final prefs = await SharedPreferences.getInstance();
+      final rawData = await _apiService.get('/api/posts');
+      prefs.setString('cached_posts', jsonEncode(rawData));
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _postsError = e.toString();
+          if (_posts.isEmpty) _isLoadingPosts = false;
+        });
+      }
+    }
+  }
+
 
   void _initWebRTC() {
     _webrtcService = WebRTCService();
@@ -47,6 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
           final data = jsonDecode(payload);
           final userId = data['user']?['id'];
           if (userId != null) {
+            SharedPreferences.getInstance().then((prefs) => prefs.setString('current_user_id', userId));
             _webrtcService.initialize(userId);
             _webrtcService.onIncomingCall = (incomingData) {
               if (mounted) {
@@ -79,12 +165,6 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _refreshPosts() async {
-    setState(() {
-      _postsFuture = _apiService.fetchPosts();
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -94,18 +174,9 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: Colors.transparent,
       body: Stack(
         children: [
-          // Dynamic Gradient Background
+          // Solid Vintage Background
           Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: isDark 
-                  ? [const Color(0xFF1E293B), const Color(0xFF0F172A)]
-                  : [const Color(0xFFF0FDFA), const Color(0xFFE6F8F5)],
-                stops: isDark ? [0.0, 1.0] : [0.0, 1.0],
-              ),
-            ),
+            color: Theme.of(context).scaffoldBackgroundColor,
           ),
           
           // Main Content Area
@@ -183,37 +254,28 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+
   Widget _buildFeedView() {
     return RefreshIndicator(
-      onRefresh: _refreshPosts,
-      child: FutureBuilder<List<Post>>(
-        future: _postsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator(color: Colors.pinkAccent));
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text('No stories available.'));
-          }
-
-          final posts = snapshot.data!;
-          return ListView.builder(
-            // Padding to ensure content isn't hidden under header or bottom nav
-            padding: EdgeInsets.only(
-              top: MediaQuery.of(context).padding.top + 70, 
-              bottom: 100,
+      onRefresh: () async {
+        await _loadPosts();
+      },
+      child: _isLoadingPosts 
+        ? const Center(child: CircularProgressIndicator(color: Colors.pinkAccent))
+        : _posts.isEmpty 
+          ? Center(child: Text(_postsError != null ? 'Error: $_postsError' : 'No stories available.', style: TextStyle(color: _postsError != null ? Colors.red : Colors.grey)))
+          : ListView.builder(
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top + 70, 
+                bottom: 100,
+              ),
+              itemCount: _posts.length,
+              itemBuilder: (context, index) {
+                return PostCard(post: _posts[index]);
+              },
             ),
-            itemCount: posts.length,
-            itemBuilder: (context, index) {
-              return PostCard(post: posts[index]);
-            },
-          );
-        },
-      ),
     );
   }
-
 
 
   Widget _buildBottomNav(bool isDark) {
@@ -259,10 +321,15 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF3B82F6), Color(0xFF8B5CF6)],
-              ),
+              color: Theme.of(context).colorScheme.primary,
               borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.2),
+                  blurRadius: 8,
+                  offset: const Offset(2, 4),
+                ),
+              ],
             ),
             child: const Icon(
               Icons.add,
@@ -399,7 +466,7 @@ class _HomeScreenState extends State<HomeScreen> {
               icon,
               size: 28,
               color: isActive 
-                  ? const Color(0xFF3B82F6) // Vibrant Blue
+                  ? Theme.of(context).colorScheme.primary // Sepia/Copper accent
                   : (isDark ? Colors.white38 : Colors.black45),
             ),
           ),

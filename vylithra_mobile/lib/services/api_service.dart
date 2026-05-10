@@ -46,6 +46,19 @@ class ApiService {
     }
   }
 
+  Future<dynamic> put(String endpoint, Map<String, dynamic> data) async {
+    try {
+      final response = await http.put(
+        Uri.parse('$baseUrl$endpoint'),
+        headers: await _getHeaders(),
+        body: jsonEncode(data),
+      );
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection or server IP.');
+    }
+  }
+
   dynamic _handleResponse(http.Response response) {
     if (response.statusCode >= 200 && response.statusCode < 300) {
       if (response.body.isEmpty) return null;
@@ -97,6 +110,16 @@ class ApiService {
   }
   Future<List<Post>> fetchPosts() async {
     final List<dynamic> data = await get('/api/posts');
+    return data.map((json) => Post.fromJson(json)).toList();
+  }
+
+  Future<List<Post>> fetchUserPosts(String userId) async {
+    final List<dynamic> data = await get('/api/posts?user=$userId');
+    return data.map((json) => Post.fromJson(json)).toList();
+  }
+
+  Future<List<Post>> fetchReels() async {
+    final List<dynamic> data = await get('/api/posts?hasVideo=true');
     return data.map((json) => Post.fromJson(json)).toList();
   }
 

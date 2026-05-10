@@ -1,4 +1,4 @@
-import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import '../models/post.dart';
 
@@ -34,34 +34,29 @@ class _PostCardState extends State<PostCard> {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    // Brand Palette
-    final cardColor = isDark ? const Color(0xFF0F172A) : Colors.white;
-    final borderColor = isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05);
-    final textColor = isDark ? Colors.white : const Color(0xFF134E4A);
-    final subTextColor = isDark ? Colors.white70 : const Color(0xFF115E59).withValues(alpha: 0.7);
-    final iconColor = isDark ? Colors.white70 : const Color(0xFF115E59);
+    final cardColor = Theme.of(context).scaffoldBackgroundColor;
+    final borderColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1);
+    final textColor = Theme.of(context).colorScheme.onSurface;
+    final subTextColor = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6);
+    final iconColor = Theme.of(context).colorScheme.primary;
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         color: cardColor,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(4),
         border: Border.all(color: borderColor),
         boxShadow: [
           BoxShadow(
-            color: isDark ? Colors.black.withValues(alpha: 0.3) : const Color(0xFF14B8A6).withValues(alpha: 0.1),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 8,
+            offset: const Offset(2, 4),
           )
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: isDark ? ImageFilter.blur(sigmaX: 10, sigmaY: 10) : ImageFilter.blur(sigmaX: 0, sigmaY: 0),
-          child: Padding(
+        borderRadius: BorderRadius.circular(4),
+        child: Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -71,8 +66,8 @@ class _PostCardState extends State<PostCard> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: isDark ? Colors.white12 : const Color(0xFF14B8A6).withValues(alpha: 0.1),
-                      child: Icon(Icons.person, color: isDark ? Colors.white54 : const Color(0xFF14B8A6)),
+                      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
+                      child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
@@ -115,7 +110,7 @@ class _PostCardState extends State<PostCard> {
                       fit: BoxFit.cover,
                       errorBuilder: (context, error, stackTrace) => Container(
                         height: 200,
-                        color: isDark ? Colors.white12 : Colors.black12,
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                         child: const Center(child: Icon(Icons.image_not_supported)),
                       ),
                     ),
@@ -175,7 +170,6 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
         ),
-      ),
     );
   }
 

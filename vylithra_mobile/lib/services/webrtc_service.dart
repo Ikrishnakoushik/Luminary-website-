@@ -60,6 +60,11 @@ class WebRTCService {
     });
   }
 
+  Future<bool> isUserOnline(String userId) async {
+    final event = await _db.child('webrtc/status/$userId').once();
+    return event.snapshot.value != null;
+  }
+
   Future<void> _handleIncomingSignal(String type, Map<String, dynamic> payload) async {
     switch (type) {
       case 'call-made':
