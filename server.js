@@ -304,7 +304,7 @@ const gatewayAuth = async (req, res, next) => {
 };
 
 // Database Connection
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/everything_spread?ssl=true&replicaSet=atlas-dy5wekj-shard-0&authSource=admin&retryWrites=true&w=majority';
+const MONGO_URI = 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/everything_spread?ssl=true&replicaSet=atlas-dy5wekj-shard-0&authSource=admin&retryWrites=true&w=majority';
 let isConnected = false;
 
 const connectDB = async () => {
