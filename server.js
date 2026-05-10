@@ -1709,7 +1709,7 @@ app.use((err, req, res, next) => {
 app.get('/api/app/version', (req, res) => {
     res.json({
         latestVersion: '1.0.1',
-        apkUrl: 'https://vylithra.onrender.com/app-release.apk',
+        apkUrl: 'https://www.vylithra.in/app-release.apk',
         updateMessage: 'A new version of Vylithra is available! Please update for bug fixes and new features.'
     });
 });
