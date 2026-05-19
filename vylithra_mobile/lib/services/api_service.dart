@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/post.dart';
+import '../models/story.dart';
 
 class ApiService {
   // Use https://www.vylithra.in for production (must include www to avoid 307 redirects)
@@ -19,6 +20,38 @@ class ApiService {
       headers['x-auth-token'] = token;
     }
     return headers;
+  }
+
+  Future<List<StoryGroup>> fetchStoriesFeed() async {
+    final List<dynamic> data = await get('/api/stories/feed');
+    return data.map((json) => StoryGroup.fromJson(json)).toList();
+  }
+
+  Future<List<Story>> fetchUserStories(String userId) async {
+    final List<dynamic> data = await get('/api/stories/user/$userId');
+    return data.map((json) => Story.fromJson(json)).toList();
+  }
+
+  Future<dynamic> uploadStory(File file) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/stories/upload'));
+      
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+        request.headers['x-auth-token'] = token;
+      }
+
+      request.files.add(await http.MultipartFile.fromPath('storyMedia', file.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection.');
+    }
   }
 
   Future<dynamic> get(String endpoint) async {

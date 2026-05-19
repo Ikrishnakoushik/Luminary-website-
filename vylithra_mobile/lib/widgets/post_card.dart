@@ -1,11 +1,17 @@
 
 import 'package:flutter/material.dart';
 import '../models/post.dart';
+import '../models/story.dart';
+import '../screens/story_viewer_screen.dart';
+import '../providers/auth_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
+  final List<StoryGroup>? storyGroups;
 
-  const PostCard({super.key, required this.post});
+  const PostCard({super.key, required this.post, this.storyGroups});
 
   @override
   State<PostCard> createState() => _PostCardState();
@@ -64,11 +70,70 @@ class _PostCardState extends State<PostCard> {
                 // 1. TOP: User Profile Info
                 Row(
                   children: [
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-                      child: Icon(Icons.person, color: Theme.of(context).colorScheme.primary),
-                    ),
+                    
+                    Builder(builder: (context) {
+                      final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?['id'];
+                      final authorId = widget.post.user is Map ? widget.post.user['_id'] : widget.post.user;
+                      
+                      StoryGroup? group;
+                      if (widget.storyGroups != null && authorId != null) {
+                        try {
+                           group = widget.storyGroups!.firstWhere((g) => g.userId == authorId);
+                        } catch(e) {}
+                      }
+                      
+                      final bool hasActiveStory = group != null && !group.stories.every((s) => s.viewers.contains(currentUserId));
+                      
+                      Widget avatarWidget = CircleAvatar(
+                        radius: 20,
+                        backgroundImage: widget.post.authorProfilePicture.isNotEmpty 
+                          ? CachedNetworkImageProvider(widget.post.authorProfilePicture)
+                          : null,
+                        backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                        child: widget.post.authorProfilePicture.isEmpty 
+                          ? Text(widget.post.authorName.isNotEmpty ? widget.post.authorName[0].toUpperCase() : 'U')
+                          : null,
+                      );
+                      
+                      if (hasActiveStory) {
+                         avatarWidget = Container(
+                           padding: const EdgeInsets.all(2),
+                           decoration: const BoxDecoration(
+                             shape: BoxShape.circle,
+                             gradient: LinearGradient(
+                               colors: [Colors.purple, Colors.orange],
+                               begin: Alignment.topRight,
+                               end: Alignment.bottomLeft,
+                             ),
+                           ),
+                           child: Container(
+                             decoration: BoxDecoration(
+                               shape: BoxShape.circle,
+                               border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                             ),
+                             child: avatarWidget,
+                           ),
+                         );
+                      }
+                      
+                      return GestureDetector(
+                        onTap: () {
+                          if (group != null) {
+                             Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(
+                               stories: group!.stories,
+                               userName: group.userName,
+                               userProfilePicture: group.userProfilePicture,
+                               onComplete: () { if(mounted) setState((){}); },
+                             )));
+                          } else {
+                             // Go to profile
+                             // Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: authorId)));
+                          }
+                        },
+                        child: avatarWidget,
+                      );
+                    }),
+
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(

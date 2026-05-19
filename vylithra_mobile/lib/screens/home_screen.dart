@@ -4,6 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../models/post.dart';
+import '../models/story.dart';
+import 'story_viewer_screen.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:io';
 import '../widgets/post_card.dart';
 import '../services/api_service.dart';
 import 'reels_screen.dart';
@@ -29,6 +34,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _currentIndex = 0;
   List<Post> _posts = [];
+  List<StoryGroup> _storyGroups = [];
+  bool _isLoadingStories = true;
+  bool _isUploadingStory = false;
   bool _isLoadingPosts = true;
   String? _postsError;
   final ApiService _apiService = ApiService();
@@ -37,6 +45,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    _loadStories();
     _loadPosts();
     _initWebRTC();
     _checkForUpdates();
@@ -78,6 +87,13 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       // Ignore errors silently
     }
+  }
+
+  Future<void> _loadStories() async {
+    try {
+      final groups = await _apiService.fetchStoriesFeed();
+      if (mounted) setState(() { _storyGroups = groups; _isLoadingStories = false; });
+    } catch(e) { if(mounted) setState(() => _isLoadingStories = false); }
   }
 
   Future<void> _loadPosts() async {
@@ -255,9 +271,139 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
+  
+  Widget _buildStoryRail() {
+    if (_isLoadingStories && _storyGroups.isEmpty) {
+      return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+    }
+    
+    final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?['id'];
+    
+    return Container(
+      height: 100,
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _storyGroups.length + 1,
+        padding: const EdgeInsets.symmetric(horizontal: 10),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            // My Story (Add)
+            return GestureDetector(
+              onTap: _pickAndUploadStory,
+              child: Container(
+                width: 72,
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                child: Column(
+                  children: [
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        Container(
+                          height: 68,
+                          width: 68,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+                          ),
+                          child: _isUploadingStory 
+                            ? const CircularProgressIndicator()
+                            : const Icon(Icons.add, color: Colors.grey, size: 30),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.all(2),
+                          decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
+                          child: const Icon(Icons.add, color: Colors.white, size: 14),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text('Your Story', style: TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis),
+                  ],
+                ),
+              ),
+            );
+          }
+          
+          final group = _storyGroups[index - 1];
+          final allViewed = group.stories.every((s) => s.viewers.contains(currentUserId));
+          
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(
+                stories: group.stories,
+                userName: group.userName,
+                userProfilePicture: group.userProfilePicture,
+                onComplete: () {
+                  if (mounted) setState(() {});
+                },
+              )));
+            },
+            child: Container(
+              width: 72,
+              margin: const EdgeInsets.symmetric(horizontal: 6),
+              child: Column(
+                children: [
+                  Container(
+                    height: 68,
+                    width: 68,
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: allViewed ? null : const LinearGradient(
+                        colors: [Colors.purple, Colors.orange],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                      border: allViewed ? Border.all(color: Colors.grey.withOpacity(0.3), width: 2) : null,
+                    ),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                      ),
+                      child: CircleAvatar(
+                        backgroundImage: group.userProfilePicture.isNotEmpty 
+                          ? CachedNetworkImageProvider(group.userProfilePicture)
+                          : null,
+                        backgroundColor: Colors.grey[800],
+                        child: group.userProfilePicture.isEmpty 
+                          ? Text(group.userName.isNotEmpty ? group.userName[0].toUpperCase() : 'U')
+                          : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(group.userName, style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+  
+  Future<void> _pickAndUploadStory() async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() => _isUploadingStory = true);
+      try {
+        await _apiService.uploadStory(File(pickedFile.path));
+        await _loadStories();
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      } finally {
+        if (mounted) setState(() => _isUploadingStory = false);
+      }
+    }
+  }
+
   Widget _buildFeedView() {
     return RefreshIndicator(
       onRefresh: () async {
+        await _loadStories();
         await _loadPosts();
       },
       child: _isLoadingPosts 
@@ -269,9 +415,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 top: MediaQuery.of(context).padding.top + 70, 
                 bottom: 100,
               ),
-              itemCount: _posts.length,
+              itemCount: _posts.length + 1,
               itemBuilder: (context, index) {
-                return PostCard(post: _posts[index]);
+                if (index == 0) return _buildStoryRail();
+                return PostCard(post: _posts[index - 1], storyGroups: _storyGroups);
               },
             ),
     );

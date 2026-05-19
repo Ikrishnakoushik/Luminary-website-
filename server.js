@@ -27,6 +27,7 @@ const speakeasy = require('speakeasy');
 const QRCode = require('qrcode');
 const User = require('./models/User');
 const Post = require('./models/Post');
+const Story = require('./models/Story');
 const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
