@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog & Articles | Vylithra</title>
+    <meta name="description" content="Read the latest articles on digital publishing, web design, and creator monetization on Vylithra.">
+    <meta name="keywords" content="digital publishing, writing, design systems, monetization, Vylithra blog">
+    
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0f1115;
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --glow-cyan: #007AFF;
+            --glow-blue: #3b82f6;
+            --glow-purple: #8b5cf6;
+            --glass-bg: linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(0, 0, 0, 0.2));
+            --glass-border: rgba(255, 255, 255, 0.15);
+            --sidebar-width: 280px;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .bg-glows { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: -1; background: var(--bg-dark); overflow: hidden; }
+        .bg-mesh { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px); background-size: 24px 24px; }
+        .glow-cyan { position: absolute; width: 800px; height: 800px; background: radial-gradient(circle, rgba(14, 165, 233, 0.45) 0%, transparent 60%); left: -15%; top: 10%; border-radius: 50%; }
+        .glow-purple { position: absolute; width: 1000px; height: 1000px; background: radial-gradient(circle, rgba(139, 92, 246, 0.4) 0%, transparent 60%); right: -20%; top: 5%; border-radius: 50%; }
+
+        .top-nav {
+            padding: 1.5rem 5%;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--glass-border);
+            background: rgba(15, 17, 21, 0.5);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            position: sticky; top: 0; z-index: 50;
+        }
+
+        .brand {
+            display: flex; align-items: center; gap: 12px; font-size: 1.5rem; font-weight: 700; color: var(--text-light); text-decoration: none; letter-spacing: -0.03em;
+        }
+
+        .cta-button {
+            padding: 0.75rem 1.5rem; border-radius: 12px; font-weight: 600; font-size: 0.95rem; text-decoration: none; transition: all 0.2s ease;
+            background: rgba(255, 255, 255, 0.1); color: var(--text-light); border: 1px solid var(--glass-border); backdrop-filter: blur(20px);
+        }
+        .cta-button:hover { background: rgba(255, 255, 255, 0.15); transform: translateY(-2px); }
+
+        .layout { display: flex; max-width: 1400px; margin: 0 auto; width: 100%; flex: 1; position: relative; }
+
+        .sidebar { width: var(--sidebar-width); padding: 40px; border-right: 1px solid var(--glass-border); position: sticky; top: 80px; height: calc(100vh - 80px); overflow-y: auto; }
+        .nav-label { text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; color: var(--glow-cyan); font-weight: 600; margin-bottom: 20px; }
+        .nav-list { list-style: none; }
+        .nav-item { display: block; padding: 12px 0; color: var(--text-muted); text-decoration: none; font-size: 0.95rem; transition: color 0.2s; border-left: 2px solid transparent; padding-left: 15px; margin-left: -17px; }
+        .nav-item:hover, .nav-item.active { color: var(--text-light); border-left-color: var(--glow-cyan); font-weight: 500; }
+
+        .content { flex: 1; padding: 60px 80px; max-width: 900px; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; letter-spacing: -0.02em; color: var(--text-light); }
+        .meta { color: var(--text-muted); font-size: 0.95rem; margin-bottom: 50px; padding-bottom: 20px; border-bottom: 1px solid var(--glass-border); }
+        h2 { font-size: 1.8rem; margin-top: 50px; margin-bottom: 20px; scroll-margin-top: 100px; color: var(--text-light); }
+        h3 { font-size: 1.2rem; margin-top: 30px; margin-bottom: 15px; color: var(--text-light); }
+        p, li { font-family: 'Merriweather', serif; color: var(--text-muted); font-size: 1.05rem; line-height: 1.8; margin-bottom: 20px; }
+        strong { color: var(--text-light); }
+        
+        .article-card {
+            background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 30px; margin: 40px 0;
+            backdrop-filter: blur(10px);
+        }
+        .article-card img { width: 100%; border-radius: 8px; margin-bottom: 20px; }
+        
+    </style>
+
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="bg-glows">
+        <div class="glow-cyan"></div>
+        <div class="glow-purple"></div>
+        <div class="bg-mesh"></div>
+    </div>
+
+    <nav class="top-nav">
+        <a href="/" class="brand">
+            <img src="/vylithra_logo.svg" alt="Vylithra" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;"> Vylithra Blog
+        </a>
+        <a href="/" class="cta-button" id="backBtn">Back to Home</a>
+    </nav>
+
+    <div class="layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="nav-label">Latest Articles</div>
+            <ul class="nav-list">
+                <li><a href="#article1" class="nav-item">The Future of Digital Publishing</a></li>
+                <li><a href="#article2" class="nav-item">How to Monetize Your Writing</a></li>
+                <li><a href="#article3" class="nav-item">Designing Web Systems</a></li>
+            </ul>
+        </aside>
+
+        <!-- Document Content -->
+        <main class="content">
+            <h1>Vylithra Insights</h1>
+            <div class="meta">Explore the latest trends in writing, digital publishing, and creator monetization.</div>
+
+            <section id="article1" class="article-card">
+                <h2>The Future of Digital Publishing in the Creator Economy</h2>
+                <div class="meta" style="margin-bottom: 20px;">Published on May 18, 2026 | By Editorial Team</div>
+                <p>The digital publishing landscape is undergoing a radical transformation. With the rise of independent creator platforms and decentralized content distribution, authors no longer need to rely entirely on traditional gatekeepers. Today, writers have unprecedented power to reach their audiences directly, build sustainable communities, and monetize their work through innovative technological tools.</p>
+                <p>In the past, the path to publication was a grueling marathon of query letters, literary agents, and publishers holding all the cards. Writers would often sign away vast percentages of their royalties just to see their names in print. Fast forward to today: platforms like Vylithra empower creators to instantly publish their content to a global audience, retaining ownership and reaping the full financial rewards of their labor.</p>
+                <p>One of the most significant shifts we are seeing is the integration of integrated payment gateways like Stripe, Razorpay, and PayPal directly into publishing platforms. This seamless checkout experience removes friction for the buyer and ensures the creator is paid almost instantly. Instead of waiting six months for a royalty check, a writer can release a new chapter or an entire eBook and see the financial return in their account within hours.</p>
+                <p>Furthermore, the modern reader's expectations have evolved. They demand highly aesthetic, distraction-free reading environments. Long gone are the days of clunky PDF viewers and poorly formatted EPUB files on mobile devices. Today's digital reading experiences must be buttery smooth, responsive, and beautifully typeset. The incorporation of native web readers—utilizing fluid typography, dynamic dark modes, and paginated scroll systems—keeps readers engaged longer.</p>
+                <p>As we look to the future, we anticipate an even greater convergence between community building and publishing. Books will no longer be static, isolated objects. They will become dynamic hubs where readers can interact, discuss, and even influence the narrative in real-time. For independent creators willing to embrace these new paradigms, the future of digital publishing has never looked brighter.</p>
+            </section>
+
+            <section id="article2" class="article-card">
+                <h2>How to Monetize Your Writing: A Guide for Modern Authors</h2>
+                <div class="meta" style="margin-bottom: 20px;">Published on May 12, 2026 | By Creator Success</div>
+                <p>Monetizing written content is an art form that requires as much strategy as the writing itself. While passion is the fuel that drives an author to write, sustainable income is the engine that allows them to turn that passion into a career. Let's explore the most effective strategies modern authors use to monetize their digital content.</p>
+                <p><strong>1. Direct Sales and Digital Downloads</strong><br>The most straightforward method of monetization is selling digital products directly to your audience. By hosting your eBooks, guides, or serialized fiction on platforms that support direct purchases, you maximize your profit margins. You avoid the heavy commission fees of massive retailers, keeping more of what you earn. Additionally, offering tiered pricing—such as a standard edition and a premium edition with bonus content—can significantly increase your average order value.</p>
+                <p><strong>2. Subscription Models and Serialized Content</strong><br>The subscription model has proven incredibly lucrative for fiction and non-fiction writers alike. Instead of selling a single book, authors offer access to their entire library or early access to ongoing chapters for a monthly fee. This creates a predictable, recurring revenue stream. It also fosters a deeply engaged community of "super fans" who are invested in the author's ongoing creative journey.</p>
+                <p><strong>3. Leveraging Ad Revenue</strong><br>For authors who publish free content—such as blog posts, short stories, or educational articles—integrating advertising networks like Google AdSense can provide a steady supplemental income. The key to successful ad monetization is generating high-quality, SEO-optimized content that draws organic traffic. The more eyeballs on your free content, the more ad revenue you generate, which can then be used to fund your premium projects.</p>
+                <p>Ultimately, the most successful creators diversify their income streams. They might offer free articles supported by ads, sell premium eBooks directly, and maintain a paid subscription tier for their most dedicated readers. By understanding the tools available and experimenting with different models, any writer can find the monetization strategy that perfectly fits their unique audience.</p>
+            </section>
+
+            <section id="article3" class="article-card">
+                <h2>Designing Web Systems for Maximum Engagement</h2>
+                <div class="meta" style="margin-bottom: 20px;">Published on May 05, 2026 | By Design Engineering</div>
+                <p>When building a platform intended for reading and content consumption, design is not just about making things look pretty—it's about removing cognitive friction. A poorly designed interface will cause a reader to abandon an article or book within seconds, regardless of how brilliant the writing might be. Designing web systems for maximum engagement requires a relentless focus on typography, spatial harmony, and user experience.</p>
+                <p>Typography is the foundation of digital reading. Selecting the right font pairing—often a sturdy sans-serif for headings and a highly legible serif for body copy—is crucial. Furthermore, maintaining an optimal line length (around 50 to 75 characters per line) and a comfortable line height (typically 1.5 to 1.8) ensures the reader's eye can track from one line to the next without fatigue. Contrast is also vital; stark black text on a pure white background can cause eye strain on bright screens, which is why off-white backgrounds and dark gray text are preferred for extended reading.</p>
+                <p>Another critical aspect of modern web design is the implementation of robust design systems and reusable components. Consistency breeds familiarity, and familiarity breeds trust. When a user navigates from a landing page to a checkout screen, and finally to a reading interface, the visual language must remain coherent. Buttons should behave predictably, spacing should follow a mathematical rhythm, and color palettes should be used purposefully to direct attention, not distract from it.</p>
+                <p>Finally, micro-interactions and performance optimization play massive roles in engagement. A button that provides satisfying visual feedback when clicked, or a page that loads in under a second, creates a subconscious feeling of quality and reliability. By prioritizing these elements, developers and designers can create digital environments that captivate users and keep them coming back for more.</p>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const sections = document.querySelectorAll('section');
+        const navItems = document.querySelectorAll('.nav-item');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (pageYOffset >= sectionTop - 150) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navItems.forEach(li => {
+                li.classList.remove('active');
+                if (li.getAttribute('href').includes(current)) {
+                    li.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
