@@ -72,8 +72,8 @@ class _PostCardState extends State<PostCard> {
                   children: [
                     
                     Builder(builder: (context) {
-                      final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?['id'];
-                      final authorId = widget.post.user is Map ? widget.post.user['_id'] : widget.post.user;
+                      final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUserId;
+                      final authorId = widget.post.userId;
                       
                       StoryGroup? group;
                       if (widget.storyGroups != null && authorId != null) {

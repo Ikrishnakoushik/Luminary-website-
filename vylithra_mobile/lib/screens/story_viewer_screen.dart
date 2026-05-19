@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/api_service.dart';
@@ -12,12 +11,12 @@ class StoryViewerScreen extends StatefulWidget {
   final VoidCallback onComplete;
 
   const StoryViewerScreen({
-    Key? key,
+    super.key,
     required this.stories,
     required this.userName,
     required this.userProfilePicture,
     required this.onComplete,
-  }) : super(key: key);
+  });
 
   @override
   State<StoryViewerScreen> createState() => _StoryViewerScreenState();
@@ -28,7 +27,6 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
   late AnimationController _animationController;
   VideoPlayerController? _videoController;
   final ApiService _apiService = ApiService();
-  bool _isPaused = false;
 
   @override
   void initState() {
@@ -52,7 +50,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
     _apiService.put('/api/stories/\${story.id}/view', {}); // Mark as viewed silently
 
     if (story.mediaType == 'video') {
-      _videoController = VideoPlayerController.network(story.mediaUrl)
+      _videoController = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl))
         ..initialize().then((_) {
           setState(() {
             _animationController.duration = _videoController!.value.duration;
@@ -92,13 +90,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
   }
 
   void _pause() {
-    setState(() => _isPaused = true);
     _animationController.stop();
     _videoController?.pause();
   }
 
   void _resume() {
-    setState(() => _isPaused = false);
     _animationController.forward();
     _videoController?.play();
   }

@@ -4,6 +4,8 @@ class Post {
   final String? image;
   final String? videoUrl;
   final String authorName;
+  final String authorProfilePicture;
+  final String userId;
 
   Post({
     required this.id,
@@ -11,6 +13,8 @@ class Post {
     this.image,
     this.videoUrl,
     required this.authorName,
+    required this.authorProfilePicture,
+    required this.userId,
   });
 
   factory Post.fromJson(Map<String, dynamic> json) {
@@ -20,6 +24,8 @@ class Post {
       image: json['image'],
       videoUrl: json['videoUrl'] ?? json['attachment'],
       authorName: json['user']?['username'] ?? json['username'] ?? 'Unknown',
+      authorProfilePicture: json['user']?['profilePicture'] ?? '',
+      userId: json['user'] is Map ? (json['user']['_id'] ?? '') : (json['user'] ?? ''),
     );
   }
 }
