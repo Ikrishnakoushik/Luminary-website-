@@ -1963,11 +1963,11 @@
         
         <!-- 1. Hero Banner -->
         <div class="dv-hero">
-            <div class="dv-hero-bg"></div>
+            <div class="dv-hero-bg" id="heroBgElement"></div>
             <div class="dv-hero-gradient"></div>
             <div class="dv-hero-content">
-                <h1>Reclaiming the art of curation</h1>
-                <p>Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>- Vylithra Editorial.</p>
+                <h1 id="heroTitleElement">Reclaiming the art of curation</h1>
+                <p id="heroSubtitleElement">Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>- Vylithra Editorial.</p>
             </div>
             <div class="dv-hero-dots">
                 <div class="dv-hero-dot active"></div>
@@ -2200,11 +2200,32 @@
             if (localStorage.getItem('theme') === 'dark') {
                 document.body.setAttribute('data-theme', 'dark');
             }
+            fetchActiveHeroBanner();
             fetchPosts();
             fetchTopSpreaders(); // Fetch sidebar users
             updateAuthLink();
             setupSearch(); // Initialize search bar listener
         });
+
+        
+        async function fetchActiveHeroBanner() {
+            try {
+                const res = await fetch(`${API_URL}/hero/active`);
+                if (res.ok) {
+                    const banner = await res.json();
+                    if (banner && banner.title) {
+                        const bgEl = document.getElementById('heroBgElement');
+                        if (bgEl) bgEl.style.backgroundImage = `url('${banner.imageUrl}')`;
+                        const titleEl = document.getElementById('heroTitleElement');
+                        if (titleEl) titleEl.innerText = banner.title;
+                        const subEl = document.getElementById('heroSubtitleElement');
+                        if (subEl) subEl.innerText = banner.subtitle;
+                    }
+                }
+            } catch(e) {
+                console.error("Failed to fetch dynamic hero banner", e);
+            }
+        }
 
         async function fetchPosts() {
             console.log('fetchPosts called');

@@ -30,6 +30,7 @@ const Post = require('./models/Post');
 const Message = require('./models/Message');
 const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
+const HeroBanner = require('./models/HeroBanner'); // Added HeroBanner model
 const PlatformSetting = require('./models/PlatformSetting');
 const seedDB = require('./seed.js'); // Required globally so Vercel traces dependencies like @faker-js/faker
 
@@ -3051,6 +3052,60 @@ app.delete('/api/users/projects/:id', auth, async (req, res) => {
     }
 });
 
+
+// --- Hero Banner Routes ---
+app.get('/api/hero/active', async (req, res) => {
+    try {
+        const banner = await HeroBanner.findOne({ isActive: true });
+        res.json(banner || { title: 'Reclaiming the art of curation', subtitle: 'Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.\n\n- Vylithra Editorial.', imageUrl: '/curation-banner.png' });
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.get('/api/admin/hero', adminAuth, async (req, res) => {
+    try {
+        const banners = await HeroBanner.find().sort({ createdAt: -1 });
+        res.json(banners);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.post('/api/admin/hero', adminAuth, async (req, res) => {
+    try {
+        const { title, subtitle, imageUrl } = req.body;
+        const newBanner = new HeroBanner({ title, subtitle, imageUrl });
+        
+        // If it's the first banner, make it active
+        const count = await HeroBanner.countDocuments();
+        if (count === 0) newBanner.isActive = true;
+
+        await newBanner.save();
+        res.json(newBanner);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.put('/api/admin/hero/:id/active', adminAuth, async (req, res) => {
+    try {
+        await HeroBanner.updateMany({}, { isActive: false });
+        const banner = await HeroBanner.findByIdAndUpdate(req.params.id, { isActive: true }, { new: true });
+        res.json(banner);
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
+
+app.delete('/api/admin/hero/:id', adminAuth, async (req, res) => {
+    try {
+        await HeroBanner.findByIdAndDelete(req.params.id);
+        res.json({ msg: 'Banner removed' });
+    } catch (err) {
+        res.status(500).send('Server Error');
+    }
+});
 
 // --- ADMIN PORTAL API (Strictly Protected) ---
 
