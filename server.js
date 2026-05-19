@@ -1117,7 +1117,18 @@ app.post('/api/login', async (req, res) => {
             { expiresIn: '30d' },
             (err, token) => {
                 if (err) throw err;
-                res.json({ token, username: user.username, role: user.role });
+                res.json({ 
+                    token, 
+                    username: user.username, 
+                    role: user.role,
+                    user: { 
+                        id: user.id, 
+                        username: user.username, 
+                        displayName: user.displayName, 
+                        email: user.email, 
+                        profilePicture: user.profilePicture 
+                    }
+                });
             }
         );
     } catch (err) {
@@ -2337,6 +2348,9 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
         }
 
         if (gateway === 'razorpay') {
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                return res.status(400).json({ msg: 'Razorpay is not configured on this server. Please contact support.' });
+            }
             const amountInPaise = Math.round(totalAmountToCharge * 100);
             const options = {
                 amount: amountInPaise,
@@ -2502,6 +2516,9 @@ app.post('/api/books/:id/download-intent', auth, async (req, res) => {
         if (gateway === 'paypal') totalAmountToCharge += (calculatedPrice * 0.04);
 
         if (gateway === 'razorpay') {
+            if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
+                return res.status(400).json({ msg: 'Razorpay is not configured on this server. Please contact support.' });
+            }
             const amountInPaise = Math.round(totalAmountToCharge * 100);
             const options = {
                 amount: amountInPaise,
