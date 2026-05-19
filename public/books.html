@@ -801,18 +801,15 @@
             flex: 1; /* Stretch vertically to match screen height */
             min-height: 0;
             margin: 0 auto;
-            overflow: hidden;
-            position: relative;
-            border-top: 1px solid rgba(0,0,0,0.05);
+            overflow-y: auto; position: relative; border-top: 1px solid rgba(0,0,0,0.05);
             border-bottom: 1px solid rgba(0,0,0,0.05);
             padding: 30px 0;
-            mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
-            -webkit-mask-image: linear-gradient(to bottom, transparent, black 1%, black 99%, transparent);
+            /* mask-image: linear-gradient(to bottom, transparent, black 3%, black 97%, transparent);
+            -webkit-/* mask-image: linear-gradient(to bottom, transparent, black 1%, black 99%, transparent);
         }
 
         .reader-columns {
-            column-width: 650px;
-            column-gap: 60px; /* Distance between pages */
+            /* column layout removed for vertical scroll */ /* Distance between pages */
             height: 100%;
             transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
         }
@@ -1396,7 +1393,7 @@
                         </div>
                     </div>
                 </div>
-                <div class="reader-controls">
+                <div class="reader-controls" style="display:none;">
                     <button class="page-btn" id="prevPageBtn" onclick="turnPage(-1)"><i class="fas fa-arrow-left"></i> Previous</button>
                     <span class="page-indicator" id="page-indicator">Page 1</span>
                     <button class="page-btn" id="nextPageBtn" onclick="turnPage(1)">Next <i class="fas fa-arrow-right"></i></button>
