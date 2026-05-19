@@ -20,13 +20,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final ApiService _apiService = ApiService();
   bool _isFollowing = false;
 
-  // Design Colors
-  final Color bgColor = const Color(0xFFF8F4EF);
-  final Color darkTextColor = const Color(0xFF332211);
-  final Color lightTextColor = const Color(0xFFBDB5B0);
-  final Color buttonBgColor = const Color(0xFFF2E6DB);
-  final Color buttonBorderColor = const Color(0xFFE6D8CC);
-  final Color orangeBorderColor = const Color(0xFFDE7336);
+  // Design Colors matching the exact vintage design
+  final Color bgColor = const Color(0xFFF8F6EB);
+  final Color darkTextColor = const Color(0xFF3E2723);
+  final Color lightTextColor = const Color(0xFF5D4037);
+  final Color buttonBgColor = const Color(0xFF4A3B31); // Dark Brown
+  final Color buttonBorderColor = const Color(0xFF4A3B31);
+  final Color avatarBorderColor = const Color(0xFF8E6A4B); // Lighter brown for border
 
   @override
   void initState() {
@@ -115,17 +115,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildStatColumn(String label, String count, VoidCallback? onTap) {
+  Widget _buildStatColumn(String count, String label, VoidCallback? onTap) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(count, style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w900, fontSize: 18, color: darkTextColor)),
-          const SizedBox(height: 2),
-          Text(label, style: GoogleFonts.lora(fontSize: 13, color: lightTextColor, fontWeight: FontWeight.w500)),
+          Text(count, style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w800, fontSize: 24, color: darkTextColor, height: 1.0)),
+          const SizedBox(height: 4),
+          Text(label, style: GoogleFonts.playfairDisplay(fontSize: 14, color: darkTextColor, fontWeight: FontWeight.w500)),
         ],
       ),
+    );
+  }
+
+  Widget _buildVerticalDivider() {
+    return Container(
+      height: 40,
+      width: 1,
+      color: const Color(0xFFDCD4C6), // Light separator color
+      margin: const EdgeInsets.symmetric(horizontal: 10),
     );
   }
 
@@ -151,6 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
         final String displayId = profileData['_id'] ?? widget.userId ?? 'me';
         final String username = profileData['username'] ?? 'User';
+        final String displayName = profileData['displayName'] ?? username;
+        final String cleanHandle = '@${username.toLowerCase().replaceAll(" ", "")}';
 
         return DefaultTabController(
           length: 2,
@@ -160,12 +171,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
               backgroundColor: bgColor,
               surfaceTintColor: Colors.transparent,
               elevation: 0,
-              centerTitle: false,
-              title: Text(username, style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w900, fontSize: 26, color: Colors.black)),
+              centerTitle: true,
+              leading: IconButton(
+                icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+              title: Text(cleanHandle, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: darkTextColor)),
               actions: [
                 if (isMe)
                   IconButton(
-                    icon: const Icon(Icons.menu, color: Colors.black, size: 32),
+                    icon: const Icon(Icons.menu, color: Colors.black, size: 28),
                     padding: const EdgeInsets.only(right: 16),
                     onPressed: () {
                       showModalBottomSheet(
@@ -211,144 +226,151 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
-                          // Top Row: Avatar + Stats
+                          // Top Row: Follow Button - Avatar - Message Button
                           Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              // Avatar with orange outer ring
+                              // Follow Button
+                              if (!isMe)
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: _isFollowing ? Colors.transparent : buttonBgColor,
+                                      foregroundColor: _isFollowing ? buttonBgColor : Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                        side: BorderSide(color: _isFollowing ? buttonBorderColor : Colors.transparent, width: 2),
+                                      ),
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                    onPressed: _toggleFollow,
+                                    child: Text(
+                                      _isFollowing ? 'FOLLOWING' : 'FOLLOW', 
+                                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.5)
+                                    ),
+                                  ),
+                                )
+                              else
+                                Expanded(
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: buttonBgColor,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                    ),
+                                    onPressed: () {},
+                                    child: Text('EDIT', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.5)),
+                                  ),
+                                ),
+                              
+                              const SizedBox(width: 15),
+                              
+                              // Avatar
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: orangeBorderColor, width: 1.5),
+                                  border: Border.all(color: avatarBorderColor, width: 2.5),
                                 ),
                                 child: CircleAvatar(
-                                  radius: 46,
-                                  backgroundColor: Colors.black,
+                                  radius: 50,
+                                  backgroundColor: avatarBorderColor,
                                   backgroundImage: profileData['profilePicture'] != null && profileData['profilePicture'] != ''
-                                      ? NetworkImage(profileData['profilePicture'].startsWith('/') ? 'https://www.vylithra.in${profileData['profilePicture']}' : profileData['profilePicture'])
+                                      ? NetworkImage(profileData['profilePicture'].startsWith('/') ? 'https://www.vylithra.in' + profileData['profilePicture'].toString() : profileData['profilePicture'])
                                       : null,
                                   child: profileData['profilePicture'] == null || profileData['profilePicture'] == '' 
-                                      ? const Icon(Icons.person, size: 45, color: Colors.white)
+                                      ? const Icon(Icons.person, size: 50, color: Colors.white)
                                       : null,
                                 ),
                               ),
-                              // Stats Columns
-                              Expanded(
-                                child: FutureBuilder<List<Post>>(
-                                  future: _postsFuture,
-                                  builder: (context, postSnapshot) {
-                                    final int postCount = postSnapshot.hasData ? postSnapshot.data!.length : 0;
-                                    return Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                      children: [
-                                        _buildStatColumn('Posts', postCount.toString(), null),
-                                        _buildStatColumn('Followers', (profileData['followers']?.length ?? 0).toString(), () => _showFollowModal('followers', displayId)),
-                                        _buildStatColumn('Following', (profileData['following']?.length ?? 0).toString(), () => _showFollowModal('following', displayId)),
-                                      ],
-                                    );
-                                  }
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 16),
-                          // Display Name & Bio
-                          Text(
-                            profileData['displayName'] ?? username,
-                            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w800, fontSize: 18, color: darkTextColor),
-                          ),
-                          if (profileData['bio'] != null && profileData['bio'].toString().isNotEmpty) ...[
-                            const SizedBox(height: 4),
-                            Text(
-                              profileData['bio'],
-                              style: TextStyle(fontSize: 14, color: darkTextColor),
-                            ),
-                          ],
-                          const SizedBox(height: 20),
-                          // Action Buttons
-                          if (isMe)
-                            Row(
-                              children: [
+                              
+                              const SizedBox(width: 15),
+
+                              // Message Button
+                              if (!isMe)
                                 Expanded(
                                   child: OutlinedButton(
                                     style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      side: BorderSide(color: buttonBorderColor, width: 1),
-                                      backgroundColor: buttonBgColor,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                      side: BorderSide(color: buttonBorderColor, width: 2),
+                                      backgroundColor: Colors.transparent,
                                       elevation: 0,
-                                    ),
-                                    onPressed: () {},
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      child: Text('Edit Profile', style: GoogleFonts.lora(fontWeight: FontWeight.w700, fontSize: 15, color: darkTextColor)),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      side: BorderSide(color: buttonBorderColor, width: 1),
-                                      backgroundColor: buttonBgColor,
-                                      elevation: 0,
-                                    ),
-                                    onPressed: () {},
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      child: Text('Share Profile', style: GoogleFonts.lora(fontWeight: FontWeight.w700, fontSize: 15, color: darkTextColor)),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            )
-                          else
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: ElevatedButton(
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: _isFollowing ? bgColor : darkTextColor,
-                                      foregroundColor: _isFollowing ? darkTextColor : Colors.white,
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        side: BorderSide(color: _isFollowing ? buttonBorderColor : Colors.transparent),
-                                      ),
-                                      elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                    ),
-                                    onPressed: _toggleFollow,
-                                    child: Text(
-                                      _isFollowing ? 'Following' : 'Follow', 
-                                      style: GoogleFonts.lora(fontWeight: FontWeight.w700, fontSize: 15)
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                      side: BorderSide(color: buttonBorderColor, width: 1),
-                                      backgroundColor: buttonBgColor,
-                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
                                     onPressed: () {
                                       Navigator.push(context, MaterialPageRoute(builder: (context) => const MessagesScreen()));
                                     },
-                                    child: Padding(
-                                      padding: const EdgeInsets.symmetric(vertical: 14),
-                                      child: Text('Message', style: GoogleFonts.lora(fontWeight: FontWeight.w700, fontSize: 15, color: darkTextColor)),
+                                    child: Text('MESSAGE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, color: buttonBgColor, letterSpacing: 0.5)),
+                                  ),
+                                )
+                              else
+                                Expanded(
+                                  child: OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                      side: BorderSide(color: buttonBorderColor, width: 2),
+                                      backgroundColor: Colors.transparent,
+                                      elevation: 0,
+                                      padding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
+                                    onPressed: () {},
+                                    child: Text('SHARE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, color: buttonBgColor, letterSpacing: 0.5)),
                                   ),
                                 ),
-                              ],
+                            ],
+                          ),
+                          const SizedBox(height: 15),
+                          
+                          // Display Name & Handle
+                          Text(
+                            displayName,
+                            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w800, fontSize: 26, color: darkTextColor, letterSpacing: -0.5),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            cleanHandle,
+                            style: GoogleFonts.inter(fontSize: 13, color: lightTextColor, fontStyle: FontStyle.italic),
+                          ),
+                          const SizedBox(height: 12),
+                          
+                          // Bio
+                          if (profileData['bio'] != null && profileData['bio'].toString().isNotEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                              child: Text(
+                                profileData['bio'],
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.playfairDisplay(fontSize: 15, color: darkTextColor, height: 1.4),
+                              ),
                             ),
+                          
+                          const SizedBox(height: 25),
+                          
+                          // Stats Row
+                          FutureBuilder<List<Post>>(
+                            future: _postsFuture,
+                            builder: (context, postSnapshot) {
+                              final int postCount = postSnapshot.hasData ? postSnapshot.data!.length : 0;
+                              return Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  _buildStatColumn(postCount.toString(), 'Posts', null),
+                                  _buildVerticalDivider(),
+                                  _buildStatColumn((profileData['followers']?.length ?? 0).toString(), 'Followers', () => _showFollowModal('followers', displayId)),
+                                  _buildVerticalDivider(),
+                                  _buildStatColumn((profileData['following']?.length ?? 0).toString(), 'Following', () => _showFollowModal('following', displayId)),
+                                ],
+                              );
+                            }
+                          ),
                           const SizedBox(height: 20),
                         ],
                       ),
@@ -360,19 +382,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       Container(
                         decoration: BoxDecoration(
                           color: bgColor,
-                          border: Border(
-                            top: BorderSide(color: Colors.grey.withValues(alpha: 0.3), width: 0.5),
-                            bottom: BorderSide(color: Colors.grey.withValues(alpha: 0.3), width: 0.5),
+                          border: const Border(
+                            bottom: BorderSide(color: Color(0xFFDCD4C6), width: 1.5),
                           ),
                         ),
                         child: TabBar(
-                          indicatorColor: Colors.black,
-                          indicatorWeight: 2,
-                          labelColor: Colors.black,
-                          unselectedLabelColor: Colors.grey.withValues(alpha: 0.6),
+                          indicatorColor: buttonBgColor,
+                          indicatorWeight: 3,
+                          labelColor: buttonBgColor,
+                          unselectedLabelColor: lightTextColor,
+                          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.5),
                           tabs: const [
-                            Tab(icon: Icon(Icons.grid_view_rounded, size: 28)),
-                            Tab(icon: Icon(Icons.filter_none, size: 26)),
+                            Tab(text: 'PHOTOS'),
+                            Tab(text: 'TAGGED'),
                           ],
                         ),
                       ),
@@ -417,23 +439,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             Icon(
               isVideo ? Icons.videocam_outlined : Icons.camera_alt_outlined, 
               size: 80, 
-              color: const Color(0xFFC4BCB4)
+              color: lightTextColor
             ),
             const SizedBox(height: 10),
             Text(
-              'No ${isVideo ? 'Reels' : 'Posts'} Yet', 
-              style: GoogleFonts.lora(fontSize: 22, color: const Color(0xFFC4BCB4))
+              isVideo ? 'No Reels Yet' : 'No Posts Yet', 
+              style: GoogleFonts.playfairDisplay(fontSize: 22, color: lightTextColor)
             ),
           ],
         ),
       );
     }
     return GridView.builder(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 15),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 3,
-        crossAxisSpacing: 2,
-        mainAxisSpacing: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 15,
+        childAspectRatio: 0.8, // Make polaroid taller
       ),
       itemCount: items.length,
       itemBuilder: (context, index) {
@@ -441,18 +464,81 @@ class _ProfileScreenState extends State<ProfileScreen> {
         final String? mediaUrl = isVideo ? post.videoUrl : post.image;
         
         return Container(
-          color: Colors.white,
-          child: mediaUrl != null
-              ? Image.network(
-                  mediaUrl.startsWith('/') ? 'https://www.vylithra.in$mediaUrl' : mediaUrl,
-                  fit: BoxFit.cover,
-                  errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error, color: Colors.grey)),
-                )
-              : Center(child: Text(post.content, textAlign: TextAlign.center, style: GoogleFonts.lora(fontSize: 10, color: darkTextColor), maxLines: 3)),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(2),
+            boxShadow: [
+              BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: 5,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          padding: const EdgeInsets.fromLTRB(6, 6, 6, 20),
+          child: Stack(
+            children: [
+              // Media
+              Positioned.fill(
+                child: Container(
+                  color: const Color(0xFFE0E0E0),
+                  child: mediaUrl != null
+                    ? Image.network(
+                        mediaUrl.startsWith('/') ? 'https://www.vylithra.in$mediaUrl' : mediaUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error, color: Colors.grey)),
+                      )
+                    : Center(child: Text(post.content, textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(fontSize: 10, color: darkTextColor), maxLines: 3)),
+                ),
+              ),
+              
+              // Dark corners
+              Positioned(top: 0, left: 0, child: _buildPhotoCorner(true, true)),
+              Positioned(top: 0, right: 0, child: _buildPhotoCorner(true, false)),
+              Positioned(bottom: 0, left: 0, child: _buildPhotoCorner(false, true)),
+              Positioned(bottom: 0, right: 0, child: _buildPhotoCorner(false, false)),
+            ],
+          ),
         );
       },
     );
   }
+
+  Widget _buildPhotoCorner(bool isTop, bool isLeft) {
+    // A simple triangle drawing for corners
+    return CustomPaint(
+      size: const Size(12, 12),
+      painter: CornerPainter(isTop: isTop, isLeft: isLeft),
+    );
+  }
+}
+
+class CornerPainter extends CustomPainter {
+  final bool isTop;
+  final bool isLeft;
+  
+  CornerPainter({required this.isTop, required this.isLeft});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..color = const Color(0xFF2A2018)..style = PaintingStyle.fill;
+    final path = Path();
+    
+    if (isTop && isLeft) {
+      path.moveTo(0, 0); path.lineTo(size.width, 0); path.lineTo(0, size.height);
+    } else if (isTop && !isLeft) {
+      path.moveTo(0, 0); path.lineTo(size.width, 0); path.lineTo(size.width, size.height);
+    } else if (!isTop && isLeft) {
+      path.moveTo(0, 0); path.lineTo(0, size.height); path.lineTo(size.width, size.height);
+    } else {
+      path.moveTo(size.width, 0); path.lineTo(size.width, size.height); path.lineTo(0, size.height);
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {

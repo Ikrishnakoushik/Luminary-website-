@@ -224,6 +224,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
             res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
             res.setHeader('Pragma', 'no-cache');
             res.setHeader('Expires', '0');
+        } else if (path.indexOf('.apk') !== -1) {
+            res.setHeader('Content-Type', 'application/vnd.android.package-archive');
+            res.setHeader('Content-Disposition', 'attachment; filename="vylithra-app.apk"');
+            res.setHeader('Cache-Control', 'no-cache');
         }
     }
 }));
