@@ -17,10 +17,12 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
   bool _isUploading = false;
   double _compressionProgress = 0;
   Subscription? _subscription;
+  bool _isAnonymous = false;
 
   @override
   void initState() {
     super.initState();
+    _fetchPrivacyDefault();
     _subscription = VideoCompress.compressProgress$.subscribe((progress) {
       if (mounted) {
         setState(() {
@@ -28,6 +30,17 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
         });
       }
     });
+  }
+
+  Future<void> _fetchPrivacyDefault() async {
+    try {
+      final res = await ApiService().get('/api/users/privacy');
+      if (mounted && res['hideProfileOnPosts'] == true) {
+        setState(() => _isAnonymous = true);
+      }
+    } catch (e) {
+      // ignore
+    }
   }
 
   @override
@@ -63,7 +76,7 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
 
       final fileToUpload = info?.file ?? widget.videoFile;
 
-      await ApiService().uploadReel(_captionController.text, fileToUpload);
+      await ApiService().uploadReel(_captionController.text, fileToUpload, _isAnonymous);
       if (mounted) {
         // Pop both the ShareReelScreen and the CreateReelScreen, returning true to refresh
         Navigator.pop(context); // Pop share screen
@@ -129,6 +142,14 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
                   ),
                 ],
               ),
+            ),
+            const Divider(height: 1),
+            SwitchListTile(
+              title: const Text('Post Anonymously', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Hide your username and profile picture from this reel.'),
+              value: _isAnonymous,
+              onChanged: (val) => setState(() => _isAnonymous = val),
+              activeColor: Colors.blueAccent,
             ),
             const SizedBox(height: 20),
             Padding(

@@ -149,6 +149,10 @@ const UserSchema = new mongoose.Schema({
         twitter: { type: String, default: '' },
         github: { type: String, default: '' },
         linkedin: { type: String, default: '' }
+    },
+    hideProfileOnPosts: {
+        type: Boolean,
+        default: false
     }
 });
 

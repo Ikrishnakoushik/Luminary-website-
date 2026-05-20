@@ -115,9 +115,17 @@ class _PostCardState extends State<PostCard> {
                            ),
                          );
                       }
+
+                      if (widget.post.isAnonymous) {
+                        avatarWidget = CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                          child: Icon(Icons.person_off, color: Theme.of(context).colorScheme.primary),
+                        );
+                      }
                       
                       return GestureDetector(
-                        onTap: () {
+                        onTap: widget.post.isAnonymous ? null : () {
                           if (group != null) {
                              Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(
                                stories: group!.stories,

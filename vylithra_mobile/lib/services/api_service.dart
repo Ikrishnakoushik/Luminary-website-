@@ -177,7 +177,7 @@ class ApiService {
       throw Exception('Unable to connect to the server. Please check your internet connection.');
     }
   }
-  Future<dynamic> uploadPost(String content, File? image) async {
+  Future<dynamic> uploadPost(String content, File? image, [bool isAnonymous = false]) async {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts'));
       
@@ -190,6 +190,7 @@ class ApiService {
 
       request.fields['content'] = content;
       request.fields['type'] = 'quick';
+      request.fields['isAnonymous'] = isAnonymous.toString();
 
       if (image != null) {
         request.files.add(await http.MultipartFile.fromPath('image', image.path));
@@ -204,7 +205,7 @@ class ApiService {
     }
   }
 
-  Future<dynamic> uploadReel(String content, File video) async {
+  Future<dynamic> uploadReel(String content, File video, [bool isAnonymous = false]) async {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts/reel'));
       
@@ -216,6 +217,7 @@ class ApiService {
       }
 
       request.fields['content'] = content;
+      request.fields['isAnonymous'] = isAnonymous.toString();
 
       request.files.add(await http.MultipartFile.fromPath('video', video.path));
 

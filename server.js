@@ -1295,6 +1295,41 @@ app.get('/api/users/profile', auth, async (req, res) => {
     }
 });
 
+// Get Privacy Settings
+app.get('/api/users/privacy', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('hideProfileOnPosts');
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json({ hideProfileOnPosts: user.hideProfileOnPosts });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
+// Update Privacy Settings
+app.put('/api/users/privacy', auth, async (req, res) => {
+    try {
+        const { hideProfileOnPosts } = req.body;
+        
+        const updateFields = {};
+        if (hideProfileOnPosts !== undefined) updateFields.hideProfileOnPosts = hideProfileOnPosts;
+
+        const user = await User.findByIdAndUpdate(
+            req.user.id,
+            { $set: updateFields },
+            { new: true }
+        ).select('hideProfileOnPosts');
+
+        res.json(user);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
 // Update Profile Info
 app.put('/api/users/profile', auth, async (req, res) => {
     try {
@@ -1484,7 +1519,14 @@ app.post('/api/posts', auth, (req, res) => {
         }
 
         try {
-            const { title, content, category, videoUrl, type } = req.body;
+            const { title, content, category, videoUrl, type, isAnonymous } = req.body;
+
+            // Fetch user to check global setting if not explicitly provided
+            let anon = isAnonymous === 'true' || isAnonymous === true;
+            if (isAnonymous === undefined) {
+                const u = await User.findById(req.user.id);
+                if (u && u.hideProfileOnPosts) anon = true;
+            }
 
             let attachment = '';
             let image = '';
@@ -1513,8 +1555,9 @@ app.post('/api/posts', auth, (req, res) => {
 
             // Create new post
             const newPost = new Post({
-                user: req.user.id,
-                username: req.user.username,
+                user: anon ? undefined : req.user.id,
+                username: anon ? 'Anonymous' : req.user.username,
+                isAnonymous: anon,
                 title,
                 content,
                 category: category || 'General',
@@ -1544,7 +1587,15 @@ app.post('/api/posts/reel', auth, (req, res) => {
         }
 
         try {
-            const { title, content, category } = req.body;
+            const { title, content, category, isAnonymous } = req.body;
+            
+            // Fetch user to check global setting if not explicitly provided
+            let anon = isAnonymous === 'true' || isAnonymous === true;
+            if (isAnonymous === undefined) {
+                const u = await User.findById(req.user.id);
+                if (u && u.hideProfileOnPosts) anon = true;
+            }
+
             let videoUrl = '';
 
             if (req.file) {
@@ -1569,8 +1620,9 @@ app.post('/api/posts/reel', auth, (req, res) => {
 
             // Create new reel post
             const newPost = new Post({
-                user: req.user.id,
-                username: req.user.username,
+                user: anon ? undefined : req.user.id,
+                username: anon ? 'Anonymous' : req.user.username,
+                isAnonymous: anon,
                 title: title || '',
                 content: content || '',
                 category: category || 'General',

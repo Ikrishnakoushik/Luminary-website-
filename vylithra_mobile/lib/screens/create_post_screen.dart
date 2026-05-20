@@ -16,6 +16,24 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
   bool _isUploading = false;
+  bool _isAnonymous = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchPrivacyDefault();
+  }
+
+  Future<void> _fetchPrivacyDefault() async {
+    try {
+      final res = await ApiService().get('/api/users/privacy');
+      if (mounted && res['hideProfileOnPosts'] == true) {
+        setState(() => _isAnonymous = true);
+      }
+    } catch (e) {
+      // ignore
+    }
+  }
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -38,7 +56,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
     
     try {
-      await ApiService().uploadPost(_contentController.text, _selectedImage);
+      await ApiService().uploadPost(_contentController.text, _selectedImage, _isAnonymous);
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -137,6 +155,15 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
               children: [
                 _buildActionIcon(Icons.image, 'Photo', _pickImage, Colors.green),
               ],
+            ),
+            const Divider(height: 30),
+            SwitchListTile(
+              title: const Text('Post Anonymously', style: TextStyle(fontWeight: FontWeight.bold)),
+              subtitle: const Text('Hide your username and profile picture from this post.'),
+              value: _isAnonymous,
+              onChanged: (val) => setState(() => _isAnonymous = val),
+              contentPadding: EdgeInsets.zero,
+              activeColor: Colors.blueAccent,
             ),
           ],
         ),
