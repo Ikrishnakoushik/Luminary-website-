@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
-import 'package:firebase_database/firebase_database.dart';
+import 'socket_service.dart';
 
 class WebRTCService {
   static final WebRTCService _instance = WebRTCService._internal();
   factory WebRTCService() => _instance;
   WebRTCService._internal();
 
-  final DatabaseReference _db = FirebaseDatabase.instance.ref();
+  final SocketService _socketService = SocketService();
   
   RTCPeerConnection? _peerConnection;
   MediaStream? localStream;
@@ -25,7 +25,7 @@ class WebRTCService {
   Function(Map<String, dynamic> data)? onIncomingCall;
   Function()? onCallAccepted;
 
-  StreamSubscription<DatabaseEvent>? _signalSubscription;
+  StreamSubscription<Map<String, dynamic>>? _signalSubscription;
 
   final Map<String, dynamic> _iceServers = {
     'iceServers': [
@@ -42,27 +42,18 @@ class WebRTCService {
   void _listenForSignals() {
     if (_currentUserId == null) return;
     
-    // Set presence status
-    _db.child('webrtc/status/$_currentUserId').set(true);
-    _db.child('webrtc/status/$_currentUserId').onDisconnect().remove();
-
-    _signalSubscription = _db.child('webrtc/signals/$_currentUserId').onChildAdded.listen((event) {
-      if (event.snapshot.value == null) return;
-      
-      final data = Map<String, dynamic>.from(event.snapshot.value as Map);
+    // Instead of Firebase, we listen to our global SocketService stream for 'webrtc_signal' events
+    _signalSubscription = _socketService.onWebRTCSignal.listen((data) {
       final type = data['type'];
       final payload = Map<String, dynamic>.from(data['payload'] ?? {});
-
       _handleIncomingSignal(type, payload);
-      
-      // Remove signal after processing
-      event.snapshot.ref.remove();
     });
   }
 
   Future<bool> isUserOnline(String userId) async {
-    final event = await _db.child('webrtc/status/$userId').once();
-    return event.snapshot.value != null;
+    // Sockets don't give synchronous presence status as easily as Firebase did. 
+    // We can assume true for outgoing calls and let the signaling timeout if they don't answer.
+    return true; 
   }
 
   Future<void> _handleIncomingSignal(String type, Map<String, dynamic> payload) async {
@@ -105,8 +96,9 @@ class WebRTCService {
 
   void _sendSignal(String type, Map<String, dynamic> payload) {
     if (payload['to'] == null) return;
-    final targetRef = _db.child('webrtc/signals/${payload['to']}').push();
-    targetRef.set({
+    // Emit through our global SocketService
+    _socketService.emit('webrtc_signal', {
+      'to': payload['to'],
       'type': type,
       'payload': payload,
     });
@@ -249,7 +241,6 @@ class WebRTCService {
 
   void dispose() {
     _signalSubscription?.cancel();
-    _db.child('webrtc/status/$_currentUserId').remove();
     endCall();
   }
 }

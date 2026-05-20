@@ -44,7 +44,15 @@ app.set('io', io);
 
 io.on('connection', (socket) => {
     console.log('New Real-time Connection:', socket.id);
-    socket.on('join_chat', (userId) => socket.join(userId));
+    socket.on('join_chat', (userId) => {
+        socket.join(userId);
+    });
+    socket.on('webrtc_signal', (data) => {
+        // Forward WebRTC signals directly to the target user's room
+        if (data.to) {
+            io.to(data.to).emit('webrtc_signal', data);
+        }
+    });
     socket.on('disconnect', () => console.log('Client disconnected'));
 });
 const PORT = process.env.PORT || 3000;
@@ -1518,6 +1526,8 @@ app.post('/api/posts', auth, (req, res) => {
             });
 
             const post = await newPost.save();
+            const io = req.app.get('io');
+            if (io) io.emit('new_post', post);
             res.json(post);
         } catch (err) {
             console.error(err.message);
@@ -1570,6 +1580,8 @@ app.post('/api/posts/reel', auth, (req, res) => {
             });
 
             const post = await newPost.save();
+            const io = req.app.get('io');
+            if (io) io.emit('new_post', post);
             res.json(post);
         } catch (err) {
             console.error('[Reel Upload Error]', err.message);
@@ -1594,6 +1606,8 @@ app.put('/api/posts/:id/like', auth, async (req, res) => {
         }
 
         await post.save();
+        const io = req.app.get('io');
+        if (io) io.emit('post_liked', { postId: req.params.id, likes: post.likes });
         res.json(post.likes);
     } catch (err) {
         console.error(err.message);
@@ -1615,6 +1629,8 @@ app.post('/api/posts/:id/comment', auth, async (req, res) => {
 
         post.comments.unshift(newComment);
         await post.save();
+        const io = req.app.get('io');
+        if (io) io.emit('new_comment', { postId: req.params.id, comments: post.comments });
         res.json(post.comments);
     } catch (err) {
         console.error(err.message);

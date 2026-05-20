@@ -7,6 +7,7 @@ import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
 import '../services/webrtc_service.dart';
+import '../services/socket_service.dart';
 import '../providers/auth_provider.dart';
 import 'call_screen.dart';
 
@@ -24,7 +25,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final ApiService _apiService = ApiService();
   final TextEditingController _messageController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-  late io_client.Socket socket;
+  final SocketService _socketService = SocketService();
+  StreamSubscription<Map<String, dynamic>>? _messageSubscription;
   
   List<dynamic> _messages = [];
   bool _isLoading = true;
@@ -74,19 +76,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _initSocket() {
     if (_currentUserId == null) return;
-
-    socket = io_client.io(ApiService.baseUrl, <String, dynamic>{
-      'transports': ['websocket'],
-      'autoConnect': false,
-    });
     
-    socket.connect();
-    
-    socket.onConnect((_) {
-      socket.emit('join_chat', _currentUserId);
-    });
-
-    socket.on('new_message', (data) {
+    // We assume SocketService is already connected globally via HomeScreen.
+    _messageSubscription = _socketService.onNewMessage.listen((data) {
       final senderData = data['sender'];
       final senderId = senderData is Map ? senderData['_id'] : senderData;
       
@@ -254,8 +246,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
-    socket.disconnect();
-    socket.dispose();
+    _messageSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();

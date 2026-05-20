@@ -18,8 +18,10 @@ import 'create_post_screen.dart';
 import 'create_reel_screen.dart';
 import 'reels_camera_screen.dart';
 import '../services/webrtc_service.dart';
+import '../services/socket_service.dart';
 import 'call_screen.dart';
 import 'dart:convert';
+import 'dart:async';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 
@@ -41,13 +43,19 @@ class _HomeScreenState extends State<HomeScreen> {
   String? _postsError;
   final ApiService _apiService = ApiService();
   late WebRTCService _webrtcService;
+  final SocketService _socketService = SocketService();
+  
+  StreamSubscription? _newPostSub;
+  StreamSubscription? _postLikedSub;
+  StreamSubscription? _newCommentSub;
+  int _newPostsCount = 0;
 
   @override
   void initState() {
     super.initState();
+    _initServices();
     _loadStories();
     _loadPosts();
-    _initWebRTC();
     _checkForUpdates();
   }
 
@@ -136,7 +144,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
 
-  void _initWebRTC() {
+  void _initServices() {
     _webrtcService = WebRTCService();
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final token = auth.token;
@@ -149,6 +157,11 @@ class _HomeScreenState extends State<HomeScreen> {
           final userId = data['user']?['id'];
           if (userId != null) {
             SharedPreferences.getInstance().then((prefs) => prefs.setString('current_user_id', userId));
+            
+            // Connect Global Socket
+            _socketService.connect(userId);
+            
+            // Initialize WebRTC
             _webrtcService.initialize(userId);
             _webrtcService.onIncomingCall = (incomingData) {
               if (mounted) {
@@ -167,6 +180,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
             };
+            
+            // Listen to real-time feed events
+            _setupRealTimeFeedListeners();
           }
         }
       } catch (e) {
@@ -175,8 +191,50 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _setupRealTimeFeedListeners() {
+    _newPostSub = _socketService.onNewPost.listen((postData) {
+      if (mounted) {
+        setState(() {
+          _newPostsCount++;
+        });
+      }
+    });
+
+    _postLikedSub = _socketService.onPostLiked.listen((data) {
+      final postId = data['postId'];
+      final likes = List<String>.from(data['likes']);
+      if (mounted) {
+        setState(() {
+          final index = _posts.indexWhere((p) => p.id == postId);
+          if (index != -1) {
+            _posts[index].likes = likes;
+          }
+        });
+      }
+    });
+
+    _newCommentSub = _socketService.onNewComment.listen((data) {
+      final postId = data['postId'];
+      final comments = List<dynamic>.from(data['comments']);
+      if (mounted) {
+        setState(() {
+          final index = _posts.indexWhere((p) => p.id == postId);
+          if (index != -1) {
+            // Simplified: we just update the comments list length if needed, 
+            // since the Post model usually holds the comments list.
+            // (Assuming Post model has comments or we just refresh data)
+            _posts[index].comments = comments;
+          }
+        });
+      }
+    });
+  }
+
   @override
   void dispose() {
+    _newPostSub?.cancel();
+    _postLikedSub?.cancel();
+    _newCommentSub?.cancel();
     _webrtcService.dispose();
     super.dispose();
   }
@@ -403,23 +461,56 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildFeedView() {
     return RefreshIndicator(
       onRefresh: () async {
+        setState(() => _newPostsCount = 0);
         await _loadStories();
         await _loadPosts();
       },
       child: _isLoadingPosts 
         ? const Center(child: CircularProgressIndicator(color: Colors.pinkAccent))
         : _posts.isEmpty 
-          ? Center(child: Text(_postsError != null ? 'Error: $_postsError' : 'No stories available.', style: TextStyle(color: _postsError != null ? Colors.red : Colors.grey)))
-          : ListView.builder(
-              padding: EdgeInsets.only(
-                top: MediaQuery.of(context).padding.top + 70, 
-                bottom: 100,
-              ),
-              itemCount: _posts.length + 1,
-              itemBuilder: (context, index) {
-                if (index == 0) return _buildStoryRail();
-                return PostCard(post: _posts[index - 1], storyGroups: _storyGroups);
-              },
+          ? Center(child: Text(_postsError != null ? 'Error: $_postsError' : 'No posts available.', style: TextStyle(color: _postsError != null ? Colors.red : Colors.grey)))
+          : Stack(
+              children: [
+                ListView.builder(
+                  padding: EdgeInsets.only(
+                    top: MediaQuery.of(context).padding.top + 70, 
+                    bottom: 100,
+                  ),
+                  itemCount: _posts.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == 0) return _buildStoryRail();
+                    return PostCard(post: _posts[index - 1], storyGroups: _storyGroups);
+                  },
+                ),
+                if (_newPostsCount > 0)
+                  Positioned(
+                    top: MediaQuery.of(context).padding.top + 80,
+                    left: 0,
+                    right: 0,
+                    child: Center(
+                      child: GestureDetector(
+                        onTap: () {
+                          setState(() => _newPostsCount = 0);
+                          _loadPosts();
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.primary,
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
+                            ],
+                          ),
+                          child: Text(
+                            '$_newPostsCount New Posts',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
     );
   }
