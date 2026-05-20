@@ -5,6 +5,7 @@ import '../services/api_service.dart';
 import '../models/post.dart';
 import '../providers/auth_provider.dart';
 import 'messages_screen.dart';
+import 'settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final String? userId;
@@ -199,8 +200,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                   leading: Icon(Icons.settings, color: darkTextColor),
                                   title: Text('Settings', style: TextStyle(color: darkTextColor)),
                                   onTap: () {
-                                    Navigator.pop(context);
-                                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Settings coming soon!')));
+                                    Navigator.pop(context); // close bottom sheet
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                    );
                                   },
                                 ),
                                 ListTile(
