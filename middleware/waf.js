@@ -174,6 +174,9 @@ const banIp = async (ip, reason) => {
 
 // The Middleware
 const wafMiddleware = async (req, res, next) => {
+    // TEMPORARY BYPASS: Instantly pass all traffic to resolve production 403 outage
+    return next();
+    
     const ip = req.headers['x-forwarded-for'] || req.ip || req.connection.remoteAddress;
 
     try {
