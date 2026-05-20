@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
+import 'package:video_compress/video_compress.dart';
 
 class ShareReelScreen extends StatefulWidget {
   final File videoFile;
@@ -14,6 +15,27 @@ class ShareReelScreen extends StatefulWidget {
 class _ShareReelScreenState extends State<ShareReelScreen> {
   final TextEditingController _captionController = TextEditingController();
   bool _isUploading = false;
+  double _compressionProgress = 0;
+  Subscription? _subscription;
+
+  @override
+  void initState() {
+    super.initState();
+    _subscription = VideoCompress.compressProgress$.subscribe((progress) {
+      if (mounted) {
+        setState(() {
+          _compressionProgress = progress;
+        });
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _subscription?.unsubscribe();
+    VideoCompress.deleteAllCache();
+    super.dispose();
+  }
 
   Future<void> _handleUpload() async {
     if (_captionController.text.isEmpty) {
@@ -28,11 +50,20 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Uploading Reel... This may take a while depending on the video size.')),
+      const SnackBar(content: Text('Compressing and uploading Reel...')),
     );
 
     try {
-      await ApiService().uploadReel(_captionController.text, widget.videoFile);
+      final info = await VideoCompress.compressVideo(
+        widget.videoFile.path,
+        quality: VideoQuality.MediumQuality,
+        deleteOrigin: false,
+        includeAudio: true,
+      );
+
+      final fileToUpload = info?.file ?? widget.videoFile;
+
+      await ApiService().uploadReel(_captionController.text, fileToUpload);
       if (mounted) {
         // Pop both the ShareReelScreen and the CreateReelScreen, returning true to refresh
         Navigator.pop(context); // Pop share screen
@@ -103,7 +134,18 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: _isUploading
-                  ? const Center(child: CircularProgressIndicator())
+                  ? Column(
+                      children: [
+                        const CircularProgressIndicator(),
+                        const SizedBox(height: 8),
+                        Text(
+                          _compressionProgress > 0 && _compressionProgress < 100
+                              ? 'Compressing: ${_compressionProgress.toStringAsFixed(0)}%'
+                              : 'Uploading...',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ],
+                    )
                   : ElevatedButton(
                       onPressed: _handleUpload,
                       style: ElevatedButton.styleFrom(
