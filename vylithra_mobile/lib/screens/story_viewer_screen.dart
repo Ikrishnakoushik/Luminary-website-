@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/api_service.dart';
 import 'package:video_player/video_player.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 
 class StoryViewerScreen extends StatefulWidget {
   final List<Story> stories;
@@ -47,7 +47,7 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
     _videoController = null;
 
     final story = widget.stories[index];
-    _apiService.put('/api/stories/\${story.id}/view', {}); // Mark as viewed silently
+    _apiService.put('/api/stories/${story.id}/view', {}); // Mark as viewed silently
 
     if (story.mediaType == 'video') {
       _videoController = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl))
@@ -140,11 +140,9 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                   : const Center(child: CircularProgressIndicator(color: Colors.white))
             else
               Center(
-                child: CachedNetworkImage(
-                  imageUrl: story.mediaUrl,
+                child: Image.network(
+                  story.mediaUrl,
                   fit: BoxFit.contain,
-                  placeholder: (context, url) => const CircularProgressIndicator(color: Colors.white),
-                  errorWidget: (context, url, error) => const Icon(Icons.error, color: Colors.white),
                 ),
               ),
 
@@ -175,8 +173,8 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                       children: [
                         CircleAvatar(
                           radius: 18,
-                          backgroundImage: widget.userProfilePicture.isNotEmpty
-                              ? CachedNetworkImageProvider(widget.userProfilePicture)
+                          backgroundImage: widget.userProfilePicture.isNotEmpty 
+                              ? NetworkImage(widget.userProfilePicture)
                               : null,
                           backgroundColor: Colors.grey[800],
                           child: widget.userProfilePicture.isEmpty

@@ -146,6 +146,16 @@ class ApiService {
     return data.map((json) => Post.fromJson(json)).toList();
   }
 
+  Future<bool> toggleSavePost(String postId) async {
+    final response = await post('/api/posts/$postId/save', {});
+    return response['isSaved'] ?? false;
+  }
+
+  Future<List<Post>> fetchSavedPosts() async {
+    final List<dynamic> data = await get('/api/users/saved');
+    return data.map((json) => Post.fromJson(json)).toList();
+  }
+
   Future<List<Post>> fetchUserPosts(String userId) async {
     final List<dynamic> data = await get('/api/posts?user=$userId');
     return data.map((json) => Post.fromJson(json)).toList();

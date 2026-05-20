@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/theme_provider.dart';
 import 'privacy_settings_screen.dart';
+import 'saved_posts_screen.dart';
+import 'notifications_settings_screen.dart';
+import 'professional_license_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -121,8 +125,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Saved',
             isDark: isDark,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Saved Posts coming soon!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SavedPostsScreen()),
               );
             },
           ),
@@ -136,8 +141,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Notifications',
             isDark: isDark,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Notification Settings coming soon!')),
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const NotificationsSettingsScreen()),
               );
             },
           ),
@@ -146,9 +152,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Theme',
             isDark: isDark,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Theme options are controlled by your device settings.')),
-              );
+              final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
+              themeProvider.toggleTheme(!themeProvider.isDarkMode);
             },
           ),
 
@@ -171,11 +176,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'About Vylithra',
             isDark: isDark,
             onTap: () {
-              showAboutDialog(
-                context: context,
-                applicationName: 'Vylithra',
-                applicationVersion: '1.0.0',
-                applicationLegalese: '© 2026 Vylithra Inc.',
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ProfessionalLicenseScreen()),
               );
             },
           ),

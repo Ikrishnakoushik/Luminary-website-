@@ -2,11 +2,25 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'package:video_compress/video_compress.dart';
+import 'package:ffmpeg_kit_flutter_new/ffmpeg_kit.dart';
+import 'package:ffmpeg_kit_flutter_new/return_code.dart';
+import 'package:path_provider/path_provider.dart';
 
 class ShareReelScreen extends StatefulWidget {
   final File videoFile;
+  final Duration trimStart;
+  final Duration trimEnd;
+  final String? audioPath;
+  final String filter;
 
-  const ShareReelScreen({super.key, required this.videoFile});
+  const ShareReelScreen({
+    super.key, 
+    required this.videoFile,
+    required this.trimStart,
+    required this.trimEnd,
+    this.audioPath,
+    this.filter = 'None',
+  });
 
   @override
   State<ShareReelScreen> createState() => _ShareReelScreenState();
@@ -63,18 +77,102 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
     });
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Compressing and uploading Reel...')),
+      const SnackBar(content: Text('Processing video...')),
     );
 
     try {
+      File fileToUpload = widget.videoFile;
+
+      // 1. Process with FFmpeg if editing was done
+      bool needsProcessing = widget.trimStart.inMilliseconds > 0 || 
+                             widget.audioPath != null || 
+                             widget.filter != 'None';
+                             
+      if (needsProcessing) {
+        final tempDir = await getTemporaryDirectory();
+        final outputPath = '${tempDir.path}/processed_${DateTime.now().millisecondsSinceEpoch}.mp4';
+
+        // Build FFmpeg command
+        List<String> cmd = [];
+        
+        // Input video (trimming)
+        cmd.add('-ss');
+        cmd.add(widget.trimStart.inSeconds.toString());
+        cmd.add('-t');
+        cmd.add((widget.trimEnd - widget.trimStart).inSeconds.toString());
+        cmd.add('-i');
+        cmd.add('"${widget.videoFile.path}"');
+
+        // Input audio if provided
+        if (widget.audioPath != null) {
+          cmd.add('-i');
+          cmd.add('"${widget.audioPath!}"');
+        }
+
+        // Filters
+        String vfString = '';
+        if (widget.filter == 'Grayscale') {
+          vfString = 'hue=s=0';
+        } else if (widget.filter == 'Sepia') {
+          vfString = 'colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131';
+        } else if (widget.filter == 'Invert') {
+          vfString = 'negate';
+        }
+
+        if (vfString.isNotEmpty) {
+          cmd.add('-vf');
+          cmd.add(vfString);
+        }
+
+        // Audio mapping
+        if (widget.audioPath != null) {
+          cmd.add('-c:v');
+          cmd.add('libx264'); // Re-encode video if applying filters
+          cmd.add('-map');
+          cmd.add('0:v:0');
+          cmd.add('-map');
+          cmd.add('1:a:0');
+          cmd.add('-shortest'); // End encoding when the shortest stream ends
+        } else {
+          if (vfString.isEmpty) {
+             cmd.add('-c');
+             cmd.add('copy'); // Fast copy if no visual filters
+          }
+        }
+
+        cmd.add('-y'); // Overwrite output
+        cmd.add('"$outputPath"');
+
+        final String commandString = cmd.join(' ');
+        print('FFmpeg command: $commandString');
+        
+        final session = await FFmpegKit.execute(commandString);
+        final returnCode = await session.getReturnCode();
+
+        if (ReturnCode.isSuccess(returnCode)) {
+          fileToUpload = File(outputPath);
+        } else {
+          final logs = await session.getLogsAsString();
+          print('FFmpeg Error: $logs');
+          throw Exception('Video processing failed');
+        }
+      }
+
+      // 2. Compress the processed video
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Compressing Reel...')),
+      );
+      
       final info = await VideoCompress.compressVideo(
-        widget.videoFile.path,
+        fileToUpload.path,
         quality: VideoQuality.MediumQuality,
         deleteOrigin: false,
         includeAudio: true,
       );
 
-      final fileToUpload = info?.file ?? widget.videoFile;
+      fileToUpload = info?.file ?? fileToUpload;
+
+      // 3. Upload
 
       await ApiService().uploadReel(_captionController.text, fileToUpload, _isAnonymous);
       if (mounted) {

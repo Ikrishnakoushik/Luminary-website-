@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:video_player/video_player.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
 
@@ -13,6 +15,7 @@ class ReelsScreen extends StatefulWidget {
 class _ReelsScreenState extends State<ReelsScreen> {
   late Future<List<Post>> _reelsFuture;
   final ApiService _apiService = ApiService();
+  int _currentPage = 0;
 
   @override
   void initState() {
@@ -42,8 +45,16 @@ class _ReelsScreenState extends State<ReelsScreen> {
         return PageView.builder(
           scrollDirection: Axis.vertical,
           itemCount: reels.length,
+          onPageChanged: (index) {
+            setState(() {
+              _currentPage = index;
+            });
+          },
           itemBuilder: (context, index) {
-            return ReelVideoPlayer(post: reels[index]);
+            return ReelVideoPlayer(
+              post: reels[index],
+              isCurrentPage: _currentPage == index,
+            );
           },
         );
       },
@@ -53,8 +64,9 @@ class _ReelsScreenState extends State<ReelsScreen> {
 
 class ReelVideoPlayer extends StatefulWidget {
   final Post post;
+  final bool isCurrentPage;
 
-  const ReelVideoPlayer({super.key, required this.post});
+  const ReelVideoPlayer({super.key, required this.post, required this.isCurrentPage});
 
   @override
   State<ReelVideoPlayer> createState() => _ReelVideoPlayerState();
@@ -63,6 +75,7 @@ class ReelVideoPlayer extends StatefulWidget {
 class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
   late VideoPlayerController _controller;
   bool _isInitialized = false;
+  bool _isSaved = false;
 
   @override
   void initState() {
@@ -79,9 +92,23 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
               _isInitialized = true;
             });
             _controller.setLooping(true);
-            _controller.play();
+            if (widget.isCurrentPage) {
+              _controller.play();
+            }
         }
       });
+  }
+
+  @override
+  void didUpdateWidget(ReelVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isCurrentPage != oldWidget.isCurrentPage) {
+      if (widget.isCurrentPage && _isInitialized) {
+        _controller.play();
+      } else {
+        _controller.pause();
+      }
+    }
   }
 
   @override
@@ -166,7 +193,32 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                       const SizedBox(height: 16),
                       _buildActionIcon(Icons.comment_outlined, 'Comment'),
                       const SizedBox(height: 16),
-                      _buildActionIcon(Icons.share_outlined, 'Share'),
+                      GestureDetector(
+                        onTap: () {
+                           Share.share('Check out this reel by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
+                        },
+                        child: _buildActionIcon(Icons.share_outlined, 'Share'),
+                      ),
+                      const SizedBox(height: 16),
+                      GestureDetector(
+                        onTap: () async {
+                          final prev = _isSaved;
+                          setState(() {
+                            _isSaved = !_isSaved;
+                          });
+                          try {
+                            final isSaved = await ApiService().toggleSavePost(widget.post.id);
+                            setState(() {
+                              _isSaved = isSaved;
+                            });
+                          } catch (e) {
+                            setState(() {
+                              _isSaved = prev;
+                            });
+                          }
+                        },
+                        child: _buildActionIcon(_isSaved ? Icons.bookmark : Icons.bookmark_border, 'Save'),
+                      ),
                     ],
                   ),
                 ],

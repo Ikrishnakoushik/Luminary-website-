@@ -1072,8 +1072,8 @@ app.post('/api/login', async (req, res) => {
             const verified = speakeasy.totp.verify({
                 secret: user.twoFactorSecret,
                 encoding: 'base32',
-                token: totpCode,
-                window: 1 // allow 30 seconds drift either way
+                token: String(totpCode).replace(/\s+/g, ''),
+                window: 4 // allow 2 minutes drift either way
             });
             if (!verified) {
                 return res.status(400).json({ msg: 'Invalid 2FA code' });
@@ -1236,8 +1236,8 @@ app.post('/api/user/2fa/verify', auth, async (req, res) => {
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: 'base32',
-            token: token,
-            window: 1
+            token: String(token).replace(/\s+/g, ''),
+            window: 4
         });
         
         if (verified) {
@@ -1263,8 +1263,8 @@ app.post('/api/user/2fa/disable', auth, async (req, res) => {
         const verified = speakeasy.totp.verify({
             secret: user.twoFactorSecret,
             encoding: 'base32',
-            token: token,
-            window: 1
+            token: String(token).replace(/\s+/g, ''),
+            window: 4
         });
         
         if (verified) {
@@ -1495,6 +1495,21 @@ app.get('/api/users/connections', auth, async (req, res) => {
     }
 });
 
+// Get Saved Posts
+app.get('/api/users/saved', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).populate({
+            path: 'savedPosts',
+            populate: { path: 'user', select: 'username displayName profilePicture' }
+        });
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user.savedPosts || []);
+    } catch (err) {
+        console.error('[Get Saved Posts Error]', err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get User by ID (Public Profile)
 app.get('/api/users/:id', async (req, res) => {
     try {
@@ -1664,6 +1679,29 @@ app.put('/api/posts/:id/like', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
+// Save/Unsave Post
+app.post('/api/posts/:id/save', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const postId = req.params.id;
+        const isSaved = user.savedPosts.includes(postId);
+
+        if (isSaved) {
+            user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId);
+        } else {
+            user.savedPosts.unshift(postId);
+        }
+
+        await user.save();
+        res.json({ isSaved: !isSaved });
+    } catch (err) {
+        console.error('[Save Post Error]', err.message);
+        res.status(500).send('Server Error');
     }
 });
 

@@ -1183,6 +1183,28 @@
             </div>
         </div>
     </div>
+
+    <!-- 2FA Disable Modal -->
+    <div class="custom-modal-overlay" id="twofaDisableModalOverlay">
+        <div class="custom-modal">
+            <div class="custom-modal-header" style="justify-content: space-between;">
+                <h2>Disable Two-Factor Authentication</h2>
+                <button class="close-btn" onclick="closeTwofaDisableModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="custom-modal-body">
+                <p style="margin-bottom: 15px; color: var(--text-muted);">
+                    Enter your 6-digit Authenticator code to disable Two-Factor Authentication.
+                </p>
+                <form id="disableTwofaForm" onsubmit="submitTwofaDisableVerification(event)">
+                    <div class="form-group">
+                        <label>Authenticator Code</label>
+                        <input type="text" class="form-control" id="twofaDisableCodeInput" placeholder="123456" required>
+                    </div>
+                    <button type="submit" class="btn btn-danger" style="width: 100%; background: #ef4444; color: white;">Disable 2FA</button>
+                </form>
+            </div>
+        </div>
+    </div>
     <script>const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUser = null;
 
@@ -1304,28 +1326,41 @@
                     closeTwofaModal();
                 }
             } else {
-                e.target.checked = true; 
-                const code = prompt('Enter your 6-digit Authenticator code to disable Two-Factor Authentication:');
-                if (code) {
-                    try {
-                        const res = await fetch('/api/user/2fa/disable', {
-                            method: 'POST',
-                            headers: { 
-                                'Content-Type': 'application/json',
-                                'x-auth-token': localStorage.getItem('token') 
-                            },
-                            body: JSON.stringify({ token: code })
-                        });
-                        const data = await res.json();
-                        if (res.ok) {
-                            VylithraUI.showToast('2FA Disabled successfully', 'success');
-                            e.target.checked = false;
-                        } else {
-                            VylithraUI.showToast(data.msg || 'Error disabling 2FA', 'error');
-                        }
-                    } catch(err) {
-                        VylithraUI.showToast('Oops! Our servers took a quick nap. Please try again.', 'error');
+                e.target.checked = true; // keep it checked visually until successfully disabled
+                document.getElementById('twofaDisableModalOverlay').classList.add('show');
+                document.getElementById('twofaDisableCodeInput').value = '';
+                document.getElementById('twofaDisableCodeInput').focus();
+            }
+        }
+
+        function closeTwofaDisableModal() {
+            document.getElementById('twofaDisableModalOverlay').classList.remove('show');
+            check2faStatus(); // reset toggle visually
+        }
+
+        async function submitTwofaDisableVerification(e) {
+            e.preventDefault();
+            const code = document.getElementById('twofaDisableCodeInput').value;
+            
+            if (code) {
+                try {
+                    const res = await fetch('/api/user/2fa/disable', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'x-auth-token': localStorage.getItem('token') 
+                        },
+                        body: JSON.stringify({ token: code })
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        VylithraUI.showToast('2FA Disabled successfully', 'success');
+                        closeTwofaDisableModal();
+                    } else {
+                        VylithraUI.showToast(data.msg || 'Error disabling 2FA', 'error');
                     }
+                } catch(err) {
+                    VylithraUI.showToast('Oops! Our servers took a quick nap. Please try again.', 'error');
                 }
             }
         }

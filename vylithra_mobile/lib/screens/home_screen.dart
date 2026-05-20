@@ -7,8 +7,8 @@ import '../models/post.dart';
 import '../models/story.dart';
 import 'story_viewer_screen.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:io';
+import '../providers/auth_provider.dart';
 import '../widgets/post_card.dart';
 import '../services/api_service.dart';
 import 'reels_screen.dart';
@@ -335,7 +335,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
     }
     
-    final currentUserId = Provider.of<AuthProvider>(context, listen: false).user?['id'];
+    final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUserId;
     
     return Container(
       height: 100,
@@ -422,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       child: CircleAvatar(
                         backgroundImage: group.userProfilePicture.isNotEmpty 
-                          ? CachedNetworkImageProvider(group.userProfilePicture)
+                          ? NetworkImage(group.userProfilePicture)
                           : null,
                         backgroundColor: Colors.grey[800],
                         child: group.userProfilePicture.isEmpty 

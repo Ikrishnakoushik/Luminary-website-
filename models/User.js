@@ -48,6 +48,10 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'
     }],
+    savedPosts: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Post'
+    }],
     activeSessions: [{
         sessionId: { type: String, required: true },
         userAgent: { type: String },

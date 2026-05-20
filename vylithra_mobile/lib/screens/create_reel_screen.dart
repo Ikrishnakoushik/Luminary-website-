@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
+import 'package:video_editor/video_editor.dart';
+import 'package:file_selector/file_selector.dart';
+import 'package:just_audio/just_audio.dart';
 import 'share_reel_screen.dart';
 
 class CreateReelScreen extends StatefulWidget {
@@ -12,9 +14,24 @@ class CreateReelScreen extends StatefulWidget {
 }
 
 class _CreateReelScreenState extends State<CreateReelScreen> {
-  File? _selectedVideo;
-  VideoPlayerController? _videoController;
   final ImagePicker _picker = ImagePicker();
+  VideoEditorController? _controller;
+  
+  // Audio Mixer State
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _selectedAudioPath;
+  bool _isPlayingMixedAudio = false;
+
+  // Filter State
+  String _selectedFilter = 'None';
+  final List<String> _filters = ['None', 'Grayscale', 'Sepia', 'Invert'];
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _audioPlayer.dispose();
+    super.dispose();
+  }
 
   Future<void> _pickVideo() async {
     final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
@@ -23,65 +40,119 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
     }
   }
 
-  void _initializeVideo(File file) {
-    _videoController?.dispose();
-    _selectedVideo = file;
-    _videoController = VideoPlayerController.file(file)
-      ..initialize().then((_) {
-        setState(() {});
-        _videoController!.setLooping(true);
-        _videoController!.play();
+  void _initializeVideo(File file) async {
+    _controller?.dispose();
+    _controller = VideoEditorController.file(
+      file,
+      minDuration: const Duration(seconds: 1),
+      maxDuration: const Duration(seconds: 60),
+    );
+    
+    await _controller!.initialize();
+    
+    // Sync audio player with video playback
+    _controller!.video.addListener(() {
+      if (_selectedAudioPath != null) {
+        if (_controller!.isPlaying && !_audioPlayer.playing) {
+          _audioPlayer.play();
+        } else if (!_controller!.isPlaying && _audioPlayer.playing) {
+          _audioPlayer.pause();
+        }
+      }
+    });
+
+    setState(() {});
+  }
+
+  Future<void> _pickAudio() async {
+    const XTypeGroup typeGroup = XTypeGroup(
+      label: 'audio',
+      extensions: <String>['mp3', 'wav', 'aac', 'm4a'],
+    );
+    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+
+    if (file != null && file.path.isNotEmpty) {
+      String path = file.path;
+      setState(() {
+        _selectedAudioPath = path;
       });
+      await _audioPlayer.setFilePath(path);
+      await _audioPlayer.setLoopMode(LoopMode.one);
+      
+      // Mute original video audio
+      _controller?.video.setVolume(0.0);
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Audio track added! Muted original video.')),
+      );
+    }
   }
 
-  @override
-  void dispose() {
-    _videoController?.dispose();
-    super.dispose();
-  }
-
-  void _showFeatureMock(String featureName, IconData icon) {
+  void _showFilterSelector() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.black87,
       builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        ),
+        height: 200,
+        padding: const EdgeInsets.all(20),
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 48, color: Colors.purpleAccent),
-            const SizedBox(height: 16),
-            Text(
-              featureName,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            const Text('Select Filter', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Expanded(
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: _filters.length,
+                itemBuilder: (context, index) {
+                  final filter = _filters[index];
+                  final isSelected = filter == _selectedFilter;
+                  return GestureDetector(
+                    onTap: () {
+                      setState(() => _selectedFilter = filter);
+                      Navigator.pop(context);
+                    },
+                    child: Container(
+                      margin: const EdgeInsets.only(right: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      decoration: BoxDecoration(
+                        color: isSelected ? Colors.purpleAccent : Colors.grey[800],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Center(
+                        child: Text(filter, style: const TextStyle(color: Colors.white)),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
-            const SizedBox(height: 8),
-            const Text(
-              'This advanced editing feature is ready to be wired up to a native video processing SDK!',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Close'),
-            )
           ],
         ),
       ),
     );
   }
 
-  void _handleUpload() async {
-    if (_selectedVideo == null) return;
+  void _handleNext() async {
+    if (_controller == null) return;
+    
+    // Pause players
+    _controller!.video.pause();
+    _audioPlayer.pause();
+
+    // Pass the trim values, selected audio, and filter to the next screen for FFmpeg processing
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => ShareReelScreen(videoFile: _selectedVideo!)),
+      MaterialPageRoute(
+        builder: (context) => ShareReelScreen(
+          videoFile: _controller!.file,
+          trimStart: _controller!.startTrim,
+          trimEnd: _controller!.endTrim,
+          audioPath: _selectedAudioPath,
+          filter: _selectedFilter,
+        ),
+      ),
     );
+    
     if (result == true && mounted) {
       Navigator.pop(context, true);
     }
@@ -91,81 +162,152 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
+      body: SafeArea(
+        child: _controller != null && _controller!.initialized
+            ? _buildEditor()
+            : _buildPickerPlaceholder(),
+      ),
+    );
+  }
+
+  Widget _buildPickerPlaceholder() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          // Video Player or Picker Placeholder
-          if (_videoController != null && _videoController!.value.isInitialized)
-            Center(
-              child: AspectRatio(
-                aspectRatio: _videoController!.value.aspectRatio,
-                child: VideoPlayer(_videoController!),
-              ),
-            )
-          else
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.video_camera_front, size: 80, color: Colors.white54),
-                  const SizedBox(height: 16),
-                  ElevatedButton.icon(
-                    onPressed: _pickVideo,
-                    icon: const Icon(Icons.upload_file),
-                    label: const Text('Select Video from Gallery'),
-                  ),
-                ],
-              ),
-            ),
-
-          // Top Header (Back & Next)
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 10,
-            left: 10,
-            right: 20,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 30),
-                  onPressed: () => Navigator.pop(context),
-                ),
-                if (_selectedVideo != null)
-                  ElevatedButton(
-                    onPressed: _handleUpload,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-                    ),
-                    child: const Text('Next', style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-              ],
-            ),
+          const Icon(Icons.video_camera_front, size: 80, color: Colors.white54),
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: _pickVideo,
+            icon: const Icon(Icons.upload_file),
+            label: const Text('Select Video from Gallery'),
           ),
-
-          // Right Side Editing Toolbar (Only shows if video is selected)
-          if (_selectedVideo != null)
-            Positioned(
-              right: 16,
-              top: MediaQuery.of(context).size.height * 0.25,
-              child: Column(
-                children: [
-                  _buildEditorTool(Icons.music_note, 'Add Song', () => _showFeatureMock('Audio Mixer', Icons.music_note)),
-                  const SizedBox(height: 24),
-                  _buildEditorTool(Icons.content_cut, 'Trim/Break', () => _showFeatureMock('Video Trimmer', Icons.content_cut)),
-                  const SizedBox(height: 24),
-                  _buildEditorTool(Icons.auto_awesome, 'Filters', () => _showFeatureMock('Color Filters', Icons.auto_awesome)),
-                  const SizedBox(height: 24),
-                  _buildEditorTool(Icons.wallpaper, 'Background', () => _showFeatureMock('AI Background Removal', Icons.wallpaper)),
-                ],
-              ),
-            ),
         ],
       ),
     );
   }
 
-  Widget _buildEditorTool(IconData icon, String label, VoidCallback onTap) {
+  Widget _buildEditor() {
+    return Stack(
+      children: [
+        // Video Preview
+        Column(
+          children: [
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  CropGridViewer.preview(controller: _controller!),
+                  AnimatedBuilder(
+                    animation: _controller!.video,
+                    builder: (_, __) => AnimatedOpacity(
+                      opacity: _controller!.isPlaying ? 0 : 1,
+                      duration: const Duration(milliseconds: 200),
+                      child: GestureDetector(
+                        onTap: _controller!.video.play,
+                        child: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: const BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.play_arrow, color: Colors.black),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Trimmer Timeline
+            Container(
+              height: 120,
+              padding: const EdgeInsets.only(bottom: 20, top: 10),
+              color: Colors.black,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('Trim Video', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  const SizedBox(height: 10),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: TrimSlider(
+                        controller: _controller!,
+                        height: 50,
+                        horizontalMargin: 10,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+
+        // Top Header
+        Positioned(
+          top: 10,
+          left: 10,
+          right: 20,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(context),
+              ),
+              ElevatedButton(
+                onPressed: _handleNext,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                ),
+                child: const Text('Next', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+
+        // Right Side Toolbar
+        Positioned(
+          right: 16,
+          top: MediaQuery.of(context).size.height * 0.2,
+          child: Column(
+            children: [
+              _buildEditorTool(
+                _selectedAudioPath != null ? Icons.library_music : Icons.music_note,
+                _selectedAudioPath != null ? 'Change Song' : 'Add Song',
+                _pickAudio,
+                color: _selectedAudioPath != null ? Colors.purpleAccent : Colors.white,
+              ),
+              const SizedBox(height: 24),
+              _buildEditorTool(
+                Icons.auto_awesome, 
+                'Filter: $_selectedFilter', 
+                _showFilterSelector,
+                color: _selectedFilter != 'None' ? Colors.purpleAccent : Colors.white,
+              ),
+              const SizedBox(height: 24),
+              _buildEditorTool(
+                Icons.crop, 
+                'Crop', 
+                () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Pinch the video preview to crop and rotate!')),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEditorTool(IconData icon, String label, VoidCallback onTap, {Color color = Colors.white}) {
     return GestureDetector(
       onTap: onTap,
       child: Column(
@@ -176,7 +318,7 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
               color: Colors.black45,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: Colors.white, size: 28),
+            child: Icon(icon, color: color, size: 28),
           ),
           const SizedBox(height: 8),
           Text(

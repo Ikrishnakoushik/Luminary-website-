@@ -1,11 +1,12 @@
 
 import 'package:flutter/material.dart';
+import 'package:share_plus/share_plus.dart';
 import '../models/post.dart';
 import '../models/story.dart';
 import '../screens/story_viewer_screen.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart';
+import '../services/api_service.dart';
 
 class PostCard extends StatefulWidget {
   final Post post;
@@ -19,11 +20,31 @@ class PostCard extends StatefulWidget {
 
 class _PostCardState extends State<PostCard> {
   bool _isLiked = false;
+  bool _isSaved = false;
 
   void _toggleLike() {
     setState(() {
       _isLiked = !_isLiked;
     });
+  }
+
+  void _toggleSave() async {
+    final prev = _isSaved;
+    setState(() {
+      _isSaved = !_isSaved;
+    });
+    try {
+      final isSaved = await ApiService().toggleSavePost(widget.post.id);
+      setState(() {
+        _isSaved = isSaved;
+      });
+      _showActionMessage(isSaved ? 'Post saved!' : 'Post removed from saved.');
+    } catch (e) {
+      setState(() {
+        _isSaved = prev;
+      });
+      _showActionMessage('Failed to save post.');
+    }
   }
 
   void _showActionMessage(String message) {
@@ -87,7 +108,7 @@ class _PostCardState extends State<PostCard> {
                       Widget avatarWidget = CircleAvatar(
                         radius: 20,
                         backgroundImage: widget.post.authorProfilePicture.isNotEmpty 
-                          ? CachedNetworkImageProvider(widget.post.authorProfilePicture)
+                          ? NetworkImage(widget.post.authorProfilePicture)
                           : null,
                         backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.1),
                         child: widget.post.authorProfilePicture.isEmpty 
@@ -233,7 +254,16 @@ class _PostCardState extends State<PostCard> {
                         icon: Icons.share_outlined,
                         color: iconColor,
                         label: 'Share',
-                        onTap: () => _showActionMessage('Share menu opened!'),
+                        onTap: () {
+                          Share.share('Check out this post by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
+                        },
+                        textColor: subTextColor,
+                      ),
+                      _buildActionItem(
+                        icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                        color: _isSaved ? iconColor : iconColor,
+                        label: 'Save',
+                        onTap: _toggleSave,
                         textColor: subTextColor,
                       ),
                     ],

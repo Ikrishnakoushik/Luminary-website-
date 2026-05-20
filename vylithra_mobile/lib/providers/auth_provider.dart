@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import '../services/api_service.dart';
@@ -12,6 +13,20 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => _isAuthenticated;
   bool get isInitialized => _isInitialized;
   String? get token => _vylithraToken;
+  String? get currentUserId {
+    if (_vylithraToken == null) return null;
+    try {
+      final parts = _vylithraToken!.split('.');
+      if (parts.length != 3) return null;
+      final payload = parts[1];
+      final String normalized = base64Url.normalize(payload);
+      final String resp = utf8.decode(base64Url.decode(normalized));
+      final data = json.decode(resp);
+      return data['user']?['id'];
+    } catch (e) {
+      return null;
+    }
+  }
 
   AuthProvider() {
     _loadToken();
