@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:video_player/video_player.dart';
+import 'share_reel_screen.dart';
 
 class CreateReelScreen extends StatefulWidget {
   const CreateReelScreen({super.key});
@@ -75,18 +76,15 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
     );
   }
 
-  void _handleUpload() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Processing and uploading Reel...')),
+  void _handleUpload() async {
+    if (_selectedVideo == null) return;
+    final result = await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => ShareReelScreen(videoFile: _selectedVideo!)),
     );
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Reel published successfully!')),
-        );
-      }
-    });
+    if (result == true && mounted) {
+      Navigator.pop(context, true);
+    }
   }
 
   @override

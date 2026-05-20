@@ -190,8 +190,8 @@ app.use(cors({
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
     allowedHeaders: ['Content-Type', 'x-auth-token', 'x-gateway-token']
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true })); // Ensure bodies are parsed
+app.use(express.json({ limit: '200mb' }));
+app.use(express.urlencoded({ extended: true, limit: '200mb' })); // Ensure bodies are parsed
 
 // Advanced Web Application Firewall (WAF)
 const { wafMiddleware, addThreatScore } = require('./middleware/waf');
@@ -1545,9 +1545,9 @@ app.post('/api/posts/reel', auth, (req, res) => {
                     return res.status(400).json({ msg: 'Only mp4, webm, and mov video files are allowed' });
                 }
 
-                // Hard limit 50MB for reels
-                if (file.buffer.length > 50 * 1024 * 1024) {
-                    return res.status(400).json({ msg: 'Video size exceeds 50MB' });
+                // Hard limit 200MB for reels
+                if (file.buffer.length > 200 * 1024 * 1024) {
+                    return res.status(400).json({ msg: 'Video size exceeds 200MB' });
                 }
 
                 const filename = `reel-${Date.now()}${ext}`;

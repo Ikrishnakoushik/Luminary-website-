@@ -177,4 +177,54 @@ class ApiService {
       throw Exception('Unable to connect to the server. Please check your internet connection.');
     }
   }
+  Future<dynamic> uploadPost(String content, File? image) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts'));
+      
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+        request.headers['x-auth-token'] = token;
+      }
+
+      request.fields['content'] = content;
+      request.fields['type'] = 'quick';
+
+      if (image != null) {
+        request.files.add(await http.MultipartFile.fromPath('image', image.path));
+      }
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection.');
+    }
+  }
+
+  Future<dynamic> uploadReel(String content, File video) async {
+    try {
+      final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts/reel'));
+      
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null) {
+        request.headers['Authorization'] = 'Bearer $token';
+        request.headers['x-auth-token'] = token;
+      }
+
+      request.fields['content'] = content;
+
+      request.files.add(await http.MultipartFile.fromPath('video', video.path));
+
+      final streamedResponse = await request.send();
+      final response = await http.Response.fromStream(streamedResponse);
+      
+      return _handleResponse(response);
+    } on SocketException {
+      throw Exception('Unable to connect to the server. Please check your internet connection.');
+    }
+  }
 }

@@ -518,9 +518,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Create Post',
               subtitle: 'Share text and images with your followers',
               color: Colors.blue,
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
+                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
+                if (result == true) {
+                  _loadPosts();
+                }
               },
             ),
             const SizedBox(height: 16),
@@ -529,9 +532,12 @@ class _HomeScreenState extends State<HomeScreen> {
               title: 'Create Reel',
               subtitle: 'Upload a video with editing tools',
               color: Colors.purple,
-              onTap: () {
+              onTap: () async {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateReelScreen())); 
+                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateReelScreen()));
+                if (result == true) {
+                  _loadPosts(); // Reels also show up in posts feed
+                }
               },
             ),
             const SizedBox(height: 16),

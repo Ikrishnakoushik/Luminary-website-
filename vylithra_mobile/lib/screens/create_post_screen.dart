@@ -2,6 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
+import '../services/api_service.dart';
+
 class CreatePostScreen extends StatefulWidget {
   const CreatePostScreen({super.key});
 
@@ -13,6 +15,7 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
   final TextEditingController _contentController = TextEditingController();
   File? _selectedImage;
   final ImagePicker _picker = ImagePicker();
+  bool _isUploading = false;
 
   Future<void> _pickImage() async {
     final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
@@ -23,22 +26,38 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     }
   }
 
-  void _handleUpload() {
+  Future<void> _handleUpload() async {
     if (_contentController.text.isEmpty && _selectedImage == null) return;
     
-    // Simulate upload process
+    setState(() {
+      _isUploading = true;
+    });
+
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Uploading post...')),
     );
     
-    Future.delayed(const Duration(seconds: 2), () {
+    try {
+      await ApiService().uploadPost(_contentController.text, _selectedImage);
       if (mounted) {
-        Navigator.pop(context);
+        Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Post published successfully!')),
         );
       }
-    });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isUploading = false;
+        });
+      }
+    }
   }
 
   @override
@@ -52,7 +71,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          TextButton(
+          _isUploading 
+          ? const Center(child: Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
+          : TextButton(
             onPressed: _handleUpload,
             child: const Text(
               'Share',
