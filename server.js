@@ -347,19 +347,27 @@ const gatewayAuth = async (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin';
+let isConnecting = null;
 const connectDB = async () => {
     if (mongoose.connection.readyState === 1) {
         return;
     }
+    if (isConnecting) {
+        await isConnecting;
+        return;
+    }
     try {
         console.error('[Startup] Checking Mongo connection...');
-        await mongoose.connect(MONGO_URI, {
+        isConnecting = mongoose.connect(MONGO_URI, {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });
+        await isConnecting;
         console.error('[Startup] MongoDB Connected');
     } catch (err) {
         console.error('[Startup] MongoDB Error:', err);
+    } finally {
+        isConnecting = null;
     }
 };
 
