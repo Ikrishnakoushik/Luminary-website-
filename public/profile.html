@@ -398,7 +398,7 @@
                         avatarEl.innerText = '';
                     } else {
                         avatarEl.innerText = initial;
-                        avatarEl.style.background = 'linear-gradient(135deg, #8D6E63 0%, #3E2723 100%)'; // Vintage brown gradient
+                        avatarEl.style.background = ''; // Revert to CSS default (purple gradient)
                     }
                                         // --- PRIVATE ACCOUNT LOGIC ---
                     if (user.isRestricted) {
