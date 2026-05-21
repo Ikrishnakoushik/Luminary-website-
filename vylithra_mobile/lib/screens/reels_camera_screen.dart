@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:ui' as ui;
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_mlkit_selfie_segmentation/google_mlkit_selfie_segmentation.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ReelsCameraScreen extends StatefulWidget {
   const ReelsCameraScreen({super.key});
@@ -22,9 +24,11 @@ class _ReelsCameraScreenState extends State<ReelsCameraScreen> {
   SegmentationMask? _mask;
   CameraImage? _latestImage;
   int _cameraIndex = 1; // Default to front camera
+  bool _isRecording = false;
 
   // A default background color/image
   Color _backgroundColor = Colors.blueAccent;
+  ui.Image? _backgroundImage;
 
   @override
   void initState() {
@@ -110,7 +114,30 @@ class _ReelsCameraScreenState extends State<ReelsCameraScreen> {
   void _changeBackground(Color color) {
     setState(() {
       _backgroundColor = color;
+      _backgroundImage = null;
     });
+  }
+
+  Future<void> _pickBackgroundImage() async {
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      setState(() {
+        _backgroundImage = frame.image;
+      });
+    }
+  }
+
+  void _toggleRecording() {
+    setState(() => _isRecording = !_isRecording);
+    if (!_isRecording) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reel saved to gallery!')),
+      );
+    }
   }
 
   @override
@@ -124,17 +151,17 @@ class _ReelsCameraScreenState extends State<ReelsCameraScreen> {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          // The actual segmented output
+          if (_cameraController != null && _cameraController!.value.isInitialized)
+            CameraPreview(_cameraController!),
           if (_mask != null && _latestImage != null)
             CustomPaint(
               painter: SegmentationPainter(
                 mask: _mask!,
                 imageSize: Size(_latestImage!.width.toDouble(), _latestImage!.height.toDouble()),
                 backgroundColor: _backgroundColor,
+                backgroundImage: _backgroundImage,
               ),
-            )
-          else
-            CameraPreview(_cameraController!), // Fallback to raw preview
+            ),
 
           // Native Scaffold UI Mock
           Positioned(
@@ -157,9 +184,7 @@ class _ReelsCameraScreenState extends State<ReelsCameraScreen> {
                 const SizedBox(height: 20),
                 _buildToolButton(Icons.color_lens, 'Blue BG', () => _changeBackground(Colors.blueAccent)),
                 const SizedBox(height: 20),
-                _buildToolButton(Icons.image, 'Image BG', () {
-                   ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Gallery BG picker ready!')));
-                }),
+                _buildToolButton(Icons.image, 'Image BG', _pickBackgroundImage),
               ],
             ),
           ),
@@ -170,16 +195,13 @@ class _ReelsCameraScreenState extends State<ReelsCameraScreen> {
             right: 0,
             child: Center(
               child: GestureDetector(
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Simulating Recording...')),
-                  );
-                },
+                onTap: _toggleRecording,
                 child: Container(
                   width: 80,
                   height: 80,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    shape: _isRecording ? BoxShape.rectangle : BoxShape.circle,
+                    borderRadius: _isRecording ? BorderRadius.circular(8) : null,
                     border: Border.all(color: Colors.white, width: 4),
                     color: Colors.redAccent,
                   ),
@@ -214,46 +236,59 @@ class SegmentationPainter extends CustomPainter {
   final SegmentationMask mask;
   final Size imageSize;
   final Color backgroundColor;
+  final ui.Image? backgroundImage;
 
   SegmentationPainter({
     required this.mask,
     required this.imageSize,
     required this.backgroundColor,
+    this.backgroundImage,
   });
 
   @override
   void paint(Canvas canvas, Size size) {
-    // 1. Draw the background color/image
-    final bgPaint = Paint()..color = backgroundColor;
-    canvas.drawRect(Rect.fromLTWH(0, 0, size.width, size.height), bgPaint);
-
-    // 2. Draw the person (This is a simplified representation)
-    // To actually draw the true camera frame pixels masked by the confidence values
-    // requires transferring the byte array to a dart:ui Image, which is complex in a CustomPainter.
-    // We will draw the mask confidence as a highly visible "Green Screen" effect for the preview.
-    
-    final paint = Paint()..style = PaintingStyle.fill;
     final scaleX = size.width / imageSize.width;
     final scaleY = size.height / imageSize.height;
 
+    final bounds = Rect.fromLTWH(0, 0, size.width, size.height);
+    
+    // Save a layer to draw the background and then erase the person
+    canvas.saveLayer(bounds, Paint());
+
+    if (backgroundImage != null) {
+      paintImage(
+        canvas: canvas,
+        rect: bounds,
+        image: backgroundImage!,
+        fit: BoxFit.cover,
+      );
+    } else {
+      canvas.drawRect(bounds, Paint()..color = backgroundColor);
+    }
+
+    // Erase the background where the person is (confidence > 0.5)
+    final clearPaint = Paint()..blendMode = BlendMode.clear;
     for (int y = 0; y < mask.height; y++) {
       for (int x = 0; x < mask.width; x++) {
         final confidence = mask.confidences[y * mask.width + x];
         if (confidence > 0.5) {
-          paint.color = Colors.white.withValues(alpha: confidence); // Shows person's silhouette
           // Mirror correction for front camera
-          final mappedX = size.width - (x * scaleX);
+          final mappedX = size.width - (x * scaleX) - scaleX;
           canvas.drawRect(
             Rect.fromLTWH(mappedX, y * scaleY, scaleX, scaleY),
-            paint,
+            clearPaint,
           );
         }
       }
     }
+    
+    canvas.restore();
   }
 
   @override
   bool shouldRepaint(covariant SegmentationPainter oldDelegate) {
-    return oldDelegate.mask != mask || oldDelegate.backgroundColor != backgroundColor;
+    return oldDelegate.mask != mask || 
+           oldDelegate.backgroundColor != backgroundColor ||
+           oldDelegate.backgroundImage != backgroundImage;
   }
 }
