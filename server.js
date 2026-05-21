@@ -1051,6 +1051,10 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
+        if (!user.password) {
+            return res.status(400).json({ msg: 'Please log in using your Google account, or reset your password.' });
+        }
+
         // Validate password
         const isMatch = await bcrypt.compare(password, user.password);
 
@@ -1105,9 +1109,11 @@ app.post('/api/login', async (req, res) => {
             lastActive: new Date()
         };
 
+        if (!user.activeSessions) user.activeSessions = [];
         user.activeSessions.push(newSession);
 
         // Log visit
+        if (!user.loginHistory) user.loginHistory = [];
         user.loginHistory.push(new Date());
         await user.save();
 
