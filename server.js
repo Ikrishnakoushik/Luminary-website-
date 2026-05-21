@@ -1526,6 +1526,17 @@ app.put('/api/users/preferences', auth, async (req, res) => {
     }
 });
 
+// Fallback endpoint to prevent 404s from cached clients
+app.get('/api/users', async (req, res) => {
+    try {
+        const users = await User.find().select('-password -email -verificationOtp -resetPasswordOtp').limit(15);
+        res.json(users);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Server Error');
+    }
+});
+
 // Get Top Users (Spreaders) - for Sidebar
 app.get('/api/users/top', async (req, res) => {
     try {
