@@ -2279,7 +2279,7 @@
             // Try to find the loading text paragraph to update it
             const loadingText = container.querySelector('p');
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout for cold starts
 
             try {
                 if (loadingText) loadingText.innerText = `Connecting to ${API_URL}...`;
@@ -2331,7 +2331,7 @@
             // Try to find the loading text paragraph to update it
             const loadingText = container.querySelector('p');
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout
+            const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout for cold starts
 
             try {
                 if (loadingText) loadingText.innerText = `Connecting to ${API_URL}...`;
