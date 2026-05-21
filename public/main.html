@@ -3058,7 +3058,7 @@
             
             // 2. Fetch Active Users
             try {
-                const res = await fetch('/api/users');
+                const res = await fetch('/api/users/top');
                 if (res.ok) {
                     const users = await res.json();
                     const activeUsers = users.slice(0, 10);
