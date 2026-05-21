@@ -4,6 +4,7 @@ import 'package:share_plus/share_plus.dart';
 import '../models/post.dart';
 import '../models/story.dart';
 import '../screens/story_viewer_screen.dart';
+import '../screens/profile_screen.dart';
 import '../providers/auth_provider.dart';
 import 'package:provider/provider.dart';
 import '../services/api_service.dart';
@@ -48,13 +49,185 @@ class _PostCardState extends State<PostCard> {
   }
 
   void _showActionMessage(String message) {
-    ScaffoldMessenger.of(context).clearSnackBars();
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showPostOptions() {
+    final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUserId;
+    final isMe = currentUserId != null && widget.post.userId.isNotEmpty && currentUserId == widget.post.userId;
+    
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        final isDark = Theme.of(context).brightness == Brightness.dark;
+        final bgColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8F6EB);
+        final textColor = isDark ? Colors.white : const Color(0xFF3E2723);
+        
+        return Container(
+          decoration: BoxDecoration(
+            color: bgColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          child: SafeArea(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  margin: const EdgeInsets.only(top: 10, bottom: 20),
+                  height: 4,
+                  width: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                ListTile(
+                  leading: Icon(Icons.share_outlined, color: textColor),
+                  title: Text('Share Post', style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Share.share('Check out this post by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
+                  },
+                ),
+                if (!isMe)
+                  ListTile(
+                    leading: const Icon(Icons.report_outlined, color: Colors.red),
+                    title: const Text('Report Post', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
+                    onTap: () {
+                      Navigator.pop(context); // Close the bottom sheet first
+                      _showReportDialog();
+                    },
+                  ),
+                if (isMe) ...[
+                  ListTile(
+                    leading: Icon(Icons.edit_outlined, color: textColor),
+                    title: Text('Edit Post', style: TextStyle(color: textColor, fontWeight: FontWeight.w500)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showActionMessage('Edit functionality coming soon!');
+                    },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.delete_outline, color: Colors.red),
+                    title: const Text('Delete Post', style: TextStyle(color: Colors.red, fontWeight: FontWeight.w500)),
+                    onTap: () {
+                      Navigator.pop(context);
+                      _showDeleteConfirmation();
+                    },
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReportDialog() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final reportReasons = [
+      {'title': 'Hate Speech & Discrimination', 'act': 'Violates IT Act Sec 66A / 153A IPC'},
+      {'title': 'Harassment or Bullying', 'act': 'Violates IT Act Sec 67 & IPC 509'},
+      {'title': 'Obscene or Nudity', 'act': 'Violates IT Act Sec 67, 67A'},
+      {'title': 'Child Exploitation', 'act': 'Violates POCSO Act / IT Act 67B'},
+      {'title': 'Privacy Violation', 'act': 'Violates IT Act Sec 66E'},
+      {'title': 'Identity Theft', 'act': 'Violates IT Act Sec 66C'},
+      {'title': 'Defamation', 'act': 'Violates IPC Sec 499 & 500'},
+      {'title': 'Fake News & Misinformation', 'act': 'Violates IPC Sec 505 / IT Rules'},
+      {'title': 'Cyber Extortion & Blackmail', 'act': 'Violates IPC Sec 384 & 503'},
+      {'title': 'Voyeurism', 'act': 'Violates IPC Sec 354C'},
+      {'title': 'Cyber Stalking', 'act': 'Violates IPC Sec 354D'},
+      {'title': 'Copyright Infringement', 'act': 'Violates DMCA Title 17 / Copyright Act'},
+      {'title': 'Terrorism or Illegal Acts', 'act': 'Violates IT Act Sec 66F'},
+      {'title': 'Spam or Scam', 'act': 'Violates IT Act Sec 66D'},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8F6EB),
+        title: Text('Why are you reporting this post?', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF3E2723), fontSize: 18)),
+        contentPadding: const EdgeInsets.only(top: 12),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: reportReasons.length,
+            separatorBuilder: (context, index) => const Divider(height: 1, color: Colors.grey),
+            itemBuilder: (context, index) {
+              final reason = reportReasons[index];
+              return ListTile(
+                title: Text(reason['title']!, style: TextStyle(color: isDark ? Colors.white : Colors.black87, fontWeight: FontWeight.w500)),
+                subtitle: Text(reason['act']!, style: const TextStyle(color: Colors.redAccent, fontSize: 12)),
+                onTap: () async {
+                  Navigator.pop(context); // Close dialog
+                  try {
+                    // Send report to backend
+                    await ApiService().post('/api/posts/${widget.post.id}/report', {'reason': reason['title']});
+                    if (mounted) {
+                      _showActionMessage('Report submitted. We will review this post.');
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      _showActionMessage('You have already reported this post or an error occurred.');
+                    }
+                  }
+                },
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8F6EB),
+        title: Text('Delete Post', style: TextStyle(color: isDark ? Colors.white : const Color(0xFF3E2723))),
+        content: Text('Are you sure you want to delete this post? This action cannot be undone.', 
+          style: TextStyle(color: isDark ? Colors.white70 : Colors.black87)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              try {
+                await ApiService().delete('/api/posts/${widget.post.id}');
+                if (mounted) {
+                  _showActionMessage('Post deleted successfully');
+                  // Trigger a refresh somehow if needed
+                }
+              } catch (e) {
+                if (mounted) _showActionMessage('Error deleting post');
+              }
+            },
+            child: const Text('Delete', style: TextStyle(color: Colors.red)),
+          ),
+        ],
       ),
     );
   }
@@ -122,7 +295,7 @@ class _PostCardState extends State<PostCard> {
                            decoration: const BoxDecoration(
                              shape: BoxShape.circle,
                              gradient: LinearGradient(
-                               colors: [Colors.purple, Colors.orange],
+                               colors: [Color(0xFF8E6A4B), Color(0xFF4A3B31)],
                                begin: Alignment.topRight,
                                end: Alignment.bottomLeft,
                              ),
@@ -155,8 +328,7 @@ class _PostCardState extends State<PostCard> {
                                onComplete: () { if(mounted) setState((){}); },
                              )));
                           } else {
-                             // Go to profile
-                             // Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: authorId)));
+                             Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: authorId)));
                           }
                         },
                         child: avatarWidget,
@@ -165,30 +337,35 @@ class _PostCardState extends State<PostCard> {
 
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.post.authorName,
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                      child: GestureDetector(
+                        onTap: widget.post.isAnonymous ? null : () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: widget.post.userId)));
+                        },
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.post.authorName,
+                              style: TextStyle(
+                                color: textColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
-                          ),
-                          Text(
-                            "Just now", // Placeholder for timestamp
-                            style: TextStyle(
-                              color: subTextColor,
-                              fontSize: 12,
+                            Text(
+                              "Just now", // Placeholder for timestamp
+                              style: TextStyle(
+                                color: subTextColor,
+                                fontSize: 12,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
                     IconButton(
                       icon: Icon(Icons.more_horiz, color: iconColor),
-                      onPressed: () {},
+                      onPressed: _showPostOptions,
                     ),
                   ],
                 ),
@@ -234,37 +411,44 @@ class _PostCardState extends State<PostCard> {
                     ),
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      _buildActionItem(
-                        icon: _isLiked ? Icons.favorite : Icons.favorite_border,
-                        color: _isLiked ? Colors.redAccent : iconColor,
-                        label: 'Like',
-                        onTap: _toggleLike,
-                        textColor: subTextColor,
+                      Expanded(
+                        child: _buildActionItem(
+                          icon: _isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: _isLiked ? Colors.redAccent : iconColor,
+                          label: 'Like',
+                          onTap: _toggleLike,
+                          textColor: subTextColor,
+                        ),
                       ),
-                      _buildActionItem(
-                        icon: Icons.chat_bubble_outline,
-                        color: iconColor,
-                        label: 'Comment',
-                        onTap: () => _showActionMessage('Comments coming soon!'),
-                        textColor: subTextColor,
+                      Expanded(
+                        child: _buildActionItem(
+                          icon: Icons.chat_bubble_outline,
+                          color: iconColor,
+                          label: 'Comment',
+                          onTap: () => _showActionMessage('Comments coming soon!'),
+                          textColor: subTextColor,
+                        ),
                       ),
-                      _buildActionItem(
-                        icon: Icons.share_outlined,
-                        color: iconColor,
-                        label: 'Share',
-                        onTap: () {
-                          Share.share('Check out this post by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
-                        },
-                        textColor: subTextColor,
+                      Expanded(
+                        child: _buildActionItem(
+                          icon: Icons.share_outlined,
+                          color: iconColor,
+                          label: 'Share',
+                          onTap: () {
+                            Share.share('Check out this post by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
+                          },
+                          textColor: subTextColor,
+                        ),
                       ),
-                      _buildActionItem(
-                        icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
-                        color: _isSaved ? iconColor : iconColor,
-                        label: 'Save',
-                        onTap: _toggleSave,
-                        textColor: subTextColor,
+                      Expanded(
+                        child: _buildActionItem(
+                          icon: _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                          color: _isSaved ? iconColor : iconColor,
+                          label: 'Save',
+                          onTap: _toggleSave,
+                          textColor: subTextColor,
+                        ),
                       ),
                     ],
                   ),
@@ -287,17 +471,21 @@ class _PostCardState extends State<PostCard> {
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 22, color: color),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: textColor,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+            Icon(icon, size: 20, color: color),
+            const SizedBox(width: 4),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ),
           ],

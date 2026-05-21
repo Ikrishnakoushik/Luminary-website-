@@ -7,6 +7,7 @@ import 'privacy_settings_screen.dart';
 import 'saved_posts_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'professional_license_screen.dart';
+import 'legal_policies_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -179,6 +180,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const ProfessionalLicenseScreen()),
+              );
+            },
+          ),
+          _buildListTile(
+            icon: Icons.gavel_outlined,
+            title: 'Legal & Policies',
+            isDark: isDark,
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const LegalPoliciesScreen()),
               );
             },
           ),

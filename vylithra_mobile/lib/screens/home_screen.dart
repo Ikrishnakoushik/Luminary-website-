@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:package_info_plus/package_info_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:upgrader/upgrader.dart';
 import '../models/post.dart';
 import '../models/story.dart';
 import 'story_viewer_screen.dart';
@@ -56,45 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
     _initServices();
     _loadStories();
     _loadPosts();
-    _checkForUpdates();
-  }
-
-  Future<void> _checkForUpdates() async {
-    try {
-      final res = await _apiService.get('/api/app/version');
-      if (res != null && res['latestVersion'] != null) {
-        final packageInfo = await PackageInfo.fromPlatform();
-        if (packageInfo.version != res['latestVersion']) {
-          if (mounted) {
-            showDialog(
-              context: context,
-              barrierDismissible: false,
-              builder: (context) => AlertDialog(
-                title: const Text('Update Available'),
-                content: Text(res['updateMessage'] ?? 'A new version is available.'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text('Later'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () async {
-                      final url = Uri.parse(res['apkUrl']);
-                      if (await canLaunchUrl(url)) {
-                        await launchUrl(url, mode: LaunchMode.externalApplication);
-                      }
-                    },
-                    child: const Text('Update'),
-                  ),
-                ],
-              ),
-            );
-          }
-        }
-      }
-    } catch (e) {
-      // Ignore errors silently
-    }
   }
 
   Future<void> _loadStories() async {
@@ -243,10 +203,17 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: Stack(
+    return UpgradeAlert(
+      upgrader: Upgrader(
+        debugLogging: false,
+        debugDisplayAlways: false, // Ensure it doesn't always show in testing
+        showIgnore: false,
+        showLater: true,
+      ),
+      child: Scaffold(
+        extendBody: true,
+        backgroundColor: Colors.transparent,
+        body: Stack(
         children: [
           // Solid Vintage Background
           Container(
@@ -275,7 +242,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ],
       ),
       bottomNavigationBar: _buildBottomNav(isDark),
-    );
+    ));
   }
 
   Widget _buildGlassHeader(bool isDark) {
@@ -309,10 +276,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               Image.asset(
                 'assets/images/logo.png',
-                height: 28,
-                color: isDark ? Colors.white : Colors.black87,
+                height: 40,
+                // Removed color overlay to keep logo full HD and properly visible
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               const Text(
                 'Vylithra',
                 style: TextStyle(
@@ -409,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: allViewed ? null : const LinearGradient(
-                        colors: [Colors.purple, Colors.orange],
+                        colors: [Color(0xFF8E6A4B), Color(0xFF4A3B31)],
                         begin: Alignment.topRight,
                         end: Alignment.bottomLeft,
                       ),

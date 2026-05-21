@@ -67,6 +67,14 @@ const PostSchema = new mongoose.Schema({
         text: String,
         createdAt: { type: Date, default: Date.now }
     }],
+    reportedBy: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }],
+    isUnderReview: {
+        type: Boolean,
+        default: false
+    },
     createdAt: {
         type: Date,
         default: Date.now

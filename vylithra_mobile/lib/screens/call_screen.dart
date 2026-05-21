@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import '../services/webrtc_service.dart';
 import 'dart:ui';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
+import 'package:just_audio/just_audio.dart';
 
 class CallScreen extends StatefulWidget {
   final WebRTCService webrtcService;
@@ -34,6 +34,7 @@ class _CallScreenState extends State<CallScreen> {
   bool _isConnected = false;
   bool _isTargetOnline = true; // Assume online until checked
   bool _isRinging = false;
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -65,24 +66,23 @@ class _CallScreenState extends State<CallScreen> {
     }
   }
 
-  void _playRingtone(bool isIncoming) {
+  Future<void> _playRingtone(bool isIncoming) async {
     _isRinging = true;
-    if (isIncoming) {
-      FlutterRingtonePlayer().playRingtone(looping: true);
-    } else {
-      // Play a dialing tone or generic notification for outgoing
-      FlutterRingtonePlayer().play(
-        android: AndroidSounds.notification,
-        ios: IosSounds.glass,
-        looping: true,
-        volume: 0.5,
-      );
+    try {
+      await _audioPlayer.setAsset('assets/audio/ringtone.mp3');
+      await _audioPlayer.setLoopMode(LoopMode.one);
+      if (!isIncoming) {
+        await _audioPlayer.setVolume(0.5);
+      }
+      await _audioPlayer.play();
+    } catch (e) {
+      print("Error playing ringtone: $e");
     }
   }
 
   void _stopRingtone() {
     if (_isRinging) {
-      FlutterRingtonePlayer().stop();
+      _audioPlayer.stop();
       _isRinging = false;
     }
   }
@@ -131,6 +131,7 @@ class _CallScreenState extends State<CallScreen> {
   @override
   void dispose() {
     _stopRingtone();
+    _audioPlayer.dispose();
     _localRenderer.dispose();
     _remoteRenderer.dispose();
     super.dispose();

@@ -25,8 +25,14 @@ class SocketService {
 
   bool get isConnected => _socket?.connected ?? false;
 
+  String? _currentUserId;
+
   void connect(String userId) {
-    if (_socket != null) return;
+    if (_socket != null) {
+      if (_currentUserId == userId) return;
+      dispose();
+    }
+    _currentUserId = userId;
 
     _socket = io_client.io(ApiService.baseUrl, <String, dynamic>{
       'transports': ['websocket'],

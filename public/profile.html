@@ -346,59 +346,127 @@
                         // Ensure we handle the path correctly whether it starts with / or http
                         avatarEl.style.backgroundImage = `url('${user.profilePicture}')`;
                         avatarEl.style.backgroundSize = 'cover';
+    document.getElementById('top-nav-handle').innerText = cleanHandle;
+
+                    // Bio Update
+                    const bioEl = document.getElementById('profile-bio');
+                    if (bioEl) {
+                        bioEl.innerText = user.bio || "Digital Craftsman & Writer. Building things for the web and sharing what I learn along the way.";
+                    }
+
+                    // Stat Updates
+                    const followersCount = user.followers ? user.followers.length : 0;
+                    const followingCount = user.following ? user.following.length : 0;
+                    
+                    const fCountEl = document.getElementById('profile-followers-count');
+                    const followingCountEl = document.getElementById('profile-following-count');
+                    
+                    if (fCountEl) fCountEl.innerText = followersCount >= 1000 ? (followersCount/1000).toFixed(1) + 'k' : followersCount;
+                    if (followingCountEl) followingCountEl.innerText = followingCount;
+
+                    const roleEl = document.getElementById('profile-role');
+                    if(roleEl) {
+                        roleEl.style.display = 'none';
+                    }
+                    const initial = (user.username || 'U').charAt(0).toUpperCase();
+                    const avatarEl = document.getElementById('profile-avatar');
+
+                    // Update Social Links
+                    const socialLinksContainer = document.querySelector('.social-links');
+                    if (socialLinksContainer) {
+                        const twitterUrl = user.socials && user.socials.twitter ? user.socials.twitter : '#';
+                        const githubUrl = user.socials && user.socials.github ? user.socials.github : '#';
+                        const linkedinUrl = user.socials && user.socials.linkedin ? user.socials.linkedin : '#';
+
+                        socialLinksContainer.innerHTML = `
+                            <a href="/${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
+                            <a href="/${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="GitHub"><i class="fab fa-github"></i></a>
+                            <a href="/${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                        `;
+                    }
+
+                    // Clear previous content
+                    avatarEl.innerHTML = '';
+                    avatarEl.style.backgroundImage = 'none';
+
+                    if (user.profilePicture) {
+                        // If user has a picture, show it
+                        // Ensure we handle the path correctly whether it starts with / or http
+                        avatarEl.style.backgroundImage = `url('${user.profilePicture}')`;
+                        avatarEl.style.backgroundSize = 'cover';
                         avatarEl.style.backgroundPosition = 'center';
                         avatarEl.innerText = '';
                     } else {
                         avatarEl.innerText = initial;
-                        avatarEl.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'; // Reset default gradient
+                        avatarEl.style.background = 'linear-gradient(135deg, #8D6E63 0%, #3E2723 100%)'; // Vintage brown gradient
                     }
-
-                    // --- READER vs PUBLISHER LOGIC ---
-                    if (user.role === 'reader') {
-                        // Hide Projects
+                                        // --- PRIVATE ACCOUNT LOGIC ---
+                    if (user.isRestricted) {
                         const projSection = document.getElementById('projects-section');
                         if (projSection) projSection.style.display = 'none';
 
-                        // Show Interests
                         const intrSection = document.getElementById('interests-section');
-                        const intrList = document.getElementById('interests-list');
-                        if (intrSection && intrList) {
-                            intrSection.style.display = 'block';
-                            if (user.preferences && user.preferences.length > 0) {
-                                intrList.innerHTML = user.preferences.map(pref =>
-                                    `<span class="tag" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);">${pref}</span>`
-                                ).join('');
-                            } else {
-                                intrList.innerHTML = '<span style="color:#94a3b8; font-size:0.9rem;">No interests selected yet.</span>';
+                        if (intrSection) intrSection.style.display = 'none';
+
+                        const spreadTitle = document.getElementById('spreads-title');
+                        if (spreadTitle) spreadTitle.innerText = 'Private Account';
+
+                        const container = document.getElementById('posts-container');
+                        if (container) {
+                            container.innerHTML = `
+                                <div style="text-align: center; padding: 40px; color: var(--text-muted); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; margin-top: 15px;">
+                                    <i class="fas fa-lock" style="font-size: 3rem; margin-bottom: 15px; color: var(--border);"></i>
+                                    <h3>This Account is Private</h3>
+                                    <p>Follow to see their posts and projects.</p>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        // --- READER vs PUBLISHER LOGIC ---
+                        if (user.role === 'reader') {
+                            // Hide Projects
+                            const projSection = document.getElementById('projects-section');
+                            if (projSection) projSection.style.display = 'none';
+
+                            // Show Interests
+                            const intrSection = document.getElementById('interests-section');
+                            const intrList = document.getElementById('interests-list');
+                            if (intrSection && intrList) {
+                                intrSection.style.display = 'block';
+                                if (user.preferences && user.preferences.length > 0) {
+                                    intrList.innerHTML = user.preferences.map(pref =>
+                                        `<span class="tag" style="background: var(--bg-color); color: var(--text-main); border: 1px solid var(--border);">${pref}</span>`
+                                    ).join('');
+                                } else {
+                                    intrList.innerHTML = '<span style="color:#94a3b8; font-size:0.9rem;">No interests selected yet.</span>';
+                                }
+                            }
+
+                            // Change Feed Title to "Favorite Spreads"
+                            const spreadTitle = document.getElementById('spreads-title');
+                            if (spreadTitle) spreadTitle.innerText = 'Favorite Spreads';
+
+                            // Fetch Liked Posts
+                            // We need the user ID. 'user' obj has it.
+                            // Check if we are viewing this profile (user._id)
+                            const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
+
+                            if (targetId) {
+                                // Trigger fetch with likedBy filter
+                                fetchPosts({ likedBy: targetId });
+                            }
+
+                        } else {
+                            // Publisher Logic (Default)
+                            const spreadTitle = document.getElementById('spreads-title');
+                            if (spreadTitle) spreadTitle.innerText = 'Recent Spreads';
+                            // Explicitly fetch own posts
+                            const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
+                            if (targetId) {
+                                fetchPosts({ user: targetId });
                             }
                         }
-
-                        // Change Feed Title to "Favorite Spreads"
-                        const spreadTitle = document.getElementById('spreads-title');
-                        if (spreadTitle) spreadTitle.innerText = 'Favorite Spreads';
-
-                        // Fetch Liked Posts
-                        // We need the user ID. 'user' obj has it.
-                        // Check if we are viewing this profile (user._id)
-                        const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
-
-                        if (targetId) {
-                            // Trigger fetch with likedBy filter
-                            // We need to wait a tick to ensure fetchPosts is defined/available if it was hoisted or script order issues
-                            // But since it's in the same file it should be fine.
-                            fetchPosts({ likedBy: targetId });
-                        }
-
-                    } else {
-                        // Publisher Logic (Default)
-                        const spreadTitle = document.getElementById('spreads-title');
-                        if (spreadTitle) spreadTitle.innerText = 'Recent Spreads';
-                        // Explicitly fetch own posts
-                        const targetId = user._id || (user.isMe ? JSON.parse(atob(localStorage.getItem('token').split('.')[1])).user.id : null);
-                        if (targetId) {
-                            fetchPosts({ user: targetId });
-                        }
-                    }
+                    }    
                     const token = localStorage.getItem('token');
                     if (token && (user._id || user.isMe)) {
                         try {
@@ -1111,7 +1179,62 @@
             const container = document.getElementById('posts-container');
             container.innerHTML = '';
 
-            if (layout === 'grid') {
+            if (layout !== 'grid') {
+                container.className = 'blog-list';
+            }
+
+            const section = container.closest('section');
+
+            if (!posts || posts.length === 0) {
+                if (section) section.style.display = 'none';
+                return;
+            }
+
+            // If we have posts, show section
+            if (section) section.style.display = 'block';
+
+            // Logic for "View All"
+            // If layout is grid and NOT showAll, we limit to 6.
+            // But we fetched 7 to check.
+            let displayPosts = posts;
+            let hasMore = false;
+
+            if (layout === 'grid' && !showAll) {
+                if (posts.length > 6) {
+                    hasMore = true;
+                    displayPosts = posts.slice(0, 6);
+                }
+            }
+
+            displayPosts.forEach(post => {
+                const authorName = post.user?.username || post.username || 'User';
+                const initial = authorName.charAt(0).toUpperCase();
+                const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
+                const authorId = post.user?._id || '#';
+                const tag = post.tag || 'General';
+                const likesCount = post.likes ? post.likes.length : 0;
+
+                // Safe content strings
+                const safeTitle = (post.title || 'Untitled Update').replace(/'/g, "&apos;");
+                const safeAuthor = authorName.replace(/'/g, "&apos;");
+                const safeTime = dateStr.replace(/'/g, "&apos;");
+
+                // Content prep
+                let fullContent = LinkifyAndFormat(post.content || '');
+                // Strip HTML for excerpt
+                let tmp = document.createElement("DIV");
+                tmp.innerHTML = fullContent;
+                let plainText = tmp.textContent || tmp.innerText || "";
+                let excerpt = plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
+
+                // Avatar
+                const postAvatarUrl = post.user?.profilePicture;
+                const authorAvatar = postAvatarUrl
+                    ? `<img src="${(postAvatarUrl) && String(postAvatarUrl).startsWith('http') ? (postAvatarUrl) : '/' + (postAvatarUrl)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
+                    : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
+
+
+                if (layout === 'grid') {
                     // GRID CARD HTML
                     const card = document.createElement('article');
                     card.className = 'post-card compact';
@@ -1123,30 +1246,31 @@
                         imageHtml = `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" class="compact-img" alt="${safeTitle}">`;
                     } else {
                         // Placeholder
-                        imageHtml = `<div class="compact-img" style="background: #e0e0e0; color: #4a3b31; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-family: 'Inter', sans-serif;">${initial}</div>`;
+                        imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${initial}</div>`;
                     }
 
                     card.innerHTML = `
                         <div class="compact-img-container">
-                            <div class="photo-corner corner-tl"></div>
-                            <div class="photo-corner corner-tr"></div>
-                            <div class="photo-corner corner-bl"></div>
-                            <div class="photo-corner corner-br"></div>
                             ${imageHtml}
                         </div>
-                        <div class="compact-body"></div>
+                        <div class="compact-body">
+                            <div class="compact-tag">${tag}</div>
+                            <h3 class="compact-title">${post.title || 'Untitled'}</h3>
+                            <p class="compact-excerpt">${excerpt}</p>
+                            
+                            <div class="compact-footer">
+                                <div style="display:flex; align-items:center;">
+                                    ${authorAvatar}
+                                    <span>${authorName}</span>
+                                </div>
+                                <div><i class="far fa-heart"></i> ${likesCount}</div>
+                            </div>
+                        </div>
                         <!-- Hidden content store for Reader -->
                         <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
                     `;
                     container.appendChild(card);
 
-                } else {
-                container.className = 'blog-list';
-            }
-
-            const section = container.closest('section');
-
-            if (!posts || posts.length === 0) {
                 if (section) section.style.display = 'none';
                 return;
             }

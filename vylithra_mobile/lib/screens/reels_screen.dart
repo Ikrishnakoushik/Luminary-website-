@@ -4,6 +4,7 @@ import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
+import '../screens/profile_screen.dart';
 
 class ReelsScreen extends StatefulWidget {
   const ReelsScreen({super.key});
@@ -171,9 +172,14 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          '@${widget.post.authorName}',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                        GestureDetector(
+                          onTap: widget.post.isAnonymous ? null : () {
+                            Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: widget.post.userId)));
+                          },
+                          child: Text(
+                            '@${widget.post.authorName}',
+                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(

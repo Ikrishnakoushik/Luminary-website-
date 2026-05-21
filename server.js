@@ -171,6 +171,8 @@ app.use(helmet({
 // 2. Prevent NoSQL Injection attacks 
 // (Relocated beneath express.json to prevent req property exception crashes)
 
+app.set('trust proxy', 1); // Trust first proxy to allow express-rate-limit to use X-Forwarded-For
+
 // 3. Global DDoS Rate Limiter (1000 requests per 15 minutes)
 const globalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, 
@@ -268,6 +270,32 @@ const auth = async (req, res, next) => {
     }
 };
 
+const optionalAuth = async (req, res, next) => {
+    const token = req.header('x-auth-token');
+    if (!token) return next();
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded.user;
+        
+        // Stateful verification
+        if (req.user.sessionId) {
+            const dbUser = await User.findById(req.user.id);
+            if (!dbUser) return next();
+            
+            const activeSessions = dbUser.activeSessions || [];
+            const isValidSession = activeSessions.some(session => session.sessionId === req.user.sessionId);
+            if (!isValidSession) {
+                return next(); // Session revoked, treat as unauthenticated
+            }
+        }
+        
+        next();
+    } catch (err) {
+        next(); // Token invalid, treat as unauthenticated
+    }
+};
+
 // Check Role Middleware (Verifies if the user matches one of the allowed roles)
 const checkRole = (roles) => {
     return (req, res, next) => {
@@ -319,19 +347,16 @@ const gatewayAuth = async (req, res, next) => {
 
 // Database Connection
 const MONGO_URI = 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin';
-let isConnected = false;
-
 const connectDB = async () => {
-    if (isConnected) {
+    if (mongoose.connection.readyState === 1) {
         return;
     }
     try {
         console.error('[Startup] Checking Mongo connection...');
-        const db = await mongoose.connect(MONGO_URI, {
+        await mongoose.connect(MONGO_URI, {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000,
         });
-        isConnected = db.connections[0].readyState;
         console.error('[Startup] MongoDB Connected');
     } catch (err) {
         console.error('[Startup] MongoDB Error:', err);
@@ -460,6 +485,16 @@ app.post('/api/users/:targetId/follow', auth, async (req, res) => {
         if (!targetUser) return res.status(404).json({ msg: 'User not found' });
         if (currentUser.id === targetUser.id) return res.status(400).json({ msg: 'Cannot follow yourself' });
 
+        if (targetUser.isPrivate) {
+            if (!targetUser.followRequests) targetUser.followRequests = [];
+            const hasRequested = targetUser.followRequests.some(id => id.toString() === currentUser.id);
+            if (!hasRequested && !currentUser.following.some(id => id.toString() === targetUser.id)) {
+                targetUser.followRequests.push(currentUser._id);
+                await targetUser.save();
+            }
+            return res.json({ msg: 'Follow requested', status: 'requested', following: currentUser.following });
+        }
+
         if (!currentUser.following) currentUser.following = [];
         if (!targetUser.followers) targetUser.followers = [];
 
@@ -475,7 +510,7 @@ app.post('/api/users/:targetId/follow', auth, async (req, res) => {
             await targetUser.save();
         }
 
-        res.json({ msg: 'Followed successfully', following: currentUser.following });
+        res.json({ msg: 'Followed successfully', status: 'followed', following: currentUser.following });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
@@ -493,6 +528,7 @@ app.delete('/api/users/:targetId/unfollow', auth, async (req, res) => {
         }
         if (targetUser) {
             targetUser.followers = (targetUser.followers || []).filter(c => c.toString() !== req.user.id);
+            targetUser.followRequests = (targetUser.followRequests || []).filter(c => c.toString() !== req.user.id);
             await targetUser.save();
         }
 
@@ -500,6 +536,64 @@ app.delete('/api/users/:targetId/unfollow', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
+// Get follow requests
+app.get('/api/users/follow-requests', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).populate('followRequests', 'username displayName profilePicture');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+        res.json(user.followRequests || []);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Accept follow request
+app.post('/api/users/follow-requests/:requesterId/accept', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        const requester = await User.findById(req.params.requesterId);
+        
+        if (!user || !requester) return res.status(404).json({ msg: 'User not found' });
+
+        // Remove from requests
+        user.followRequests = (user.followRequests || []).filter(id => id.toString() !== requester.id);
+        
+        // Add to followers
+        if (!user.followers.some(id => id.toString() === requester.id)) {
+            user.followers.push(requester._id);
+        }
+        
+        // Add to requester's following
+        if (!requester.following.some(id => id.toString() === user.id)) {
+            requester.following.push(user._id);
+            await requester.save();
+        }
+        
+        await user.save();
+        res.json({ msg: 'Request accepted' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
+
+// Reject follow request
+app.post('/api/users/follow-requests/:requesterId/reject', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        user.followRequests = (user.followRequests || []).filter(id => id.toString() !== req.params.requesterId);
+        await user.save();
+        
+        res.json({ msg: 'Request rejected' });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
     }
 });
 
@@ -1304,11 +1398,11 @@ app.get('/api/users/profile', auth, async (req, res) => {
 // Get Privacy Settings
 app.get('/api/users/privacy', auth, async (req, res) => {
     try {
-        const user = await User.findById(req.user.id).select('hideProfileOnPosts');
+        const user = await User.findById(req.user.id).select('hideProfileOnPosts isPrivate');
         if (!user) {
             return res.status(404).json({ msg: 'User not found' });
         }
-        res.json({ hideProfileOnPosts: user.hideProfileOnPosts });
+        res.json({ hideProfileOnPosts: user.hideProfileOnPosts, isPrivate: user.isPrivate });
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
@@ -1318,16 +1412,17 @@ app.get('/api/users/privacy', auth, async (req, res) => {
 // Update Privacy Settings
 app.put('/api/users/privacy', auth, async (req, res) => {
     try {
-        const { hideProfileOnPosts } = req.body;
+        const { hideProfileOnPosts, isPrivate } = req.body;
         
         const updateFields = {};
         if (hideProfileOnPosts !== undefined) updateFields.hideProfileOnPosts = hideProfileOnPosts;
+        if (isPrivate !== undefined) updateFields.isPrivate = isPrivate;
 
         const user = await User.findByIdAndUpdate(
             req.user.id,
             { $set: updateFields },
             { new: true }
-        ).select('hideProfileOnPosts');
+        ).select('hideProfileOnPosts isPrivate');
 
         res.json(user);
     } catch (err) {
@@ -1517,10 +1612,37 @@ app.get('/api/users/saved', auth, async (req, res) => {
 });
 
 // Get User by ID (Public Profile)
-app.get('/api/users/:id', async (req, res) => {
+app.get('/api/users/:id', optionalAuth, async (req, res) => {
     try {
-        const user = await User.findById(req.params.id).select('-password');
+        let user = await User.findById(req.params.id).select('-password');
         if (!user) return res.status(404).json({ msg: 'User not found' });
+        
+        if (user.isPrivate) {
+            let isAllowed = false;
+            if (req.user) {
+                if (req.user.id === user._id.toString()) isAllowed = true;
+                if (user.followers && user.followers.some(id => id.toString() === req.user.id)) isAllowed = true;
+            }
+            
+            if (!isAllowed) {
+                const isRequested = req.user && user.followRequests && user.followRequests.some(id => id.toString() === req.user.id);
+                // Return restricted profile
+                return res.json({
+                    _id: user._id,
+                    username: user.username,
+                    displayName: user.displayName,
+                    profilePicture: user.profilePicture,
+                    isPrivate: true,
+                    followers: user.followers,
+                    following: user.following,
+                    isRequested: !!isRequested,
+                    bio: user.bio,
+                    hideProfileOnPosts: user.hideProfileOnPosts,
+                    isRestricted: true
+                });
+            }
+        }
+
         res.json(user);
     } catch (err) {
         console.error("Error fetching user:", err.message);
@@ -1760,6 +1882,47 @@ app.put('/api/posts/:id', auth, async (req, res) => {
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
+// Report Post
+app.post('/api/posts/:id/report', auth, async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) {
+            return res.status(404).json({ msg: 'Post not found' });
+        }
+
+        if (post.reportedBy.includes(req.user.id)) {
+            return res.status(400).json({ msg: 'You have already reported this post' });
+        }
+
+        post.reportedBy.push(req.user.id);
+        
+        // Check thresholds
+        if (post.reportedBy.length === 10) {
+            if (post.user) {
+                await Message.create({
+                    sender: req.user.id, // Using reporter as sender for system message
+                    receiver: post.user,
+                    content: 'SYSTEM WARNING: Your recent post has received multiple reports. Please ensure your content complies with our community guidelines to avoid account restrictions.'
+                });
+            }
+        } else if (post.reportedBy.length >= 20) {
+            post.isUnderReview = true;
+            if (post.user) {
+                await Message.create({
+                    sender: req.user.id,
+                    receiver: post.user,
+                    content: 'SYSTEM NOTICE: Your post has been hidden and flagged for admin review due to excessive reports. Please contact support if you believe this is an error.'
+                });
+            }
+        }
+
+        await post.save();
+        res.json({ msg: 'Post reported successfully', isUnderReview: post.isUnderReview });
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Server Error');
+    }
+});
 
 // Delete Post
 app.delete('/api/posts/:id', auth, async (req, res) => {
@@ -1771,7 +1934,7 @@ app.delete('/api/posts/:id', auth, async (req, res) => {
         }
 
         // Check user
-        if (post.user.toString() !== req.user.id) {
+        if (post.user.toString() !== req.user.id && req.user.role !== 'admin') {
             return res.status(401).json({ msg: 'User not authorized' });
         }
 
@@ -1788,10 +1951,10 @@ app.delete('/api/posts/:id', auth, async (req, res) => {
 });
 
 // Get All Posts (with optional filtering)
-app.get('/api/posts', async (req, res) => {
+app.get('/api/posts', optionalAuth, async (req, res) => {
     console.error(`[API] GET /api/posts request received with query:`, req.query);
     try {
-        const query = {};
+        const query = { isUnderReview: { $ne: true } };
         if (req.query.user) {
             query.user = req.query.user;
         }
@@ -1807,15 +1970,26 @@ app.get('/api/posts', async (req, res) => {
             ];
         }
 
-        const limit = parseInt(req.query.limit) || 20;
+        const limit = parseInt(req.query.limit) || 40;
 
         const posts = await Post.find(query)
             .sort({ createdAt: -1 })
             .limit(limit)
-            .populate('user', 'username profilePicture')
+            .populate('user', 'username profilePicture isPrivate followers')
             .populate('comments.user', 'username profilePicture');
 
-        res.json(posts);
+        const filteredPosts = posts.filter(post => {
+            if (!post.user) return false;
+            if (post.user.isPrivate) {
+                if (!req.user) return false; // Not logged in -> cannot see private
+                if (req.user.id === post.user._id.toString()) return true; // Owner
+                const isFollower = post.user.followers && post.user.followers.some(id => id.toString() === req.user.id);
+                return isFollower;
+            }
+            return true;
+        });
+
+        res.json(filteredPosts);
     } catch (err) {
         console.error('[CRITICAL] /api/posts Error:', err.message, err.stack);
         res.status(500).json({ error: err.message, stack: err.stack, type: err.name });

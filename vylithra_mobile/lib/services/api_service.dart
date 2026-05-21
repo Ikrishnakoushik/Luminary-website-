@@ -141,6 +141,25 @@ class ApiService {
   Future<List<dynamic>> getFollowing(String userId) async {
     return await get('/api/users/$userId/following');
   }
+
+  Future<List<dynamic>> getFollowRequests() async {
+    return await get('/api/users/follow-requests');
+  }
+
+  Future<dynamic> acceptFollowRequest(String requesterId) async {
+    return await post('/api/users/follow-requests/$requesterId/accept', {});
+  }
+
+  Future<dynamic> rejectFollowRequest(String requesterId) async {
+    return await post('/api/users/follow-requests/$requesterId/reject', {});
+  }
+
+  Future<dynamic> updatePrivacySettings(bool hideProfileOnPosts, bool isPrivate) async {
+    return await put('/api/users/privacy', {
+      'hideProfileOnPosts': hideProfileOnPosts,
+      'isPrivate': isPrivate
+    });
+  }
   Future<List<Post>> fetchPosts() async {
     final List<dynamic> data = await get('/api/posts');
     return data.map((json) => Post.fromJson(json)).toList();

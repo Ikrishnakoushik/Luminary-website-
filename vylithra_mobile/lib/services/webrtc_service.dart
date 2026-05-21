@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'socket_service.dart';
 
 class WebRTCService {
@@ -17,6 +18,8 @@ class WebRTCService {
   String? _currentCallTarget;
   bool isCallActive = false;
   bool isVideoCall = false;
+  bool _isCallConnected = false;
+  Timer? _ringTimer;
 
   // Callbacks for UI updates
   Function(MediaStream stream)? onLocalStream;
@@ -39,9 +42,12 @@ class WebRTCService {
     _listenForSignals();
   }
 
+  Map<String, dynamic>? _incomingOfferPayload;
+
   void _listenForSignals() {
     if (_currentUserId == null) return;
     
+    _signalSubscription?.cancel();
     // Instead of Firebase, we listen to our global SocketService stream for 'webrtc_signal' events
     _signalSubscription = _socketService.onWebRTCSignal.listen((data) {
       final type = data['type'];
@@ -50,9 +56,10 @@ class WebRTCService {
     });
   }
 
-  Future<bool> isUserOnline(String userId) async {
-    // Sockets don't give synchronous presence status as easily as Firebase did. 
-    // We can assume true for outgoing calls and let the signaling timeout if they don't answer.
+  Future<bool> isUserOnline(String targetId) async {
+    // With pure WebRTC via sockets, we can assume online, 
+    // or we could implement a ping/pong over socket.
+    // For now, always try.
     return true; 
   }
 
@@ -63,29 +70,33 @@ class WebRTCService {
           _sendSignal('call-rejected', {'to': payload['from']});
           return;
         }
+        if (_currentCallTarget == payload['from']) {
+          // Already ringing from this user, just update the payload and ignore
+          _incomingOfferPayload = payload;
+          return;
+        }
         _currentCallTarget = payload['from'];
         isVideoCall = payload['isVideo'] ?? false;
+        _incomingOfferPayload = payload;
+        
         if (onIncomingCall != null) {
           onIncomingCall!(payload);
         }
         break;
       case 'answer-made':
-        if (_peerConnection != null) {
-          final answer = RTCSessionDescription(payload['answer']['sdp'], payload['answer']['type']);
-          await _peerConnection!.setRemoteDescription(answer);
-          if (onCallAccepted != null) onCallAccepted!();
-        }
+        _isCallConnected = true;
+        _ringTimer?.cancel();
+        final answer = RTCSessionDescription(payload['answer']['sdp'], payload['answer']['type']);
+        await _peerConnection?.setRemoteDescription(answer);
+        if (onCallAccepted != null) onCallAccepted!();
         break;
       case 'ice-candidate':
-        if (_peerConnection != null) {
-          final candidateMap = Map<String, dynamic>.from(payload['candidate']);
-          final candidate = RTCIceCandidate(
-            candidateMap['candidate'],
-            candidateMap['sdpMid'],
-            candidateMap['sdpMLineIndex'],
-          );
-          await _peerConnection!.addCandidate(candidate);
-        }
+        final candidate = RTCIceCandidate(
+          payload['candidate']['candidate'],
+          payload['candidate']['sdpMid'],
+          payload['candidate']['sdpMLineIndex'],
+        );
+        await _peerConnection?.addCandidate(candidate);
         break;
       case 'call-rejected':
       case 'call-ended':
@@ -136,8 +147,10 @@ class WebRTCService {
   Future<void> initiateCall(String targetId, bool isVideo) async {
     _currentCallTarget = targetId;
     isVideoCall = isVideo;
+    _isCallConnected = false;
     
     try {
+      await [Permission.camera, Permission.microphone].request();
       localStream = await navigator.mediaDevices.getUserMedia({
         'audio': true,
         'video': isVideo,
@@ -149,16 +162,29 @@ class WebRTCService {
       final offer = await _peerConnection!.createOffer();
       await _peerConnection!.setLocalDescription(offer);
 
-      _sendSignal('call-made', {
-        'to': targetId,
-        'from': _currentUserId,
-        'isVideo': isVideo,
-        'offer': {
-          'type': offer.type,
-          'sdp': offer.sdp,
+      void sendOfferSignal() {
+        _sendSignal('call-made', {
+          'to': targetId,
+          'from': _currentUserId,
+          'isVideo': isVideo,
+          'offer': {
+            'type': offer.type,
+            'sdp': offer.sdp,
+          }
+        });
+      }
+
+      sendOfferSignal();
+      isCallActive = true;
+      
+      _ringTimer?.cancel();
+      _ringTimer = Timer.periodic(const Duration(seconds: 4), (timer) {
+        if (isCallActive && !_isCallConnected && _peerConnection != null) {
+          sendOfferSignal();
+        } else {
+          timer.cancel();
         }
       });
-      isCallActive = true;
     } catch (e) {
       endCall();
     }
@@ -166,16 +192,20 @@ class WebRTCService {
 
   Future<void> acceptCall(Map<String, dynamic> incomingData) async {
     try {
+      final payloadToUse = incomingData.isNotEmpty ? incomingData : _incomingOfferPayload;
+      if (payloadToUse == null) throw Exception("No incoming offer payload found");
+
+      await [Permission.camera, Permission.microphone].request();
       localStream = await navigator.mediaDevices.getUserMedia({
         'audio': true,
         'video': isVideoCall,
       });
       if (onLocalStream != null) onLocalStream!(localStream!);
 
-      final targetId = incomingData['from'];
+      final targetId = payloadToUse['from'];
       await _createPeerConnection(targetId);
 
-      final offer = RTCSessionDescription(incomingData['offer']['sdp'], incomingData['offer']['type']);
+      final offer = RTCSessionDescription(payloadToUse['offer']['sdp'], payloadToUse['offer']['type']);
       await _peerConnection!.setRemoteDescription(offer);
 
       final answer = await _peerConnection!.createAnswer();
@@ -206,21 +236,27 @@ class WebRTCService {
     if (_currentCallTarget != null && isCallActive) {
       _sendSignal('call-ended', {'to': _currentCallTarget});
     }
-
-    localStream?.getTracks().forEach((track) => track.stop());
+    isCallActive = false;
+    _isCallConnected = false;
+    _ringTimer?.cancel();
+    _currentCallTarget = null;
+    _incomingOfferPayload = null;
+    
+    localStream?.getTracks().forEach((track) {
+      track.stop();
+    });
     localStream?.dispose();
     localStream = null;
 
-    remoteStream?.getTracks().forEach((track) => track.stop());
+    remoteStream?.getTracks().forEach((track) {
+      track.stop();
+    });
     remoteStream?.dispose();
     remoteStream = null;
 
     _peerConnection?.close();
     _peerConnection?.dispose();
     _peerConnection = null;
-
-    isCallActive = false;
-    _currentCallTarget = null;
 
     if (onCallEnded != null) onCallEnded!();
   }

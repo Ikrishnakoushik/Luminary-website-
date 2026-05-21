@@ -20,6 +20,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   late Future<List<Post>> _postsFuture;
   final ApiService _apiService = ApiService();
   bool _isFollowing = false;
+  bool _isRequested = false;
 
   // Design Colors matching the exact vintage design
   final Color bgColor = const Color(0xFFF8F6EB);
@@ -53,6 +54,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       setState(() {
         _isFollowing = following.any((u) => u['_id'] == widget.userId);
       });
+      if (!_isFollowing) {
+        final profile = await _profileFuture;
+        if (profile != null && profile['isRequested'] == true) {
+            setState(() {
+                _isRequested = true;
+            });
+        }
+      }
     } catch (e) {
       // Ignore
     }
@@ -61,9 +70,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _toggleFollow() async {
     if (widget.userId == null) return;
     try {
-      await _apiService.toggleFollow(widget.userId!, _isFollowing);
+      final response = await _apiService.toggleFollow(widget.userId!, _isFollowing);
       setState(() {
-        _isFollowing = !_isFollowing;
+        if (response != null && response['status'] == 'requested') {
+            _isRequested = true;
+        } else {
+            _isFollowing = !_isFollowing;
+            _isRequested = false;
+        }
         _profileFuture = _apiService.get('/api/users/${widget.userId}').catchError((e) => null);
       });
     } catch (e) {
@@ -100,6 +114,70 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       return ListTile(
                         leading: const CircleAvatar(backgroundColor: Colors.black, child: Icon(Icons.person, color: Colors.white)),
                         title: Text(u['username'] ?? 'User', style: TextStyle(color: darkTextColor)),
+                        onTap: () {
+                           Navigator.pop(context);
+                           Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(userId: u['_id'])));
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showFollowRequestsModal() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : bgColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Text('Follow Requests', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.bold, color: darkTextColor)),
+            const SizedBox(height: 10),
+            Expanded(
+              child: FutureBuilder<List<dynamic>>(
+                future: _apiService.getFollowRequests(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) return Center(child: Text('No follow requests.', style: TextStyle(color: darkTextColor)));
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (context, index) {
+                      final u = snapshot.data![index];
+                      return ListTile(
+                        leading: const CircleAvatar(backgroundColor: Colors.black, child: Icon(Icons.person, color: Colors.white)),
+                        title: Text(u['username'] ?? 'User', style: TextStyle(color: darkTextColor)),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.check, color: Colors.green),
+                              onPressed: () async {
+                                await _apiService.acceptFollowRequest(u['_id']);
+                                Navigator.pop(context);
+                                _showFollowRequestsModal(); // Reload
+                              },
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.close, color: Colors.red),
+                              onPressed: () async {
+                                await _apiService.rejectFollowRequest(u['_id']);
+                                Navigator.pop(context);
+                                _showFollowRequestsModal(); // Reload
+                              },
+                            ),
+                          ],
+                        ),
                         onTap: () {
                            Navigator.pop(context);
                            Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(userId: u['_id'])));
@@ -197,6 +275,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
+                                  leading: Icon(Icons.person_add, color: darkTextColor),
+                                  title: Text('Follow Requests', style: TextStyle(color: darkTextColor)),
+                                  onTap: () {
+                                    Navigator.pop(context); // close bottom sheet
+                                    _showFollowRequestsModal();
+                                  },
+                                ),
+                                ListTile(
                                   leading: Icon(Icons.settings, color: darkTextColor),
                                   title: Text('Settings', style: TextStyle(color: darkTextColor)),
                                   onTap: () {
@@ -243,18 +329,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Expanded(
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: _isFollowing ? Colors.transparent : buttonBgColor,
-                                      foregroundColor: _isFollowing ? buttonBgColor : Colors.white,
+                                      backgroundColor: _isFollowing || _isRequested ? Colors.transparent : buttonBgColor,
+                                      foregroundColor: _isFollowing || _isRequested ? buttonBgColor : Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(6),
-                                        side: BorderSide(color: _isFollowing ? buttonBorderColor : Colors.transparent, width: 2),
+                                        side: BorderSide(color: _isFollowing || _isRequested ? buttonBorderColor : Colors.transparent, width: 2),
                                       ),
                                       elevation: 0,
                                       padding: const EdgeInsets.symmetric(vertical: 10),
                                     ),
-                                    onPressed: _toggleFollow,
+                                    onPressed: _isRequested ? null : _toggleFollow,
                                     child: Text(
-                                      _isFollowing ? 'FOLLOWING' : 'FOLLOW', 
+                                      _isFollowing ? 'FOLLOWING' : (_isRequested ? 'REQUESTED' : 'FOLLOW'), 
                                       style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.5)
                                     ),
                                   ),
@@ -408,7 +494,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               body: Container(
                 color: bgColor,
-                child: FutureBuilder<List<Post>>(
+                child: (profileData['isPrivate'] == true && !isMe && !_isFollowing)
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(Icons.lock_outline, size: 80, color: lightTextColor),
+                          const SizedBox(height: 10),
+                          Text('This account is private', style: GoogleFonts.playfairDisplay(fontSize: 22, color: lightTextColor)),
+                          const SizedBox(height: 5),
+                          Text('Follow this account to see their photos and videos.', style: GoogleFonts.inter(fontSize: 13, color: lightTextColor.withOpacity(0.7))),
+                        ],
+                      ),
+                    )
+                  : FutureBuilder<List<Post>>(
                   future: _postsFuture,
                   builder: (context, postSnapshot) {
                     if (postSnapshot.connectionState == ConnectionState.waiting) {

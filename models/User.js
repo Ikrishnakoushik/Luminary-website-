@@ -157,7 +157,15 @@ const UserSchema = new mongoose.Schema({
     hideProfileOnPosts: {
         type: Boolean,
         default: false
-    }
+    },
+    isPrivate: {
+        type: Boolean,
+        default: false
+    },
+    followRequests: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }]
 });
 
 module.exports = mongoose.model('User', UserSchema);

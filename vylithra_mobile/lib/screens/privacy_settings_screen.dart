@@ -13,6 +13,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
   final ApiService _apiService = ApiService();
   bool _isLoading = true;
   bool _hideProfileOnPosts = false;
+  bool _isPrivate = false;
   
   final Color bgColor = const Color(0xFFF8F6EB);
   final Color darkTextColor = const Color(0xFF3E2723);
@@ -29,6 +30,7 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
       if (mounted) {
         setState(() {
           _hideProfileOnPosts = res['hideProfileOnPosts'] ?? false;
+          _isPrivate = res['isPrivate'] ?? false;
           _isLoading = false;
         });
       }
@@ -47,9 +49,27 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
     try {
       await _apiService.put('/api/users/privacy', {
         'hideProfileOnPosts': value,
+        'isPrivate': _isPrivate,
       });
     } catch (e) {
       setState(() => _hideProfileOnPosts = !value); // Revert
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update: $e')),
+        );
+      }
+    }
+  }
+
+  Future<void> _toggleIsPrivate(bool value) async {
+    setState(() => _isPrivate = value);
+    try {
+      await _apiService.put('/api/users/privacy', {
+        'hideProfileOnPosts': _hideProfileOnPosts,
+        'isPrivate': value,
+      });
+    } catch (e) {
+      setState(() => _isPrivate = !value); // Revert
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update: $e')),
@@ -119,6 +139,27 @@ class _PrivacySettingsScreenState extends State<PrivacySettingsScreen> {
                   value: _hideProfileOnPosts,
                   activeColor: Colors.blueAccent,
                   onChanged: _toggleHideProfile,
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+                ),
+                SwitchListTile(
+                  title: Text(
+                    'Private Account',
+                    style: GoogleFonts.inter(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : darkTextColor,
+                    ),
+                  ),
+                  subtitle: Text(
+                    'Only approved followers can see your posts and profile.',
+                    style: GoogleFonts.inter(
+                      fontSize: 13,
+                      color: isDark ? Colors.white54 : darkTextColor.withOpacity(0.6),
+                    ),
+                  ),
+                  value: _isPrivate,
+                  activeColor: Colors.blueAccent,
+                  onChanged: _toggleIsPrivate,
                   contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                 ),
                 const Divider(height: 30, thickness: 1, color: Colors.black12),
