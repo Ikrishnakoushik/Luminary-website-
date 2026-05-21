@@ -2399,7 +2399,13 @@
                     const authorId = post.user?._id || '#';
 
                     // Post Avatar logic
-                    const currentUserId = localStorage.getItem('user') ? JSON.parse(localStorage.getItem('user'))._id : null;
+                    let currentUserId = null;
+                    try {
+                        const userStr = localStorage.getItem('user');
+                        if (userStr && userStr !== 'undefined') currentUserId = JSON.parse(userStr)._id;
+                    } catch (e) {
+                        console.error("Failed to parse user from localStorage:", e);
+                    }
                     const userStoryGroup = typeof globalStories !== 'undefined' ? globalStories.find(g => g.user && g.user._id === authorId) : null;
                     const hasActiveStory = userStoryGroup && !userStoryGroup.stories.every(s => currentUserId && s.viewers.includes(currentUserId));
                     const avatarClass = hasActiveStory ? "avatar-sm story-ring" : "avatar-sm";
