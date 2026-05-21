@@ -223,7 +223,7 @@
                 </div>
                 <button class="btn-message" id="message-profile-btn" onclick="messageUser()" style="display:none;">MESSAGE</button>
                 <!-- Edit Profile Button (for owner) -->
-                <button class="btn-message" id="edit-profile-btn" style="display:none;" onclick="openSettings()">EDIT</button>
+                <button class="btn-message" id="edit-profile-btn" style="display:none;" onclick="openEditProfileModal()">EDIT</button>
             </div>
             
             <h1 class="profile-name-title" id="profile-name">Loading...</h1>
@@ -838,9 +838,19 @@
                 }
 
                 function openSettings(user) {
-                    // Settings have been moved to settings.html
                     window.location.href = 'settings';
                 }
+
+                function openEditProfileModal() {
+                    document.getElementById('editDisplayName').value = document.getElementById('profile-name').innerText;
+                    document.getElementById('editBio').value = document.getElementById('profile-bio').innerText === 'No bio yet.' ? '' : document.getElementById('profile-bio').innerText;
+                    
+                    const handle = document.getElementById('profile-handle').innerText;
+                    document.getElementById('editUsername').value = handle.startsWith('@') ? handle.substring(1) : handle;
+                    
+                    openModal('editProfileModal');
+                }
+
                 function updateAuthUI() {
                     const token = localStorage.getItem('token');
                     const authSection = document.getElementById('auth-section');
@@ -869,7 +879,38 @@
                     window.location.reload();
                 }
 
-                window.addEventListener('DOMContentLoaded', loadProfile);
+                window.addEventListener('DOMContentLoaded', () => {
+                    document.getElementById('editProfileForm').addEventListener('submit', async (e) => {
+                        e.preventDefault();
+                        const name = document.getElementById('editDisplayName').value;
+                        const username = document.getElementById('editUsername').value;
+                        const bio = document.getElementById('editBio').value;
+
+                        try {
+                            const token = localStorage.getItem('token');
+                            const res = await fetch(`${API_URL}/users/profile`, {
+                                method: 'PUT',
+                                headers: { 
+                                    'Content-Type': 'application/json',
+                                    'x-auth-token': token 
+                                },
+                                body: JSON.stringify({ displayName: name, username, bio })
+                            });
+
+                            if (res.ok) {
+                                closeModal('editProfileModal');
+                                window.history.replaceState({}, '', `?user=${username}`);
+                                loadProfile(username);
+                                VylithraUI.showToast('Profile updated!', 'success');
+                            } else {
+                                VylithraUI.showToast('Update failed', 'error');
+                            }
+                        } catch (err) {
+                            console.error(err);
+                        }
+                    });
+                    loadProfile();
+                });
             </script>
 
             <!-- INTERESTS SECTION (Visible for everyone, but prominent for Readers) -->
@@ -980,6 +1021,29 @@
             <div class="switch-auth">
                 Already have an account? <a onclick="switchModal('registerModal', 'loginModal')">Sign In</a>
             </div>
+        </div>
+    </div>
+
+    <!-- Edit Profile Modal -->
+    <div id="editProfileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('editProfileModal')">&times;</span>
+            <h2>Edit Profile</h2>
+            <form id="editProfileForm">
+                <div class="form-group">
+                    <label>Display Name</label>
+                    <input type="text" id="editDisplayName" required>
+                </div>
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="editUsername" required>
+                </div>
+                <div class="form-group">
+                    <label>Bio</label>
+                    <textarea id="editBio" rows="3" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; outline: none; font-family: inherit; resize: vertical;"></textarea>
+                </div>
+                <button type="submit" class="form-btn">Save Changes</button>
+            </form>
         </div>
     </div>
 
