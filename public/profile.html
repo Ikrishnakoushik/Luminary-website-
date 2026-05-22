@@ -290,29 +290,35 @@
                         } catch (e) { console.error(e); }
                     } else {
                         // If no user ID provided, we are viewing our own profile
-                    // If no user ID provided, we are viewing our own profile
                         const username = localStorage.getItem('username');
                         const role = localStorage.getItem('role');
-                        if (username) {
+                        if (username && username !== 'undefined' && username !== 'null') {
                             userData = { _id: myId, username, role, isMe: true };
+                        } else if (token) {
+                            // Token exists but username is missing, we will fetch it in fetchMeData later
+                            userData = { _id: myId, isMe: true };
                         }
                     }
 
                     if (userData) {
                         renderProfile(userData);
                     } else {
-                        document.getElementById('profile-name').innerText = 'User Not Found';
+                        // If no user is found and no token, prompt login
+                        document.getElementById('profile-name').innerText = 'Please Sign In';
+                        document.getElementById('profile-handle').innerText = '@guest';
                         const bio = document.getElementById('profile-bio');
-                        if(bio) bio.innerText = '';
-                        const handle = document.getElementById('profile-handle');
-                        if(handle) handle.innerText = '';
+                        if(bio) bio.innerText = 'Log in to view your profile and manage your account.';
                         
                         const postsContainer = document.getElementById('posts-container');
                         if (postsContainer) {
-                            postsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">This user does not exist.</div>';
+                            postsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);"><button class="auth-btn btn-sm" onclick="openModal(\'loginModal\')" style="width: auto;">Sign In</button></div>';
                         }
                         const projectsSection = document.getElementById('projects-section');
                         if (projectsSection) projectsSection.style.display = 'none';
+                        const fCountEl = document.getElementById('profile-followers-count');
+                        const followingCountEl = document.getElementById('profile-following-count');
+                        if (fCountEl) fCountEl.innerText = '0';
+                        if (followingCountEl) followingCountEl.innerText = '0';
                     }
 
                     updateAuthUI();
@@ -1418,14 +1424,20 @@
                         `;
                     }
 
+                    // Edit & Delete Button Logic
                     let deleteBtn = '';
+                    let editBtn = '';
                     try {
                         const token = localStorage.getItem('token');
                         if (token) {
                             const payload = JSON.parse(atob(token.split('.')[1]));
                             const postUserId = post.user?._id || post.user;
                             if (postUserId === payload.user.id) {
-                                deleteBtn = `<div class="action-btn delete-btn" onclick="deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash-alt"></i> Delete</div>`;
+                                editBtn = `
+                                <div class="action-btn edit-btn" onclick="event.stopPropagation(); openEditPostModal('${post._id}', \`${(post.title || '').replace(/`/g, '\\`')}\`, \`${(post.content || post.text || '').replace(/`/g, '\\`')}\`)" style="margin-left: auto; color: #3b82f6; cursor: pointer;">
+                                    <i class="fas fa-edit"></i> Edit
+                                </div>`;
+                                deleteBtn = `<div class="action-btn delete-btn" onclick="event.stopPropagation(); deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash-alt"></i> Delete</div>`;
                             }
                         }
                     } catch (e) { }
@@ -1450,10 +1462,11 @@
                         </div>
                         ${post.image ? `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
                         <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
-                            <div class="action-btn"><i class="far fa-heart"></i> ${likesCount}</div>
+                            <div class="action-btn" onclick="event.stopPropagation(); toggleLike('${post._id}')"><i class="far fa-heart"></i> ${likesCount}</div>
                             <div class="action-btn"><i class="far fa-comment"></i> ${post.comments ? post.comments.length : 0}</div>
                             <div class="action-btn"><i class="far fa-share-square"></i> Share</div>
                             ${readActionBtn}
+                            ${editBtn}
                             ${deleteBtn}
                         </div>
                     </article>`;
@@ -1815,6 +1828,123 @@
             </div>
         </div>
     </div>
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:var(--card-bg); color:var(--text-color); width:90%; max-width:500px; padding:20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="margin-top:0;">Edit Post</h2>
+            <form id="editPostForm">
+                <input type="hidden" id="editPostId">
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px;">Title</label>
+                    <input type="text" id="editPostTitle" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);">
+                </div>
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px;">Content</label>
+                    <textarea id="editPostContent" class="form-control" rows="5" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="closeEditPostModal()" class="btn" style="padding:10px 20px; border-radius:8px; background:var(--border-color); color:var(--text-color); border:none; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="padding:10px 20px; border-radius:8px; background:var(--accent); color:#fff; border:none; cursor:pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditPostModal(id, title, content) {
+            document.getElementById('editPostId').value = id;
+            document.getElementById('editPostTitle').value = title;
+            document.getElementById('editPostContent').value = content;
+            const modal = document.getElementById('editPostModal');
+            modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.transition = 'opacity 0.2s'; modal.style.opacity = '1'; }, 10);
+        }
+
+        function closeEditPostModal() {
+            const modal = document.getElementById('editPostModal');
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
+        }
+
+        document.getElementById('editPostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editPostId').value;
+            const title = document.getElementById('editPostTitle').value;
+            const content = document.getElementById('editPostContent').value;
+            const token = localStorage.getItem('token');
+            if(!token) return VylithraUI.showToast('Please login to edit', 'error');
+
+            try {
+                const res = await fetch(`${API_URL}/posts/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if(res.ok) {
+                    VylithraUI.showToast('Post updated successfully!', 'success');
+                    closeEditPostModal();
+                    // Refetch posts to update UI locally or fetch
+                    fetchPosts(); 
+                } else {
+                    const txt = await res.text();
+                    VylithraUI.showToast('Error updating post: ' + txt, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast('Failed to update post.', 'error');
+            }
+        });
+
+        window.toggleLike = async function (postId) {
+            try {
+                const token = localStorage.getItem('token');
+                if (!token) return VylithraUI.showToast('Please login to like', 'error');
+
+                const res = await fetch(`${API_URL}/posts/${postId}/like`, {
+                    method: 'PUT',
+                    headers: { 'x-auth-token': token }
+                });
+
+                if (res.status === 401) {
+                    VylithraUI.showToast('Session expired. Please login again.', 'error');
+                    localStorage.removeItem('token');
+                    window.location.href = 'auth';
+                    return;
+                }
+
+                if (res.ok) {
+                    const likesArray = await res.json();
+                    const newCount = likesArray.length;
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const userId = payload.user.id;
+                    const isLiked = likesArray.includes(userId);
+
+                    // Update UI locally without reload
+                    const postCard = document.getElementById(`post-${postId}`);
+                    if (postCard) {
+                        const likeBtn = postCard.querySelector('.action-btn .fa-heart');
+                        if (likeBtn) {
+                            const likeTextContainer = likeBtn.parentElement;
+                            if (isLiked) {
+                                likeTextContainer.innerHTML = `<i class="fas fa-heart" style="color: #e11d48;"></i> ${newCount}`;
+                            } else {
+                                likeTextContainer.innerHTML = `<i class="far fa-heart"></i> ${newCount > 0 ? newCount : '0'}`;
+                            }
+                        }
+                    }
+                } else {
+                    const txt = await res.text();
+                    console.error("Like failed", txt);
+                    VylithraUI.showToast("Like failed: " + txt, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast("Error liking post", 'error');
+            }
+        }
+    </script>
 </body>
 
 </html>
