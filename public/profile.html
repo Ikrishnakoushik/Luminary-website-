@@ -375,54 +375,6 @@
                         // Ensure we handle the path correctly whether it starts with / or http
                         avatarEl.style.backgroundImage = `url('${user.profilePicture}')`;
                         avatarEl.style.backgroundSize = 'cover';
-    document.getElementById('top-nav-handle').innerText = cleanHandle;
-
-                    // Bio Update
-                    const bioEl = document.getElementById('profile-bio');
-                    if (bioEl) {
-                        bioEl.innerText = user.bio || "Digital Craftsman & Writer. Building things for the web and sharing what I learn along the way.";
-                    }
-
-                    // Stat Updates
-                    const followersCount = user.followers ? user.followers.length : 0;
-                    const followingCount = user.following ? user.following.length : 0;
-                    
-                    const fCountEl = document.getElementById('profile-followers-count');
-                    const followingCountEl = document.getElementById('profile-following-count');
-                    
-                    if (fCountEl) fCountEl.innerText = followersCount >= 1000 ? (followersCount/1000).toFixed(1) + 'k' : followersCount;
-                    if (followingCountEl) followingCountEl.innerText = followingCount;
-
-                    const roleEl = document.getElementById('profile-role');
-                    if(roleEl) {
-                        roleEl.style.display = 'none';
-                    }
-                    const initial = (user.username || 'U').charAt(0).toUpperCase();
-                    const avatarEl = document.getElementById('profile-avatar');
-
-                    // Update Social Links
-                    const socialLinksContainer = document.querySelector('.social-links');
-                    if (socialLinksContainer) {
-                        const twitterUrl = user.socials && user.socials.twitter ? user.socials.twitter : '#';
-                        const githubUrl = user.socials && user.socials.github ? user.socials.github : '#';
-                        const linkedinUrl = user.socials && user.socials.linkedin ? user.socials.linkedin : '#';
-
-                        socialLinksContainer.innerHTML = `
-                            <a href="/${twitterUrl}" target="${twitterUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="X (Twitter)"><i class="fa-brands fa-x-twitter"></i></a>
-                            <a href="/${githubUrl}" target="${githubUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="GitHub"><i class="fab fa-github"></i></a>
-                            <a href="/${linkedinUrl}" target="${linkedinUrl === '#' ? '_self' : '_blank'}" class="social-circle-btn" title="LinkedIn"><i class="fab fa-linkedin"></i></a>
-                        `;
-                    }
-
-                    // Clear previous content
-                    avatarEl.innerHTML = '';
-                    avatarEl.style.backgroundImage = 'none';
-
-                    if (user.profilePicture) {
-                        // If user has a picture, show it
-                        // Ensure we handle the path correctly whether it starts with / or http
-                        avatarEl.style.backgroundImage = `url('${user.profilePicture}')`;
-                        avatarEl.style.backgroundSize = 'cover';
                         avatarEl.style.backgroundPosition = 'center';
                         avatarEl.innerText = '';
                     } else {
