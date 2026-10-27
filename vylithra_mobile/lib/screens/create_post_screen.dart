@@ -46,17 +46,21 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
 
   Future<void> _handleUpload() async {
     if (_contentController.text.isEmpty && _selectedImage == null) return;
-    
+
     setState(() {
       _isUploading = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Uploading post...')),
-    );
-    
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Uploading post...')));
+
     try {
-      await ApiService().uploadPost(_contentController.text, _selectedImage, _isAnonymous);
+      await ApiService().uploadPost(
+        _contentController.text,
+        _selectedImage,
+        _isAnonymous,
+      );
       if (mounted) {
         Navigator.pop(context, true);
         ScaffoldMessenger.of(context).showSnackBar(
@@ -65,9 +69,9 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
       }
     } finally {
       if (mounted) {
@@ -83,21 +87,36 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: isDark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('New Post'),
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          _isUploading 
-          ? const Center(child: Padding(padding: EdgeInsets.symmetric(horizontal: 16.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))))
-          : TextButton(
-            onPressed: _handleUpload,
-            child: const Text(
-              'Share',
-              style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-          ),
+          _isUploading
+              ? const Center(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  ),
+                )
+              : TextButton(
+                  onPressed: _handleUpload,
+                  child: const Text(
+                    'Share',
+                    style: TextStyle(
+                      color: Colors.blue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
         ],
       ),
       body: SingleChildScrollView(
@@ -131,7 +150,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                 children: [
                   ClipRRect(
                     borderRadius: BorderRadius.circular(12),
-                    child: Image.file(_selectedImage!, width: double.infinity, fit: BoxFit.cover),
+                    child: Image.file(
+                      _selectedImage!,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
                   ),
                   Positioned(
                     top: 8,
@@ -144,7 +167,11 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
                           color: Colors.black54,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.close, color: Colors.white, size: 20),
+                        child: const Icon(
+                          Icons.close,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ),
@@ -153,17 +180,27 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
             const SizedBox(height: 24),
             Row(
               children: [
-                _buildActionIcon(Icons.image, 'Photo', _pickImage, Colors.green),
+                _buildActionIcon(
+                  Icons.image,
+                  'Photo',
+                  _pickImage,
+                  Colors.green,
+                ),
               ],
             ),
             const Divider(height: 30),
             SwitchListTile(
-              title: const Text('Post Anonymously', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Hide your username and profile picture from this post.'),
+              title: const Text(
+                'Post Anonymously',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Hide your username and profile picture from this post.',
+              ),
               value: _isAnonymous,
               onChanged: (val) => setState(() => _isAnonymous = val),
               contentPadding: EdgeInsets.zero,
-              activeColor: Colors.blueAccent,
+              activeThumbColor: Colors.blueAccent,
             ),
           ],
         ),
@@ -171,7 +208,12 @@ class _CreatePostScreenState extends State<CreatePostScreen> {
     );
   }
 
-  Widget _buildActionIcon(IconData icon, String label, VoidCallback onTap, Color color) {
+  Widget _buildActionIcon(
+    IconData icon,
+    String label,
+    VoidCallback onTap,
+    Color color,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(8),

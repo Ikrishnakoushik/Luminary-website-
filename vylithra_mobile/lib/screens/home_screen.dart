@@ -22,7 +22,6 @@ import 'call_screen.dart';
 import 'dart:convert';
 import 'dart:async';
 import 'package:provider/provider.dart';
-import '../providers/auth_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,7 +31,6 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
   int _currentIndex = 0;
   List<Post> _posts = [];
   List<StoryGroup> _storyGroups = [];
@@ -43,7 +41,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final ApiService _apiService = ApiService();
   late WebRTCService _webrtcService;
   final SocketService _socketService = SocketService();
-  
+
   StreamSubscription? _newPostSub;
   StreamSubscription? _postLikedSub;
   StreamSubscription? _newCommentSub;
@@ -60,8 +58,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _loadStories() async {
     try {
       final groups = await _apiService.fetchStoriesFeed();
-      if (mounted) setState(() { _storyGroups = groups; _isLoadingStories = false; });
-    } catch(e) { if(mounted) setState(() => _isLoadingStories = false); }
+      if (mounted) {
+        setState(() {
+          _storyGroups = groups;
+          _isLoadingStories = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoadingStories = false);
+    }
   }
 
   Future<void> _loadPosts() async {
@@ -103,7 +108,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   void _initServices() {
     _webrtcService = WebRTCService();
     final auth = Provider.of<AuthProvider>(context, listen: false);
@@ -112,15 +116,19 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         final parts = token.split('.');
         if (parts.length == 3) {
-          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+          final payload = utf8.decode(
+            base64Url.decode(base64Url.normalize(parts[1])),
+          );
           final data = jsonDecode(payload);
           final userId = data['user']?['id'];
           if (userId != null) {
-            SharedPreferences.getInstance().then((prefs) => prefs.setString('current_user_id', userId));
-            
+            SharedPreferences.getInstance().then(
+              (prefs) => prefs.setString('current_user_id', userId),
+            );
+
             // Connect Global Socket
             _socketService.connect(userId);
-            
+
             // Initialize WebRTC
             _webrtcService.initialize(userId);
             _webrtcService.onIncomingCall = (incomingData) {
@@ -140,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 );
               }
             };
-            
+
             // Listen to real-time feed events
             _setupRealTimeFeedListeners();
           }
@@ -180,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           final index = _posts.indexWhere((p) => p.id == postId);
           if (index != -1) {
-            // Simplified: we just update the comments list length if needed, 
+            // Simplified: we just update the comments list length if needed,
             // since the Post model usually holds the comments list.
             // (Assuming Post model has comments or we just refresh data)
             _posts[index].comments = comments;
@@ -207,42 +215,39 @@ class _HomeScreenState extends State<HomeScreen> {
       upgrader: Upgrader(
         debugLogging: false,
         debugDisplayAlways: false, // Ensure it doesn't always show in testing
-        showIgnore: false,
-        showLater: true,
       ),
       child: Scaffold(
         extendBody: true,
         backgroundColor: Colors.transparent,
         body: Stack(
-        children: [
-          // Solid Vintage Background
-          Container(
-            color: Theme.of(context).scaffoldBackgroundColor,
-          ),
-          
-          // Main Content Area
-          IndexedStack(
-            index: _currentIndex,
-            children: [
-              _buildFeedView(),
-              const ReelsScreen(),
-              const MessagesScreen(),
-              const ProfileScreen(),
-            ],
-          ),
+          children: [
+            // Solid Vintage Background
+            Container(color: Theme.of(context).scaffoldBackgroundColor),
 
-          // Custom Edge-to-Edge Glass Header Overlay (Only on Home tab)
-          if (_currentIndex == 0)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _buildGlassHeader(isDark),
+            // Main Content Area
+            IndexedStack(
+              index: _currentIndex,
+              children: [
+                _buildFeedView(),
+                const ReelsScreen(),
+                const MessagesScreen(),
+                const ProfileScreen(),
+              ],
             ),
-        ],
+
+            // Custom Edge-to-Edge Glass Header Overlay (Only on Home tab)
+            if (_currentIndex == 0)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _buildGlassHeader(isDark),
+              ),
+          ],
+        ),
+        bottomNavigationBar: _buildBottomNav(isDark),
       ),
-      bottomNavigationBar: _buildBottomNav(isDark),
-    ));
+    );
   }
 
   Widget _buildGlassHeader(bool isDark) {
@@ -260,13 +265,21 @@ class _HomeScreenState extends State<HomeScreen> {
             gradient: LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: isDark 
-                ? [Colors.black.withValues(alpha: 0.4), Colors.black.withValues(alpha: 0.1)] 
-                : [Colors.white.withValues(alpha: 0.6), Colors.white.withValues(alpha: 0.2)],
+              colors: isDark
+                  ? [
+                      Colors.black.withValues(alpha: 0.4),
+                      Colors.black.withValues(alpha: 0.1),
+                    ]
+                  : [
+                      Colors.white.withValues(alpha: 0.6),
+                      Colors.white.withValues(alpha: 0.2),
+                    ],
             ),
             border: Border(
               bottom: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.black.withValues(alpha: 0.05),
                 width: 1,
               ),
             ),
@@ -295,15 +308,19 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-  
   Widget _buildStoryRail() {
     if (_isLoadingStories && _storyGroups.isEmpty) {
-      return const SizedBox(height: 100, child: Center(child: CircularProgressIndicator()));
+      return const SizedBox(
+        height: 100,
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
-    
-    final currentUserId = Provider.of<AuthProvider>(context, listen: false).currentUserId;
-    
+
+    final currentUserId = Provider.of<AuthProvider>(
+      context,
+      listen: false,
+    ).currentUserId;
+
     return Container(
       height: 100,
       margin: const EdgeInsets.only(bottom: 8),
@@ -329,40 +346,65 @@ class _HomeScreenState extends State<HomeScreen> {
                           width: 68,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.grey.withOpacity(0.3), width: 1),
+                            border: Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
                           ),
-                          child: _isUploadingStory 
-                            ? const CircularProgressIndicator()
-                            : const Icon(Icons.add, color: Colors.grey, size: 30),
+                          child: _isUploadingStory
+                              ? const CircularProgressIndicator()
+                              : const Icon(
+                                  Icons.add,
+                                  color: Colors.grey,
+                                  size: 30,
+                                ),
                         ),
                         Container(
                           padding: const EdgeInsets.all(2),
-                          decoration: const BoxDecoration(color: Colors.blue, shape: BoxShape.circle),
-                          child: const Icon(Icons.add, color: Colors.white, size: 14),
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 14,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
-                    const Text('Your Story', style: TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis),
+                    const Text(
+                      'Your Story',
+                      style: TextStyle(fontSize: 11),
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
             );
           }
-          
+
           final group = _storyGroups[index - 1];
-          final allViewed = group.stories.every((s) => s.viewers.contains(currentUserId));
-          
+          final allViewed = group.stories.every(
+            (s) => s.viewers.contains(currentUserId),
+          );
+
           return GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (_) => StoryViewerScreen(
-                stories: group.stories,
-                userName: group.userName,
-                userProfilePicture: group.userProfilePicture,
-                onComplete: () {
-                  if (mounted) setState(() {});
-                },
-              )));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => StoryViewerScreen(
+                    stories: group.stories,
+                    userName: group.userName,
+                    userProfilePicture: group.userProfilePicture,
+                    onComplete: () {
+                      if (mounted) setState(() {});
+                    },
+                  ),
+                ),
+              );
             },
             child: Container(
               width: 72,
@@ -375,31 +417,49 @@ class _HomeScreenState extends State<HomeScreen> {
                     padding: const EdgeInsets.all(3),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: allViewed ? null : const LinearGradient(
-                        colors: [Color(0xFF8E6A4B), Color(0xFF4A3B31)],
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                      ),
-                      border: allViewed ? Border.all(color: Colors.grey.withOpacity(0.3), width: 2) : null,
+                      gradient: allViewed
+                          ? null
+                          : const LinearGradient(
+                              colors: [Color(0xFF8E6A4B), Color(0xFF4A3B31)],
+                              begin: Alignment.topRight,
+                              end: Alignment.bottomLeft,
+                            ),
+                      border: allViewed
+                          ? Border.all(
+                              color: Colors.grey.withValues(alpha: 0.3),
+                              width: 2,
+                            )
+                          : null,
                     ),
                     child: Container(
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(color: Theme.of(context).scaffoldBackgroundColor, width: 2),
+                        border: Border.all(
+                          color: Theme.of(context).scaffoldBackgroundColor,
+                          width: 2,
+                        ),
                       ),
                       child: CircleAvatar(
-                        backgroundImage: group.userProfilePicture.isNotEmpty 
-                          ? NetworkImage(group.userProfilePicture)
-                          : null,
+                        backgroundImage: group.userProfilePicture.isNotEmpty
+                            ? NetworkImage(group.userProfilePicture)
+                            : null,
                         backgroundColor: Colors.grey[800],
-                        child: group.userProfilePicture.isEmpty 
-                          ? Text(group.userName.isNotEmpty ? group.userName[0].toUpperCase() : 'U')
-                          : null,
+                        child: group.userProfilePicture.isEmpty
+                            ? Text(
+                                group.userName.isNotEmpty
+                                    ? group.userName[0].toUpperCase()
+                                    : 'U',
+                              )
+                            : null,
                       ),
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(group.userName, style: const TextStyle(fontSize: 11), overflow: TextOverflow.ellipsis),
+                  Text(
+                    group.userName,
+                    style: const TextStyle(fontSize: 11),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -408,7 +468,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   Future<void> _pickAndUploadStory() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
@@ -418,7 +478,11 @@ class _HomeScreenState extends State<HomeScreen> {
         await _apiService.uploadStory(File(pickedFile.path));
         await _loadStories();
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        if (mounted) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+        }
       } finally {
         if (mounted) setState(() => _isUploadingStory = false);
       }
@@ -432,21 +496,35 @@ class _HomeScreenState extends State<HomeScreen> {
         await _loadStories();
         await _loadPosts();
       },
-      child: _isLoadingPosts 
-        ? const Center(child: CircularProgressIndicator(color: Colors.pinkAccent))
-        : _posts.isEmpty 
-          ? Center(child: Text(_postsError != null ? 'Error: $_postsError' : 'No posts available.', style: TextStyle(color: _postsError != null ? Colors.red : Colors.grey)))
+      child: _isLoadingPosts
+          ? const Center(
+              child: CircularProgressIndicator(color: Colors.pinkAccent),
+            )
+          : _posts.isEmpty
+          ? Center(
+              child: Text(
+                _postsError != null
+                    ? 'Error: $_postsError'
+                    : 'No posts available.',
+                style: TextStyle(
+                  color: _postsError != null ? Colors.red : Colors.grey,
+                ),
+              ),
+            )
           : Stack(
               children: [
                 ListView.builder(
                   padding: EdgeInsets.only(
-                    top: MediaQuery.of(context).padding.top + 70, 
+                    top: MediaQuery.of(context).padding.top + 70,
                     bottom: 100,
                   ),
                   itemCount: _posts.length + 1,
                   itemBuilder: (context, index) {
                     if (index == 0) return _buildStoryRail();
-                    return PostCard(post: _posts[index - 1], storyGroups: _storyGroups);
+                    return PostCard(
+                      post: _posts[index - 1],
+                      storyGroups: _storyGroups,
+                    );
                   },
                 ),
                 if (_newPostsCount > 0)
@@ -461,17 +539,27 @@ class _HomeScreenState extends State<HomeScreen> {
                           _loadPosts();
                         },
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
                           decoration: BoxDecoration(
                             color: Theme.of(context).colorScheme.primary,
                             borderRadius: BorderRadius.circular(20),
                             boxShadow: [
-                              BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 4, offset: const Offset(0, 2)),
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.2),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
                             ],
                           ),
                           child: Text(
                             '$_newPostsCount New Posts',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
@@ -482,7 +570,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
   Widget _buildBottomNav(bool isDark) {
     return ClipRRect(
       child: BackdropFilter(
@@ -490,16 +577,22 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Container(
           height: 65 + MediaQuery.of(context).padding.bottom,
           decoration: BoxDecoration(
-            color: isDark ? Colors.black.withValues(alpha: 0.3) : Colors.white.withValues(alpha: 0.6),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.6),
             border: Border(
               top: BorderSide(
-                color: isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05),
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.1)
+                    : Colors.black.withValues(alpha: 0.05),
                 width: 1,
               ),
             ),
           ),
           child: Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(context).padding.bottom),
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(context).padding.bottom,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -536,11 +629,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ],
             ),
-            child: const Icon(
-              Icons.add,
-              size: 24,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.add, size: 24, color: Colors.white),
           ),
         ),
       ),
@@ -549,7 +638,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _showUploadOptions() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -578,7 +667,10 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.blue,
               onTap: () async {
                 Navigator.pop(context);
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreatePostScreen()));
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreatePostScreen()),
+                );
                 if (result == true) {
                   _loadPosts();
                 }
@@ -592,7 +684,10 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.purple,
               onTap: () async {
                 Navigator.pop(context);
-                final result = await Navigator.push(context, MaterialPageRoute(builder: (_) => const CreateReelScreen()));
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const CreateReelScreen()),
+                );
                 if (result == true) {
                   _loadPosts(); // Reels also show up in posts feed
                 }
@@ -606,7 +701,10 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.green,
               onTap: () {
                 Navigator.pop(context);
-                Navigator.push(context, MaterialPageRoute(builder: (_) => const ReelsCameraScreen())); 
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ReelsCameraScreen()),
+                );
               },
             ),
             const SizedBox(height: 24),
@@ -616,7 +714,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildUploadOption({required IconData icon, required String title, required String subtitle, required Color color, required VoidCallback onTap}) {
+  Widget _buildUploadOption({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return InkWell(
       onTap: onTap,
@@ -642,9 +746,21 @@ class _HomeScreenState extends State<HomeScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: TextStyle(color: isDark ? Colors.white54 : Colors.black54, fontSize: 14)),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: isDark ? Colors.white54 : Colors.black54,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -657,7 +773,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _navItem(IconData icon, int index, bool isDark) {
     final isActive = _currentIndex == index;
-    
+
     // Smooth transition for icons
     return Expanded(
       child: InkWell(
@@ -676,8 +792,10 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Icon(
               icon,
               size: 28,
-              color: isActive 
-                  ? Theme.of(context).colorScheme.primary // Sepia/Copper accent
+              color: isActive
+                  ? Theme.of(context)
+                        .colorScheme
+                        .primary // Sepia/Copper accent
                   : (isDark ? Colors.white38 : Colors.black45),
             ),
           ),

@@ -56,9 +56,6 @@
     document.body.insertAdjacentHTML('beforeend', overlayHtml);
 
     // 2. State configuration
-    const token = localStorage.getItem('token');
-    const currentUserId = parseJwt(token);
-    
     function parseJwt(token) {
         if(!token) return null;
         try {
@@ -71,35 +68,77 @@
         } catch(e) { return null; }
     }
 
-    if(!currentUserId) return;
-
-    // --- Firebase Realtime Database Signaling Adapter ---
-    if (!window.firebase || !window.firebase.database) {
-        console.error("Firebase Database not initialized for signaling.");
-        return;
+    function getCurrentUserId() {
+        const token = localStorage.getItem('token');
+        return parseJwt(token);
     }
-    
-    const db = firebase.database();
-    const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
-    const statusRef = db.ref(`webrtc/status/${currentUserId}`);
-    
-    // Set presence status
-    statusRef.set(true);
-    statusRef.onDisconnect().remove();
+    const currentUserId = getCurrentUserId();
 
     const eventHandlers = {};
 
-    // Listen for incoming 1-on-1 signals (offers, answers, ice)
-    signalsRef.on('child_added', (snapshot) => {
-        const data = snapshot.val();
-        if (!data || !data.type) return;
-        
-        if (eventHandlers[data.type]) {
-            eventHandlers[data.type](data.payload);
+    function handleIncomingSignal(type, payload) {
+        if (!type || !payload) return;
+        if (eventHandlers[type]) {
+            eventHandlers[type](payload);
         }
-        // Remove signal immediately after processing
-        snapshot.ref.remove().catch(e => console.error(e));
-    });
+    }
+
+    // --- 1. Real-time Socket.IO Signaling (Shared with Mobile App) ---
+    let socket = null;
+    function setupSocket() {
+        if (typeof io !== 'undefined') {
+            socket = io();
+            socket.on('connect', () => {
+                socket.emit('join_chat', currentUserId);
+            });
+            socket.on('webrtc_signal', (data) => {
+                if (data && data.type) {
+                    handleIncomingSignal(data.type, data.payload || data);
+                }
+            });
+            socket.on('user-joined-call', (data) => {
+                if (eventHandlers['user-joined-call']) {
+                    eventHandlers['user-joined-call'](data);
+                }
+            });
+            socket.on('user-left-call', (data) => {
+                if (eventHandlers['user-left-call']) {
+                    eventHandlers['user-left-call'](data);
+                }
+            });
+        }
+    }
+
+    if (typeof io !== 'undefined') {
+        setupSocket();
+    } else {
+        const s = document.createElement('script');
+        s.src = '/socket.io/socket.io.js';
+        s.onload = setupSocket;
+        document.head.appendChild(s);
+    }
+
+    // --- 2. Optional Firebase Signaling Adapter (Web fallback) ---
+    let db = null;
+    if (window.firebase && window.firebase.database) {
+        try {
+            db = firebase.database();
+            const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
+            const statusRef = db.ref(`webrtc/status/${currentUserId}`);
+            
+            statusRef.set(true);
+            statusRef.onDisconnect().remove();
+
+            signalsRef.on('child_added', (snapshot) => {
+                const data = snapshot.val();
+                if (!data || !data.type) return;
+                handleIncomingSignal(data.type, data.payload);
+                snapshot.ref.remove().catch(e => console.error(e));
+            });
+        } catch (e) {
+            console.warn('[WebRTC] Firebase RTDB initialization skipped:', e);
+        }
+    }
 
     window.globalSocket = {
         on: (event, handler) => {
@@ -108,21 +147,23 @@
         emit: async (event, data, callback) => {
             if (event === 'check-online') {
                 const targetId = data;
-                try {
-                    const snap = await db.ref(`webrtc/status/${targetId}`).once('value');
-                    if (callback) callback({ isOnline: snap.exists() });
-                } catch(e) {
-                    if (callback) callback({ isOnline: false });
+                if (db) {
+                    try {
+                        const snap = await db.ref(`webrtc/status/${targetId}`).once('value');
+                        if (callback) callback({ isOnline: snap.exists() });
+                        return;
+                    } catch(e) {}
                 }
+                if (callback) callback({ isOnline: true });
                 return;
             }
             if (event === 'join-room') {
-                return; // Handled structurally by Firebase
+                if (socket) socket.emit('join_room', data);
+                return;
             }
             
             // Standard 1-on-1 peer events require a "to" field
             if (data && data.to) {
-                // Map outgoing events to receiver's expected incoming events (matching legacy server logic)
                 const eventMap = {
                     'call-user': 'call-made',
                     'make-answer': 'answer-made',
@@ -132,44 +173,63 @@
                 };
                 const translatedEvent = eventMap[event] || event;
 
-                db.ref(`webrtc/signals/${data.to}`).push({
-                    type: translatedEvent,
-                    payload: data
-                }).catch(e => console.error(e));
+                // Send via Socket.IO directly to target (Works for Mobile & Web cross-platform)
+                if (socket) {
+                    socket.emit('webrtc_signal', {
+                        to: data.to,
+                        type: translatedEvent,
+                        payload: data
+                    });
+                }
+
+                // Dual send via Firebase if available
+                if (db) {
+                    db.ref(`webrtc/signals/${data.to}`).push({
+                        type: translatedEvent,
+                        payload: data
+                    }).catch(e => console.error(e));
+                }
             } 
             // Group Call Logic
             else if (event === 'join-group-call') {
                 const { groupId, userId } = data;
-                const groupRef = db.ref(`webrtc/groups/${groupId}`);
-                const myNode = groupRef.child(userId);
-                
-                const now = Date.now();
-                myNode.set(now);
-                myNode.onDisconnect().remove();
+                if (socket) {
+                    socket.emit('join-group-call', { groupId, userId });
+                }
+                if (db) {
+                    const groupRef = db.ref(`webrtc/groups/${groupId}`);
+                    const myNode = groupRef.child(userId);
+                    const now = Date.now();
+                    myNode.set(now);
+                    myNode.onDisconnect().remove();
 
-                // Listen for others joining
-                groupRef.on('child_added', snap => {
-                    const otherId = snap.key;
-                    const joinTime = snap.val();
-                    // If they joined AFTER me, I initiate to prevent glare
-                    if (otherId !== userId && joinTime > now) {
-                        if (eventHandlers['user-joined-call']) {
-                            eventHandlers['user-joined-call']({ userId: otherId });
+                    groupRef.on('child_added', snap => {
+                        const otherId = snap.key;
+                        const joinTime = snap.val();
+                        if (otherId !== userId && joinTime > now) {
+                            if (eventHandlers['user-joined-call']) {
+                                eventHandlers['user-joined-call']({ userId: otherId });
+                            }
                         }
-                    }
-                });
+                    });
 
-                groupRef.on('child_removed', snap => {
-                    const otherId = snap.key;
-                    if (otherId !== userId && eventHandlers['user-left-call']) {
-                        eventHandlers['user-left-call']({ userId: otherId });
-                    }
-                });
+                    groupRef.on('child_removed', snap => {
+                        const otherId = snap.key;
+                        if (otherId !== userId && eventHandlers['user-left-call']) {
+                            eventHandlers['user-left-call']({ userId: otherId });
+                        }
+                    });
+                }
             }
             else if (event === 'leave-group-call') {
                 const { groupId, userId } = data;
-                db.ref(`webrtc/groups/${groupId}/${userId}`).remove();
-                db.ref(`webrtc/groups/${groupId}`).off();
+                if (socket) {
+                    socket.emit('leave-group-call', { groupId, userId });
+                }
+                if (db) {
+                    db.ref(`webrtc/groups/${groupId}/${userId}`).remove();
+                    db.ref(`webrtc/groups/${groupId}`).off();
+                }
             }
         }
     };
@@ -189,6 +249,33 @@
 
     // Group state
     let activeGroupIdForCall = null;
+        queuedCandidates = {};
+
+    // Candidate buffering to prevent addIceCandidate on null remoteDescription
+    let queuedCandidates = {};
+    function addOrQueueCandidate(targetId, candidateData) {
+        if (!targetId || !candidateData) return;
+        const pc = peerConnections[targetId] || Object.values(peerConnections)[0];
+        if (pc && pc.remoteDescription && pc.remoteDescription.type) {
+            pc.addIceCandidate(new RTCIceCandidate(candidateData)).catch(e => console.warn('ICE add error:', e));
+        } else {
+            if (!queuedCandidates[targetId]) queuedCandidates[targetId] = [];
+            queuedCandidates[targetId].push(candidateData);
+        }
+    }
+    async function drainQueuedCandidates(targetId) {
+        const pc = peerConnections[targetId] || Object.values(peerConnections)[0];
+        if (!pc) return;
+        const list = queuedCandidates[targetId] || [];
+        queuedCandidates[targetId] = [];
+        for (const cand of list) {
+            try {
+                await pc.addIceCandidate(new RTCIceCandidate(cand));
+            } catch(e) {
+                console.warn('ICE drain error:', e);
+            }
+        }
+    }
 
     const servers = {
         iceServers: [
@@ -248,13 +335,10 @@
     });
 
     window.globalSocket.on('answer-made', async data => {
-        const pc = peerConnections[data.from]; // data.from must be injected by server! Wait, server.js doesn't send data.from in make-answer.
-        // Actually, we modified server but didn't modify make-answer to send 'from'. Let's find pc by looking at Object.keys if there's only 1, or we need to fix server.js.
-        // Quick Fix: if there's only 1 connection, use it. Or find the pc that corresponds to this state.
-        const targetPc = pc || Object.values(peerConnections)[0];
-
+        const targetPc = peerConnections[data.from] || Object.values(peerConnections)[0];
         if (targetPc) {
             await targetPc.setRemoteDescription(new RTCSessionDescription(data.answer));
+            await drainQueuedCandidates(data.from);
         }
 
         document.getElementById('global-call-title').innerText = activeGroupIdForCall ? 'Group Call Active' : 'Connected';
@@ -280,12 +364,7 @@
     });
 
     window.globalSocket.on('ice-candidate', data => {
-        // Find the PC
-        // Notice data.from was added in server.js earlier!
-        const targetPc = peerConnections[data.from] || Object.values(peerConnections)[0];
-        if (targetPc) {
-            targetPc.addIceCandidate(new RTCIceCandidate(data.candidate));
-        }
+        addOrQueueCandidate(data.from, data.candidate);
     });
 
     // ----------------------------------------------------
@@ -426,7 +505,24 @@
 
     window.globalAcceptCall = async function() {
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideoCall, audio: true });
+            if (!incomingCallData || !incomingCallData.from || !incomingCallData.offer) {
+                console.error('No incoming call data available to accept');
+                return;
+            }
+            try {
+                if (isVideoCall) {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                } else {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                }
+            } catch (mediaErr) {
+                if (isVideoCall) {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    isVideoCall = false;
+                } else {
+                    throw mediaErr;
+                }
+            }
             document.getElementById('global-local-video').srcObject = localStream;
             
             document.getElementById('global-call-video-container').style.display = isVideoCall ? 'flex' : 'none';
@@ -440,13 +536,15 @@
 
             const pc = createPeerConnection(incomingCallData.from, false);
             await pc.setRemoteDescription(new RTCSessionDescription(incomingCallData.offer));
+            await drainQueuedCandidates(incomingCallData.from);
+
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
 
             window.globalSocket.emit('make-answer', {
                 answer: answer,
                 to: incomingCallData.from,
-                from: currentUserId
+                from: getCurrentUserId()
             });
             
             isCallActive = true;
@@ -555,31 +653,47 @@
     // ----------------------------------------------------
 
     window.globalInitiateCall = async function(targetUserId, targetUsername, isVideo) {
+        const uid = getCurrentUserId();
+        if (!uid) {
+            if (window.showToast) window.showToast('Please log in to make a call.', 'error');
+            return;
+        }
         currentCallTarget = targetUserId;
-        isVideoCall = isVideo;
+        isVideoCall = !!isVideo;
             
-        // Proceed to WebRTC setup immediately without blocking for global online presence
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            if (isVideoCall) {
+                try {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                } catch (mediaErr) {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    isVideo = false;
+                    isVideoCall = false;
+                    if (window.showToast) window.showToast('Camera unavailable, continuing with audio only', 'info');
+                }
+            } else {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+            }
+
             document.getElementById('global-local-video').srcObject = localStream;
-            document.getElementById('global-call-video-container').style.display = isVideo ? 'flex' : 'none';
-            document.getElementById('global-call-audio-container').style.display = isVideo ? 'none' : 'flex';
+            document.getElementById('global-call-video-container').style.display = isVideoCall ? 'flex' : 'none';
+            document.getElementById('global-call-audio-container').style.display = isVideoCall ? 'none' : 'flex';
             
             document.getElementById('global-call-overlay').style.display = 'flex';
             document.getElementById('global-call-controls-incoming').style.display = 'none';
             document.getElementById('global-call-controls-active').style.display = 'flex';
-            document.getElementById('global-btn-toggle-cam').style.display = isVideo ? 'flex' : 'none';
+            document.getElementById('global-btn-toggle-cam').style.display = isVideoCall ? 'flex' : 'none';
             
             document.getElementById('global-call-name').innerText = targetUsername || 'User';
             document.getElementById('global-call-title').innerText = 'Connecting...';
             document.getElementById('global-audio-avatar').classList.add('pulsing');
 
-            await initiatePeerConnection(targetUserId, isVideo, false);
+            await initiatePeerConnection(targetUserId, isVideoCall, false);
             isCallActive = true;
         } catch(e) {
             console.error(e);
             window.globalEndUI();
-            if(window.showToast) window.showToast('Microphone/Camera access denied.', 'error');
+            if(window.showToast) window.showToast('Microphone access denied.', 'error');
         }
     };
 
@@ -589,7 +703,17 @@
         currentCallTarget = null;
         
         try {
-            localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+            } catch (mediaErr) {
+                if (isVideo) {
+                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    isVideo = false;
+                    isVideoCall = false;
+                } else {
+                    throw mediaErr;
+                }
+            }
             document.getElementById('global-local-video').srcObject = localStream;
             document.getElementById('global-call-video-container').style.display = isVideo ? 'flex' : 'none';
             document.getElementById('global-call-audio-container').style.display = isVideo ? 'none' : 'flex';

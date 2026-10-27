@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy | Vylithra Creative Ecosystem</title>
+    <meta name="description" content="Read Vylithra's Privacy Policy. Learn how we collect, protect, and handle your data with transparent security practices and GDPR/CCPA compliance.">
+    <meta name="keywords" content="Vylithra privacy policy, data protection, GDPR, CCPA, user rights, security">
+    <link rel="canonical" href="https://www.vylithra.in/privacy">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Privacy Policy | Vylithra">
+    <meta property="og:description" content="Learn how Vylithra protects your personal data and respects your privacy rights.">
+    <meta property="og:image" content="https://www.vylithra.in/vylithra_app_icon.png">
+    <meta property="og:url" content="https://www.vylithra.in/privacy">
+    <meta property="og:type" content="website">
+    
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --surface: #0e121b;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-purple: #a855f7;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed;
+            pointer-events: none;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 70%);
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+        }
+        .ambient-glow-2 {
+            position: fixed;
+            pointer-events: none;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            z-index: 0;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 9, 14, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-cyan);
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 8px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 24px;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        .hero {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            padding: 36px;
+            margin-bottom: 24px;
+        }
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2 i { color: var(--accent-cyan); font-size: 1.2rem; }
+        p, ul {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        strong { color: var(--text-light); }
+        .highlight-box {
+            background: rgba(0, 242, 254, 0.05);
+            border-left: 4px solid var(--accent-cyan);
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+        }
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 30px 5%;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: var(--bg-dark);
+            margin-top: auto;
+        }
+        footer a { color: var(--accent-cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <header>
+        <a href="/" class="logo">
+            <img src="/vylithra_logo.svg" alt="Vylithra Logo" width="28" height="28">
+            Vylithra
+        </a>
+        <div class="nav-links">
+            <a href="/terms">Terms of Service</a>
+            <a href="/privacy" class="active">Privacy Policy</a>
+            <a href="/main" class="btn-back"><i class="fa-solid fa-arrow-left"></i> App</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero">
+            <h1>Privacy Policy</h1>
+            <p class="last-updated">Last Updated: October 2026 | Effective Date: Immediately</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-shield-halved"></i> 1. Introduction & Scope</h2>
+            <p>Welcome to <strong>Vylithra</strong> ("we," "our," or "us"). We provide an interactive creator ecosystem including content publishing, short-form reels, direct messaging, live WebRTC audio/video calls, and digital publications.</p>
+            <p>This Privacy Policy explains how we collect, store, process, and protect your personal information when you access or interact with our web and mobile applications.</p>
+            <div class="highlight-box">
+                <strong>Our Core Privacy Commitment:</strong> We never sell your personal data to third-party data brokers. Your private conversations and direct audio/video calls are encrypted and never recorded without explicit consent.
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-database"></i> 2. Information We Collect</h2>
+            <p>We only collect data necessary to provide a high-performance, secure user experience:</p>
+            <ul>
+                <li><strong>Account Credentials:</strong> Name, username, email address, hashed passwords (via bcryptjs), and optional two-factor authentication secrets.</li>
+                <li><strong>Profile & Creator Content:</strong> Profile pictures, bio text, social handles, uploaded stories, posts, reels, comments, and published books.</li>
+                <li><strong>Payment & Transaction Information:</strong> When purchasing books or withdrawing earnings, transactions are processed securely via PCI-DSS compliant providers (Stripe, Razorpay, and PayPal). We do not store raw credit card numbers.</li>
+                <li><strong>Technical & Device Data:</strong> IP address, browser type, operating system, device identifiers, and anonymized access logs to detect abuse, spam, and Web Application Firewall (WAF) threats.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-lock"></i> 3. How We Use and Protect Your Data</h2>
+            <p>Your data is used strictly for the following purposes:</p>
+            <ul>
+                <li>Authenticating your account and sustaining secure sessions.</li>
+                <li>Delivering low-latency WebRTC audio/video signaling and chat messages.</li>
+                <li>Protecting users against brute force attacks, distributed denial-of-service (DDoS), and malicious intrusions.</li>
+                <li>Processing creator monetization payouts and providing digital book download keys.</li>
+            </ul>
+            <p>We employ enterprise-grade security including TLS 1.3 in-transit encryption, salted password hashing, NoSQL injection sanitization, rate-limiting, and distributed honeypot intrusion detection.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-scale-balanced"></i> 4. GDPR & CCPA Compliance (Your Rights)</h2>
+            <p>Under international privacy frameworks including the General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA), you retain the following rights:</p>
+            <ul>
+                <li><strong>Right to Access:</strong> You may request a copy of all personal data held about you.</li>
+                <li><strong>Right to Rectification:</strong> You can edit and correct your profile information at any time via Settings.</li>
+                <li><strong>Right to Erasure ("Right to Be Forgotten"):</strong> You may delete your account and all associated posts, reels, and stories at any time in Settings.</li>
+                <li><strong>Right to Data Portability:</strong> Export your published assets and transaction ledger in machine-readable format.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-envelope"></i> 5. Data Controller & Contact Information</h2>
+            <p>If you have any questions, concerns, or requests regarding this Privacy Policy or your data, please contact our Data Protection Team at:</p>
+            <p><strong>Email:</strong> <a href="mailto:privacy@vylithra.in" style="color: var(--accent-cyan);">privacy@vylithra.in</a></p>
+            <p><strong>Support Portal:</strong> <a href="/settings" style="color: var(--accent-cyan);">Account Settings & Privacy Hub</a></p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Vylithra Creative Ecosystem. All rights reserved. | <a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+    </footer>
+</body>
+</html>

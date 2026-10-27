@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:socket_io_client/socket_io_client.dart' as io_client;
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import '../services/api_service.dart';
@@ -16,7 +15,11 @@ class ChatScreen extends StatefulWidget {
   final String targetUserId;
   final String targetUsername;
 
-  const ChatScreen({super.key, required this.targetUserId, required this.targetUsername});
+  const ChatScreen({
+    super.key,
+    required this.targetUserId,
+    required this.targetUsername,
+  });
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -28,7 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final SocketService _socketService = SocketService();
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
-  
+
   List<dynamic> _messages = [];
   bool _isLoading = true;
   String? _currentUserId;
@@ -48,7 +51,9 @@ class _ChatScreenState extends State<ChatScreen> {
       try {
         final parts = token.split('.');
         if (parts.length == 3) {
-          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+          final payload = utf8.decode(
+            base64Url.decode(base64Url.normalize(parts[1])),
+          );
           final data = jsonDecode(payload);
           _currentUserId = data['user']?['id'];
         }
@@ -60,7 +65,9 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _fetchMessages() async {
     try {
-      final messages = await _apiService.get('/api/messages/${widget.targetUserId}');
+      final messages = await _apiService.get(
+        '/api/messages/${widget.targetUserId}',
+      );
       if (mounted) {
         setState(() {
           _messages = messages ?? [];
@@ -77,12 +84,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _initSocket() {
     if (_currentUserId == null) return;
-    
+
     // We assume SocketService is already connected globally via HomeScreen.
     _messageSubscription = _socketService.onNewMessage.listen((data) {
       final senderData = data['sender'];
       final senderId = senderData is Map ? senderData['_id'] : senderData;
-      
+
       if (senderId == widget.targetUserId || senderId == _currentUserId) {
         if (mounted) {
           setState(() {
@@ -109,12 +116,79 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
+  String _resolveMediaUrl(dynamic url) {
+    if (url == null) return '';
+    final str = url.toString().trim();
+    if (str.isEmpty) return '';
+    if (str.startsWith('http://') || str.startsWith('https://')) return str;
+    if (str.startsWith('/')) return '${ApiService.baseUrl}$str';
+    return '${ApiService.baseUrl}/$str';
+  }
+
+  void _openMediaViewer(String mediaUrl, bool isVideo) {
+    final fullUrl = _resolveMediaUrl(mediaUrl);
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: isVideo
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.play_circle_outline, color: Colors.white, size: 72),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'Video Attachment',
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 24),
+                            child: Text(
+                              fullUrl,
+                              style: const TextStyle(color: Colors.white60, fontSize: 12),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.network(
+                      fullUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 64,
+                      ),
+                    ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Future<void> _sendMessage() async {
     final text = _messageController.text.trim();
     if (text.isEmpty || _currentUserId == null) return;
 
     _messageController.clear();
-    
+
     // Optimistic UI update
     final optimisticMsg = {
       '_id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -122,20 +196,23 @@ class _ChatScreenState extends State<ChatScreen> {
       'content': text,
       'createdAt': DateTime.now().toIso8601String(),
     };
-    
+
     setState(() {
       _messages.add(optimisticMsg);
     });
     _scrollToBottom();
 
     try {
-      final savedMsg = await _apiService.post('/api/messages/${widget.targetUserId}', {
-        'content': text,
-      });
-      
+      final savedMsg = await _apiService.post(
+        '/api/messages/${widget.targetUserId}',
+        {'content': text},
+      );
+
       // Replace optimistic message with saved one
       setState(() {
-        final index = _messages.indexWhere((m) => m['_id'] == optimisticMsg['_id']);
+        final index = _messages.indexWhere(
+          (m) => m['_id'] == optimisticMsg['_id'],
+        );
         if (index != -1) {
           _messages[index] = savedMsg;
         }
@@ -146,17 +223,22 @@ class _ChatScreenState extends State<ChatScreen> {
         _messages.removeWhere((m) => m['_id'] == optimisticMsg['_id']);
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
     }
   }
 
   Future<void> _logCall(bool isVideo) async {
     try {
-      final savedMsg = await _apiService.post('/api/messages/${widget.targetUserId}', {
-        'content': isVideo ? 'Video Call' : 'Voice Call',
-        'attachmentType': 'call',
-      });
+      final savedMsg = await _apiService.post(
+        '/api/messages/${widget.targetUserId}',
+        {
+          'content': isVideo ? 'Video Call' : 'Voice Call',
+          'attachmentType': 'call',
+        },
+      );
       setState(() => _messages.add(savedMsg));
       _scrollToBottom();
     } catch (e) {
@@ -166,14 +248,14 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _pickAndUploadMedia(bool isVideo) async {
     final picker = ImagePicker();
-    final XFile? pickedFile = isVideo 
-        ? await picker.pickVideo(source: ImageSource.gallery) 
+    final XFile? pickedFile = isVideo
+        ? await picker.pickVideo(source: ImageSource.gallery)
         : await picker.pickImage(source: ImageSource.gallery, imageQuality: 50);
-        
+
     if (pickedFile == null || _currentUserId == null) return;
 
     File file = File(pickedFile.path);
-    
+
     // Show uploading indicator (optimistic ui with a loader)
     final optimisticMsg = {
       '_id': DateTime.now().millisecondsSinceEpoch.toString(),
@@ -181,29 +263,43 @@ class _ChatScreenState extends State<ChatScreen> {
       'content': 'Uploading media...',
       'createdAt': DateTime.now().toIso8601String(),
     };
-    
+
     setState(() => _messages.add(optimisticMsg));
     _scrollToBottom();
 
     try {
-      final uploadRes = await _apiService.uploadFile('/api/messages/upload', file);
-      final fileUrl = uploadRes['url'] ?? uploadRes['fileUrl']; 
-      
-      if (fileUrl == null) throw Exception("Failed to get file URL from server.");
+      final uploadRes = await _apiService.uploadFile(
+        '/api/messages/upload',
+        file,
+      );
+      final fileUrl = uploadRes['url'] ?? uploadRes['fileUrl'];
 
-      final savedMsg = await _apiService.post('/api/messages/${widget.targetUserId}', {
-        'content': isVideo ? 'Sent a video' : 'Sent an image',
-        'attachmentUrl': fileUrl,
-        'attachmentType': isVideo ? 'video' : 'image',
-      });
-      
+      if (fileUrl == null) {
+        throw Exception("Failed to get file URL from server.");
+      }
+
+      final savedMsg = await _apiService
+          .post('/api/messages/${widget.targetUserId}', {
+            'content': isVideo ? 'Sent a video' : 'Sent an image',
+            'attachmentUrl': fileUrl,
+            'attachmentType': isVideo ? 'video' : 'image',
+          });
+
       setState(() {
-        final index = _messages.indexWhere((m) => m['_id'] == optimisticMsg['_id']);
+        final index = _messages.indexWhere(
+          (m) => m['_id'] == optimisticMsg['_id'],
+        );
         if (index != -1) _messages[index] = savedMsg;
       });
     } catch (e) {
-      setState(() => _messages.removeWhere((m) => m['_id'] == optimisticMsg['_id']));
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      setState(
+        () => _messages.removeWhere((m) => m['_id'] == optimisticMsg['_id']),
+      );
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
+      }
     }
   }
 
@@ -224,7 +320,12 @@ class _ChatScreenState extends State<ChatScreen> {
             children: [
               ListTile(
                 leading: const Icon(Icons.image, color: Colors.blue),
-                title: Text('Image', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                title: Text(
+                  'Image',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickAndUploadMedia(false);
@@ -232,7 +333,12 @@ class _ChatScreenState extends State<ChatScreen> {
               ),
               ListTile(
                 leading: const Icon(Icons.videocam, color: Colors.red),
-                title: Text('Video', style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+                title: Text(
+                  'Video',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                  ),
+                ),
                 onTap: () {
                   Navigator.pop(context);
                   _pickAndUploadMedia(true);
@@ -241,7 +347,7 @@ class _ChatScreenState extends State<ChatScreen> {
             ],
           ),
         );
-      }
+      },
     );
   }
 
@@ -260,14 +366,19 @@ class _ChatScreenState extends State<ChatScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: isDark ? const Color(0xFF0F172A).withValues(alpha: 0.8) : Colors.white.withValues(alpha: 0.8),
+        backgroundColor: isDark
+            ? const Color(0xFF0F172A).withValues(alpha: 0.8)
+            : Colors.white.withValues(alpha: 0.8),
         flexibleSpace: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Container(color: Colors.transparent),
           ),
         ),
-        title: Text(widget.targetUsername, style: TextStyle(color: isDark ? Colors.white : Colors.black87)),
+        title: Text(
+          widget.targetUsername,
+          style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+        ),
         iconTheme: IconThemeData(color: isDark ? Colors.white : Colors.black87),
         actions: [
           IconButton(
@@ -313,9 +424,9 @@ class _ChatScreenState extends State<ChatScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: isDark 
-              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
-              : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
+            colors: isDark
+                ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                : [const Color(0xFFF1F5F9), const Color(0xFFE2E8F0)],
           ),
         ),
         child: Column(
@@ -326,7 +437,10 @@ class _ChatScreenState extends State<ChatScreen> {
                   : ListView.builder(
                       controller: _scrollController,
                       padding: EdgeInsets.only(
-                        top: MediaQuery.of(context).padding.top + kToolbarHeight + 20,
+                        top:
+                            MediaQuery.of(context).padding.top +
+                            kToolbarHeight +
+                            20,
                         bottom: 20,
                         left: 16,
                         right: 16,
@@ -335,40 +449,63 @@ class _ChatScreenState extends State<ChatScreen> {
                       itemBuilder: (context, index) {
                         final msg = _messages[index];
                         final senderData = msg['sender'];
-                        final senderId = senderData is Map ? senderData['_id'] : senderData;
+                        final senderId = senderData is Map
+                            ? senderData['_id']
+                            : senderData;
                         final isMe = senderId == _currentUserId;
 
                         return Align(
-                          alignment: isMe ? Alignment.centerRight : Alignment.centerLeft,
+                          alignment: isMe
+                              ? Alignment.centerRight
+                              : Alignment.centerLeft,
                           child: Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
-                              color: isMe 
-                                  ? const Color(0xFF3B82F6) 
-                                  : (isDark ? Colors.white.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.05)),
+                              color: isMe
+                                  ? const Color(0xFF3B82F6)
+                                  : (isDark
+                                        ? Colors.white.withValues(alpha: 0.1)
+                                        : Colors.black.withValues(alpha: 0.05)),
                               borderRadius: BorderRadius.circular(20).copyWith(
-                                bottomRight: isMe ? const Radius.circular(0) : null,
-                                bottomLeft: !isMe ? const Radius.circular(0) : null,
+                                bottomRight: isMe
+                                    ? const Radius.circular(0)
+                                    : null,
+                                bottomLeft: !isMe
+                                    ? const Radius.circular(0)
+                                    : null,
                               ),
                             ),
                             child: Column(
-                              crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                              crossAxisAlignment: isMe
+                                  ? CrossAxisAlignment.end
+                                  : CrossAxisAlignment.start,
                               children: [
                                 if (msg['attachmentType'] == 'call')
                                   Row(
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Icon(
-                                        msg['content'] == 'Video Call' ? Icons.videocam : Icons.phone,
-                                        color: isMe ? Colors.white : const Color(0xFF3B82F6),
+                                        msg['content'] == 'Video Call'
+                                            ? Icons.videocam
+                                            : Icons.phone,
+                                        color: isMe
+                                            ? Colors.white
+                                            : const Color(0xFF3B82F6),
                                         size: 20,
                                       ),
                                       const SizedBox(width: 8),
                                       Text(
                                         msg['content'] ?? '',
                                         style: TextStyle(
-                                          color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                          color: isMe
+                                              ? Colors.white
+                                              : (isDark
+                                                    ? Colors.white
+                                                    : Colors.black87),
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -376,29 +513,74 @@ class _ChatScreenState extends State<ChatScreen> {
                                     ],
                                   )
                                 else ...[
-                                  if (msg['attachmentUrl'] != null && msg['attachmentUrl'].toString().isNotEmpty)
+                                  if (msg['attachmentUrl'] != null &&
+                                      msg['attachmentUrl']
+                                          .toString()
+                                          .isNotEmpty)
                                     Container(
                                       margin: const EdgeInsets.only(bottom: 8),
                                       child: msg['attachmentType'] == 'image'
-                                        ? ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: Image.network(
-                                              msg['attachmentUrl'], 
-                                              width: 200, 
-                                              height: 200, 
-                                              fit: BoxFit.cover,
+                                          ? GestureDetector(
+                                              onTap: () => _openMediaViewer(
+                                                msg['attachmentUrl'].toString(),
+                                                false,
+                                              ),
+                                              child: ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                                child: Image.network(
+                                                  _resolveMediaUrl(
+                                                    msg['attachmentUrl'],
+                                                  ),
+                                                  width: 200,
+                                                  height: 200,
+                                                  fit: BoxFit.cover,
+                                                  errorBuilder:
+                                                      (context, error, stackTrace) => Container(
+                                                    width: 200,
+                                                    height: 150,
+                                                    color: Colors.black12,
+                                                    child: const Center(
+                                                      child: Icon(
+                                                        Icons.broken_image,
+                                                        color: Colors.grey,
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
                                             )
-                                          )
-                                        : Container(
-                                            width: 200, height: 100,
-                                            decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
-                                            child: const Center(child: Icon(Icons.play_circle_fill, size: 50, color: Colors.white)),
-                                          ),
+                                          : GestureDetector(
+                                              onTap: () => _openMediaViewer(
+                                                msg['attachmentUrl'].toString(),
+                                                true,
+                                              ),
+                                              child: Container(
+                                                width: 200,
+                                                height: 100,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.black26,
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                child: const Center(
+                                                  child: Icon(
+                                                    Icons.play_circle_fill,
+                                                    size: 50,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
                                     ),
                                   Text(
                                     msg['content'] ?? '',
                                     style: TextStyle(
-                                      color: isMe ? Colors.white : (isDark ? Colors.white : Colors.black87),
+                                      color: isMe
+                                          ? Colors.white
+                                          : (isDark
+                                                ? Colors.white
+                                                : Colors.black87),
                                       fontSize: 16,
                                     ),
                                   ),
@@ -413,37 +595,53 @@ class _ChatScreenState extends State<ChatScreen> {
             // Input Bar
             Container(
               padding: EdgeInsets.only(
-                left: 16, 
-                right: 16, 
-                top: 12, 
-                bottom: MediaQuery.of(context).padding.bottom + 12
+                left: 16,
+                right: 16,
+                top: 12,
+                bottom: MediaQuery.of(context).padding.bottom + 12,
               ),
               decoration: BoxDecoration(
                 color: isDark ? const Color(0xFF1E293B) : Colors.white,
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, -5))
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -5),
+                  ),
                 ],
               ),
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(Icons.add_circle_outline, color: isDark ? Colors.white54 : Colors.black54),
+                    icon: Icon(
+                      Icons.add_circle_outline,
+                      color: isDark ? Colors.white54 : Colors.black54,
+                    ),
                     onPressed: _showAttachmentMenu,
                   ),
                   Expanded(
                     child: TextField(
                       controller: _messageController,
-                      style: TextStyle(color: isDark ? Colors.white : Colors.black87),
+                      style: TextStyle(
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                       decoration: InputDecoration(
                         hintText: 'Type a message...',
-                        hintStyle: TextStyle(color: isDark ? Colors.white54 : Colors.black54),
+                        hintStyle: TextStyle(
+                          color: isDark ? Colors.white54 : Colors.black54,
+                        ),
                         filled: true,
-                        fillColor: isDark ? Colors.black.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.05),
+                        fillColor: isDark
+                            ? Colors.black.withValues(alpha: 0.2)
+                            : Colors.black.withValues(alpha: 0.05),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 12,
+                        ),
                       ),
                       onSubmitted: (_) => _sendMessage(),
                     ),

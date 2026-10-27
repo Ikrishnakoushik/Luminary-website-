@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terms & Conditions | Vylithra Creative Ecosystem</title>
+    <meta name="description" content="Review Vylithra's Terms of Service and Conditions. Understand user responsibilities, creator rights, platform standards, and legal agreements.">
+    <meta name="keywords" content="Vylithra terms of service, conditions of use, creator rights, community standards, legal agreements">
+    <link rel="canonical" href="https://www.vylithra.in/terms">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Terms & Conditions | Vylithra">
+    <meta property="og:description" content="Review the Terms of Service and User Agreement for Vylithra.">
+    <meta property="og:image" content="https://www.vylithra.in/vylithra_app_icon.png">
+    <meta property="og:url" content="https://www.vylithra.in/terms">
+    <meta property="og:type" content="website">
+    
+    <link rel="stylesheet" href="/ui-common.css">
+    <script src="/ui-common.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --bg-dark: #07090e;
+            --surface: #0e121b;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --text-light: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-cyan: #00f2fe;
+            --accent-blue: #4facfe;
+            --accent-purple: #a855f7;
+            --danger: #ef4444;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            line-height: 1.7;
+        }
+        .ambient-glow {
+            position: fixed;
+            pointer-events: none;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 70%);
+            top: -100px;
+            left: -100px;
+            z-index: 0;
+        }
+        .ambient-glow-2 {
+            position: fixed;
+            pointer-events: none;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1) 0%, transparent 70%);
+            bottom: -150px;
+            right: -150px;
+            z-index: 0;
+        }
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(7, 9, 14, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--glass-border);
+            padding: 16px 5%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: var(--text-light);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.4rem;
+        }
+        .nav-links a {
+            color: var(--text-muted);
+            text-decoration: none;
+            margin-left: 20px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--accent-cyan);
+        }
+        .btn-back {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--glass-border);
+            color: var(--text-light);
+            padding: 8px 18px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        .btn-back:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-1px);
+        }
+        .container {
+            max-width: 900px;
+            margin: 40px auto;
+            padding: 0 24px;
+            flex: 1;
+            position: relative;
+            z-index: 1;
+        }
+        .hero {
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        .hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #fff 0%, var(--accent-cyan) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+        }
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        .card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            padding: 36px;
+            margin-bottom: 24px;
+        }
+        h2 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-light);
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h2 i { color: var(--accent-cyan); font-size: 1.2rem; }
+        p, ul {
+            color: var(--text-muted);
+            font-size: 1rem;
+            margin-bottom: 16px;
+        }
+        ul { padding-left: 20px; }
+        li { margin-bottom: 8px; }
+        strong { color: var(--text-light); }
+        .danger-box {
+            background: rgba(239, 68, 68, 0.06);
+            border-left: 4px solid var(--danger);
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+            color: #fca5a5;
+        }
+        .danger-box strong { color: #fee2e2; }
+        footer {
+            border-top: 1px solid var(--glass-border);
+            padding: 30px 5%;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            background: var(--bg-dark);
+            margin-top: auto;
+        }
+        footer a { color: var(--accent-cyan); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <header>
+        <a href="/" class="logo">
+            <img src="/vylithra_logo.svg" alt="Vylithra Logo" width="28" height="28">
+            Vylithra
+        </a>
+        <div class="nav-links">
+            <a href="/terms" class="active">Terms of Service</a>
+            <a href="/privacy">Privacy Policy</a>
+            <a href="/main" class="btn-back"><i class="fa-solid fa-arrow-left"></i> App</a>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="hero">
+            <h1>Terms of Service</h1>
+            <p class="last-updated">Last Updated: October 2026 | Effective Date: Immediately</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-handshake"></i> 1. Acceptance of Terms</h2>
+            <p>By registering for, accessing, or using the <strong>Vylithra</strong> web application, mobile application, or any associated APIs, services, or software (the "Platform"), you agree to be legally bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not access or use the Platform.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-user-shield"></i> 2. User Accounts & Security</h2>
+            <p>You must provide accurate and complete information when creating an account. You are solely responsible for all activities that occur under your account and for maintaining the confidentiality of your login credentials and two-factor authentication secrets.</p>
+            <p>You must immediately notify Vylithra of any unauthorized access, session breach, or security compromise.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-copyright"></i> 3. Creator Rights & Intellectual Property</h2>
+            <p><strong>You own your work.</strong> You retain 100% ownership, copyright, and intellectual property rights in all original content, photos, videos, stories, reels, and digital publications that you submit or publish on Vylithra.</p>
+            <p>By posting content, you grant Vylithra a worldwide, non-exclusive, royalty-free license to host, store, cache, transcode, and display your content solely for the purpose of operating and displaying the Platform to you and your selected audience.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-triangle-exclamation"></i> 4. Prohibited Conduct & Zero Tolerance Policy</h2>
+            <div class="danger-box">
+                <strong>STRICT ZERO-TOLERANCE POLICY:</strong> Any attempt to compromise server security, upload malicious code, or engage in abuse will result in immediate permanent banning and referral to legal authorities.
+            </div>
+            <p>You strictly agree that you will NOT:</p>
+            <ul>
+                <li>Engage in illegal activities, hate speech, bullying, doxxing, harassment, or threats.</li>
+                <li>Upload, transmit, or solicit child sexual abuse material (CSAM) or any form of minor exploitation. Violators are immediately reported to NCMEC and international law enforcement.</li>
+                <li>Attempt to bypass rate limiters, security firewalls, authentication gateways, or reverse-engineer the API.</li>
+                <li>Deploy scraping bots, spiders, or automated downloaders without express written authorization.</li>
+                <li>Distribute pirated books, copyrighted materials without authorization, or engage in payment fraud or money laundering.</li>
+            </ul>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-coins"></i> 5. Creator Monetization & Digital Purchases</h2>
+            <p>Creators may sell digital books and receive earnings via our integrated payment rails (Stripe, Razorpay, PayPal). Withdrawal requests undergo automated risk assessment and fraud screening. Digital purchases are final and non-refundable once the unique download key has been delivered, except where required by applicable consumer protection laws.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-gavel"></i> 6. Limitation of Liability & Termination</h2>
+            <p>Vylithra is provided "as is" and "as available" without warranties of any kind. In no event shall Vylithra, its developers, or affiliates be liable for indirect, incidental, punitive, or consequential damages resulting from platform downtime, service interruptions, or third-party conduct.</p>
+            <p>We reserve the right to suspend or terminate accounts that violate these Terms at our sole discretion without prior notice.</p>
+        </div>
+
+        <div class="card">
+            <h2><i class="fa-solid fa-envelope-open-text"></i> 7. Contact Us</h2>
+            <p>For legal inquiries, copyright claims, DMCA notices, or service questions, please reach us at:</p>
+            <p><strong>Legal & Compliance:</strong> <a href="mailto:legal@vylithra.in" style="color: var(--accent-cyan);">legal@vylithra.in</a></p>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Vylithra Creative Ecosystem. All rights reserved. | <a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a></p>
+    </footer>
+</body>
+</html>

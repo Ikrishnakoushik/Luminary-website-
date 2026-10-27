@@ -14,7 +14,7 @@ class ShareReelScreen extends StatefulWidget {
   final String filter;
 
   const ShareReelScreen({
-    super.key, 
+    super.key,
     required this.videoFile,
     required this.trimStart,
     required this.trimEnd,
@@ -66,9 +66,9 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
 
   Future<void> _handleUpload() async {
     if (_captionController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please write a caption')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please write a caption')));
       return;
     }
 
@@ -76,25 +76,27 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
       _isUploading = true;
     });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Processing video...')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Processing video...')));
 
     try {
       File fileToUpload = widget.videoFile;
 
       // 1. Process with FFmpeg if editing was done
-      bool needsProcessing = widget.trimStart.inMilliseconds > 0 || 
-                             widget.audioPath != null || 
-                             widget.filter != 'None';
-                             
+      bool needsProcessing =
+          widget.trimStart.inMilliseconds > 0 ||
+          widget.audioPath != null ||
+          widget.filter != 'None';
+
       if (needsProcessing) {
         final tempDir = await getTemporaryDirectory();
-        final outputPath = '${tempDir.path}/processed_${DateTime.now().millisecondsSinceEpoch}.mp4';
+        final outputPath =
+            '${tempDir.path}/processed_${DateTime.now().millisecondsSinceEpoch}.mp4';
 
         // Build FFmpeg command
         List<String> cmd = [];
-        
+
         // Input video (trimming)
         cmd.add('-ss');
         cmd.add(widget.trimStart.inSeconds.toString());
@@ -114,7 +116,8 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
         if (widget.filter == 'Grayscale') {
           vfString = 'hue=s=0';
         } else if (widget.filter == 'Sepia') {
-          vfString = 'colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131';
+          vfString =
+              'colorchannelmixer=.393:.769:.189:0:.349:.686:.168:0:.272:.534:.131';
         } else if (widget.filter == 'Invert') {
           vfString = 'negate';
         }
@@ -135,8 +138,8 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
           cmd.add('-shortest'); // End encoding when the shortest stream ends
         } else {
           if (vfString.isEmpty) {
-             cmd.add('-c');
-             cmd.add('copy'); // Fast copy if no visual filters
+            cmd.add('-c');
+            cmd.add('copy'); // Fast copy if no visual filters
           }
         }
 
@@ -144,8 +147,8 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
         cmd.add('"$outputPath"');
 
         final String commandString = cmd.join(' ');
-        print('FFmpeg command: $commandString');
-        
+        debugPrint('FFmpeg command: $commandString');
+
         final session = await FFmpegKit.execute(commandString);
         final returnCode = await session.getReturnCode();
 
@@ -153,16 +156,17 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
           fileToUpload = File(outputPath);
         } else {
           final logs = await session.getLogsAsString();
-          print('FFmpeg Error: $logs');
+          debugPrint('FFmpeg Error: $logs');
           throw Exception('Video processing failed');
         }
       }
 
       // 2. Compress the processed video
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Compressing Reel...')),
-      );
-      
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Compressing Reel...')));
+
       final info = await VideoCompress.compressVideo(
         fileToUpload.path,
         quality: VideoQuality.MediumQuality,
@@ -174,7 +178,11 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
 
       // 3. Upload
 
-      await ApiService().uploadReel(_captionController.text, fileToUpload, _isAnonymous);
+      await ApiService().uploadReel(
+        _captionController.text,
+        fileToUpload,
+        _isAnonymous,
+      );
       if (mounted) {
         // Pop both the ShareReelScreen and the CreateReelScreen, returning true to refresh
         Navigator.pop(context); // Pop share screen
@@ -185,9 +193,9 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Upload failed: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Upload failed: $e')));
       }
     } finally {
       if (mounted) {
@@ -201,7 +209,9 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).brightness == Brightness.dark
+          ? const Color(0xFF0F172A)
+          : const Color(0xFFF8FAFC),
       appBar: AppBar(
         title: const Text('New Reel'),
         backgroundColor: Colors.transparent,
@@ -224,7 +234,11 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Center(
-                      child: Icon(Icons.video_library, color: Colors.white, size: 30),
+                      child: Icon(
+                        Icons.video_library,
+                        color: Colors.white,
+                        size: 30,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -243,11 +257,16 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
             ),
             const Divider(height: 1),
             SwitchListTile(
-              title: const Text('Post Anonymously', style: TextStyle(fontWeight: FontWeight.bold)),
-              subtitle: const Text('Hide your username and profile picture from this reel.'),
+              title: const Text(
+                'Post Anonymously',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: const Text(
+                'Hide your username and profile picture from this reel.',
+              ),
               value: _isAnonymous,
               onChanged: (val) => setState(() => _isAnonymous = val),
-              activeColor: Colors.blueAccent,
+              activeThumbColor: Colors.blueAccent,
             ),
             const SizedBox(height: 20),
             Padding(
@@ -271,9 +290,17 @@ class _ShareReelScreenState extends State<ShareReelScreen> {
                         backgroundColor: Colors.blue,
                         foregroundColor: Colors.white,
                         minimumSize: const Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      child: const Text('Share', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      child: const Text(
+                        'Share',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
             ),
           ],

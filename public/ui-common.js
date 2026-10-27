@@ -125,16 +125,27 @@ window.addEventListener('DOMContentLoaded', () => {
         link.href = '/global-webrtc.css';
         document.head.appendChild(link);
 
-        // 2. Ensure Firebase is loaded for Signaling
-        function loadFirebaseAndWebRTC() {
+        // 2. Load WebRTC immediately independent of Firebase
+        function loadWebRTC() {
+            if (!document.getElementById('global-webrtc-script')) {
+                const s2 = document.createElement('script');
+                s2.id = 'global-webrtc-script';
+                s2.src = "/global-webrtc.js";
+                document.head.appendChild(s2);
+            }
+        }
+        loadWebRTC();
+
+        // 3. Optional Firebase initialization in background for legacy features
+        function loadFirebaseAsync() {
             const loadDb = () => {
                 if (!window.firebase.database) {
                     const fbDb = document.createElement('script');
                     fbDb.src = "https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js";
-                    fbDb.onload = initAndLoadRealtime;
+                    fbDb.onload = initRealtime;
                     document.head.appendChild(fbDb);
                 } else {
-                    initAndLoadRealtime();
+                    initRealtime();
                 }
             };
             
@@ -147,7 +158,7 @@ window.addEventListener('DOMContentLoaded', () => {
                 loadDb();
             }
 
-            function initAndLoadRealtime() {
+            function initRealtime() {
                 const firebaseConfig = {
                     apiKey: "AIzaSyBMe2R5iWYj_H4IZ5OpkXSsyc9ULM5Esbw",
                     authDomain: "luminary-eae16.firebaseapp.com",
@@ -160,16 +171,32 @@ window.addEventListener('DOMContentLoaded', () => {
                 if (!firebase.apps.length) {
                     firebase.initializeApp(firebaseConfig);
                 }
-                loadWebRTC();
             }
         }
 
-        function loadWebRTC() {
-            const s2 = document.createElement('script');
-            s2.src = "/global-webrtc.js";
-            document.head.appendChild(s2);
-        }
-
-        loadFirebaseAndWebRTC();
+        loadFirebaseAsync();
     }
 });
+
+// Production Analytics and Telemetry Interface
+window.VylithraAnalytics = {
+    trackEvent: function(category, action, label = '', value = 0) {
+        if (window.gtag) {
+            window.gtag('event', action, {
+                event_category: category,
+                event_label: label,
+                value: value
+            });
+        }
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            console.log(`[Analytics] ${category} -> ${action} (${label})`);
+        }
+    },
+    trackPageView: function(pagePath = window.location.pathname) {
+        if (window.gtag) {
+            window.gtag('config', window.VYLITHRA_GA_ID || 'G-XXXXXXXXXX', {
+                page_path: pagePath
+            });
+        }
+    }
+};

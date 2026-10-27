@@ -28,14 +28,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final Color lightTextColor = const Color(0xFF5D4037);
   final Color buttonBgColor = const Color(0xFF4A3B31); // Dark Brown
   final Color buttonBorderColor = const Color(0xFF4A3B31);
-  final Color avatarBorderColor = const Color(0xFF8E6A4B); // Lighter brown for border
+  final Color avatarBorderColor = const Color(
+    0xFF8E6A4B,
+  ); // Lighter brown for border
 
   @override
   void initState() {
     super.initState();
-    final endpoint = widget.userId != null ? '/api/users/${widget.userId}' : '/api/users/profile';
+    final endpoint = widget.userId != null
+        ? '/api/users/${widget.userId}'
+        : '/api/users/profile';
     _profileFuture = _apiService.get(endpoint).catchError((e) => null);
-    
+
     _postsFuture = _profileFuture.then((profile) {
       if (profile != null && profile['_id'] != null) {
         return _apiService.fetchUserPosts(profile['_id']);
@@ -57,9 +61,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (!_isFollowing) {
         final profile = await _profileFuture;
         if (profile != null && profile['isRequested'] == true) {
-            setState(() {
-                _isRequested = true;
-            });
+          setState(() {
+            _isRequested = true;
+          });
         }
       }
     } catch (e) {
@@ -70,19 +74,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _toggleFollow() async {
     if (widget.userId == null) return;
     try {
-      final response = await _apiService.toggleFollow(widget.userId!, _isFollowing);
+      final response = await _apiService.toggleFollow(
+        widget.userId!,
+        _isFollowing,
+      );
       setState(() {
         if (response != null && response['status'] == 'requested') {
-            _isRequested = true;
+          _isRequested = true;
         } else {
-            _isFollowing = !_isFollowing;
-            _isRequested = false;
+          _isFollowing = !_isFollowing;
+          _isRequested = false;
         }
-        _profileFuture = _apiService.get('/api/users/${widget.userId}').catchError((e) => null);
+        _profileFuture = _apiService
+            .get('/api/users/${widget.userId}')
+            .catchError((e) => null);
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to toggle follow: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to toggle follow: $e')));
       }
     }
   }
@@ -93,30 +104,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : bgColor,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E293B)
+              : bgColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text(type == 'followers' ? 'Followers' : 'Following', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.bold, color: darkTextColor)),
+            Text(
+              type == 'followers' ? 'Followers' : 'Following',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: darkTextColor,
+              ),
+            ),
             const SizedBox(height: 10),
             Expanded(
               child: FutureBuilder<List<dynamic>>(
-                future: type == 'followers' ? _apiService.getFollowers(userId) : _apiService.getFollowing(userId),
+                future: type == 'followers'
+                    ? _apiService.getFollowers(userId)
+                    : _apiService.getFollowing(userId),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) return Center(child: Text('No $type yet.', style: TextStyle(color: darkTextColor)));
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No $type yet.',
+                        style: TextStyle(color: darkTextColor),
+                      ),
+                    );
+                  }
                   return ListView.builder(
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final u = snapshot.data![index];
                       return ListTile(
-                        leading: const CircleAvatar(backgroundColor: Colors.black, child: Icon(Icons.person, color: Colors.white)),
-                        title: Text(u['username'] ?? 'User', style: TextStyle(color: darkTextColor)),
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.black,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        title: Text(
+                          u['username'] ?? 'User',
+                          style: TextStyle(color: darkTextColor),
+                        ),
                         onTap: () {
-                           Navigator.pop(context);
-                           Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(userId: u['_id'])));
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProfileScreen(userId: u['_id']),
+                            ),
+                          );
                         },
                       );
                     },
@@ -136,51 +179,88 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
         decoration: BoxDecoration(
-          color: Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E293B) : bgColor,
+          color: Theme.of(context).brightness == Brightness.dark
+              ? const Color(0xFF1E293B)
+              : bgColor,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
         ),
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            Text('Follow Requests', style: GoogleFonts.playfairDisplay(fontSize: 20, fontWeight: FontWeight.bold, color: darkTextColor)),
+            Text(
+              'Follow Requests',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: darkTextColor,
+              ),
+            ),
             const SizedBox(height: 10),
             Expanded(
               child: FutureBuilder<List<dynamic>>(
                 future: _apiService.getFollowRequests(),
                 builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) return const Center(child: CircularProgressIndicator());
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) return Center(child: Text('No follow requests.', style: TextStyle(color: darkTextColor)));
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Text(
+                        'No follow requests.',
+                        style: TextStyle(color: darkTextColor),
+                      ),
+                    );
+                  }
                   return ListView.builder(
                     itemCount: snapshot.data!.length,
                     itemBuilder: (context, index) {
                       final u = snapshot.data![index];
                       return ListTile(
-                        leading: const CircleAvatar(backgroundColor: Colors.black, child: Icon(Icons.person, color: Colors.white)),
-                        title: Text(u['username'] ?? 'User', style: TextStyle(color: darkTextColor)),
+                        leading: const CircleAvatar(
+                          backgroundColor: Colors.black,
+                          child: Icon(Icons.person, color: Colors.white),
+                        ),
+                        title: Text(
+                          u['username'] ?? 'User',
+                          style: TextStyle(color: darkTextColor),
+                        ),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: const Icon(Icons.check, color: Colors.green),
+                              icon: const Icon(
+                                Icons.check,
+                                color: Colors.green,
+                              ),
                               onPressed: () async {
+                                final nav = Navigator.of(context);
                                 await _apiService.acceptFollowRequest(u['_id']);
-                                Navigator.pop(context);
+                                if (!mounted) return;
+                                nav.pop();
                                 _showFollowRequestsModal(); // Reload
                               },
                             ),
                             IconButton(
                               icon: const Icon(Icons.close, color: Colors.red),
                               onPressed: () async {
+                                final nav = Navigator.of(context);
                                 await _apiService.rejectFollowRequest(u['_id']);
-                                Navigator.pop(context);
+                                if (!mounted) return;
+                                nav.pop();
                                 _showFollowRequestsModal(); // Reload
                               },
                             ),
                           ],
                         ),
                         onTap: () {
-                           Navigator.pop(context);
-                           Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen(userId: u['_id'])));
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  ProfileScreen(userId: u['_id']),
+                            ),
+                          );
                         },
                       );
                     },
@@ -200,9 +280,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(count, style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w800, fontSize: 24, color: darkTextColor, height: 1.0)),
+          Text(
+            count,
+            style: GoogleFonts.playfairDisplay(
+              fontWeight: FontWeight.w800,
+              fontSize: 24,
+              color: darkTextColor,
+              height: 1.0,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(label, style: GoogleFonts.playfairDisplay(fontSize: 14, color: darkTextColor, fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: GoogleFonts.playfairDisplay(
+              fontSize: 14,
+              color: darkTextColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -225,22 +320,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
       future: _profileFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Scaffold(backgroundColor: bgColor, body: const Center(child: CircularProgressIndicator()));
+          return Scaffold(
+            backgroundColor: bgColor,
+            body: const Center(child: CircularProgressIndicator()),
+          );
         }
 
-        final profileData = (snapshot.hasData && snapshot.data != null) 
-            ? snapshot.data 
-            : {
-                'username': 'User',
-                'bio': '',
-                'followers': [],
-                'following': [],
-              };
+        final profileData = (snapshot.hasData && snapshot.data != null)
+            ? snapshot.data
+            : {'username': 'User', 'bio': '', 'followers': [], 'following': []};
 
         final String displayId = profileData['_id'] ?? widget.userId ?? 'me';
         final String username = profileData['username'] ?? 'User';
         final String displayName = profileData['displayName'] ?? username;
-        final String cleanHandle = '@${username.toLowerCase().replaceAll(" ", "")}';
+        final String cleanHandle =
+            '@${username.toLowerCase().replaceAll(" ", "")}';
 
         return DefaultTabController(
           length: 2,
@@ -252,10 +346,21 @@ class _ProfileScreenState extends State<ProfileScreen> {
               elevation: 0,
               centerTitle: true,
               leading: IconButton(
-                icon: const Icon(Icons.chevron_left, color: Colors.black, size: 30),
+                icon: const Icon(
+                  Icons.chevron_left,
+                  color: Colors.black,
+                  size: 30,
+                ),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: Text(cleanHandle, style: GoogleFonts.inter(fontWeight: FontWeight.w600, fontSize: 16, color: darkTextColor)),
+              title: Text(
+                cleanHandle,
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 16,
+                  color: darkTextColor,
+                ),
+              ),
               actions: [
                 if (isMe)
                   IconButton(
@@ -268,37 +373,67 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         builder: (context) => Container(
                           decoration: BoxDecoration(
                             color: bgColor,
-                            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(20),
+                            ),
                           ),
                           child: SafeArea(
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 ListTile(
-                                  leading: Icon(Icons.person_add, color: darkTextColor),
-                                  title: Text('Follow Requests', style: TextStyle(color: darkTextColor)),
+                                  leading: Icon(
+                                    Icons.person_add,
+                                    color: darkTextColor,
+                                  ),
+                                  title: Text(
+                                    'Follow Requests',
+                                    style: TextStyle(color: darkTextColor),
+                                  ),
                                   onTap: () {
-                                    Navigator.pop(context); // close bottom sheet
+                                    Navigator.pop(
+                                      context,
+                                    ); // close bottom sheet
                                     _showFollowRequestsModal();
                                   },
                                 ),
                                 ListTile(
-                                  leading: Icon(Icons.settings, color: darkTextColor),
-                                  title: Text('Settings', style: TextStyle(color: darkTextColor)),
+                                  leading: Icon(
+                                    Icons.settings,
+                                    color: darkTextColor,
+                                  ),
+                                  title: Text(
+                                    'Settings',
+                                    style: TextStyle(color: darkTextColor),
+                                  ),
                                   onTap: () {
-                                    Navigator.pop(context); // close bottom sheet
+                                    Navigator.pop(
+                                      context,
+                                    ); // close bottom sheet
                                     Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (context) => const SettingsScreen()),
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const SettingsScreen(),
+                                      ),
                                     );
                                   },
                                 ),
                                 ListTile(
-                                  leading: const Icon(Icons.logout, color: Colors.red),
-                                  title: const Text('Logout', style: TextStyle(color: Colors.red)),
+                                  leading: const Icon(
+                                    Icons.logout,
+                                    color: Colors.red,
+                                  ),
+                                  title: const Text(
+                                    'Logout',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
                                   onTap: () async {
                                     Navigator.pop(context);
-                                    final auth = Provider.of<AuthProvider>(context, listen: false);
+                                    final auth = Provider.of<AuthProvider>(
+                                      context,
+                                      listen: false,
+                                    );
                                     await auth.logout();
                                   },
                                 ),
@@ -316,7 +451,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 return [
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20.0,
+                        vertical: 10.0,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -329,19 +467,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Expanded(
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: _isFollowing || _isRequested ? Colors.transparent : buttonBgColor,
-                                      foregroundColor: _isFollowing || _isRequested ? buttonBgColor : Colors.white,
+                                      backgroundColor:
+                                          _isFollowing || _isRequested
+                                          ? Colors.transparent
+                                          : buttonBgColor,
+                                      foregroundColor:
+                                          _isFollowing || _isRequested
+                                          ? buttonBgColor
+                                          : Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(6),
-                                        side: BorderSide(color: _isFollowing || _isRequested ? buttonBorderColor : Colors.transparent, width: 2),
+                                        side: BorderSide(
+                                          color: _isFollowing || _isRequested
+                                              ? buttonBorderColor
+                                              : Colors.transparent,
+                                          width: 2,
+                                        ),
                                       ),
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                     ),
-                                    onPressed: _isRequested ? null : _toggleFollow,
+                                    onPressed: _isRequested
+                                        ? null
+                                        : _toggleFollow,
                                     child: Text(
-                                      _isFollowing ? 'FOLLOWING' : (_isRequested ? 'REQUESTED' : 'FOLLOW'), 
-                                      style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.5)
+                                      _isFollowing
+                                          ? 'FOLLOWING'
+                                          : (_isRequested
+                                                ? 'REQUESTED'
+                                                : 'FOLLOW'),
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        letterSpacing: 0.5,
+                                      ),
                                     ),
                                   ),
                                 )
@@ -351,36 +512,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: buttonBgColor,
                                       foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                     ),
                                     onPressed: () {},
-                                    child: Text('EDIT', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, letterSpacing: 0.5)),
+                                    child: Text(
+                                      'EDIT',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ),
                                 ),
-                              
+
                               const SizedBox(width: 15),
-                              
+
                               // Avatar
                               Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  border: Border.all(color: avatarBorderColor, width: 2.5),
+                                  border: Border.all(
+                                    color: avatarBorderColor,
+                                    width: 2.5,
+                                  ),
                                 ),
                                 child: CircleAvatar(
                                   radius: 50,
                                   backgroundColor: avatarBorderColor,
-                                  backgroundImage: profileData['profilePicture'] != null && profileData['profilePicture'] != ''
-                                      ? NetworkImage(profileData['profilePicture'].startsWith('/') ? 'https://www.vylithra.in' + profileData['profilePicture'].toString() : profileData['profilePicture'])
+                                  backgroundImage:
+                                      profileData['profilePicture'] != null &&
+                                          profileData['profilePicture'] != ''
+                                      ? NetworkImage(
+                                          profileData['profilePicture']
+                                                  .startsWith('/')
+                                              ? 'https://www.vylithra.in${profileData['profilePicture']}'
+                                              : profileData['profilePicture'],
+                                        )
                                       : null,
-                                  child: profileData['profilePicture'] == null || profileData['profilePicture'] == '' 
-                                      ? const Icon(Icons.person, size: 50, color: Colors.white)
+                                  child:
+                                      profileData['profilePicture'] == null ||
+                                          profileData['profilePicture'] == ''
+                                      ? const Icon(
+                                          Icons.person,
+                                          size: 50,
+                                          color: Colors.white,
+                                        )
                                       : null,
                                 ),
                               ),
-                              
+
                               const SizedBox(width: 15),
 
                               // Message Button
@@ -388,78 +576,152 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 Expanded(
                                   child: OutlinedButton(
                                     style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                      side: BorderSide(color: buttonBorderColor, width: 2),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      side: BorderSide(
+                                        color: buttonBorderColor,
+                                        width: 2,
+                                      ),
                                       backgroundColor: Colors.transparent,
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                     ),
                                     onPressed: () {
-                                      Navigator.push(context, MaterialPageRoute(builder: (context) => const MessagesScreen()));
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) =>
+                                              const MessagesScreen(),
+                                        ),
+                                      );
                                     },
-                                    child: Text('MESSAGE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, color: buttonBgColor, letterSpacing: 0.5)),
+                                    child: Text(
+                                      'MESSAGE',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: buttonBgColor,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ),
                                 )
                               else
                                 Expanded(
                                   child: OutlinedButton(
                                     style: OutlinedButton.styleFrom(
-                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(6)),
-                                      side: BorderSide(color: buttonBorderColor, width: 2),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(6),
+                                      ),
+                                      side: BorderSide(
+                                        color: buttonBorderColor,
+                                        width: 2,
+                                      ),
                                       backgroundColor: Colors.transparent,
                                       elevation: 0,
-                                      padding: const EdgeInsets.symmetric(vertical: 10),
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 10,
+                                      ),
                                     ),
                                     onPressed: () {},
-                                    child: Text('SHARE', style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 12, color: buttonBgColor, letterSpacing: 0.5)),
+                                    child: Text(
+                                      'SHARE',
+                                      style: GoogleFonts.inter(
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                        color: buttonBgColor,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
                                   ),
                                 ),
                             ],
                           ),
                           const SizedBox(height: 15),
-                          
+
                           // Display Name & Handle
                           Text(
                             displayName,
-                            style: GoogleFonts.playfairDisplay(fontWeight: FontWeight.w800, fontSize: 26, color: darkTextColor, letterSpacing: -0.5),
+                            style: GoogleFonts.playfairDisplay(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 26,
+                              color: darkTextColor,
+                              letterSpacing: -0.5,
+                            ),
                           ),
                           const SizedBox(height: 2),
                           Text(
                             cleanHandle,
-                            style: GoogleFonts.inter(fontSize: 13, color: lightTextColor, fontStyle: FontStyle.italic),
+                            style: GoogleFonts.inter(
+                              fontSize: 13,
+                              color: lightTextColor,
+                              fontStyle: FontStyle.italic,
+                            ),
                           ),
                           const SizedBox(height: 12),
-                          
+
                           // Bio
-                          if (profileData['bio'] != null && profileData['bio'].toString().isNotEmpty)
+                          if (profileData['bio'] != null &&
+                              profileData['bio'].toString().isNotEmpty)
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10.0,
+                              ),
                               child: Text(
                                 profileData['bio'],
                                 textAlign: TextAlign.center,
-                                style: GoogleFonts.playfairDisplay(fontSize: 15, color: darkTextColor, height: 1.4),
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 15,
+                                  color: darkTextColor,
+                                  height: 1.4,
+                                ),
                               ),
                             ),
-                          
+
                           const SizedBox(height: 25),
-                          
+
                           // Stats Row
                           FutureBuilder<List<Post>>(
                             future: _postsFuture,
                             builder: (context, postSnapshot) {
-                              final int postCount = postSnapshot.hasData ? postSnapshot.data!.length : 0;
+                              final int postCount = postSnapshot.hasData
+                                  ? postSnapshot.data!.length
+                                  : 0;
                               return Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
-                                  _buildStatColumn(postCount.toString(), 'Posts', null),
+                                  _buildStatColumn(
+                                    postCount.toString(),
+                                    'Posts',
+                                    null,
+                                  ),
                                   _buildVerticalDivider(),
-                                  _buildStatColumn((profileData['followers']?.length ?? 0).toString(), 'Followers', () => _showFollowModal('followers', displayId)),
+                                  _buildStatColumn(
+                                    (profileData['followers']?.length ?? 0)
+                                        .toString(),
+                                    'Followers',
+                                    () => _showFollowModal(
+                                      'followers',
+                                      displayId,
+                                    ),
+                                  ),
                                   _buildVerticalDivider(),
-                                  _buildStatColumn((profileData['following']?.length ?? 0).toString(), 'Following', () => _showFollowModal('following', displayId)),
+                                  _buildStatColumn(
+                                    (profileData['following']?.length ?? 0)
+                                        .toString(),
+                                    'Following',
+                                    () => _showFollowModal(
+                                      'following',
+                                      displayId,
+                                    ),
+                                  ),
                                 ],
                               );
-                            }
+                            },
                           ),
                           const SizedBox(height: 20),
                         ],
@@ -473,7 +735,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         decoration: BoxDecoration(
                           color: bgColor,
                           border: const Border(
-                            bottom: BorderSide(color: Color(0xFFDCD4C6), width: 1.5),
+                            bottom: BorderSide(
+                              color: Color(0xFFDCD4C6),
+                              width: 1.5,
+                            ),
                           ),
                         ),
                         child: TabBar(
@@ -481,7 +746,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           indicatorWeight: 3,
                           labelColor: buttonBgColor,
                           unselectedLabelColor: lightTextColor,
-                          labelStyle: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 13, letterSpacing: 0.5),
+                          labelStyle: GoogleFonts.inter(
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                            letterSpacing: 0.5,
+                          ),
                           tabs: const [
                             Tab(text: 'PHOTOS'),
                             Tab(text: 'TAGGED'),
@@ -494,37 +763,63 @@ class _ProfileScreenState extends State<ProfileScreen> {
               },
               body: Container(
                 color: bgColor,
-                child: (profileData['isPrivate'] == true && !isMe && !_isFollowing)
-                  ? Center(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.lock_outline, size: 80, color: lightTextColor),
-                          const SizedBox(height: 10),
-                          Text('This account is private', style: GoogleFonts.playfairDisplay(fontSize: 22, color: lightTextColor)),
-                          const SizedBox(height: 5),
-                          Text('Follow this account to see their photos and videos.', style: GoogleFonts.inter(fontSize: 13, color: lightTextColor.withOpacity(0.7))),
-                        ],
-                      ),
-                    )
-                  : FutureBuilder<List<Post>>(
-                  future: _postsFuture,
-                  builder: (context, postSnapshot) {
-                    if (postSnapshot.connectionState == ConnectionState.waiting) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
-                    final posts = postSnapshot.data ?? [];
-                    final imagePosts = posts.where((p) => p.image != null || p.videoUrl == null).toList();
-                    final videoPosts = posts.where((p) => p.videoUrl != null).toList();
+                child:
+                    (profileData['isPrivate'] == true && !isMe && !_isFollowing)
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.lock_outline,
+                              size: 80,
+                              color: lightTextColor,
+                            ),
+                            const SizedBox(height: 10),
+                            Text(
+                              'This account is private',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 22,
+                                color: lightTextColor,
+                              ),
+                            ),
+                            const SizedBox(height: 5),
+                            Text(
+                              'Follow this account to see their photos and videos.',
+                              style: GoogleFonts.inter(
+                                fontSize: 13,
+                                color: lightTextColor.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : FutureBuilder<List<Post>>(
+                        future: _postsFuture,
+                        builder: (context, postSnapshot) {
+                          if (postSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          }
+                          final posts = postSnapshot.data ?? [];
+                          final imagePosts = posts
+                              .where(
+                                (p) => p.image != null || p.videoUrl == null,
+                              )
+                              .toList();
+                          final videoPosts = posts
+                              .where((p) => p.videoUrl != null)
+                              .toList();
 
-                    return TabBarView(
-                      children: [
-                        _buildGrid(imagePosts, false),
-                        _buildGrid(videoPosts, true),
-                      ],
-                    );
-                  }
-                ),
+                          return TabBarView(
+                            children: [
+                              _buildGrid(imagePosts, false),
+                              _buildGrid(videoPosts, true),
+                            ],
+                          );
+                        },
+                      ),
               ),
             ),
           ),
@@ -540,14 +835,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(
-              isVideo ? Icons.videocam_outlined : Icons.camera_alt_outlined, 
-              size: 80, 
-              color: lightTextColor
+              isVideo ? Icons.videocam_outlined : Icons.camera_alt_outlined,
+              size: 80,
+              color: lightTextColor,
             ),
             const SizedBox(height: 10),
             Text(
-              isVideo ? 'No Reels Yet' : 'No Posts Yet', 
-              style: GoogleFonts.playfairDisplay(fontSize: 22, color: lightTextColor)
+              isVideo ? 'No Reels Yet' : 'No Posts Yet',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 22,
+                color: lightTextColor,
+              ),
             ),
           ],
         ),
@@ -565,14 +863,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
       itemBuilder: (context, index) {
         final post = items[index];
         final String? mediaUrl = isVideo ? post.videoUrl : post.image;
-        
+
         return Container(
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(2),
             boxShadow: [
               BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.08),
+                color: Colors.black.withValues(alpha: 0.08),
                 blurRadius: 5,
                 offset: const Offset(0, 3),
               ),
@@ -586,20 +884,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Container(
                   color: const Color(0xFFE0E0E0),
                   child: mediaUrl != null
-                    ? Image.network(
-                        mediaUrl.startsWith('/') ? 'https://www.vylithra.in$mediaUrl' : mediaUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => const Center(child: Icon(Icons.error, color: Colors.grey)),
-                      )
-                    : Center(child: Text(post.content, textAlign: TextAlign.center, style: GoogleFonts.playfairDisplay(fontSize: 10, color: darkTextColor), maxLines: 3)),
+                      ? Image.network(
+                          mediaUrl.startsWith('/')
+                              ? 'https://www.vylithra.in$mediaUrl'
+                              : mediaUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stackTrace) =>
+                              const Center(
+                                child: Icon(Icons.error, color: Colors.grey),
+                              ),
+                        )
+                      : Center(
+                          child: Text(
+                            post.content,
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.playfairDisplay(
+                              fontSize: 10,
+                              color: darkTextColor,
+                            ),
+                            maxLines: 3,
+                          ),
+                        ),
                 ),
               ),
-              
+
               // Dark corners
               Positioned(top: 0, left: 0, child: _buildPhotoCorner(true, true)),
-              Positioned(top: 0, right: 0, child: _buildPhotoCorner(true, false)),
-              Positioned(bottom: 0, left: 0, child: _buildPhotoCorner(false, true)),
-              Positioned(bottom: 0, right: 0, child: _buildPhotoCorner(false, false)),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: _buildPhotoCorner(true, false),
+              ),
+              Positioned(
+                bottom: 0,
+                left: 0,
+                child: _buildPhotoCorner(false, true),
+              ),
+              Positioned(
+                bottom: 0,
+                right: 0,
+                child: _buildPhotoCorner(false, false),
+              ),
             ],
           ),
         );
@@ -619,22 +944,32 @@ class _ProfileScreenState extends State<ProfileScreen> {
 class CornerPainter extends CustomPainter {
   final bool isTop;
   final bool isLeft;
-  
+
   CornerPainter({required this.isTop, required this.isLeft});
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0xFF2A2018)..style = PaintingStyle.fill;
+    final paint = Paint()
+      ..color = const Color(0xFF2A2018)
+      ..style = PaintingStyle.fill;
     final path = Path();
-    
+
     if (isTop && isLeft) {
-      path.moveTo(0, 0); path.lineTo(size.width, 0); path.lineTo(0, size.height);
+      path.moveTo(0, 0);
+      path.lineTo(size.width, 0);
+      path.lineTo(0, size.height);
     } else if (isTop && !isLeft) {
-      path.moveTo(0, 0); path.lineTo(size.width, 0); path.lineTo(size.width, size.height);
+      path.moveTo(0, 0);
+      path.lineTo(size.width, 0);
+      path.lineTo(size.width, size.height);
     } else if (!isTop && isLeft) {
-      path.moveTo(0, 0); path.lineTo(0, size.height); path.lineTo(size.width, size.height);
+      path.moveTo(0, 0);
+      path.lineTo(0, size.height);
+      path.lineTo(size.width, size.height);
     } else {
-      path.moveTo(size.width, 0); path.lineTo(size.width, size.height); path.lineTo(0, size.height);
+      path.moveTo(size.width, 0);
+      path.lineTo(size.width, size.height);
+      path.lineTo(0, size.height);
     }
     path.close();
     canvas.drawPath(path, paint);
@@ -655,7 +990,11 @@ class _SliverAppBarDelegate extends SliverPersistentHeaderDelegate {
   double get maxExtent => 48.0;
 
   @override
-  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+  Widget build(
+    BuildContext context,
+    double shrinkOffset,
+    bool overlapsContent,
+  ) {
     return _child;
   }
 

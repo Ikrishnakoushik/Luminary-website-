@@ -913,14 +913,23 @@
                 // Ignore decryption errors for unencrypted legacy messages
             }
 
+            function getValidMediaUrl(url) {
+                if (!url) return '';
+                const str = String(url).trim();
+                if (str.startsWith('http://') || str.startsWith('https://')) return str;
+                if (str.startsWith('/')) return str;
+                return '/' + str;
+            }
+
             let attachmentHtml = '';
             if (msg.attachmentUrl) {
+                const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
                 if (msg.attachmentType === 'image') {
-                    attachmentHtml = `<div class="message-attachment"><img src="${(msg.attachmentUrl) && String(msg.attachmentUrl).startsWith('http') ? (msg.attachmentUrl) : '/' + (msg.attachmentUrl)}"></div>`;
+                    attachmentHtml = `<div class="message-attachment"><img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" style="cursor:pointer; max-height:260px; object-fit:cover; border-radius:12px;"></div>`;
                 } else if (msg.attachmentType === 'video') {
-                    attachmentHtml = `<div class="message-attachment"><video src="${(msg.attachmentUrl) && String(msg.attachmentUrl).startsWith('http') ? (msg.attachmentUrl) : '/' + (msg.attachmentUrl)}" controls></video></div>`;
+                    attachmentHtml = `<div class="message-attachment"><video src="${mediaUrl}" controls playsinline preload="metadata" style="max-height:260px; border-radius:12px;"></video></div>`;
                 } else if (msg.attachmentType === 'file') {
-                    attachmentHtml = `<a href="/${msg.attachmentUrl}" target="_blank" class="attachment-file-link"><i class="fas fa-file"></i> Download File</a>`;
+                    attachmentHtml = `<a href="${mediaUrl}" target="_blank" class="attachment-file-link"><i class="fas fa-file"></i> Download File</a>`;
                 }
             }
 
@@ -967,7 +976,8 @@
                     else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
                     else pendingAttachmentType = 'file';
 
-                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="${(pendingAttachmentUrl) && String(pendingAttachmentUrl).startsWith('http') ? (pendingAttachmentUrl) : '/' + (pendingAttachmentUrl)}">` : `<i class="fas fa-file"></i>`;
+                    const previewUrl = (pendingAttachmentUrl && (pendingAttachmentUrl.startsWith('http') || pendingAttachmentUrl.startsWith('/'))) ? pendingAttachmentUrl : '/' + pendingAttachmentUrl;
+                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="${previewUrl}">` : `<i class="fas fa-file"></i>`;
                     previewContainer.innerHTML = `
                         <div class="attachment-preview">
                             ${iconHtml}
@@ -1052,8 +1062,33 @@
             }
         }
 
+        // Real-time Chat Socket
+        let chatSocket = null;
+        function initChatSocket() {
+            if (typeof io !== 'undefined') {
+                chatSocket = io();
+                chatSocket.on('connect', () => {
+                    if (currentUserId) {
+                        chatSocket.emit('join_chat', currentUserId);
+                    }
+                });
+                chatSocket.on('new_message', (msg) => {
+                    if (!msg) return;
+                    const senderId = msg.sender && msg.sender._id ? msg.sender._id : msg.sender;
+                    const isCurrentChat = (activeChatUserId && (senderId === activeChatUserId || senderId === currentUserId)) ||
+                                          (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId);
+                    if (isCurrentChat) {
+                        renderMessage(msg);
+                        scrollToBottom();
+                    }
+                    loadConversations();
+                });
+            }
+        }
+
         // Init
         document.addEventListener('DOMContentLoaded', () => {
+            initChatSocket();
             checkAuth();
 
             // Check if user came from profile with a target user id

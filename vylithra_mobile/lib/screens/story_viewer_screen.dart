@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/story.dart';
 import '../services/api_service.dart';
@@ -22,7 +21,8 @@ class StoryViewerScreen extends StatefulWidget {
   State<StoryViewerScreen> createState() => _StoryViewerScreenState();
 }
 
-class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTickerProviderStateMixin {
+class _StoryViewerScreenState extends State<StoryViewerScreen>
+    with SingleTickerProviderStateMixin {
   int _currentIndex = 0;
   late AnimationController _animationController;
   VideoPlayerController? _videoController;
@@ -47,17 +47,22 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
     _videoController = null;
 
     final story = widget.stories[index];
-    _apiService.put('/api/stories/${story.id}/view', {}); // Mark as viewed silently
+    _apiService.put(
+      '/api/stories/${story.id}/view',
+      {},
+    ); // Mark as viewed silently
 
     if (story.mediaType == 'video') {
-      _videoController = VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl))
-        ..initialize().then((_) {
-          setState(() {
-            _animationController.duration = _videoController!.value.duration;
-            _videoController!.play();
-            _animationController.forward();
-          });
-        });
+      _videoController =
+          VideoPlayerController.networkUrl(Uri.parse(story.mediaUrl))
+            ..initialize().then((_) {
+              setState(() {
+                _animationController.duration =
+                    _videoController!.value.duration;
+                _videoController!.play();
+                _animationController.forward();
+              });
+            });
     } else {
       setState(() {
         _animationController.duration = const Duration(seconds: 5);
@@ -137,14 +142,11 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                         child: VideoPlayer(_videoController!),
                       ),
                     )
-                  : const Center(child: CircularProgressIndicator(color: Colors.white))
+                  : const Center(
+                      child: CircularProgressIndicator(color: Colors.white),
+                    )
             else
-              Center(
-                child: Image.network(
-                  story.mediaUrl,
-                  fit: BoxFit.contain,
-                ),
-              ),
+              Center(child: Image.network(story.mediaUrl, fit: BoxFit.contain)),
 
             // UI Layer
             SafeArea(
@@ -152,7 +154,10 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                 children: [
                   // Progress Bars
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: List.generate(
                         widget.stories.length,
@@ -173,13 +178,15 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                       children: [
                         CircleAvatar(
                           radius: 18,
-                          backgroundImage: widget.userProfilePicture.isNotEmpty 
+                          backgroundImage: widget.userProfilePicture.isNotEmpty
                               ? NetworkImage(widget.userProfilePicture)
                               : null,
                           backgroundColor: Colors.grey[800],
                           child: widget.userProfilePicture.isEmpty
                               ? Text(
-                                  widget.userName.isNotEmpty ? widget.userName[0].toUpperCase() : 'U',
+                                  widget.userName.isNotEmpty
+                                      ? widget.userName[0].toUpperCase()
+                                      : 'U',
                                   style: const TextStyle(color: Colors.white),
                                 )
                               : null,
@@ -187,7 +194,13 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
                         const SizedBox(width: 10),
                         Text(
                           widget.userName,
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, shadows: [Shadow(color: Colors.black, blurRadius: 4)]),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(color: Colors.black, blurRadius: 4),
+                            ],
+                          ),
                         ),
                         const Spacer(),
                         IconButton(
@@ -211,25 +224,49 @@ class _StoryViewerScreenState extends State<StoryViewerScreen> with SingleTicker
 
   Widget _buildProgressBar(int index) {
     if (index < _currentIndex) {
-      return Container(height: 3, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(2)));
+      return Container(
+        height: 3,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      );
     } else if (index == _currentIndex) {
       return AnimatedBuilder(
         animation: _animationController,
         builder: (context, child) {
           return Stack(
             children: [
-              Container(height: 3, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(2))),
+              Container(
+                height: 3,
+                decoration: BoxDecoration(
+                  color: Colors.white30,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
               FractionallySizedBox(
                 alignment: Alignment.centerLeft,
                 widthFactor: _animationController.value,
-                child: Container(height: 3, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(2))),
+                child: Container(
+                  height: 3,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
               ),
             ],
           );
         },
       );
     } else {
-      return Container(height: 3, decoration: BoxDecoration(color: Colors.white30, borderRadius: BorderRadius.circular(2)));
+      return Container(
+        height: 3,
+        decoration: BoxDecoration(
+          color: Colors.white30,
+          borderRadius: BorderRadius.circular(2),
+        ),
+      );
     }
   }
 }

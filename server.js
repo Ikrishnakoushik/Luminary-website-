@@ -42,18 +42,160 @@ const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: '*' } });
 app.set('io', io);
 
+const userSocketMap = new Map(); // userId -> Set of socket.id
+const activeGroupCalls = new Map(); // groupId -> Map(userId -> socket.id)
+
+// Secure ICE servers endpoint for both Web and Flutter mobile
+app.get('/api/webrtc/ice-servers', (req, res) => {
+    const iceServers = [
+        { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:global.stun.twilio.com:3478' }
+    ];
+
+    if (process.env.TURN_URLS) {
+        const turnUrls = process.env.TURN_URLS.split(',').map(u => u.trim());
+        iceServers.push({
+            urls: turnUrls,
+            username: process.env.TURN_USERNAME || '',
+            credential: process.env.TURN_CREDENTIAL || ''
+        });
+    }
+
+    res.json({ iceServers });
+});
+
 io.on('connection', (socket) => {
-    console.log('New Real-time Connection:', socket.id);
     socket.on('join_chat', (userId) => {
-        socket.join(userId);
-    });
-    socket.on('webrtc_signal', (data) => {
-        // Forward WebRTC signals directly to the target user's room
-        if (data.to) {
-            io.to(data.to).emit('webrtc_signal', data);
+        if (userId) {
+            const uid = String(userId);
+            socket.userId = uid;
+            socket.join(uid);
+            if (!userSocketMap.has(uid)) {
+                userSocketMap.set(uid, new Set());
+            }
+            userSocketMap.get(uid).add(socket.id);
         }
     });
-    socket.on('disconnect', () => console.log('Client disconnected'));
+    socket.on('join_room', (roomId) => {
+        if (roomId) {
+            const rid = String(roomId);
+            socket.join(rid);
+            if (!socket.userId) {
+                socket.userId = rid;
+                if (!userSocketMap.has(rid)) {
+                    userSocketMap.set(rid, new Set());
+                }
+                userSocketMap.get(rid).add(socket.id);
+            }
+        }
+    });
+    socket.on('join-group-call', (data) => {
+        if (!data || !data.groupId) return;
+        const groupId = String(data.groupId);
+        const userId = socket.userId || (data.userId ? String(data.userId) : null);
+        if (!userId) return;
+
+        if (!activeGroupCalls.has(groupId)) {
+            activeGroupCalls.set(groupId, new Map());
+        }
+        const groupMap = activeGroupCalls.get(groupId);
+
+        // Send existing participants to the joining user
+        const existingParticipants = Array.from(groupMap.keys()).filter(id => id !== userId);
+        socket.emit('existing-group-participants', {
+            groupId,
+            participants: existingParticipants
+        });
+
+        // Register new participant
+        groupMap.set(userId, socket.id);
+        socket.join('group_call_' + groupId);
+
+        // Notify existing members
+        socket.to('group_call_' + groupId).emit('user-joined-call', {
+            userId,
+            groupId
+        });
+    });
+    socket.on('leave-group-call', (data) => {
+        if (!data || !data.groupId) return;
+        const groupId = String(data.groupId);
+        const userId = socket.userId || (data.userId ? String(data.userId) : null);
+        if (!userId) return;
+
+        if (activeGroupCalls.has(groupId)) {
+            const groupMap = activeGroupCalls.get(groupId);
+            groupMap.delete(userId);
+            if (groupMap.size === 0) {
+                activeGroupCalls.delete(groupId);
+            }
+        }
+
+        socket.leave('group_call_' + groupId);
+        socket.to('group_call_' + groupId).emit('user-left-call', {
+            userId,
+            groupId
+        });
+    });
+    socket.on('webrtc_signal', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        
+        // Stamp authenticated sender identity to prevent impersonation
+        if (senderId) {
+            data.from = senderId;
+            if (data.payload && typeof data.payload === 'object') {
+                data.payload.from = senderId;
+            }
+        }
+
+        // Check if recipient has active sockets
+        const recipientSockets = userSocketMap.get(targetUserId);
+        const isOnline = recipientSockets && recipientSockets.size > 0;
+        
+        // Forward signal to target room
+        io.to(targetUserId).emit('webrtc_signal', data);
+
+        // If initiating 1-on-1 call and target user is offline, notify caller
+        if (data.type === 'call-made' && !data.isGroupCall && !isOnline && senderId) {
+            socket.emit('webrtc_signal', {
+                type: 'call-rejected',
+                to: senderId,
+                from: targetUserId,
+                payload: {
+                    to: senderId,
+                    from: targetUserId,
+                    reason: 'offline'
+                }
+            });
+        }
+    });
+    socket.on('disconnect', () => {
+        if (socket.userId) {
+            // Clean up 1-on-1 active socket mapping
+            if (userSocketMap.has(socket.userId)) {
+                const set = userSocketMap.get(socket.userId);
+                set.delete(socket.id);
+                if (set.size === 0) {
+                    userSocketMap.delete(socket.userId);
+                }
+            }
+            // Clean up any active group call rooms
+            for (const [groupId, groupMap] of activeGroupCalls.entries()) {
+                if (groupMap.has(socket.userId)) {
+                    groupMap.delete(socket.userId);
+                    socket.to('group_call_' + groupId).emit('user-left-call', {
+                        userId: socket.userId,
+                        groupId
+                    });
+                    if (groupMap.size === 0) {
+                        activeGroupCalls.delete(groupId);
+                    }
+                }
+            }
+        }
+    });
 });
 const PORT = process.env.PORT || 3000;
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
@@ -160,6 +302,28 @@ const rateLimit = require('express-rate-limit');
 const sanitize = require('mongo-sanitize');
 
 // --- High-Security Middleware ---
+// 0. Enforce HTTPS in production
+app.use((req, res, next) => {
+    const proto = req.headers['x-forwarded-proto'];
+    if (process.env.NODE_ENV === 'production' && proto && proto !== 'https') {
+        return res.redirect(301, `https://${req.hostname}${req.originalUrl}`);
+    }
+    next();
+});
+
+// Advanced Security Headers
+app.use((req, res, next) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+    res.setHeader('X-XSS-Protection', '1; mode=block');
+    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+    res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+    if (process.env.NODE_ENV === 'production') {
+        res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+    }
+    next();
+});
+
 // 1. Helmet headers (CSP, COOP relaxed to guarantee Firebase Google SSO iframe redirects don't fail silently)
 app.use(helmet({
     contentSecurityPolicy: false,
@@ -243,6 +407,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
         }
     }
 }));
+
+// Explicit Core Route Mappings for SEO and Compliance
+app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/privacy.html')));
+app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public/terms.html')));
+app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'public/robots.txt')));
+
 const auth = async (req, res, next) => {
     const token = req.header('x-auth-token');
     if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
@@ -346,7 +516,7 @@ const gatewayAuth = async (req, res, next) => {
 };
 
 // Database Connection
-const MONGO_URI = 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin';
 let isConnecting = null;
 const connectDB = async () => {
     if (mongoose.connection.readyState === 1) {
@@ -384,7 +554,7 @@ app.use('/api', async (req, res, next) => {
 app.get('/sitemap.xml', async (req, res) => {
     try {
         await connectDB();
-        const HOST = 'https://vylithra.in';
+        const HOST = 'https://www.vylithra.in';
 
         // Let's create the XML structure
         let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
@@ -395,16 +565,17 @@ app.get('/sitemap.xml', async (req, res) => {
             '/',
             '/auth',
             '/main',
-            '/studio',
-            '/settings',
-            '/community',
             '/books',
+            '/reels',
             '/creator-kit',
+            '/publisher',
             '/publish-book',
+            '/blog',
+            '/community',
             '/documentation',
             '/legal',
-            '/messages',
-            '/profile'
+            '/privacy',
+            '/terms'
         ];
 
         staticPages.forEach(page => {
@@ -1886,10 +2057,12 @@ app.put('/api/posts/:id', auth, async (req, res) => {
         if (post.user.toString() !== req.user.id) {
             return res.status(401).json({ msg: 'User not authorized to edit this post' });
         }
-        
         // Update content
-        if (req.body.text !== undefined) {
-            post.text = req.body.text;
+        if (req.body.title !== undefined) {
+            post.title = req.body.title;
+        }
+        if (req.body.content !== undefined) {
+            post.content = req.body.content;
         }
         await post.save();
         res.json(post);
@@ -3905,6 +4078,29 @@ app.put('/api/stories/:id/view', auth, async (req, res) => {
     } catch (err) {
         res.status(500).send('Server Error');
     }
+});
+
+// ==========================================
+// 404 Fallback & Centralized Error Handler
+// ==========================================
+app.use((req, res) => {
+    if (req.accepts('html')) {
+        return res.status(404).sendFile(path.join(__dirname, 'public/404.html'));
+    }
+    if (req.accepts('json')) {
+        return res.status(404).json({ error: 'Endpoint Not Found', status: 404 });
+    }
+    res.status(404).type('txt').send('404 Not Found');
+});
+
+// Production error logging and safe status dispatch
+app.use((err, req, res, next) => {
+    console.error(`[Production Error] ${new Date().toISOString()} ${req.method} ${req.url}:`, err);
+    const isProd = process.env.NODE_ENV === 'production';
+    res.status(err.status || 500).json({
+        error: isProd ? 'Internal Server Error' : (err.message || 'Something went wrong!'),
+        status: err.status || 500
+    });
 });
 
 module.exports = app;

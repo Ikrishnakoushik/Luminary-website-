@@ -1,6 +1,6 @@
 class Post {
   final String id;
-  final String content;
+  String content;
   final String? image;
   final String? videoUrl;
   final String authorName;

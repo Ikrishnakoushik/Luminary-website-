@@ -1,4 +1,23 @@
 User-agent: *
 Allow: /
+Allow: /main
+Allow: /books
+Allow: /reels
+Allow: /creator-kit
+Allow: /publisher
+Allow: /blog
+Allow: /documentation
+Allow: /legal
+Allow: /privacy
+Allow: /terms
+
+Disallow: /api/
+Disallow: /settings
+Disallow: /messages
+Disallow: /checkout
+Disallow: /paypal-checkout
+Disallow: /checkout-download
+Disallow: /downloads/
+Disallow: /vylithra-portal-override-x9v2.html
 
 Sitemap: https://www.vylithra.in/sitemap.xml

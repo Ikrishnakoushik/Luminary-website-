@@ -325,13 +325,16 @@
                 }
 
                 function renderProfile(user) {
-                    document.getElementById('profile-name').innerText = user.displayName || user.username || 'User';
-                    document.getElementById('profile-handle').innerText = '@' + (user.username || 'user').toLowerCase().replace(/\s/g, '');
+                    let dName = user.displayName && user.displayName !== 'undefined' && user.displayName !== 'null' ? user.displayName : '';
+                    let uName = user.username && user.username !== 'undefined' && user.username !== 'null' ? user.username : '';
+
+                    document.getElementById('profile-name').innerText = dName || uName || 'User';
+                    document.getElementById('profile-handle').innerText = '@' + (uName || 'user').toLowerCase().replace(/\s/g, '');
 
                     
                     // Handle Profile Handle & Joined Date
                     const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', {month: 'short', year: 'numeric'}) : 'Apr 2026';
-                    const cleanHandle = '@' + (user.username || 'user').toLowerCase().replace(/\s/g, '');
+                    const cleanHandle = '@' + (uName || 'user').toLowerCase().replace(/\s/g, '');
     document.getElementById('profile-handle').innerText = cleanHandle;
     document.getElementById('top-nav-handle').innerText = cleanHandle;
 
@@ -355,7 +358,7 @@
                     if(roleEl) {
                         roleEl.style.display = 'none';
                     }
-                    const initial = (user.username || 'U').charAt(0).toUpperCase();
+                    const initial = (uName || 'U').charAt(0).toUpperCase();
                     const avatarEl = document.getElementById('profile-avatar');
 
                     // Update Social Links

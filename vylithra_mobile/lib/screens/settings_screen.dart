@@ -30,7 +30,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         style: GoogleFonts.inter(
           fontSize: 13,
           fontWeight: FontWeight.bold,
-          color: isDark ? Colors.grey[400] : lightTextColor.withOpacity(0.7),
+          color: isDark ? Colors.grey[400] : lightTextColor.withValues(alpha: 0.7),
           letterSpacing: 1.2,
         ),
       ),

@@ -42,7 +42,7 @@ class ProfessionalLicenseScreen extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 height: 1.6,
-                color: textColor.withOpacity(0.8),
+                color: textColor.withValues(alpha: 0.8),
               ),
             ),
           ],

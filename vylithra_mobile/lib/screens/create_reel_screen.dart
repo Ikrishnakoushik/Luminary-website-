@@ -16,12 +16,10 @@ class CreateReelScreen extends StatefulWidget {
 class _CreateReelScreenState extends State<CreateReelScreen> {
   final ImagePicker _picker = ImagePicker();
   VideoEditorController? _controller;
-  
+
   // Audio Mixer State
   final AudioPlayer _audioPlayer = AudioPlayer();
   String? _selectedAudioPath;
-  bool _isPlayingMixedAudio = false;
-
   // Filter State
   String _selectedFilter = 'None';
   final List<String> _filters = ['None', 'Grayscale', 'Sepia', 'Invert'];
@@ -47,9 +45,9 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
       minDuration: const Duration(seconds: 1),
       maxDuration: const Duration(seconds: 60),
     );
-    
+
     await _controller!.initialize();
-    
+
     // Sync audio player with video playback
     _controller!.video.addListener(() {
       if (_selectedAudioPath != null) {
@@ -69,7 +67,9 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
       label: 'audio',
       extensions: <String>['mp3', 'wav', 'aac', 'm4a'],
     );
-    final XFile? file = await openFile(acceptedTypeGroups: <XTypeGroup>[typeGroup]);
+    final XFile? file = await openFile(
+      acceptedTypeGroups: <XTypeGroup>[typeGroup],
+    );
 
     if (file != null && file.path.isNotEmpty) {
       String path = file.path;
@@ -78,12 +78,15 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
       });
       await _audioPlayer.setFilePath(path);
       await _audioPlayer.setLoopMode(LoopMode.one);
-      
+
       // Mute original video audio
       _controller?.video.setVolume(0.0);
-      
+
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Audio track added! Muted original video.')),
+        const SnackBar(
+          content: Text('Audio track added! Muted original video.'),
+        ),
       );
     }
   }
@@ -97,7 +100,14 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Text('Select Filter', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Select Filter',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: 20),
             Expanded(
               child: ListView.builder(
@@ -113,13 +123,21 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
                     },
                     child: Container(
                       margin: const EdgeInsets.only(right: 16),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 15,
+                      ),
                       decoration: BoxDecoration(
-                        color: isSelected ? Colors.purpleAccent : Colors.grey[800],
+                        color: isSelected
+                            ? Colors.purpleAccent
+                            : Colors.grey[800],
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Center(
-                        child: Text(filter, style: const TextStyle(color: Colors.white)),
+                        child: Text(
+                          filter,
+                          style: const TextStyle(color: Colors.white),
+                        ),
                       ),
                     ),
                   );
@@ -134,7 +152,7 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
 
   void _handleNext() async {
     if (_controller == null) return;
-    
+
     // Pause players
     _controller!.video.pause();
     _audioPlayer.pause();
@@ -152,7 +170,7 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
         ),
       ),
     );
-    
+
     if (result == true && mounted) {
       Navigator.pop(context, true);
     }
@@ -200,7 +218,7 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
                   CropGridViewer.preview(controller: _controller!),
                   AnimatedBuilder(
                     animation: _controller!.video,
-                    builder: (_, __) => AnimatedOpacity(
+                    builder: (_, _) => AnimatedOpacity(
                       opacity: _controller!.isPlaying ? 0 : 1,
                       duration: const Duration(milliseconds: 200),
                       child: GestureDetector(
@@ -212,7 +230,10 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
                             color: Colors.white,
                             shape: BoxShape.circle,
                           ),
-                          child: const Icon(Icons.play_arrow, color: Colors.black),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.black,
+                          ),
                         ),
                       ),
                     ),
@@ -228,7 +249,10 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text('Trim Video', style: TextStyle(color: Colors.white54, fontSize: 12)),
+                  const Text(
+                    'Trim Video',
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
+                  ),
                   const SizedBox(height: 10),
                   Expanded(
                     child: Padding(
@@ -263,9 +287,14 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.white,
                   foregroundColor: Colors.black,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
-                child: const Text('Next', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Next',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ],
           ),
@@ -278,28 +307,34 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
           child: Column(
             children: [
               _buildEditorTool(
-                _selectedAudioPath != null ? Icons.library_music : Icons.music_note,
+                _selectedAudioPath != null
+                    ? Icons.library_music
+                    : Icons.music_note,
                 _selectedAudioPath != null ? 'Change Song' : 'Add Song',
                 _pickAudio,
-                color: _selectedAudioPath != null ? Colors.purpleAccent : Colors.white,
+                color: _selectedAudioPath != null
+                    ? Colors.purpleAccent
+                    : Colors.white,
               ),
               const SizedBox(height: 24),
               _buildEditorTool(
-                Icons.auto_awesome, 
-                'Filter: $_selectedFilter', 
+                Icons.auto_awesome,
+                'Filter: $_selectedFilter',
                 _showFilterSelector,
-                color: _selectedFilter != 'None' ? Colors.purpleAccent : Colors.white,
+                color: _selectedFilter != 'None'
+                    ? Colors.purpleAccent
+                    : Colors.white,
               ),
               const SizedBox(height: 24),
-              _buildEditorTool(
-                Icons.crop, 
-                'Crop', 
-                () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Pinch the video preview to crop and rotate!')),
-                  );
-                },
-              ),
+              _buildEditorTool(Icons.crop, 'Crop', () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text(
+                      'Pinch the video preview to crop and rotate!',
+                    ),
+                  ),
+                );
+              }),
             ],
           ),
         ),
@@ -307,7 +342,12 @@ class _CreateReelScreenState extends State<CreateReelScreen> {
     );
   }
 
-  Widget _buildEditorTool(IconData icon, String label, VoidCallback onTap, {Color color = Colors.white}) {
+  Widget _buildEditorTool(
+    IconData icon,
+    String label,
+    VoidCallback onTap, {
+    Color color = Colors.white,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Column(

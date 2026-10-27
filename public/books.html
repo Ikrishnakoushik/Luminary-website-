@@ -3,6 +3,19 @@
 
 <head>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" href="/vylithra_app_icon.png">
+    <link rel="apple-touch-icon" href="/vylithra_app_icon.png">
+    <link rel="canonical" href="https://www.vylithra.in/books">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.vylithra.in/books">
+    <meta property="og:title" content="Curated Library | Explore Vylithra Collections">
+    <meta property="og:description" content="Immerse yourself in Vylithra's extensive digital library. Find your next transformative experience across diverse curated collections.">
+    <meta property="og:image" content="https://www.vylithra.in/vylithra_app_icon.png">
+    <meta property="og:site_name" content="Vylithra">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Curated Library | Explore Vylithra Collections">
+    <meta name="twitter:description" content="Immerse yourself in Vylithra's extensive digital library.">
+    <meta name="twitter:image" content="https://www.vylithra.in/vylithra_app_icon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Curated Library | Explore Vylithra Collections</title>
@@ -1250,8 +1263,8 @@
                     const formattedTitle = book.title.split(' ').join('+');
                     const fallbackImageUrl = `https://placehold.co/300x450/1a1a24/d4af37?text=${formattedTitle}&font=Playfair+Display`;
                     const coverHtml = book.coverImage
-                        ? `<img src="${(book.coverImage) && String(book.coverImage).startsWith('http') ? (book.coverImage) : '/' + (book.coverImage)}" class="book-cover" alt="Cover" onerror="this.onerror=null; this.src="${(fallbackImageUrl) && String(fallbackImageUrl).startsWith('http') ? (fallbackImageUrl) : '/' + (fallbackImageUrl)}"; this.style.backgroundColor='#1e2235';">`
-                        : `<img src="${(fallbackImageUrl) && String(fallbackImageUrl).startsWith('http') ? (fallbackImageUrl) : '/' + (fallbackImageUrl)}" class="book-cover" alt="Cover" style="background-color: #1e2235;">`;
+                        ? `<img src="${(book.coverImage) && String(book.coverImage).startsWith('http') ? (book.coverImage) : '/' + (book.coverImage)}" class="book-cover" alt="${book.title} Cover" loading="lazy" decoding="async" onerror="this.onerror=null; this.src='${fallbackImageUrl}'; this.style.backgroundColor='#1e2235';">`
+                        : `<img src="${(fallbackImageUrl) && String(fallbackImageUrl).startsWith('http') ? (fallbackImageUrl) : '/' + (fallbackImageUrl)}" class="book-cover" alt="${book.title} Cover" loading="lazy" decoding="async" style="background-color: #1e2235;">`;
 
                     let actionHtml = '';
                     if (canRead) {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
-import 'package:video_player/video_player.dart';
 import 'package:share_plus/share_plus.dart';
 import '../models/post.dart';
 import '../services/api_service.dart';
@@ -30,17 +29,34 @@ class _ReelsScreenState extends State<ReelsScreen> {
       future: _reelsFuture,
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(child: CircularProgressIndicator(color: Colors.pinkAccent));
+          return const Center(
+            child: CircularProgressIndicator(color: Colors.pinkAccent),
+          );
         } else if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}', style: const TextStyle(color: Colors.red)));
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: const TextStyle(color: Colors.red),
+            ),
+          );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(child: Text('No reels available.', style: TextStyle(color: Colors.white)));
+          return const Center(
+            child: Text(
+              'No reels available.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         final reels = snapshot.data!.where((p) => p.videoUrl != null).toList();
 
         if (reels.isEmpty) {
-          return const Center(child: Text('No video reels available.', style: TextStyle(color: Colors.white)));
+          return const Center(
+            child: Text(
+              'No video reels available.',
+              style: TextStyle(color: Colors.white),
+            ),
+          );
         }
 
         return PageView.builder(
@@ -67,7 +83,11 @@ class ReelVideoPlayer extends StatefulWidget {
   final Post post;
   final bool isCurrentPage;
 
-  const ReelVideoPlayer({super.key, required this.post, required this.isCurrentPage});
+  const ReelVideoPlayer({
+    super.key,
+    required this.post,
+    required this.isCurrentPage,
+  });
 
   @override
   State<ReelVideoPlayer> createState() => _ReelVideoPlayerState();
@@ -83,19 +103,19 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
     super.initState();
     String vUrl = widget.post.videoUrl!;
     if (vUrl.startsWith('/')) {
-        vUrl = 'https://www.vylithra.in$vUrl';
+      vUrl = 'https://www.vylithra.in$vUrl';
     }
-    
+
     _controller = VideoPlayerController.networkUrl(Uri.parse(vUrl))
       ..initialize().then((_) {
         if (mounted) {
-            setState(() {
-              _isInitialized = true;
-            });
-            _controller.setLooping(true);
-            if (widget.isCurrentPage) {
-              _controller.play();
-            }
+          setState(() {
+            _isInitialized = true;
+          });
+          _controller.setLooping(true);
+          if (widget.isCurrentPage) {
+            _controller.play();
+          }
         }
       });
   }
@@ -130,7 +150,9 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
             GestureDetector(
               onTap: () {
                 setState(() {
-                  _controller.value.isPlaying ? _controller.pause() : _controller.play();
+                  _controller.value.isPlaying
+                      ? _controller.pause()
+                      : _controller.play();
                 });
               },
               child: FittedBox(
@@ -144,7 +166,7 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
             )
           else
             const Center(child: CircularProgressIndicator(color: Colors.white)),
-          
+
           // Play/Pause Overlay Indicator
           if (_isInitialized && !_controller.value.isPlaying)
             const Center(
@@ -160,7 +182,10 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
               padding: const EdgeInsets.all(16).copyWith(bottom: 30),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Colors.black.withValues(alpha: 0.7), Colors.transparent],
+                  colors: [
+                    Colors.black.withValues(alpha: 0.7),
+                    Colors.transparent,
+                  ],
                   begin: Alignment.bottomCenter,
                   end: Alignment.topCenter,
                 ),
@@ -173,18 +198,34 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         GestureDetector(
-                          onTap: widget.post.isAnonymous ? null : () {
-                            Navigator.push(context, MaterialPageRoute(builder: (_) => ProfileScreen(userId: widget.post.userId)));
-                          },
+                          onTap: widget.post.isAnonymous
+                              ? null
+                              : () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => ProfileScreen(
+                                        userId: widget.post.userId,
+                                      ),
+                                    ),
+                                  );
+                                },
                           child: Text(
                             '@${widget.post.authorName}',
-                            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           widget.post.content,
-                          style: const TextStyle(color: Colors.white, fontSize: 14),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -201,7 +242,12 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                       const SizedBox(height: 16),
                       GestureDetector(
                         onTap: () {
-                           Share.share('Check out this reel by ${widget.post.authorName} on Vylithra: ${widget.post.content}');
+                          SharePlus.instance.share(
+                            ShareParams(
+                              text:
+                                  'Check out this reel by ${widget.post.authorName} on Vylithra: ${widget.post.content}',
+                            ),
+                          );
                         },
                         child: _buildActionIcon(Icons.share_outlined, 'Share'),
                       ),
@@ -213,7 +259,9 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                             _isSaved = !_isSaved;
                           });
                           try {
-                            final isSaved = await ApiService().toggleSavePost(widget.post.id);
+                            final isSaved = await ApiService().toggleSavePost(
+                              widget.post.id,
+                            );
                             setState(() {
                               _isSaved = isSaved;
                             });
@@ -223,7 +271,10 @@ class _ReelVideoPlayerState extends State<ReelVideoPlayer> {
                             });
                           }
                         },
-                        child: _buildActionIcon(_isSaved ? Icons.bookmark : Icons.bookmark_border, 'Save'),
+                        child: _buildActionIcon(
+                          _isSaved ? Icons.bookmark : Icons.bookmark_border,
+                          'Save',
+                        ),
                       ),
                     ],
                   ),

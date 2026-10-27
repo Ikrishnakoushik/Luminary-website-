@@ -170,6 +170,23 @@ class ApiService {
     return response['isSaved'] ?? false;
   }
 
+  Future<List<String>> toggleLikePost(String postId) async {
+    final List<dynamic> response = await put('/api/posts/$postId/like', {});
+    return response.map((e) => e.toString()).toList();
+  }
+
+  Future<List<dynamic>> commentOnPost(String postId, String text) async {
+    final List<dynamic> response = await post('/api/posts/$postId/comment', {'text': text});
+    return response;
+  }
+
+  Future<void> editPost(String postId, String title, String content) async {
+    await put('/api/posts/$postId', {
+      'title': title,
+      'content': content
+    });
+  }
+
   Future<List<Post>> fetchSavedPosts() async {
     final List<dynamic> data = await get('/api/users/saved');
     return data.map((json) => Post.fromJson(json)).toList();

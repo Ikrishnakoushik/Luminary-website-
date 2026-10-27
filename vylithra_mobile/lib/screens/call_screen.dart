@@ -76,7 +76,7 @@ class _CallScreenState extends State<CallScreen> {
       }
       await _audioPlayer.play();
     } catch (e) {
-      print("Error playing ringtone: $e");
+      debugPrint("Error playing ringtone: $e");
     }
   }
 
@@ -163,9 +163,7 @@ class _CallScreenState extends State<CallScreen> {
 
   void _acceptCall() {
     _stopRingtone();
-    if (widget.incomingData != null) {
-      widget.webrtcService.acceptCall(widget.incomingData!);
-    }
+    widget.webrtcService.acceptCall(widget.incomingData ?? {});
   }
 
   String _getStatusText() {

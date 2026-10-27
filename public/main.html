@@ -3,6 +3,19 @@
 
 <head>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="icon" type="image/png" href="/vylithra_app_icon.png">
+    <link rel="apple-touch-icon" href="/vylithra_app_icon.png">
+    <link rel="canonical" href="https://www.vylithra.in/main">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.vylithra.in/main">
+    <meta property="og:title" content="Community Feed | Vylithra Creative Ecosystem">
+    <meta property="og:description" content="Discover the latest digital releases, trending collections, and visionary content within the Vylithra community.">
+    <meta property="og:image" content="https://www.vylithra.in/vylithra_app_icon.png">
+    <meta property="og:site_name" content="Vylithra">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Community Feed | Vylithra Creative Ecosystem">
+    <meta name="twitter:description" content="Discover the latest digital releases, trending collections, and visionary content within the Vylithra community.">
+    <meta name="twitter:image" content="https://www.vylithra.in/vylithra_app_icon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Community Feed | Vylithra Creative Ecosystem</title>
@@ -38,18 +51,24 @@
     </script>
     <style>
         :root {
-            /* Vylithra Global 3-Color Mint Theme (Default) */
-            --bg-color: #f0fdfa;
-            --surface: #ffffff;
-            --primary: #14b8a6;
-            --btn-text: #ffffff;
-            --accent: #0d9488;
-            --accent-hover: #0f766e;
-            --text-main: #134e4a;
-            --text-muted: #115e59;
-            --border: #ccfbf1;
-            --input-bg: #f0fdfa;
-            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);
+            /* Vylithra Signature Cyber-Luxe Obsidian Figma Design System */
+            --bg-color: #07090e;
+            --surface: #0e121b;
+            --glass-bg: rgba(255, 255, 255, 0.04);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --primary: #00f2fe;
+            --btn-text: #07090e;
+            --accent: #4facfe;
+            --accent-purple: #a855f7;
+            --accent-magenta: #ec4899;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --text-light: #64748b;
+            --border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
+            --border-radius: 20px;
             --header-height: 70px;
         }
 
@@ -64,7 +83,43 @@
             background-color: var(--bg-color);
             color: var(--text-main);
             padding-top: var(--header-height);
-            transition: background-color 0.3s, color 0.3s;
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Ambient Glows from Figma Design */
+        .ambient-glow {
+            position: fixed;
+            pointer-events: none;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.12) 0%, transparent 65%);
+            top: -150px;
+            left: -100px;
+            z-index: 0;
+            filter: blur(40px);
+        }
+        .ambient-glow-2 {
+            position: fixed;
+            pointer-events: none;
+            width: 800px;
+            height: 800px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.12) 0%, transparent 65%);
+            bottom: -200px;
+            right: -100px;
+            z-index: 0;
+            filter: blur(50px);
+        }
+        .ambient-mesh {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 1px);
+            background-size: 24px 24px;
+            pointer-events: none;
+            z-index: 0;
         }
 
         /* Header */
@@ -74,18 +129,17 @@
             left: 0;
             width: 100%;
             height: var(--header-height);
-            /* Glassmorphism Effect */
-            background: color-mix(in srgb, var(--surface, #ffffff), transparent 20%);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(7, 9, 14, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5);
+            border-bottom: 1px solid var(--glass-border);
             z-index: 100;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 20px;
-            transition: transform 0.3s ease, background-color 0.3s, border-color 0.3s;
+            padding: 0 30px;
+            transition: transform 0.3s ease, background-color 0.3s;
         }
 
         header.nav-hidden {
@@ -93,27 +147,22 @@
             box-shadow: none;
         }
 
-                .logo {
+        .logo {
             font-size: 1.6rem;
             font-weight: 700;
-            color: #5b62fa; /* Indigo matched from screenshot */
+            color: #ffffff;
             text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             letter-spacing: -0.5px;
         }
 
-        .logo i {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            background: #5b62fa;
-            color: #ffffff;
-            border-radius: 50%;
-            font-size: 1.1rem;
+        .logo span {
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #ec4899 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
         }
 
         .search-bar {
@@ -125,24 +174,26 @@
 
         .search-bar input {
             width: 100%;
-            padding: 10px 15px 10px 40px;
-            border: 1px solid var(--border);
+            padding: 11px 18px 11px 44px;
+            border: 1px solid var(--glass-border);
             border-radius: 25px;
-            background: var(--input-bg);
+            background: rgba(255, 255, 255, 0.05);
             outline: none;
             font-family: inherit;
             color: var(--text-main);
-            transition: 0.3s;
+            backdrop-filter: blur(10px);
+            transition: all 0.25s ease;
         }
 
         .search-bar input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.25);
+            background: rgba(255, 255, 255, 0.08);
         }
 
         .search-bar i {
             position: absolute;
-            left: 15px;
+            left: 18px;
             top: 50%;
             transform: translateY(-50%);
             color: var(--text-muted);
@@ -155,23 +206,24 @@
         }
 
         .avatar-sm {
-            width: 40px;
-            height: 40px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
-            background: var(--input-bg);
+            background: rgba(255, 255, 255, 0.06);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
-            border: 2px solid var(--border);
-            color: var(--text-muted);
-            transition: 0.3s;
+            border: 2px solid var(--glass-border);
+            color: var(--text-main);
+            transition: all 0.25s ease;
         }
 
         .avatar-sm:hover {
             border-color: var(--primary);
-            color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+            transform: scale(1.05);
         }
 
         /* Layout */
@@ -179,27 +231,30 @@
             max-width: 1800px;
             margin: 0 auto;
             display: grid;
-            grid-template-columns: 220px 1fr 280px;
-            /* Reduced sidebars slightly for more mid space */
-            gap: 20px;
-            /* Reduced gap */
-            padding: 20px 0;
-            /* Reduced padding to move items to edge */
+            grid-template-columns: 240px 1fr 300px;
+            gap: 24px;
+            padding: 24px 30px;
+            position: relative;
+            z-index: 1;
         }
 
         .card,
         .post,
         .widget,
         .create-post-placeholder {
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
             box-shadow: var(--card-shadow);
             border-radius: var(--border-radius);
-            transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.25s ease;
         }
 
         .create-post-placeholder:hover {
-            background: var(--input-bg);
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(0, 242, 254, 0.3);
+            box-shadow: 0 0 25px rgba(0, 242, 254, 0.15);
         }
 
         .create-input {
@@ -231,32 +286,53 @@
         .nav-item {
             display: flex;
             align-items: center;
-            padding: 12px 15px;
-            border-radius: 12px;
+            padding: 12px 18px;
+            border-radius: 14px;
             color: var(--text-muted);
             text-decoration: none;
-            transition: 0.2s;
-            margin-bottom: 5px;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 6px;
             font-weight: 600;
+            font-size: 0.95rem;
+            border: 1px solid transparent;
         }
 
-        .nav-item:hover,
+        .nav-item:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.04);
+            border-color: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
         .nav-item.active {
-            background: var(--input-bg);
             color: var(--primary);
+            background: linear-gradient(90deg, rgba(0, 242, 254, 0.12) 0%, rgba(0, 242, 254, 0.02) 100%);
+            border-color: rgba(0, 242, 254, 0.25);
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.15);
+        }
+
+        .nav-item.active i {
+            color: var(--primary);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
         }
 
         .nav-item i {
             width: 25px;
-            margin-right: 10px;
+            margin-right: 12px;
+            font-size: 1.1rem;
+            transition: transform 0.2s;
+        }
+
+        .nav-item:hover i {
+            transform: scale(1.1);
         }
 
         .section-label {
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-muted);
-            margin: 20px 0 10px 15px;
+            letter-spacing: 1.2px;
+            color: var(--text-light);
+            margin: 24px 0 10px 18px;
             font-weight: 700;
         }
 
@@ -544,26 +620,39 @@
         }
 
         .widget {
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: var(--border-radius);
-            padding: 20px;
-            box-shadow: var(--shadow);
-            margin-bottom: 20px;
+            padding: 22px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .widget:hover {
+            border-color: rgba(255, 255, 255, 0.12);
         }
 
         .widget-title {
-            font-size: 1.1rem;
+            font-size: 1.05rem;
             font-weight: 700;
-            margin-bottom: 15px;
-            color: var(--text-main);
+            margin-bottom: 16px;
+            color: #ffffff;
+            letter-spacing: -0.3px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
         .spreader-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 0;
-            border-bottom: 1px solid var(--border);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
         }
 
         .spreader-item:last-child {
@@ -577,19 +666,34 @@
         .spreader-name {
             font-weight: 600;
             font-size: 0.95rem;
+            color: var(--text-main);
             display: block;
         }
 
         .spreader-role {
             font-size: 0.8rem;
-            color: var(--text-light);
+            color: var(--text-muted);
         }
 
         .follow-btn {
-            color: var(--accent);
-            font-size: 0.85rem;
+            background: rgba(0, 242, 254, 0.1);
+            color: var(--primary);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            padding: 5px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.25s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .follow-btn:hover {
+            background: var(--primary);
+            color: #07090e;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.45);
+            transform: scale(1.05);
         }
 
         /* --- Auto-Hide Sidebar on Scroll --- */
@@ -1290,87 +1394,90 @@
             color: var(--accent);
         }
     
-        /* === MOBILE STORIES RAIL (OPTION 9) === */
+        /* === STORIES RAIL (FIGMA CYBER-LUXE DESIGN) === */
         .mobile-stories-rail {
+            display: flex !important;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 20px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            scrollbar-width: none;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+        }
+        .mobile-stories-rail::-webkit-scrollbar {
             display: none;
         }
-        @media (max-width: 768px) {
-            .mobile-stories-rail {
-                display: flex;
-                overflow-x: auto;
-                scroll-snap-type: x mandatory;
-                gap: 15px;
-                padding: 15px 15px 10px 15px;
-                margin-bottom: 5px;
-                scrollbar-width: none; /* Firefox */
-                background: transparent;
-                border-bottom: 1px solid rgba(0,0,0,0.05);
-            }
-            body[data-theme='dark'] .mobile-stories-rail {
-                border-bottom: 1px solid rgba(255,255,255,0.05);
-            }
-            .mobile-stories-rail::-webkit-scrollbar {
-                display: none; /* Chrome/Safari */
-            }
-            .story-item {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 6px;
-                scroll-snap-align: start;
-                cursor: pointer;
-                flex-shrink: 0;
-            }
-            .story-avatar-wrapper {
-                width: 65px;
-                height: 65px;
-                border-radius: 50%;
-                background: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
-                padding: 3px;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                transition: transform 0.2s;
-            }
-            .story-item:active .story-avatar-wrapper {
-                transform: scale(0.95);
-            }
-            .story-avatar-wrapper.add-story {
-                background: transparent;
-                border: 2px dashed #94a3b8;
-                padding: 0;
-            }
-            body[data-theme='dark'] .story-avatar-wrapper.add-story {
-                border-color: #475569;
-            }
-            .story-avatar {
-                width: 100%;
-                height: 100%;
-                border-radius: 50%;
-                background-color: #f8fafc;
-                border: 2px solid #fff;
-                object-fit: cover;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #fff;
-            }
-            body[data-theme='dark'] .story-avatar {
-                border-color: #0f172a;
-                background-color: #1e293b;
-            }
-            .story-username {
-                font-size: 0.75rem;
-                color: var(--text-main);
-                font-weight: 600;
-                max-width: 70px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                text-align: center;
-            }
+        .story-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            scroll-snap-align: start;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.25s ease;
+        }
+        .story-item:hover {
+            transform: translateY(-3px);
+        }
+        .story-avatar-wrapper {
+            width: 68px;
+            height: 68px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #ec4899 100%);
+            padding: 2.5px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0 16px rgba(0, 242, 254, 0.35);
+            transition: all 0.25s ease;
+        }
+        .story-item:hover .story-avatar-wrapper {
+            box-shadow: 0 0 24px rgba(0, 242, 254, 0.6);
+            transform: scale(1.05);
+        }
+        .story-item:active .story-avatar-wrapper {
+            transform: scale(0.95);
+        }
+        .story-avatar-wrapper.add-story {
+            background: transparent;
+            border: 2px dashed rgba(0, 242, 254, 0.5);
+            padding: 0;
+            box-shadow: none;
+        }
+        .story-avatar-wrapper.add-story:hover {
+            border-color: #00f2fe;
+            box-shadow: 0 0 16px rgba(0, 242, 254, 0.3);
+        }
+        .story-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background-color: #0e121b;
+            border: 2px solid #07090e;
+            object-fit: cover;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .story-username {
+            font-size: 0.8rem;
+            color: var(--text-main);
+            font-weight: 500;
+            max-width: 75px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            text-align: center;
         }
         
         /* === PROFESSIONAL NATIVE MOBILE REDESIGN (MAIN FEED) === */
@@ -1505,12 +1612,10 @@
                 display: none !important;
             }
 
-            /* 2. Pure Backgrounds */
-            body, .container, .feed {
-                background: #ffffff !important;
-            }
+            /* 2. Pure Cyber-Luxe Obsidian Backgrounds */
+            body, .container, .feed,
             body[data-theme='dark'], body[data-theme='dark'] .container, body[data-theme='dark'] .feed {
-                background: #0f172a !important;
+                background: #07090e !important;
             }
 
             /* 3. Edge-to-Edge Cards */
@@ -1595,7 +1700,11 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
 </head>
 
-<body>
+<body data-theme="dark">
+    <!-- Ambient Cyber-Luxe Background Glows & Mesh Grid -->
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+    <div class="ambient-mesh"></div>
 
     <input type="file" id="storyUploadInput" accept="image/*,video/*" style="display:none;" onchange="handleStoryUpload(event)">
     <div id="storyViewerOverlay" class="story-viewer-overlay">
@@ -1616,7 +1725,10 @@
 
     <!-- Header -->
     <header id="main-header">
-        <a href="main" class="logo" style="text-decoration:none;"><img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;"> Vylithra</a>
+        <a href="main" class="logo">
+            <img src="/vylithra_app_icon.png" alt="Vylithra Logo" style="width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 0 16px rgba(0, 242, 254, 0.45); object-fit: cover;">
+            <span>Vylithra</span>
+        </a>
 
         <div class="search-bar">
             <i class="fa-solid fa-search"></i>
@@ -1716,60 +1828,67 @@
             margin-bottom: 30px;
         }
 
-        /* Hero Banner */
+        /* Hero Banner (Figma Cyber-Luxe) */
         .dv-hero {
             position: relative;
             width: 100%;
             height: clamp(280px, 35vh, 320px);
-            border-radius: 20px;
+            border-radius: var(--border-radius);
             overflow: hidden;
-            background: #1E293B; /* Fallback */
+            background: linear-gradient(135deg, rgba(14, 18, 27, 0.95) 0%, rgba(20, 26, 40, 0.95) 50%, rgba(10, 14, 22, 0.95) 100%);
             display: flex;
             align-items: center;
             justify-content: flex-end;
             padding: 40px 60px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         
         .dv-hero-bg {
             position: absolute;
             inset: 0;
             background: url('/uploads/curation-banner.png') center/cover no-repeat;
+            opacity: 0.6;
             z-index: 0;
         }
         
         .dv-hero-gradient {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to right, transparent 0%, rgba(15, 23, 42, 0.4) 40%, rgba(15, 23, 42, 0.95) 75%, rgba(15, 23, 42, 1) 100%);
+            background: linear-gradient(to right, transparent 0%, rgba(7, 9, 14, 0.5) 30%, rgba(7, 9, 14, 0.95) 75%, rgba(7, 9, 14, 1) 100%);
             z-index: 1;
         }
 
         .dv-hero-content {
             position: relative;
             z-index: 2;
-            width: 450px;
+            width: 480px;
             text-align: left;
             color: #f8fafc;
         }
 
         .dv-hero-content h1 {
-            font-family: 'Georgia', serif; /* Matching the elegant serif */
-            font-size: 2.2rem;
-            font-weight: 500;
-            line-height: 1.2;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.3rem;
+            font-weight: 700;
+            line-height: 1.15;
             margin-bottom: 15px;
-            letter-spacing: 0.5px;
+            letter-spacing: -0.5px;
             text-transform: uppercase;
-            text-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
         }
 
         .dv-hero-content p {
             font-size: 0.95rem;
             line-height: 1.6;
             color: var(--text-muted);
-            font-weight: 300;
+            font-weight: 400;
         }
 
         .dv-hero-dots {
@@ -1785,37 +1904,53 @@
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.25);
+            transition: all 0.3s;
         }
         .dv-hero-dot.active {
-            width: 20px;
-            background: #8b5cf6; /* The purple dot in the image */
+            width: 24px;
+            background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
             border-radius: 8px;
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
         }
 
-        /* Composer Bar */
+        /* Composer Bar (Figma Cyber-Luxe) */
         .dv-composer {
             display: flex;
             align-items: center;
-            background: #1e293b;
+            background: rgba(255, 255, 255, 0.04);
             border-radius: 50px;
-            padding: 10px 15px 10px 20px; /* Slight padding offset to adapt to larger avatar */
+            padding: 10px 16px 10px 18px;
             border: 1px solid rgba(255,255,255,0.08);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            transition: all 0.3s ease;
+        }
+        .dv-composer:hover, .dv-composer:focus-within {
+            border-color: rgba(0, 242, 254, 0.35);
+            box-shadow: 0 8px 32px rgba(0, 242, 254, 0.15);
+            background: rgba(255, 255, 255, 0.06);
         }
         
         .dv-composer-icon {
-            width: 44px; /* Increased slightly for professional presence */
+            width: 44px;
             height: 44px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.1);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(168, 85, 247, 0.15));
+            border: 1px solid rgba(0, 242, 254, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #94A3B8;
+            color: #00f2fe;
             margin-right: 15px;
-            overflow: hidden; /* Ensures profile pics stay circular */
+            overflow: hidden;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transition: all 0.25s ease;
+        }
+        .dv-composer:hover .dv-composer-icon {
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+            transform: scale(1.05);
         }
 
         .dv-composer-input {
@@ -1834,17 +1969,19 @@
         .dv-composer-tools {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 14px;
             margin-right: 20px;
             color: var(--text-muted);
-            font-size: 1rem;
+            font-size: 1.05rem;
         }
         .dv-composer-tools i {
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.2s ease;
         }
         .dv-composer-tools i:hover {
-            color: #f1f5f9;
+            color: #00f2fe;
+            transform: scale(1.15);
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
         }
         .dv-composer-tools .divider {
             width: 1px;
@@ -1857,29 +1994,33 @@
             gap: 10px;
         }
         .dv-btn {
-            padding: 8px 20px;
+            padding: 8px 22px;
             border-radius: 20px;
             font-size: 0.85rem;
             font-weight: 600;
             border: none;
             cursor: pointer;
-            transition: 0.2s;
+            transition: all 0.25s ease;
         }
         .dv-btn-ghost {
-            background: transparent;
+            background: rgba(255, 255, 255, 0.04);
             color: var(--text-muted);
             border: 1px solid rgba(255,255,255,0.1);
         }
         .dv-btn-ghost:hover {
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.08);
             color: white;
+            border-color: rgba(255, 255, 255, 0.2);
         }
         .dv-btn-solid {
-            background: #e2e8f0;
-            color: var(--text-main);
+            background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
+            color: #07090e;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
         }
         .dv-btn-solid:hover {
-            background: white;
+            box-shadow: 0 4px 25px rgba(0, 242, 254, 0.6);
+            transform: translateY(-1px) scale(1.02);
         }
 
         /* Featured Grid */
@@ -1996,12 +2137,9 @@
             margin-bottom: 10px;
         }
 
-        /* Override Body globally to match dark sleek theme */
-        body[data-theme="dark"] .container {
-            grid-template-columns: 240px 1fr;
-        }
-        body[data-theme="dark"] .sidebar-right {
-            display: none !important;
+        /* 3-Column Desktop Layout */
+        .container {
+            grid-template-columns: 240px 1fr 300px;
         }
     </style>
 
@@ -2012,8 +2150,13 @@
             <div class="dv-hero-bg" id="heroBgElement"></div>
             <div class="dv-hero-gradient"></div>
             <div class="dv-hero-content">
+                <div style="margin-bottom: 12px;">
+                    <span style="display:inline-flex; align-items:center; gap:6px; padding: 4px 12px; border-radius: 20px; background: rgba(0, 242, 254, 0.12); color: #00f2fe; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.2px; border: 1px solid rgba(0, 242, 254, 0.3); text-transform: uppercase;">
+                        <i class="fas fa-sparkles" style="font-size:0.7rem;"></i> Vylithra Editorial
+                    </span>
+                </div>
                 <h1 id="heroTitleElement">Reclaiming the art of curation</h1>
-                <p id="heroSubtitleElement">Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>- Vylithra Editorial.</p>
+                <p id="heroSubtitleElement">Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>— The Curators.</p>
             </div>
             <div class="dv-hero-dots">
                 <div class="dv-hero-dot active"></div>
@@ -2242,9 +2385,10 @@
         // Initialize
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
-            // Dark mode init
-            if (localStorage.getItem('theme') === 'dark') {
+            // Dark mode init (Cyber-Luxe Obsidian default)
+            if (localStorage.getItem('theme') !== 'light') {
                 document.body.setAttribute('data-theme', 'dark');
+                localStorage.setItem('theme', 'dark');
             }
             fetchActiveHeroBanner();
             fetchPosts();
@@ -2324,67 +2468,22 @@
                                     </div>`;
             }
         }
-
-        async function fetchPosts() {
-            console.log('fetchPosts called');
-            const container = document.getElementById('feed-container');
-            // Try to find the loading text paragraph to update it
-            const loadingText = container.querySelector('p');
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout for cold starts
-
-            try {
-                if (loadingText) loadingText.innerText = `Connecting to ${API_URL}...`;
-                console.log(`Fetching from: ${API_URL}/posts`);
-
-                const res = await fetch(`${API_URL}/posts`, { signal: controller.signal });
-                clearTimeout(timeoutId);
-                console.log('Fetch response received', res.status);
-
-                if (loadingText) loadingText.innerText = 'Receiving data from server...';
-
-                if (!res.ok) {
-                    throw new Error(`Server responded with status ${res.status}`);
-                }
-
-                const posts = await res.json();
-
-                if (loadingText) loadingText.innerText = `Processing ${posts.length} posts...`;
-
-                allPosts = posts;
-                renderPosts(posts);
-            } catch (err) {
-                console.error(err);
-
-                let errorMsg = err.message;
-                if (err.name === 'AbortError') errorMsg = "Connection timed out. Server is not responding.";
-
-                container.innerHTML = `
-                                    <div style="text-align: center; color: var(--error); padding: 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px;">
-                                        <i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: 10px;"></i><br>
-                                            <strong>Failed to load feed.</strong><br>
-                                                <span style="font-size: 0.9em; opacity: 0.8;">${errorMsg}</span><br>
-
-                                                    <div style="text-align: left; background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin: 15px 0;">
-                                                        <strong>Debug Info:</strong><br>
-                                                            URL: ${API_URL}/posts<br>
-                                                                Protocol: ${window.location.protocol}<br>
-                                                                    Hostname: ${window.location.hostname}
-                                                                </div>
-
-                                                                <button onclick="fetchPosts()" class="btn btn-primary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.9em;">Retry</button>
-                                                            </div>`;
-            }
-        }
-
         function renderPosts(posts) {
             try {
                 const container = document.getElementById('feed-container');
 
                 if (!posts || posts.length === 0) {
                     container.innerHTML = `
-                        <div style="text-align: center; padding: 40px; color: var(--text-muted);">
-                            <p>No spreads found. Be the first to spread something!</p>
+                        <div style="text-align: center; padding: 50px 30px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 24px; backdrop-filter: blur(24px); box-shadow: 0 12px 40px rgba(0,0,0,0.4); margin: 20px 0;">
+                            <div style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 20px; background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(168, 85, 247, 0.15)); border: 1px solid rgba(0, 242, 254, 0.35); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 30px rgba(0, 242, 254, 0.25);">
+                                <i class="fas fa-sparkles" style="font-size: 1.8rem; color: #00f2fe; text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);"></i>
+                            </div>
+                            <span style="display: inline-block; padding: 4px 14px; border-radius: 20px; background: rgba(0, 242, 254, 0.1); color: #00f2fe; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.5px; border: 1px solid rgba(0, 242, 254, 0.25); margin-bottom: 15px;">CYBER-LUXE FEED SYNCHRONIZED</span>
+                            <h3 style="font-size: 1.6rem; font-weight: 700; color: #ffffff; margin-bottom: 10px; letter-spacing: -0.3px;">Be the First to Spread Something</h3>
+                            <p style="color: var(--text-muted); font-size: 0.95rem; max-width: 480px; margin: 0 auto 24px; line-height: 1.6;">Publish visionary editorial narratives, digital books, and multimedia stories to the global Vylithra community.</p>
+                            <button onclick="handleCreatePostClick()" style="padding: 12px 28px; border-radius: 50px; background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%); color: #07090e; font-weight: 700; font-size: 0.95rem; border: none; cursor: pointer; box-shadow: 0 4px 20px rgba(0, 242, 254, 0.4); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 4px 30px rgba(0, 242, 254, 0.7)'; this.style.transform='translateY(-2px)'" onmouseout="this.style.boxShadow='0 4px 20px rgba(0, 242, 254, 0.4)'; this.style.transform='translateY(0)'">
+                                <i class="fas fa-plus" style="margin-right: 6px;"></i> Create First Spread
+                            </button>
                         </div>`;
                     return;
                 }
@@ -2426,7 +2525,7 @@
                     if (post.image) {
                         postContentHTML += `
                     <div style="width: 100%; margin: 15px 0 20px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.03); max-height: 480px; background: var(--input-bg); display: flex; justify-content: center; align-items: center;">
-                        <img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" alt="Post Attached Photo" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
+                        <img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" alt="Post Attached Photo" loading="lazy" decoding="async" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
                     </div>`;
                     }
 
@@ -2538,13 +2637,18 @@
                     const likeText = likesCount > 0 ? `${likesCount}` : 'Like';
                     const commentText = commentsCount > 0 ? `${commentsCount}` : 'Comment';
 
-                    // Delete Button Logic
+                    // Edit and Delete Button Logic
                     let deleteBtn = '';
+                    let editBtn = '';
                     try {
                         const token = localStorage.getItem('token');
                         if (token) {
                             const payload = JSON.parse(atob(token.split('.')[1]));
                             if (post.user && (post.user._id === payload.user.id || post.user === payload.user.id)) {
+                                editBtn = `
+                                <div class="action-btn edit-btn" onclick="openEditPostModal('${post._id}', \`${(post.title || '').replace(/`/g, '\\`')}\`, \`${(post.content || post.text || '').replace(/`/g, '\\`')}\`)" style="margin-left: auto; color: #3b82f6;">
+                                    <i class="fas fa-edit"></i> Edit
+                                </div>`;
                                 deleteBtn = `
                                 <div class="action-btn delete-btn" onclick="deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444;">
                                     <i class="fas fa-trash-alt"></i> Delete
@@ -2583,7 +2687,8 @@
                         <!-- Read Story Action -->
                                                                                     ${readActionBtn}
 
-                                                                                    <!-- Delete Action -->
+                                                                                    <!-- Edit & Delete Action -->
+                                                                                    ${editBtn}
                                                                                     ${deleteBtn}
                                                                                 </div>
 
@@ -2630,31 +2735,23 @@
                 }
 
                 if (res.ok) {
+                    const likesArray = await res.json();
+                    const newCount = likesArray.length;
+                    const payload = JSON.parse(atob(token.split('.')[1]));
+                    const userId = payload.user.id;
+                    const isLiked = likesArray.includes(userId);
+
                     // Update UI locally without reload
                     const postCard = document.getElementById(`post-${postId}`);
                     if (postCard) {
                         const likeBtn = postCard.querySelector('.action-btn .fa-heart');
-                        const likeTextContainer = likeBtn.parentElement; // Get the parent div with the text
-
-                        // Toggle icon
-                        if (likeBtn.classList.contains('far')) {
-                            likeBtn.classList.remove('far');
-                            likeBtn.classList.add('fas');
-                            likeBtn.style.color = '#e11d48';
-                            // Increment count logic (simplified)
-                            // Ideally backend returns new count
-                            const currentText = likeTextContainer.innerText.replace(/Like|\d+/g, '').trim(); // Remove "Like" or existing number
-                            const currentCount = parseInt(currentText) || 0;
-                            const newCount = currentCount + 1;
-                            likeTextContainer.innerHTML = `<i class="fas fa-heart" style="color: #e11d48;"></i> ${newCount}`;
-                        } else {
-                            likeBtn.classList.remove('fas');
-                            likeBtn.classList.add('far');
-                            likeBtn.style.color = '';
-                            const currentText = likeTextContainer.innerText.replace(/Like|\d+/g, '').trim(); // Remove "Like" or existing number
-                            const currentCount = parseInt(currentText) || 1; // If it was liked, assume at least 1
-                            const newCount = Math.max(0, currentCount - 1);
-                            likeTextContainer.innerHTML = `<i class="far fa-heart"></i> ${newCount > 0 ? newCount : 'Like'}`;
+                        if (likeBtn) {
+                            const likeTextContainer = likeBtn.parentElement;
+                            if (isLiked) {
+                                likeTextContainer.innerHTML = `<i class="fas fa-heart" style="color: #e11d48;"></i> ${newCount}`;
+                            } else {
+                                likeTextContainer.innerHTML = `<i class="far fa-heart"></i> ${newCount > 0 ? newCount : 'Like'}`;
+                            }
                         }
                     }
                 } else {
@@ -2703,8 +2800,37 @@
                 }
 
                 if (res.ok) {
+                    const commentsArray = await res.json();
+                    const newComment = commentsArray[0]; // The backend unshifts the new comment
                     input.value = '';
-                    fetchPosts();
+                    
+                    // Update UI locally without reload
+                    const commentsSection = document.getElementById(`comments-${postId}`);
+                    if (commentsSection) {
+                        const commentHtml = `
+                            <div style="margin-bottom: 10px; background: #f9fafb; padding: 10px; border-radius: 8px;">
+                                <strong style="color: var(--text-color);">${newComment.username}</strong>
+                                <p style="margin: 5px 0 0; color: var(--text-color); font-size: 0.95rem;">${newComment.text}</p>
+                            </div>
+                        `;
+                        const inputGroup = commentsSection.querySelector('.input-group');
+                        if (inputGroup) {
+                            inputGroup.insertAdjacentHTML('beforebegin', commentHtml);
+                        } else {
+                            commentsSection.innerHTML += commentHtml;
+                        }
+
+                        // Update comment count
+                        const postCard = document.getElementById(`post-${postId}`);
+                        if (postCard) {
+                            const commentBtn = postCard.querySelector('.action-btn .fa-comment');
+                            if (commentBtn) {
+                                const commentTextContainer = commentBtn.parentElement;
+                                const newCount = commentsArray.length;
+                                commentTextContainer.innerHTML = `<i class="far fa-comment"></i> ${newCount}`;
+                            }
+                        }
+                    }
                 } else {
                     const txt = await res.text();
                     console.error("Comment failed", txt);
@@ -2985,25 +3111,25 @@
                 let publisherLink = '';
                 if (role === 'publisher' || role === 'admin') {
                     publisherLink = `
-                        <a href="/publisher" style="color: var(--primary); font-size: 1.2rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 5px; margin-right: 10px;" title="Publisher Page">
-                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.95rem;">Publisher</span>
+                        <a href="/publisher" style="color: var(--primary); font-size: 1.1rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 6px; margin-right: 6px;" title="Publisher Page">
+                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.9rem;">Studio</span>
                         </a>
                     `;
                 }
 
                 authSection.innerHTML = `
-                    <div style="display: flex; gap: 15px; align-items: center;">
-                        <a href="/studio" style="background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.4); color: var(--primary); padding: 5px 15px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='rgba(99, 102, 241, 0.2)'" onmouseout="this.style.background='rgba(99, 102, 241, 0.1)'" title="Upload Content">
+                    <div style="display: flex; gap: 14px; align-items: center;">
+                        <a href="/studio" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #07090e; padding: 7px 18px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.35); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 0 22px rgba(0, 242, 254, 0.6)'; this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='0 0 15px rgba(0, 242, 254, 0.35)'; this.style.transform='scale(1)'" title="Upload Content">
                             <i class="fas fa-plus"></i> Upload
                         </a>
                         ${publisherLink}
-                        <a href="messages" style="color: var(--text-muted); font-size: 1.2rem; text-decoration: none; transition: 0.2s;" title="Messages" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
+                        <a href="messages" style="color: var(--text-muted); font-size: 1.15rem; text-decoration: none; transition: 0.2s; display: flex; align-items: center;" title="Messages" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">
                             <i class="fa-regular fa-envelope"></i>
                         </a>
-                        <a href="/profile" class="avatar-sm" style="text-decoration: none;" title="Profile">
+                        <a href="/profile" class="avatar-sm" style="text-decoration: none; border-color: rgba(0, 242, 254, 0.4);" title="Profile">
                             <i class="fa-regular fa-user"></i>
                         </a>
-                        <a href="#" onclick="logoutUser(event)" style="color: #ef4444; font-size: 1.2rem; text-decoration: none; transition: 0.2s;" title="Logout">
+                        <a href="#" onclick="logoutUser(event)" style="color: #ef4444; font-size: 1.15rem; text-decoration: none; transition: 0.2s; display: flex; align-items: center;" title="Logout">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>
@@ -3011,7 +3137,7 @@
             } else {
                 // Not logged in: Show Login button
                 authSection.innerHTML = `
-                    <a href="/auth" class="btn" style="text-decoration: none; padding: 8px 20px; background: var(--primary); color: white; border-radius: 20px;">Log In</a>
+                    <a href="/auth" class="btn" style="text-decoration: none; padding: 8px 24px; background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%); color: #07090e; font-weight: 700; border-radius: 20px; box-shadow: 0 0 15px rgba(0, 242, 254, 0.35); transition: 0.2s;">Log In</a>
                 `;
             }
         }
@@ -3045,16 +3171,16 @@
             }
         });
     
-        // === MOBILE STORIES RAIL LOGIC ===
+        // === STORIES RAIL LOGIC (FIGMA CYBER-LUXE) ===
         async function renderStories() {
             const rail = document.getElementById('stories-rail');
             if(!rail) return;
             
             // 1. My Story (Add)
             let htmlContent = `
-                <div class="story-item" onclick="alert('Stories uploading coming soon!')">
+                <div class="story-item" onclick="alert('Stories upload coming soon! Tap + to draft.')">
                     <div class="story-avatar-wrapper add-story">
-                        <div class="story-avatar" style="color: #64748b; background: transparent; border: none;">
+                        <div class="story-avatar" style="color: #00f2fe; background: transparent; border: none; font-size: 1.1rem;">
                             <i class="fas fa-plus"></i>
                         </div>
                     </div>
@@ -3062,31 +3188,58 @@
                 </div>
             `;
             
-            // 2. Fetch Active Users
+            // 2. Fetch Active Users or fallback to featured creator stories
             try {
+                let activeUsers = [];
                 const res = await fetch('/api/users/top');
                 if (res.ok) {
-                    const users = await res.json();
-                    const activeUsers = users.slice(0, 10);
-                    
+                    activeUsers = await res.json();
+                }
+                
+                const featuredCreators = [
+                    { name: 'Elena Vance', username: 'elena_v', initial: 'E', color: 'linear-gradient(135deg, #00f2fe, #4facfe)' },
+                    { name: 'Mia Kurt', username: 'miak', initial: 'M', color: 'linear-gradient(135deg, #a855f7, #ec4899)' },
+                    { name: 'Liam Sterling', username: 'sterling', initial: 'L', color: 'linear-gradient(135deg, #3b82f6, #06b6d4)' },
+                    { name: 'Nova Lab', username: 'novalab', initial: 'N', color: 'linear-gradient(135deg, #10b981, #00f2fe)' },
+                    { name: 'Kaelen Frost', username: 'kaelen', initial: 'K', color: 'linear-gradient(135deg, #f59e0b, #ef4444)' },
+                    { name: 'Aria Chen', username: 'ariachen', initial: 'A', color: 'linear-gradient(135deg, #8b5cf6, #d946ef)' }
+                ];
+
+                const currentUsername = localStorage.getItem('username');
+                let displayCount = 0;
+
+                if (Array.isArray(activeUsers) && activeUsers.length > 0) {
                     activeUsers.forEach(u => {
-                        if(u.username === localStorage.getItem('username')) return;
-                        
+                        if (u.username === currentUsername) return;
                         const initial = u.name ? u.name.charAt(0).toUpperCase() : u.username.charAt(0).toUpperCase();
-                        const color = `hsl(${(u.username.charCodeAt(0) * 20) % 360}, 70%, 50%)`;
-                        
+                        const bg = `hsl(${(u.username.charCodeAt(0) * 35) % 360}, 75%, 55%)`;
                         htmlContent += `
-                            <div class="story-item" onclick="window.location.href='/profile.html?user=${u._id}'">
+                            <div class="story-item" onclick="window.location.href='/profile?user=${u._id}'">
                                 <div class="story-avatar-wrapper">
-                                    <div class="story-avatar" style="background-color: ${color};">${initial}</div>
+                                    <div class="story-avatar" style="background: ${bg};">${initial}</div>
                                 </div>
                                 <div class="story-username">${u.name || u.username}</div>
+                            </div>
+                        `;
+                        displayCount++;
+                    });
+                }
+
+                // If fewer than 4 live users, supplement with community featured creators
+                if (displayCount < 4) {
+                    featuredCreators.slice(0, 6 - displayCount).forEach(c => {
+                        htmlContent += `
+                            <div class="story-item" onclick="filterPosts('trending')">
+                                <div class="story-avatar-wrapper">
+                                    <div class="story-avatar" style="background: ${c.color}; font-weight: 700;">${c.initial}</div>
+                                </div>
+                                <div class="story-username">${c.name}</div>
                             </div>
                         `;
                     });
                 }
             } catch(e) {
-                console.error("Could not fetch users for stories");
+                console.error("Could not fetch users for stories", e);
             }
             
             rail.innerHTML = htmlContent;
@@ -3130,6 +3283,81 @@
             <i class="fas fa-user-circle"></i>
         </a>
     </nav>
+    <!-- Edit Post Modal -->
+    <div id="editPostModal" class="modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; align-items:center; justify-content:center;">
+        <div class="modal-content" style="background:var(--card-bg); color:var(--text-color); width:90%; max-width:500px; padding:20px; border-radius:12px; box-shadow:0 10px 30px rgba(0,0,0,0.5);">
+            <h2 style="margin-top:0;">Edit Post</h2>
+            <form id="editPostForm">
+                <input type="hidden" id="editPostId">
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px;">Title</label>
+                    <input type="text" id="editPostTitle" class="form-control" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);">
+                </div>
+                <div class="form-group" style="margin-bottom:15px;">
+                    <label style="display:block; margin-bottom:5px;">Content</label>
+                    <textarea id="editPostContent" class="form-control" rows="5" style="width:100%; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-color); color:var(--text-color);"></textarea>
+                </div>
+                <div style="display:flex; justify-content:flex-end; gap:10px;">
+                    <button type="button" onclick="closeEditPostModal()" class="btn" style="padding:10px 20px; border-radius:8px; background:var(--border-color); color:var(--text-color); border:none; cursor:pointer;">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="padding:10px 20px; border-radius:8px; background:var(--accent); color:#fff; border:none; cursor:pointer;">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditPostModal(id, title, content) {
+            document.getElementById('editPostId').value = id;
+            document.getElementById('editPostTitle').value = title;
+            document.getElementById('editPostContent').value = content;
+            const modal = document.getElementById('editPostModal');
+            modal.style.display = 'flex';
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.transition = 'opacity 0.2s'; modal.style.opacity = '1'; }, 10);
+        }
+
+        function closeEditPostModal() {
+            const modal = document.getElementById('editPostModal');
+            modal.style.opacity = '0';
+            setTimeout(() => { modal.style.display = 'none'; }, 200);
+        }
+
+        document.getElementById('editPostForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('editPostId').value;
+            const title = document.getElementById('editPostTitle').value;
+            const content = document.getElementById('editPostContent').value;
+            const token = localStorage.getItem('token');
+            if(!token) return VylithraUI.showToast('Please login to edit', 'error');
+
+            try {
+                const res = await fetch(`${API_URL}/posts/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    body: JSON.stringify({ title, content })
+                });
+
+                if(res.ok) {
+                    VylithraUI.showToast('Post updated successfully!', 'success');
+                    closeEditPostModal();
+                    // Locally update the UI
+                    const postCard = document.getElementById(`post-${id}`);
+                    if (postCard) {
+                        const titleEl = postCard.querySelector('.post-title');
+                        if (titleEl) titleEl.innerText = title;
+                        // Since content can be HTML or markdown, a full fetch is safest, but for real-time:
+                        fetchPosts(); 
+                    }
+                } else {
+                    const txt = await res.text();
+                    VylithraUI.showToast('Error updating post: ' + txt, 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                VylithraUI.showToast('Failed to update post.', 'error');
+            }
+        });
+    </script>
 </body>
 
 </html>
