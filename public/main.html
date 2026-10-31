@@ -2557,22 +2557,7 @@
                 carouselEl.addEventListener('mouseleave', restartHeroTimer);
             }
         });
-/hero/active`);
-                if (res.ok) {
-                    const banner = await res.json();
-                    if (banner && banner.title) {
-                        const bgEl = document.getElementById('heroBgElement');
-                        if (bgEl) bgEl.style.backgroundImage = `url('${banner.imageUrl}')`;
-                        const titleEl = document.getElementById('heroTitleElement');
-                        if (titleEl) titleEl.innerText = banner.title;
-                        const subEl = document.getElementById('heroSubtitleElement');
-                        if (subEl) subEl.innerText = banner.subtitle;
-                    }
-                }
-            } catch(e) {
-                console.error("Failed to fetch dynamic hero banner", e);
-            }
-        }
+
 
         async function fetchPosts(isRetry = false) {
             console.log('fetchPosts called, isRetry:', isRetry);
