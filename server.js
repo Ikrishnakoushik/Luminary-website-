@@ -517,7 +517,7 @@ const gatewayAuth = async (req, res, next) => {
 };
 
 // Database Connection
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin&replicaSet=atlas-nv3gv7-shard-0';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017/vylithra';
 let isConnecting = null;
 const connectDB = async () => {
     if (mongoose.connection.readyState === 1) {
