@@ -771,6 +771,7 @@
                         localStorage.setItem('token', data.token);
                         localStorage.setItem('username', data.username);
                         localStorage.setItem('role', data.role);
+                        if (data.user) { localStorage.setItem('user', JSON.stringify(data.user)); }
                         window.location.href = '/main';
                     } else {
                         const errDiv = document.getElementById('loginError') || document.getElementById('regError');
@@ -852,10 +853,10 @@
                 <div class="form-panel active" id="panel-login">
                     <form id="loginForm">
                         <div class="input-group">
-                            <label>Email Address</label>
+                            <label>Email or Username</label>
                             <div class="input-wrapper">
                                 <i class="fas fa-envelope"></i>
-                                <input type="email" id="loginEmail" class="input-field" placeholder="Email Address" required>
+                                <input type="text" id="loginEmail" class="input-field" placeholder="Email or Username" required autocomplete="username">
                             </div>
                         </div>
                         <div class="input-group">
@@ -1007,6 +1008,9 @@
                         </div>
                         <button type="submit" class="submit-btn">Verify Account</button>
                         <div class="error-message" id="verifyError"></div>
+                        <div style="text-align:center; margin-top:10px;">
+                            <button type="button" onclick="resendVerificationOtp()" id="btnResendOtp" style="background:none; border:none; color:var(--glow-cyan, #007AFF); cursor:pointer; font-size:0.88rem; text-decoration:underline;">Resend Code</button>
+                        </div>
                         <div style="text-align:center; margin-top:15px;">
                              <a href="#" onclick="switchTab('login'); return false;" style="color:var(--text-muted); text-decoration:none; font-size:0.85rem;">&larr; Back to login</a>
                         </div>
@@ -1069,7 +1073,7 @@
             }
         });
 
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
+        const API_URL = '/api';
 
         let pendingLoginEmail = '';
         let pendingLoginPassword = '';
@@ -1221,6 +1225,7 @@
                     localStorage.setItem('token', data.token);
                     localStorage.setItem('username', data.username);
                     localStorage.setItem('role', data.role);
+                    if (data.user) { localStorage.setItem('user', JSON.stringify(data.user)); }
                     window.location.href = '/main';
                 } else {
                     errorMsg.innerText = data.msg || 'Invalid code.';
@@ -1352,6 +1357,35 @@
                 }
             });
         }
+    
+        async function resendVerificationOtp() {
+            const btn = document.getElementById('btnResendOtp');
+            const err = document.getElementById('verifyError');
+            if (!pendingLoginEmail) return;
+            btn.disabled = true;
+            btn.innerText = 'Sending...';
+            err.className = 'error-message';
+            err.innerText = '';
+            try {
+                const res = await fetch('/api/resend-verification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingLoginEmail })
+                });
+                const d = await res.json();
+                if (res.ok) {
+                    err.className = 'success-message';
+                    err.innerText = d.msg || 'Verification code sent!';
+                } else {
+                    err.innerText = d.msg || 'Failed to resend code.';
+                }
+            } catch(e) {
+                err.innerText = 'Network error resending code.';
+            } finally {
+                setTimeout(() => { btn.disabled = false; btn.innerText = 'Resend Code'; }, 10000);
+            }
+        }
+        
     </script>
 
     <!-- Request Demo Modal -->

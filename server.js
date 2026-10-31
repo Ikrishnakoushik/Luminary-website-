@@ -1160,24 +1160,113 @@ app.post('/api/register', async (req, res) => {
 app.post('/api/verify-email', async (req, res) => {
     const { email, otp } = req.body;
     try {
-        const user = await User.findOne({ email });
+        if (!email || !otp) {
+            return res.status(400).json({ msg: 'Email and OTP code are required' });
+        }
+        const identifier = String(email).trim().toLowerCase();
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { username: { $regex: '^' + identifier + '$', $options: 'i' } }
+            ]
+        });
         if (!user) return res.status(400).json({ msg: 'User not found' });
 
         if (user.isVerified) return res.status(400).json({ msg: 'User already verified' });
 
-        if (user.verificationOtp !== otp) return res.status(400).json({ msg: 'Invalid OTP' });
+        if (user.verificationOtp !== String(otp).trim()) {
+            return res.status(400).json({ msg: 'Invalid verification code' });
+        }
 
         user.isVerified = true;
         user.verificationOtp = undefined;
+        user.verificationExpires = undefined;
+
+        // Generate rapid active session
+        const sessionId = crypto.randomBytes(16).toString('hex');
+        user.activeSessions = user.activeSessions || [];
+        user.activeSessions.push({
+            sessionId,
+            userAgent: req.headers['user-agent'] || 'VerifyEmail',
+            ip: req.headers['x-forwarded-for'] || req.socket.remoteAddress,
+            lastActive: new Date()
+        });
         await user.save();
 
-        // Login automatically
-        const payload = { user: { id: user.id, role: user.role } };
+        const payload = {
+            user: {
+                id: user.id,
+                username: user.username,
+                role: user.role,
+                sessionId
+            }
+        };
+
         jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' }, (err, token) => {
             if (err) throw err;
-            res.json({ token, username: user.username, role: user.role });
+            res.json({
+                token,
+                username: user.username,
+                role: user.role,
+                user: {
+                    id: user.id,
+                    username: user.username,
+                    displayName: user.displayName,
+                    email: user.email,
+                    profilePicture: user.profilePicture
+                }
+            });
         });
 
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
+    }
+});
+
+// Resend Verification Code Route
+app.post('/api/resend-verification', async (req, res) => {
+    const { email } = req.body;
+    try {
+        if (!email) return res.status(400).json({ msg: 'Email is required' });
+        const identifier = String(email).trim().toLowerCase();
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { username: { $regex: '^' + identifier + '$', $options: 'i' } }
+            ]
+        });
+        if (!user) return res.status(400).json({ msg: 'User not found' });
+        if (user.isVerified) return res.status(400).json({ msg: 'User already verified. Please sign in.' });
+
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+        user.verificationOtp = otp;
+        user.verificationExpires = Date.now() + 10 * 60 * 1000;
+        await user.save();
+
+        try {
+            const emailHtml = `
+            <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center;">Vylithra</h1>
+                <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600;">Verification Code Resent</h2>
+                <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                    Please use the code below to complete account verification:
+                </p>
+                <div style="background-color: #12121a; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                    <span style="font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #d4af37;">${otp}</span>
+                </div>
+                <p style="color: #a0a0ab; font-size: 14px; text-align: center;">Expires in 10 minutes.</p>
+            </div>`;
+            await sendEmail({
+                to: user.email,
+                subject: 'Vylithra - New Verification Code',
+                html: emailHtml
+            });
+        } catch (emailErr) {
+            console.warn('[Warning] Email sending failed on resend verification:', emailErr.message);
+        }
+
+        res.json({ msg: 'A new verification code has been sent to your email.' });
     } catch (err) {
         console.error(err);
         res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
@@ -1350,8 +1439,19 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password, totpCode } = req.body;
 
-        // Check if user exists
-        const user = await User.findOne({ email: email.toLowerCase() });
+        const identifier = String(email || '').trim().toLowerCase();
+        if (!identifier || !password) {
+            return res.status(400).json({ msg: 'Please provide both email/username and password' });
+        }
+
+        // Check if user exists by email OR username (case-insensitive)
+        const user = await User.findOne({
+            $or: [
+                { email: identifier },
+                { username: { $regex: '^' + identifier + '$', $options: 'i' } }
+            ]
+        });
+
         if (!user) {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
@@ -1367,9 +1467,39 @@ app.post('/api/login', async (req, res) => {
             return res.status(400).json({ msg: 'Invalid Credentials' });
         }
 
-        // Check if user is verified
+        // Check if user is verified - dispatch new verification code so user is not stuck
         if (user.isVerified === false) {
-            return res.status(403).json({ msg: 'Please verify your email before logging in.', requiresVerification: true });
+            const otp = Math.floor(100000 + Math.random() * 900000).toString();
+            user.verificationOtp = otp;
+            user.verificationExpires = Date.now() + 10 * 60 * 1000;
+            await user.save();
+
+            try {
+                const emailHtml = `
+                <div style="font-family: 'Inter', sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #0a0a0f; color: #ffffff; border-radius: 16px; border: 1px solid #1a1a24;">
+                    <h1 style="color: #d4af37; margin-bottom: 30px; font-weight: 800; font-size: 28px; text-align: center;">Vylithra</h1>
+                    <h2 style="font-size: 22px; margin-bottom: 15px; font-weight: 600;">Account Verification Code</h2>
+                    <p style="color: #a0a0ab; font-size: 16px; line-height: 1.6; margin-bottom: 30px;">
+                        Please use the code below to verify your account and sign in:
+                    </p>
+                    <div style="background-color: #12121a; padding: 25px; border-radius: 12px; text-align: center; margin-bottom: 30px; border: 1px solid rgba(212, 175, 55, 0.2);">
+                        <span style="font-size: 42px; font-weight: 800; letter-spacing: 12px; color: #d4af37;">${otp}</span>
+                    </div>
+                    <p style="color: #a0a0ab; font-size: 14px; text-align: center;">This code expires in 10 minutes.</p>
+                </div>`;
+                await sendEmail({
+                    to: user.email,
+                    subject: 'Vylithra - Verify Your Account',
+                    html: emailHtml
+                });
+            } catch (emailErr) {
+                console.warn('[Warning] Email sending failed on login verification:', emailErr.message);
+            }
+            return res.status(403).json({
+                msg: 'Please verify your email before logging in. A verification code has been sent to your email.',
+                requiresVerification: true,
+                email: user.email
+            });
         }
 
         // 2FA Intercept
