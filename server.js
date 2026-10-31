@@ -517,7 +517,7 @@ const gatewayAuth = async (req, res, next) => {
 };
 
 // Database Connection
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/everything_spread?ssl=true&authSource=admin&replicaSet=atlas-nv3gv7-shard-0';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin&replicaSet=atlas-nv3gv7-shard-0';
 let isConnecting = null;
 const connectDB = async () => {
     if (mongoose.connection.readyState === 1) {
@@ -2239,10 +2239,12 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
         const convosMap = new Map();
 
         messages.forEach(msg => {
-            const isSentByMe = msg.sender._id.toString() === userId;
+            if (!msg.sender) return;
+            const senderId = msg.sender._id ? msg.sender._id.toString() : msg.sender.toString();
+            const isSentByMe = senderId === userId;
             const otherUser = isSentByMe ? msg.receiver : msg.sender;
 
-            if (!otherUser) return; // In case user was deleted
+            if (!otherUser || !otherUser._id) return; // In case user was deleted or group message
 
             const otherUserId = otherUser._id.toString();
 
@@ -2251,7 +2253,7 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
                     user: otherUser,
                     lastMessage: msg.content,
                     timestamp: msg.createdAt,
-                    unread: !isSentByMe && msg.unread
+                    unread: !isSentByMe && (!msg.read && msg.unread !== false)
                 });
             }
         });
@@ -2260,7 +2262,7 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
         res.json(convos);
 
     } catch (err) {
-        console.error(err.message);
+        console.error('Conversations Error:', err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
@@ -2280,8 +2282,8 @@ app.get('/api/messages/:userId', auth, async (req, res) => {
 
         // Mark as read if receiving them
         await Message.updateMany(
-            { sender: otherUserId, receiver: userId, unread: true },
-            { $set: { unread: false } }
+            { sender: otherUserId, receiver: userId, read: false },
+            { $set: { read: true, unread: false } }
         );
 
         res.json(messages);
