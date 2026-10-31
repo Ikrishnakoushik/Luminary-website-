@@ -1812,10 +1812,19 @@ app.get('/api/users/saved', auth, async (req, res) => {
     }
 });
 
-// Get User by ID (Public Profile)
+// Get User by ID or Username (Public Profile)
 app.get('/api/users/:id', optionalAuth, async (req, res) => {
     try {
-        let user = await User.findById(req.params.id).select('-password');
+        let user = null;
+        if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+            user = await User.findById(req.params.id).select('-password');
+        }
+        if (!user) {
+            user = await User.findOne({ username: req.params.id }).select('-password');
+        }
+        if (!user) {
+            user = await User.findOne({ username: new RegExp('^' + req.params.id + '$', 'i') }).select('-password');
+        }
         if (!user) return res.status(404).json({ msg: 'User not found' });
         
         if (user.isPrivate) {
@@ -1834,8 +1843,8 @@ app.get('/api/users/:id', optionalAuth, async (req, res) => {
                     displayName: user.displayName,
                     profilePicture: user.profilePicture,
                     isPrivate: true,
-                    followers: user.followers,
-                    following: user.following,
+                    followers: user.followers || [],
+                    following: user.following || [],
                     isRequested: !!isRequested,
                     bio: user.bio,
                     hideProfileOnPosts: user.hideProfileOnPosts,
@@ -2159,7 +2168,16 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
     try {
         const query = { isUnderReview: { $ne: true } };
         if (req.query.user) {
-            query.user = req.query.user;
+            if (mongoose.Types.ObjectId.isValid(req.query.user)) {
+                query.user = req.query.user;
+            } else {
+                const authorUser = await User.findOne({ username: req.query.user });
+                if (authorUser) {
+                    query.user = authorUser._id;
+                } else {
+                    return res.json([]);
+                }
+            }
         }
         if (req.query.likedBy) {
             query.likes = req.query.likedBy;

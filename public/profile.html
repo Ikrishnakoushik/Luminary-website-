@@ -8,6 +8,11 @@
     <title>Creator Profile | Vylithra</title>
     <meta name="description" content="Build your digital presence. Showcase your portfolios, followers, and curated collections on Vylithra.">
     <meta name="keywords" content="Vylithra profile, creator portfolio, digital presence">
+    <script>
+        const API_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
+            ? 'http://localhost:3000/api'
+            : '/api';
+    </script>
     <script src="/theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
@@ -276,49 +281,142 @@
                     let myId = null;
                     if (token) {
                         try {
-                            myId = JSON.parse(atob(token.split('.')[1])).user.id;
-                        } catch (e) { }
+                            const payload = JSON.parse(atob(token.split('.')[1]));
+                            myId = payload.user ? payload.user.id : payload.id;
+                        } catch (e) {
+                            console.error('Token parse error:', e);
+                        }
+                    }
+
+                    const headers = {};
+                    if (token) {
+                        headers['x-auth-token'] = token;
                     }
 
                     if (userId) {
+                        // Viewing specific user's public profile
                         try {
-                            const res = await fetch(`${API_URL}/users/${userId}`);
+                            const res = await fetch(`${API_URL}/users/${encodeURIComponent(userId)}`, { headers });
                             if (res.ok) {
                                 userData = await res.json();
-                                userData.isMe = (myId === userData._id);
+                                userData.isMe = (myId && userData._id && String(myId) === String(userData._id));
+                            } else {
+                                console.warn(`User "${userId}" returned status:`, res.status);
                             }
-                        } catch (e) { console.error(e); }
+                        } catch (e) {
+                            console.error('Failed to fetch user profile:', e);
+                        }
                     } else {
-                        // If no user ID provided, we are viewing our own profile
-                        const username = localStorage.getItem('username');
-                        const role = localStorage.getItem('role');
-                        if (username && username !== 'undefined' && username !== 'null') {
-                            userData = { _id: myId, username, role, isMe: true };
-                        } else if (token) {
-                            // Token exists but username is missing, we will fetch it in fetchMeData later
-                            userData = { _id: myId, isMe: true };
+                        // Viewing own profile
+                        if (token) {
+                            try {
+                                const res = await fetch(`${API_URL}/users/profile`, { headers });
+                                if (res.ok) {
+                                    userData = await res.json();
+                                    userData.isMe = true;
+                                }
+                            } catch (e) {
+                                console.error('Failed to fetch current user profile:', e);
+                            }
+                        }
+
+                        // Fallback to local storage if API call didn't succeed
+                        if (!userData) {
+                            const username = localStorage.getItem('username');
+                            const role = localStorage.getItem('role');
+                            if (username && username !== 'undefined' && username !== 'null') {
+                                userData = { _id: myId, username, role, isMe: true };
+                            }
                         }
                     }
 
                     if (userData) {
                         renderProfile(userData);
                     } else {
-                        // If no user is found and no token, prompt login
-                        document.getElementById('profile-name').innerText = 'Please Sign In';
-                        document.getElementById('profile-handle').innerText = '@guest';
-                        const bio = document.getElementById('profile-bio');
-                        if(bio) bio.innerText = 'Log in to view your profile and manage your account.';
-                        
-                        const postsContainer = document.getElementById('posts-container');
-                        if (postsContainer) {
-                            postsContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);"><button class="auth-btn btn-sm" onclick="openModal(\'loginModal\')" style="width: auto;">Sign In</button></div>';
+                        if (userId) {
+                            // Specified creator was not found in the database
+                            const nameEl = document.getElementById('profile-name');
+                            if (nameEl) nameEl.innerText = 'Creator Not Found';
+                            
+                            const handleEl = document.getElementById('profile-handle');
+                            if (handleEl) handleEl.innerText = '@unavailable';
+                            
+                            const topNavHandle = document.getElementById('top-nav-handle');
+                            if (topNavHandle) topNavHandle.innerText = '@unavailable';
+                            
+                            const bioEl = document.getElementById('profile-bio');
+                            if (bioEl) bioEl.innerText = `The creator profile "${userId}" does not exist or may have been removed.`;
+                            
+                            const avatarEl = document.getElementById('profile-avatar');
+                            if (avatarEl) {
+                                avatarEl.innerText = '?';
+                                avatarEl.style.backgroundImage = 'none';
+                            }
+                            
+                            const postsContainer = document.getElementById('posts-container');
+                            if (postsContainer) {
+                                postsContainer.innerHTML = `
+                                    <div style="text-align:center; padding: 40px 20px; color: var(--text-muted);">
+                                        <i class="fas fa-user-slash" style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.5; color: var(--primary);"></i>
+                                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Profile Unavailable</h3>
+                                        <p style="font-size: 0.95rem; margin-bottom: 20px;">We couldn't locate any creator under this identifier.</p>
+                                        <a href="/main" class="auth-btn btn-sm" style="display:inline-block; text-decoration: none; padding: 8px 20px;">Explore Home Feed</a>
+                                    </div>
+                                `;
+                            }
+                            
+                            const projSec = document.getElementById('projects-section');
+                            if (projSec) projSec.style.display = 'none';
+                            
+                            const fCountEl = document.getElementById('profile-followers-count');
+                            const followingCountEl = document.getElementById('profile-following-count');
+                            const spreadsCountEl = document.getElementById('profile-spreads-count');
+                            if (fCountEl) fCountEl.innerText = '0';
+                            if (followingCountEl) followingCountEl.innerText = '0';
+                            if (spreadsCountEl) spreadsCountEl.innerText = '0';
+
+                            const followBtn = document.getElementById('follow-profile-btn');
+                            const msgBtn = document.getElementById('message-profile-btn');
+                            const editBtn = document.getElementById('edit-profile-btn');
+                            if (followBtn) followBtn.style.display = 'none';
+                            if (msgBtn) msgBtn.style.display = 'none';
+                            if (editBtn) editBtn.style.display = 'none';
+                        } else {
+                            // Unauthenticated user attempting to view own profile
+                            const nameEl = document.getElementById('profile-name');
+                            if (nameEl) nameEl.innerText = 'Please Sign In';
+                            
+                            const handleEl = document.getElementById('profile-handle');
+                            if (handleEl) handleEl.innerText = '@guest';
+                            
+                            const topNavHandle = document.getElementById('top-nav-handle');
+                            if (topNavHandle) topNavHandle.innerText = '@guest';
+                            
+                            const bioEl = document.getElementById('profile-bio');
+                            if (bioEl) bioEl.innerText = 'Sign in to access your profile, publish spreads, and manage your account.';
+                            
+                            const postsContainer = document.getElementById('posts-container');
+                            if (postsContainer) {
+                                postsContainer.innerHTML = `
+                                    <div style="text-align:center; padding: 35px 20px; color: var(--text-muted);">
+                                        <i class="fas fa-lock" style="font-size: 2.5rem; margin-bottom: 15px; opacity: 0.6; color: var(--primary);"></i>
+                                        <h3 style="color: var(--text-main); margin-bottom: 8px;">Sign In to View Spreads</h3>
+                                        <p style="font-size: 0.95rem; margin-bottom: 20px;">Connect your account to access your published works and reader collections.</p>
+                                        <a href="/auth" class="auth-btn btn-sm" style="display:inline-block; text-decoration: none; padding: 9px 24px;">Sign In to Vylithra</a>
+                                    </div>
+                                `;
+                            }
+                            
+                            const projSec = document.getElementById('projects-section');
+                            if (projSec) projSec.style.display = 'none';
+                            
+                            const fCountEl = document.getElementById('profile-followers-count');
+                            const followingCountEl = document.getElementById('profile-following-count');
+                            const spreadsCountEl = document.getElementById('profile-spreads-count');
+                            if (fCountEl) fCountEl.innerText = '0';
+                            if (followingCountEl) followingCountEl.innerText = '0';
+                            if (spreadsCountEl) spreadsCountEl.innerText = '0';
                         }
-                        const projectsSection = document.getElementById('projects-section');
-                        if (projectsSection) projectsSection.style.display = 'none';
-                        const fCountEl = document.getElementById('profile-followers-count');
-                        const followingCountEl = document.getElementById('profile-following-count');
-                        if (fCountEl) fCountEl.innerText = '0';
-                        if (followingCountEl) followingCountEl.innerText = '0';
                     }
 
                     updateAuthUI();
@@ -341,7 +439,7 @@
                     // Bio Update
                     const bioEl = document.getElementById('profile-bio');
                     if (bioEl) {
-                        bioEl.innerText = user.bio || "Digital Craftsman & Writer. Building things for the web and sharing what I learn along the way.";
+                        bioEl.innerText = user.bio && user.bio.trim() ? user.bio : (user.isMe ? "Add a bio in Settings to tell your readers about your work." : "No bio provided.");
                     }
 
                     // Stat Updates
@@ -498,7 +596,7 @@
                         // Set up Message routing
                         if (msgBtn) {
                             msgBtn.onclick = () => {
-                                window.location.href = 'messages.html?user=' + user._id;
+                                window.location.href = '/messages?user=' + user._id;
                             };
                         }
                         
@@ -1060,10 +1158,7 @@
         }
 
 
-        // Force localhost API if opening via file://
-        const API_URL = (window.location.hostname === 'localhost' || window.location.protocol === 'file:')
-            ? 'http://localhost:3000/api'
-            : '/api';
+        // API_URL already initialized globally in <head>
 
 
         // Check login status on load
@@ -1229,8 +1324,9 @@
 
         function renderPosts(posts, layout = 'list', showAll = false) {
             const spreadsCountEl = document.getElementById('profile-spreads-count');
-            if(spreadsCountEl && posts) spreadsCountEl.innerText = posts.length;
+            if (spreadsCountEl && posts) spreadsCountEl.innerText = posts.length;
             const container = document.getElementById('posts-container');
+            if (!container) return;
             container.innerHTML = '';
 
             if (layout !== 'grid') {
@@ -1240,16 +1336,12 @@
             const section = container.closest('section');
 
             if (!posts || posts.length === 0) {
-                if (section) section.style.display = 'none';
+                container.innerHTML = '<div style="text-align:center; padding: 35px 20px; color: var(--text-muted);"><i class="fas fa-feather-pointed" style="font-size: 2rem; margin-bottom: 12px; display:block; opacity: 0.4;"></i><p>No spreads published yet.</p></div>';
                 return;
             }
 
-            // If we have posts, show section
             if (section) section.style.display = 'block';
 
-            // Logic for "View All"
-            // If layout is grid and NOT showAll, we limit to 6.
-            // But we fetched 7 to check.
             let displayPosts = posts;
             let hasMore = false;
 
@@ -1263,33 +1355,27 @@
             displayPosts.forEach(post => {
                 const authorName = post.user?.username || post.username || 'User';
                 const initial = authorName.charAt(0).toUpperCase();
-                const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
+                const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Recently';
                 const authorId = post.user?._id || '#';
                 const tag = post.tag || 'General';
                 const likesCount = post.likes ? post.likes.length : 0;
 
-                // Safe content strings
                 const safeTitle = (post.title || 'Untitled Update').replace(/'/g, "&apos;");
                 const safeAuthor = authorName.replace(/'/g, "&apos;");
                 const safeTime = dateStr.replace(/'/g, "&apos;");
 
-                // Content prep
-                let fullContent = LinkifyAndFormat(post.content || '');
-                // Strip HTML for excerpt
+                let fullContent = typeof LinkifyAndFormat === 'function' ? LinkifyAndFormat(post.content || '') : (post.content || '');
                 let tmp = document.createElement("DIV");
                 tmp.innerHTML = fullContent;
                 let plainText = tmp.textContent || tmp.innerText || "";
                 let excerpt = plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
 
-                // Avatar
                 const postAvatarUrl = post.user?.profilePicture;
                 const authorAvatar = postAvatarUrl
-                    ? `<img src="${(postAvatarUrl) && String(postAvatarUrl).startsWith('http') ? (postAvatarUrl) : '/' + (postAvatarUrl)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
+                    ? `<img src="${(postAvatarUrl) && String(postAvatarUrl).startsWith('http') ? (postAvatarUrl) : '/' + (postAvatarUrl)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;" alt="${authorName}">`
                     : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
 
-
                 if (layout === 'grid') {
-                    // GRID CARD HTML
                     const card = document.createElement('article');
                     card.className = 'post-card compact';
                     card.onclick = () => openReaderFromId(post._id, safeTitle, safeAuthor, safeTime);
@@ -1299,7 +1385,6 @@
                     if (post.image) {
                         imageHtml = `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" class="compact-img" alt="${safeTitle}">`;
                     } else {
-                        // Placeholder
                         imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${initial}</div>`;
                     }
 
@@ -1311,7 +1396,6 @@
                             <div class="compact-tag">${tag}</div>
                             <h3 class="compact-title">${post.title || 'Untitled'}</h3>
                             <p class="compact-excerpt">${excerpt}</p>
-                            
                             <div class="compact-footer">
                                 <div style="display:flex; align-items:center;">
                                     ${authorAvatar}
@@ -1320,100 +1404,12 @@
                                 <div><i class="far fa-heart"></i> ${likesCount}</div>
                             </div>
                         </div>
-                        <!-- Hidden content store for Reader -->
                         <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
                     `;
                     container.appendChild(card);
-
-                if (section) section.style.display = 'none';
-                return;
-            }
-
-            // If we have posts, show section
-            if (section) section.style.display = 'block';
-
-            // Logic for "View All"
-            // If layout is grid and NOT showAll, we limit to 6.
-            // But we fetched 7 to check.
-            let displayPosts = posts;
-            let hasMore = false;
-
-            if (layout === 'grid' && !showAll) {
-                if (posts.length > 6) {
-                    hasMore = true;
-                    displayPosts = posts.slice(0, 6);
-                }
-            }
-
-            displayPosts.forEach(post => {
-                const authorName = post.user?.username || post.username || 'User';
-                const initial = authorName.charAt(0).toUpperCase();
-                const dateStr = post.createdAt ? new Date(post.createdAt).toLocaleDateString() : 'Just now';
-                const authorId = post.user?._id || '#';
-                const tag = post.tag || 'General';
-                const likesCount = post.likes ? post.likes.length : 0;
-
-                // Safe content strings
-                const safeTitle = (post.title || 'Untitled Update').replace(/'/g, "&apos;");
-                const safeAuthor = authorName.replace(/'/g, "&apos;");
-                const safeTime = dateStr.replace(/'/g, "&apos;");
-
-                // Content prep
-                let fullContent = LinkifyAndFormat(post.content || '');
-                // Strip HTML for excerpt
-                let tmp = document.createElement("DIV");
-                tmp.innerHTML = fullContent;
-                let plainText = tmp.textContent || tmp.innerText || "";
-                let excerpt = plainText.length > 120 ? plainText.substring(0, 120) + '...' : plainText;
-
-                // Avatar
-                const postAvatarUrl = post.user?.profilePicture;
-                const authorAvatar = postAvatarUrl
-                    ? `<img src="${(postAvatarUrl) && String(postAvatarUrl).startsWith('http') ? (postAvatarUrl) : '/' + (postAvatarUrl)}" style="width:24px;height:24px;border-radius:50%;object-fit:cover;margin-right:8px;">`
-                    : `<div style="width:24px;height:24px;border-radius:50%;background:var(--accent);color:white;display:flex;align-items:center;justify-content:center;font-size:0.7rem;margin-right:8px;">${initial}</div>`;
-
-
-                if (layout === 'grid') {
-                    // GRID CARD HTML
-                    const card = document.createElement('article');
-                    card.className = 'post-card compact';
-                    card.onclick = () => openReaderFromId(post._id, safeTitle, safeAuthor, safeTime);
-                    card.style.cursor = 'pointer';
-
-                    let imageHtml = '';
-                    if (post.image) {
-                        imageHtml = `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" class="compact-img" alt="${safeTitle}">`;
-                    } else {
-                        // Placeholder
-                        imageHtml = `<div class="compact-img" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 2rem;">${initial}</div>`;
-                    }
-
-                    card.innerHTML = `
-                        <div class="compact-img-container">
-                            ${imageHtml}
-                        </div>
-                        <div class="compact-body">
-                            <div class="compact-tag">${tag}</div>
-                            <h3 class="compact-title">${post.title || 'Untitled'}</h3>
-                            <p class="compact-excerpt">${excerpt}</p>
-                            
-                            <div class="compact-footer">
-                                <div style="display:flex; align-items:center;">
-                                    ${authorAvatar}
-                                    <span>${authorName}</span>
-                                </div>
-                                <div><i class="far fa-heart"></i> ${likesCount}</div>
-                            </div>
-                        </div>
-                        <!-- Hidden content store for Reader -->
-                        <div id="content-store-${post._id}" style="display:none;">${fullContent}</div>
-                    `;
-                    container.appendChild(card);
-
                 } else {
-                    // STANDARD LIST HTML (Previous Logic)
                     const postAvatar = post.user?.profilePicture
-                        ? `<img src="${(post.user.profilePicture) && String(post.user.profilePicture).startsWith('http') ? (post.user.profilePicture) : '/' + (post.user.profilePicture)}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">`
+                        ? `<img src="${(post.user.profilePicture) && String(post.user.profilePicture).startsWith('http') ? (post.user.profilePicture) : '/' + (post.user.profilePicture)}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;" alt="${authorName}">`
                         : `<div class="avatar" style="width:40px;height:40px;font-size:1.2rem;margin:0;">${initial}</div>`;
 
                     const isLong = (post.content || '').length > 500;
@@ -1427,17 +1423,17 @@
                         `;
                     }
 
-                    // Edit & Delete Button Logic
                     let deleteBtn = '';
                     let editBtn = '';
                     try {
                         const token = localStorage.getItem('token');
                         if (token) {
                             const payload = JSON.parse(atob(token.split('.')[1]));
+                            const myUserId = payload.user ? payload.user.id : payload.id;
                             const postUserId = post.user?._id || post.user;
-                            if (postUserId === payload.user.id) {
+                            if (postUserId && String(postUserId) === String(myUserId)) {
                                 editBtn = `
-                                <div class="action-btn edit-btn" onclick="event.stopPropagation(); openEditPostModal('${post._id}', \`${(post.title || '').replace(/`/g, '\\`')}\`, \`${(post.content || post.text || '').replace(/`/g, '\\`')}\`)" style="margin-left: auto; color: #3b82f6; cursor: pointer;">
+                                <div class="action-btn edit-btn" onclick="event.stopPropagation(); openEditPostModal('${post._id}', \`${(post.title || '').replace(/\`/g, '\\\\`')}\`, \`${(post.content || post.text || '').replace(/\`/g, '\\\\`')}\`)" style="margin-left: auto; color: #3b82f6; cursor: pointer;">
                                     <i class="fas fa-edit"></i> Edit
                                 </div>`;
                                 deleteBtn = `<div class="action-btn delete-btn" onclick="event.stopPropagation(); deletePost('${post._id}')" style="margin-left: 10px; color: #ef4444; cursor: pointer;"><i class="fas fa-trash-alt"></i> Delete</div>`;
@@ -1463,7 +1459,7 @@
                         <div class="post-content" style="margin-bottom:15px;">
                             ${isLong ? `<div class="blog-excerpt">${fullContent.substring(0, 300)}...</div>` : `<div class="blog-excerpt">${fullContent}</div>`}
                         </div>
-                        ${post.image ? `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" style="width:100%; border-radius:12px; margin-bottom:15px;">` : ''}
+                        ${post.image ? `<img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" style="width:100%; border-radius:12px; margin-bottom:15px;" alt="Post image">` : ''}
                         <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
                             <div class="action-btn" onclick="event.stopPropagation(); toggleLike('${post._id}')"><i class="far fa-heart"></i> ${likesCount}</div>
                             <div class="action-btn"><i class="far fa-comment"></i> ${post.comments ? post.comments.length : 0}</div>
@@ -1476,7 +1472,6 @@
                     container.innerHTML += postHTML;
                 }
             });
-
             // "View All" Button Logic
             if (hasMore) {
                 // We need to fetch ID to pass to button? No, we can just use the url params or a closure.
