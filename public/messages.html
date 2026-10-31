@@ -482,7 +482,10 @@
 <body>
 
     <header>
-        <a href="main" class="logo" style="text-decoration:none;"><img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 28px; height: 28px; vertical-align: middle; margin-right: 8px;"> Vylithra</a>
+        <a href="main" class="logo" style="text-decoration:none; display:inline-flex; align-items:center; gap:12px; font-size:1.85rem; font-weight:800; color:#ffffff; line-height:1;">
+        <img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(0 0 12px rgba(0, 122, 255, 0.45));">
+        Vylithra
+    </a>
         <div class="header-actions">
             <a href="main" class="back-btn"><i class="fas fa-arrow-left"></i> Back to Home</a>
         </div>
@@ -492,11 +495,22 @@
 
         <!-- Conversations Sidebar -->
         <aside class="conversations-sidebar">
-            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center;">
-                <span>Chats</span>
-                <button onclick="openCreateGroupModal()" style="background:none; border:none; color:var(--text-main); font-size:1.1rem; cursor:pointer; padding:5px; transition:color 0.2s;" title="Create Group" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-main)'">
-                    <i class="fas fa-users-medical"></i>
+            <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 20px 10px 20px;">
+                <span style="font-weight: 700; font-size: 1.25rem;">Chats</span>
+                <button onclick="openCreateGroupModal()" style="background:rgba(20, 184, 166, 0.1); border:1px solid rgba(20, 184, 166, 0.2); color:var(--primary); font-size:0.95rem; cursor:pointer; padding:6px 12px; border-radius:12px; display:inline-flex; align-items:center; gap:6px; font-weight:600; transition:all 0.2s;" title="Create Group" onmouseover="this.style.background='var(--primary)'; this.style.color='#ffffff'" onmouseout="this.style.background='rgba(20, 184, 166, 0.1)'; this.style.color='var(--primary)'">
+                    <i class="fas fa-users-medical"></i> New Group
                 </button>
+            </div>
+            <!-- Search People to Message & Call -->
+            <div class="sidebar-search-box" style="padding: 10px 16px; border-bottom: 1px solid var(--border); position: relative;">
+                <div style="display: flex; align-items: center; background: var(--bg-color); border: 1px solid var(--border); border-radius: 20px; padding: 8px 14px; gap: 8px; transition: all 0.2s ease;">
+                    <i class="fas fa-search" style="color: var(--primary); font-size: 0.9rem;"></i>
+                    <input type="text" id="user-search-input" placeholder="Search people to chat or call..." style="background: transparent; border: none; outline: none; width: 100%; color: var(--text-main); font-size: 0.9rem; font-family: inherit;" oninput="handleUserSearch(this.value)">
+                    <i class="fas fa-times" id="clear-search-btn" style="color: var(--text-muted); font-size: 0.85rem; cursor: pointer; display: none;" onclick="clearUserSearch()"></i>
+                </div>
+                <!-- Dynamic Search Results Dropdown -->
+                <div id="user-search-results" style="display: none; position: absolute; top: calc(100% + 2px); left: 12px; right: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 14px 35px rgba(0,0,0,0.25); max-height: 320px; overflow-y: auto; z-index: 200; padding: 8px;">
+                </div>
             </div>
             <div class="conversation-list" id="convos-list">
                 <!-- Loaded via JS -->
@@ -585,6 +599,97 @@
     <script>
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
         let currentUserId = null;
+        let userSearchTimeout = null;
+
+        async function handleUserSearch(query) {
+            const clearBtn = document.getElementById('clear-search-btn');
+            const resultsBox = document.getElementById('user-search-results');
+            
+            if (!query || !query.trim()) {
+                if (clearBtn) clearBtn.style.display = 'none';
+                if (resultsBox) resultsBox.style.display = 'none';
+                return;
+            }
+            
+            if (clearBtn) clearBtn.style.display = 'block';
+            
+            clearTimeout(userSearchTimeout);
+            userSearchTimeout = setTimeout(async () => {
+                try {
+                    resultsBox.style.display = 'block';
+                    resultsBox.innerHTML = '<div style="padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.88rem;"><i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Searching creators...</div>';
+                    
+                    const res = await fetch(`${API_URL}/search?q=${encodeURIComponent(query.trim())}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        const users = (data.users || []).filter(u => u._id !== currentUserId);
+                        
+                        if (users.length === 0) {
+                            resultsBox.innerHTML = '<div style="padding: 16px; text-align: center; color: var(--text-muted); font-size: 0.88rem;">No people found for "<b>' + query.trim() + '</b>"</div>';
+                            return;
+                        }
+                        
+                        resultsBox.innerHTML = users.map(u => {
+                            const avatarSrc = u.profilePicture 
+                                ? (String(u.profilePicture).startsWith('http') ? u.profilePicture : '/' + u.profilePicture)
+                                : '';
+                            const initial = (u.displayName || u.username || 'U').charAt(0).toUpperCase();
+                            const avatarHtml = avatarSrc 
+                                ? `<img src="${avatarSrc}" alt="${u.username}" style="width: 38px; height: 38px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border);">`
+                                : `<div style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #6366f1); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.95rem;">${initial}</div>`;
+                            
+                            return `
+                                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-radius: 10px; transition: background 0.2s; cursor: pointer; gap: 8px; margin-bottom: 4px; border: 1px solid transparent;" onmouseover="this.style.background='color-mix(in srgb, var(--primary) 10%, transparent)'; this.style.borderColor='var(--border)'" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent'">
+                                    <div style="display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0;" onclick="selectUserFromSearch('${u._id}', '${u.username}', '${avatarSrc}')">
+                                        ${avatarHtml}
+                                        <div style="overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                                            <div style="font-weight: 600; font-size: 0.92rem; color: var(--text-main);">${u.displayName || u.username}</div>
+                                            <div style="font-size: 0.8rem; color: var(--text-muted);">@${u.username}</div>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; gap: 6px; align-items: center;">
+                                        <button onclick="selectUserFromSearch('${u._id}', '${u.username}', '${avatarSrc}');" title="Chat" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: var(--primary); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='var(--primary)'; this.style.color='#fff'" onmouseout="this.style.background='var(--surface)'; this.style.color='var(--primary)'">
+                                            <i class="fas fa-comment" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                        <button onclick="selectUserFromSearch('${u._id}', '${u.username}', '${avatarSrc}', false);" title="Voice Call" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: #10b981; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#10b981'; this.style.color='#fff'" onmouseout="this.style.background='var(--surface)'; this.style.color='#10b981'">
+                                            <i class="fas fa-phone-alt" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                        <button onclick="selectUserFromSearch('${u._id}', '${u.username}', '${avatarSrc}', true);" title="Video Call" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border); background: var(--surface); color: #3b82f6; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='#3b82f6'; this.style.color='#fff'" onmouseout="this.style.background='var(--surface)'; this.style.color='#3b82f6'">
+                                            <i class="fas fa-video" style="font-size: 0.85rem;"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('');
+                    } else {
+                        resultsBox.innerHTML = '<div style="padding: 14px; text-align: center; color: #ef4444; font-size: 0.88rem;">Failed to load search results.</div>';
+                    }
+                } catch(err) {
+                    console.error(err);
+                    resultsBox.innerHTML = '<div style="padding: 14px; text-align: center; color: #ef4444; font-size: 0.88rem;">Error during search.</div>';
+                }
+            }, 250);
+        }
+
+        function clearUserSearch() {
+            const input = document.getElementById('user-search-input');
+            const clearBtn = document.getElementById('clear-search-btn');
+            const resultsBox = document.getElementById('user-search-results');
+            if (input) input.value = '';
+            if (clearBtn) clearBtn.style.display = 'none';
+            if (resultsBox) resultsBox.style.display = 'none';
+        }
+
+        function selectUserFromSearch(userId, username, profilePic, autoCallType = null) {
+            clearUserSearch();
+            openChat(userId, username, profilePic);
+            if (autoCallType !== null) {
+                setTimeout(() => {
+                    startCall(autoCallType);
+                }, 500);
+            }
+        }
+
         let activeChatUserId = null;
         let chatKey = '';
 

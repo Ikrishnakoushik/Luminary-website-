@@ -2,28 +2,11 @@
 <html lang="en">
 <head>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="icon" type="image/png" href="/vylithra_app_icon.png">
-    <link rel="apple-touch-icon" href="/vylithra_app_icon.png">
-    <link rel="canonical" href="https://www.vylithra.in/">
-    <!-- Open Graph / Social Sharing -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://www.vylithra.in/">
-    <meta property="og:title" content="Vylithra | The Ultimate Digital Creator Studio & Library">
-    <meta property="og:description" content="Explore curated collections and masterpieces on Vylithra. The premier digital ecosystem for creators, enthusiasts, and visionaries.">
-    <meta property="og:image" content="https://www.vylithra.in/vylithra_app_icon.png">
-    <meta property="og:site_name" content="Vylithra">
-    <!-- Twitter -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Vylithra | The Ultimate Digital Creator Studio & Library">
-    <meta name="twitter:description" content="The premier digital ecosystem for creators, enthusiasts, and visionaries.">
-    <meta name="twitter:image" content="https://www.vylithra.in/vylithra_app_icon.png">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vylithra | The Ultimate Digital Creator Studio & Library</title>
-    <meta name="description" content="Explore curated collections and masterpieces on Vylithra. The premier digital ecosystem for creators, enthusiasts, and visionaries.">
-    <meta name="keywords" content="Vylithra, Vylithra Books, digital collections, creator studio, digital ecosystem, creative community">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Join Vylithra | Join the Community</title>
+    <meta name="description" content="Sign in to access your Creator Studio, curated collections, and the complete Vylithra ecosystem.">
+    <meta name="keywords" content="Vylithra login, sign up, join creator community">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
@@ -114,20 +97,44 @@
 
         /* Navigation */
         nav {
-            padding: 1.5rem 5%;
+            padding: 0.85rem 5%;
+            height: 72px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             z-index: 10;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: white;
-            display: flex;
+            font-size: 1.85rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: inline-flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
+            letter-spacing: -0.5px;
+            text-decoration: none;
+            line-height: 1;
+            transition: opacity 0.2s ease;
+        }
+
+        .logo:hover {
+            opacity: 0.92;
+        }
+
+        .logo img {
+            width: 40px;
+            height: 40px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(0, 122, 255, 0.45));
+            transition: transform 0.25s ease;
+        }
+
+        .logo:hover img {
+            transform: scale(1.05);
         }
 
         .nav-links {
@@ -151,38 +158,56 @@
         .nav-right {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
+            gap: 1.25rem;
+        }
+
+        .nav-right a.nav-signin-link {
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.25s ease;
+        }
+
+        .nav-right a.nav-signin-link:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.06);
         }
 
         .btn-gradient {
-            background: linear-gradient(90deg, var(--glow-cyan), var(--glow-purple));
+            background: linear-gradient(135deg, var(--glow-cyan) 0%, var(--glow-purple) 100%);
             color: white;
-            padding: 10px 24px;
+            padding: 9px 24px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 600;
             font-size: 0.95rem;
             border: none;
             cursor: pointer;
-            box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.35);
             transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-gradient:hover {
-            box-shadow: 0 4px 25px rgba(59, 130, 246, 0.5);
+            box-shadow: 0 6px 24px rgba(0, 122, 255, 0.55);
             transform: translateY(-1px);
             color: white;
         }
 
         .btn-outline {
             background: transparent;
-            color: rgba(255, 255, 255, 0.7);
-            padding: 8px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            padding: 9px 22px;
             border-radius: 50px;
             text-decoration: none;
             font-weight: 500;
             font-size: 0.95rem;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             transition: all 0.3s;
             display: inline-flex;
             align-items: center;
@@ -191,79 +216,83 @@
 
         .btn-outline:hover {
             color: white;
-            border-color: rgba(255, 255, 255, 0.2);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-1px);
         }
 
-        /* Hero Layout */
+        /* Hero Layout - Balanced & Viewport-Aware */
         .hero {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
-            padding: 5rem 5%;
-            max-width: 1400px;
+            grid-template-columns: 1.1fr 0.9fr;
+            gap: 3.5rem;
+            padding: 1rem 5% 1.5rem 5%;
+            max-width: 1350px;
             margin: 0 auto;
             align-items: center;
-            flex-grow: 1;
+            min-height: calc(100vh - 72px);
+            width: 100%;
         }
 
         .hero-left {
-            max-width: 600px;
+            max-width: 620px;
         }
 
-        .hero-left h1 {
-            font-size: 4.5rem;
-            line-height: 1.1;
+        .hero-left h1.hero-title {
+            font-size: clamp(2.3rem, 4vw, 3.8rem);
+            line-height: 1.12;
             font-weight: 800;
-            margin-bottom: 1.5rem;
-            color: white;
+            margin-bottom: 1.25rem;
+            color: #ffffff;
             letter-spacing: -1px;
         }
 
         .hero-left p {
-            font-size: 1.15rem;
+            font-size: 1.05rem;
             color: var(--text-muted);
             line-height: 1.6;
-            margin-bottom: 2.5rem;
-            max-width: 500px;
+            margin-bottom: 1.8rem;
+            max-width: 520px;
         }
 
         .cta-group {
             display: flex;
             align-items: center;
-            gap: 1.5rem;
-            margin-bottom: 3rem;
+            gap: 1.25rem;
+            margin-bottom: 2rem;
         }
 
         .hero-mockup-wrapper {
             position: relative;
-            margin-top: 2rem;
+            margin-top: 1.5rem;
+            max-width: 480px;
         }
 
         .hero-mockup-wrapper img {
             max-width: 100%;
-            border-radius: 12px;
-            opacity: 0.8;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            border-radius: 14px;
+            opacity: 0.85;
+            box-shadow: 0 16px 40px rgba(0,0,0,0.55);
             border: 1px solid var(--glass-border);
         }
 
-        /* Glassmorphic Auth Modal */
+        /* Glassmorphic Auth Modal - Compact, No Overflow */
         .hero-right {
             display: flex;
             justify-content: flex-end;
+            align-items: center;
         }
 
         .auth-card {
             width: 100%;
-            max-width: 440px;
-            background: var(--glass-bg);
-            backdrop-filter: blur(50px);
-            -webkit-backdrop-filter: blur(50px);
+            max-width: 430px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, rgba(15, 17, 21, 0.78) 100%);
+            backdrop-filter: blur(40px);
+            -webkit-backdrop-filter: blur(40px);
             border: 1px solid var(--glass-border);
             border-radius: 20px;
-            padding: 35px 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            padding: 24px 28px 22px 28px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
             position: relative;
             overflow: hidden;
         }
@@ -273,42 +302,48 @@
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
         }
 
-        .auth-card h2 {
-            font-size: 1.75rem;
+        .auth-card .form-header h2 {
+            font-size: 1.55rem;
             font-weight: 700;
             color: white;
-            margin-bottom: 0.5rem;
+            margin-bottom: 4px;
+            letter-spacing: -0.3px;
         }
 
-        .auth-card > p {
+        .auth-card .form-header p {
             color: var(--text-muted);
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
+            font-size: 0.88rem;
+            margin-bottom: 14px;
         }
 
         /* Tabs */
         .auth-tabs {
             display: flex;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            margin-bottom: 2rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            margin-bottom: 16px;
             position: relative;
         }
 
         .tab {
             flex: 1;
             text-align: center;
-            padding: 10px 0;
+            padding: 8px 0;
             color: var(--text-muted);
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 0.95rem;
             cursor: pointer;
-            transition: color 0.3s;
+            transition: all 0.25s ease;
         }
 
         .tab.active {
-            color: white;
+            color: #ffffff;
+        }
+
+        .tab:hover:not(.active) {
+            color: #cbd5e1;
         }
 
         .tab-indicator {
@@ -317,8 +352,9 @@
             left: 0;
             height: 2px;
             width: 50%;
-            background: white;
-            transition: transform 0.3s ease;
+            background: linear-gradient(90deg, var(--glow-cyan), var(--glow-purple));
+            border-radius: 2px;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* Forms */
@@ -332,26 +368,35 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         .input-group {
-            margin-bottom: 1.25rem;
+            margin-bottom: 12px;
             position: relative;
         }
 
         .input-group label {
             display: flex;
             justify-content: space-between;
-            font-size: 0.85rem;
-            color: var(--text-light);
-            margin-bottom: 0.5rem;
+            align-items: center;
+            font-size: 0.82rem;
+            font-weight: 500;
+            color: #e2e8f0;
+            margin-bottom: 5px;
         }
 
         .input-group label a {
-            color: var(--glow-cyan);
+            color: #38bdf8;
+            font-size: 0.8rem;
             text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .input-group label a:hover {
+            color: #00f2fe;
+            text-decoration: underline;
         }
 
         .input-wrapper {
@@ -363,169 +408,254 @@
             left: 14px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 1rem;
+            color: #94a3b8;
+            font-size: 0.95rem;
+            pointer-events: none;
+            transition: color 0.2s;
         }
 
         .input-field {
             width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--input-border);
+            height: 44px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             color: white;
-            border-radius: 8px;
-            padding: 14px 16px 14px 44px;
-            font-size: 0.95rem;
-            transition: all 0.2s;
+            border-radius: 10px;
+            padding: 0 14px 0 42px;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+            outline: none;
+        }
+
+        .input-field::placeholder {
+            color: #64748b;
         }
 
         .input-field:focus {
-            outline: none;
-            border-color: var(--glow-cyan);
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 0 2px rgba(0, 122, 255, 0.3);
+            border-color: #007AFF;
+            background: rgba(0, 0, 0, 0.45);
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.25);
+        }
+
+        .input-wrapper:focus-within i {
+            color: #007AFF;
         }
 
         .checkbox-group {
             display: flex;
             align-items: center;
             gap: 8px;
-            margin-bottom: 1.5rem;
+            margin-bottom: 14px;
         }
 
-        .checkbox-group input { border-radius: 4px; border: 1px solid rgba(255,255,255,0.2); background: transparent; cursor: pointer;
-            accent-color: var(--glow-blue);
+        .checkbox-group input {
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.25);
+            background: transparent;
+            cursor: pointer;
+            accent-color: #007AFF;
             width: 16px;
             height: 16px;
         }
 
         .checkbox-group label {
-            font-size: 0.85rem;
+            font-size: 0.84rem;
             color: var(--text-muted);
             cursor: pointer;
+            user-select: none;
         }
 
         .submit-btn {
             width: 100%;
-            background: linear-gradient(90deg, var(--glow-cyan), var(--glow-purple));
+            height: 46px;
+            background: linear-gradient(135deg, var(--glow-cyan) 0%, var(--glow-purple) 100%);
             color: white;
             border: none;
-            border-radius: 8px;
-            padding: 14px;
-            font-size: 1rem;
+            border-radius: 10px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.96rem;
             font-weight: 600;
             cursor: pointer;
-            transition: 0.3s ease;
-            box-shadow: 0 8px 30px rgba(0, 122, 255, 0.5);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 18px rgba(0, 122, 255, 0.4);
         }
 
         .submit-btn:hover {
-            box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+            box-shadow: 0 6px 26px rgba(0, 122, 255, 0.6);
             transform: translateY(-1px);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
         }
 
         .error-message {
             color: #ef4444;
-            font-size: 0.85rem;
-            margin-top: 10px;
+            font-size: 0.82rem;
+            margin-top: 6px;
             text-align: center;
-            min-height: 20px;
+            min-height: 18px;
         }
 
         .success-message {
             color: #10b981;
-            font-size: 0.85rem;
-            margin-top: 10px;
+            font-size: 0.82rem;
+            margin-top: 6px;
             text-align: center;
-            min-height: 20px;
+            min-height: 18px;
         }
 
-        /* Responsive */
-        @media (max-width: 968px) {
-            .hero {
-                grid-template-columns: 1fr;
-                text-align: center;
-                gap: 2rem;
-            }
-            .hero-left {
-                margin: 0 auto;
-            }
-            .hero-left h1 {
-                font-size: 3.5rem;
-            }
-            .cta-group {
-                justify-content: center;
-            }
-            .hero-mockup-wrapper {
-                display: none; /* Hide on small screens to prioritize auth */
-            }
-            .nav-links {
-                display: none; /* Mobile nav hiding */
-            }
-            .auth-card {
-                margin: 0 auto;
-            }
-        }
-        /* Social Auth */
+        /* Social Auth - Perfectly Visible & Spaced */
         .social-auth {
-            margin-top: 1.5rem;
+            margin-top: 12px;
         }
+
         .social-divider {
             display: flex;
             align-items: center;
             text-align: center;
             color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-bottom: 1.25rem;
+            font-size: 0.78rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
         }
+
         .social-divider::before, .social-divider::after {
             content: '';
             flex: 1;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .social-divider::before { margin-right: 15px; }
-        .social-divider::after { margin-left: 15px; }
+
+        .social-divider::before { margin-right: 12px; }
+        .social-divider::after { margin-left: 12px; }
         
         .social-buttons {
             display: flex;
             justify-content: center;
-            gap: 1rem;
-            margin-bottom: 1.5rem;
+            gap: 14px;
+            margin-bottom: 12px;
         }
+
         .btn-social {
-            background: white;
-            border: none;
-            border-radius: 14px;
-            width: 60px;
-            height: 60px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            width: 48px;
+            height: 48px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
         }
-        .btn-social.github { color: #24292e; font-size: 34px; }
-        .btn-social.google img { width: 30px; height: auto; }
-        .btn-social.microsoft img { width: 28px; height: auto; }
+
+        .btn-social.github { color: #1e293b; font-size: 24px; }
+        .btn-social.google img { width: 22px; height: 22px; object-fit: contain; }
+        
         .btn-social:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(255,255,255,0.1);
+            box-shadow: 0 6px 20px rgba(255, 255, 255, 0.25);
+            background: #ffffff;
         }
 
         .auth-footer {
             text-align: center;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: var(--text-muted);
         }
+
         .auth-footer a {
-            color: white;
+            color: #38bdf8;
             text-decoration: none;
             font-weight: 600;
+            transition: color 0.2s;
         }
+
         .auth-footer a:hover {
             text-decoration: underline;
+            color: #00f2fe;
         }
-    
+
+        /* Responsive Breakpoints */
+        @media (max-width: 1100px) {
+            .hero {
+                gap: 2.5rem;
+                padding: 1rem 4%;
+            }
+            .hero-left h1.hero-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 968px) {
+            nav {
+                padding: 0.75rem 4%;
+            }
+            .hero {
+                grid-template-columns: 1fr;
+                text-align: center;
+                gap: 2rem;
+                padding: 2rem 4% 3rem 4%;
+                min-height: auto;
+            }
+            .hero-left {
+                margin: 0 auto;
+                max-width: 100%;
+            }
+            .hero-left p {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            .cta-group {
+                justify-content: center;
+            }
+            .hero-mockup-wrapper {
+                display: none; /* Prioritize authentication card on tablet/mobile */
+            }
+            .nav-links {
+                display: none;
+            }
+            .hero-right {
+                justify-content: center;
+            }
+            .auth-card {
+                margin: 0 auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1.5rem;
+                gap: 10px;
+            }
+            .logo img {
+                width: 34px;
+                height: 34px;
+            }
+            .nav-right a.nav-signin-link {
+                display: none;
+            }
+            .btn-gradient {
+                padding: 8px 18px;
+                font-size: 0.88rem;
+            }
+            .hero {
+                padding: 1rem 1rem 2.5rem 1rem;
+            }
+            .hero-left h1.hero-title {
+                font-size: 2.2rem;
+            }
+            .auth-card {
+                padding: 20px 18px 18px 18px;
+                border-radius: 16px;
+            }
+        }
+        
         /* === DYNAMIC TEXT ANIMATION === */
         .hero-title {
             line-height: 1.2;
@@ -659,22 +789,32 @@
 
     <nav>
         <a href="/" class="logo" style="text-decoration:none;">
-            <img src="/vylithra_logo.svg" alt="Vylithra" height="32" style="filter: drop-shadow(0 0 10px rgba(255,255,255,0.15));">
+            <img src="/vylithra_logo.svg" alt="Vylithra">
             Vylithra
         </a>
         
         <div class="nav-right">
-            <a href="#" onclick="switchTab('login')" style="color:var(--text-muted);text-decoration:none;font-size:0.95rem;font-weight:500;">Sign In</a>
+            <a href="#" onclick="switchTab('login')" class="nav-signin-link">Sign In</a>
             <a href="#" onclick="switchTab('register')" class="btn-gradient">Get Started</a>
         </div>
     </nav>
 
     <main class="hero">
         <div class="hero-left">
-            <h1>Your Digital<br>Canvas</h1>
-            <p>Architect, Collaborate, and Deliver. Transform ideas into reality with our intuitive enterprise workspace.</p>
+            <h1 class="hero-title fade-up">
+                The Future of<br>
+                <span class="word-slider">
+                    <span class="word-slider-track">
+                        <span class="word">Digital Publishing.</span>
+                        <span class="word" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">Visual Storytelling.</span>
+                        <span class="word" style="color: #6366f1;">Creative Freedom.</span>
+                        <span class="word">Digital Publishing.</span> <!-- Duplicate for seamless loop -->
+                    </span>
+                </span>
+            </h1>
+            <p class="fade-up delay-1">Unleash your creativity. Build an audience, share visual spreads, and publish your masterpieces on a platform built for modern creators.</p>
             <div class="cta-group fade-up delay-2">
-                <a href="#" onclick="switchTab('register')" class="btn-gradient">Explore the Canvas &rarr;</a>
+                <a href="#" onclick="switchTab('register')" class="btn-gradient">Become a Creator &rarr;</a>
                 <a href="#" onclick="openDemoModal(); return false;" class="btn-outline">Request Demo</a>
             </div>
             <div class="hero-mockup-wrapper">
@@ -714,7 +854,7 @@
                         <div class="input-group">
                             <label>
                                 Password 
-                                <a href="#" onclick="switchTab('forgot'); return false;">Forgot password?</a>
+                                <a href="/forgot-password.html">Forgot password?</a>
                             </label>
                             <div class="input-wrapper">
                                 <i class="fas fa-lock"></i>
@@ -870,18 +1010,6 @@
         </div>
     </main>
 
-    <!-- Global Footer -->
-    <footer style="border-top: 1px solid var(--glass-border); padding: 40px; text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-top: auto; background: rgba(15, 17, 21, 0.5); backdrop-filter: blur(20px); position: relative; z-index: 10;">
-        <div style="display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; flex-wrap: wrap;">
-            <a href="/blog.html" style="color: var(--glow-cyan); text-decoration: none; font-weight: 500;">Blog & Articles</a>
-            <a href="/legal.html#privacy" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--text-light)'" onmouseout="this.style.color='var(--text-muted)'">Privacy Policy</a>
-            <a href="/legal.html#terms" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--text-light)'" onmouseout="this.style.color='var(--text-muted)'">Terms of Service</a>
-            <a href="/legal.html#contact" style="color: var(--text-muted); text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='var(--text-light)'" onmouseout="this.style.color='var(--text-muted)'">Contact Us</a>
-        </div>
-        <p>&copy; 2026 Vylithra Platform. All rights reserved.</p>
-    </footer>
-
-
     <script>
         // Authentication UI Logic
         function switchTab(tabName) {
@@ -925,10 +1053,6 @@
 
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
-        // ----------------------------------------
-        // Form submissions (cloned from auth.html)
-        // ----------------------------------------
-        
         let pendingLoginEmail = '';
         let pendingLoginPassword = '';
 
@@ -940,69 +1064,123 @@
             const errorMsg = document.getElementById('loginError');
             errorMsg.innerText = '';
 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Authenticating...';
+            submitBtn.disabled = true;
+
             try {
                 const res = await fetch(`${API_URL}/login`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
+                
                 const data = await res.json();
-
-                if (data.requires2FA) {
-                    pendingLoginEmail = email;
-                    pendingLoginPassword = password;
-                    switchTab('twofa');
-                    return;
-                }
-
+                
                 if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('role', data.role);
-                    window.location.href = '/main';
-                } else if (data.requiresVerification) {
-                    registrationEmail = email;
-                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
-                    switchTab('verify');
-                    document.getElementById('verifyError').innerText = data.msg;
+                    if (data.requires2FA) {
+                        pendingLoginEmail = email;
+                        pendingLoginPassword = password;
+                        switchTab('twofa');
+                    } else {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('role', data.role);
+                        localStorage.setItem('user', JSON.stringify(data.user));
+                        window.location.href = '/main';
+                    }
                 } else {
-                    errorMsg.innerText = data.msg || 'Login failed';
+                    if (data.requiresVerification) {
+                        pendingLoginEmail = email;
+                        document.getElementById('verifyEmailDisplay').innerText = email;
+                        switchTab('verify');
+                    } else {
+                        errorMsg.innerText = data.msg || 'Invalid email or password.';
+                    }
                 }
             } catch (err) {
                 console.error(err);
-                errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+                errorMsg.innerText = 'Authentication error or server is down.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
         // Handle Registration
-        let registrationEmail = '';
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const username = document.getElementById('regUsername').value;
+            const displayName = document.getElementById('regUsername').value;
             const email = document.getElementById('regEmail').value;
             const password = document.getElementById('regPassword').value;
             const role = document.getElementById('regRole').value;
             const errorMsg = document.getElementById('regError');
             errorMsg.innerText = '';
 
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Creating account...';
+            submitBtn.disabled = true;
+
             try {
                 const res = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password, role })
+                    body: JSON.stringify({ email, password, displayName, role })
                 });
-                const data = await res.json();
 
-                if (res.status === 201) {
-                    registrationEmail = data.email;
-                    document.getElementById('verifyEmailDisplay').innerText = registrationEmail;
+                const data = await res.json();
+                
+                if (res.ok) {
+                    pendingLoginEmail = email;
+                    document.getElementById('verifyEmailDisplay').innerText = email;
                     switchTab('verify');
                 } else {
                     errorMsg.innerText = data.msg || 'Registration failed';
                 }
             } catch (err) {
                 console.error(err);
+                errorMsg.innerText = 'Registration error or server is down.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+            }
+        });
+
+        // Verify Email Submit
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const otpCode = document.getElementById('verifyOtp').value;
+            const errorMsg = document.getElementById('verifyError');
+            errorMsg.innerText = '';
+            
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Verifying...';
+            submitBtn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/verify-email`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: pendingLoginEmail, otp: otpCode })
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('role', data.role);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    window.location.href = '/main';
+                } else {
+                    errorMsg.innerText = data.msg || 'Invalid code.';
+                }
+            } catch (err) {
+                console.error(err);
                 errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
@@ -1035,15 +1213,17 @@
             }
         });
 
-        // Forgot Step 1
+        // Handle Forgot Password - Step 1 (Send OTP)
         document.getElementById('forgotFormStep1').addEventListener('submit', async (e) => {
             e.preventDefault();
             const email = document.getElementById('forgotEmail').value;
-            const btn = document.getElementById('btnSendOtp');
             const errorMsg = document.getElementById('forgotError1');
-            btn.disabled = true;
-            btn.innerText = 'Sending...';
+            const submitBtn = document.getElementById('btnSendOtp');
             errorMsg.innerText = '';
+            
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Sending...';
+            submitBtn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/auth/forgot-password`, {
@@ -1051,110 +1231,91 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email })
                 });
+                
                 const data = await res.json();
-
+                
                 if (res.ok) {
-                    document.getElementById('forgotFormStep1').style.display = 'none';
-                    document.getElementById('forgotFormStep2').style.display = 'block';
+                    errorMsg.className = "success-message";
+                    errorMsg.innerText = "OTP sent to your email!";
+                    setTimeout(() => {
+                        document.getElementById('forgotFormStep1').style.display = 'none';
+                        document.getElementById('forgotFormStep2').style.display = 'block';
+                    }, 1500);
                 } else {
-                    errorMsg.innerText = data.msg || 'Failed to send OTP';
-                    btn.disabled = false;
-                    btn.innerText = 'Send Instructions';
+                    errorMsg.className = "error-message";
+                    errorMsg.innerText = data.msg || 'Failed to send OTP.';
                 }
             } catch (err) {
-                btn.disabled = false;
-                btn.innerText = 'Send Instructions';
+                console.error(err);
+                errorMsg.className = "error-message";
                 errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
-        // Forgot Step 2
+        // Handle Forgot Password - Step 2 (Reset Password)
         document.getElementById('forgotFormStep2').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('forgotEmail').value;
-            const otpCode = document.getElementById('forgotOtp').value;
+            const email = document.getElementById('forgotEmail').value; // from step 1
+            const otp = document.getElementById('forgotOtp').value;
             const newPassword = document.getElementById('newPassword').value;
             const errorMsg = document.getElementById('forgotError2');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
             errorMsg.innerText = '';
+
+            const originalText = submitBtn.innerText;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right: 8px;"></i> Resetting...';
+            submitBtn.disabled = true;
 
             try {
                 const res = await fetch(`${API_URL}/auth/reset-password`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otpCode, newPassword })
+                    body: JSON.stringify({ email, otp, newPassword })
                 });
+                
                 const data = await res.json();
-
+                
                 if (res.ok) {
-                    errorMsg.className = 'success-message';
-                    errorMsg.innerText = 'Password reset! Redirecting to login...';
-                    setTimeout(() => { switchTab('login'); }, 2000);
+                    errorMsg.className = "success-message";
+                    errorMsg.innerText = "Password reset successful! You can now sign in.";
+                    setTimeout(() => {
+                        switchTab('login');
+                    }, 2000);
                 } else {
-                    errorMsg.className = 'error-message';
-                    errorMsg.innerText = data.msg || 'Reset failed';
+                    errorMsg.className = "error-message";
+                    errorMsg.innerText = data.msg || 'Failed to reset password.';
                 }
             } catch (err) {
-                errorMsg.className = 'error-message';
+                console.error(err);
+                errorMsg.className = "error-message";
                 errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
+            } finally {
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
             }
         });
 
-        // Verify Step
-        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const otp = document.getElementById('verifyOtp').value;
-            const errorMsg = document.getElementById('verifyError');
-            errorMsg.innerText = '';
-
-            try {
-                const res = await fetch(`${API_URL}/verify-email`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email: registrationEmail, otp })
-                });
-                const data = await res.json();
-
-                if (res.ok) {
-                    localStorage.setItem('token', data.token);
-                    localStorage.setItem('username', data.username);
-                    localStorage.setItem('role', data.role);
-                    errorMsg.className = 'success-message';
-                    errorMsg.innerText = 'Verified! Logging in...';
-                    setTimeout(() => window.location.href = '/main', 1500);
-                } else {
-                    errorMsg.className = 'error-message';
-                    errorMsg.innerText = data.msg || 'Verification failed';
-                }
-            } catch (err) {
-                errorMsg.className = 'error-message';
-                errorMsg.innerText = 'Oops! Our servers took a quick nap. Please try again.';
-            }
-        });
-
-        // Request Demo Logic
-        function openDemoModal() {
-            document.getElementById("demoModal").style.display = "flex";
-        }
-        function closeDemoModal() {
-            document.getElementById("demoModal").style.display = "none";
-            document.getElementById("demoError").innerText = "";
-        }
-        const demoForm = document.getElementById("demoForm");
-        if(demoForm) {
-            demoForm.addEventListener("submit", async (e) => {
+        const demoForm = document.getElementById('demoForm');
+        if (demoForm) {
+            demoForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                const btn = document.getElementById("demoBtn");
-                const errorMsg = document.getElementById("demoError");
-                btn.innerText = "Sending..."; btn.disabled = true; errorMsg.innerText = "";
+                const name = document.getElementById('demoName').value;
+                const email = document.getElementById('demoEmail').value;
+                const company = document.getElementById('demoCompany').value;
+                const btn = demoForm.querySelector('button[type="submit"]');
+                const errorMsg = document.getElementById('demoError');
+                
+                btn.innerText = "Sending...";
+                btn.disabled = true;
+                
                 try {
-                    const res = await fetch(API_URL + "/request-demo", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            name: document.getElementById("demoName").value,
-                            email: document.getElementById("demoEmail").value,
-                            company: document.getElementById("demoCompany").value
-                        })
+                    const res = await fetch('/api/request-demo', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, email, company })
                     });
                     if (res.ok) {
                         errorMsg.className = "success-message";
@@ -1173,25 +1334,6 @@
                 }
             });
         }
-
-        // Auto-fill Magic Link for Password Reset
-        document.addEventListener('DOMContentLoaded', () => {
-            const urlParams = new URLSearchParams(window.location.search);
-            const action = urlParams.get('action');
-            const email = urlParams.get('email');
-            const otp = urlParams.get('otp');
-            
-            if (action === 'reset' && email && otp) {
-                switchTab('forgot');
-                document.getElementById('forgotFormStep1').style.display = 'none';
-                document.getElementById('forgotFormStep2').style.display = 'block';
-                document.getElementById('forgotEmail').value = email;
-                document.getElementById('forgotOtp').value = otp;
-                
-                // Clear URL to prevent re-triggering and for cleaner UX
-                window.history.replaceState({}, document.title, window.location.pathname);
-            }
-        });
     </script>
 
     <!-- Request Demo Modal -->
