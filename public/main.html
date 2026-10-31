@@ -40,7 +40,7 @@
         };
 
         function enforceLogin(e) {
-            if (!localStorage.getItem('token')) {
+            const _tok = localStorage.getItem('token'); if (!_tok || _tok === 'null' || _tok === 'undefined' || _tok.trim() === '') {
                 if (e) e.preventDefault();
                 VylithraUI.showToast('Please login to access this feature!', 'error');
                 window.location.href = 'auth';
@@ -3248,7 +3248,8 @@
         }
 
         function updateAuthLink() {
-            const token = localStorage.getItem('token');
+            let token = localStorage.getItem('token');
+            if (!token || token === 'null' || token === 'undefined' || token.trim() === '') { token = null; localStorage.removeItem('token'); localStorage.removeItem('user'); localStorage.removeItem('role'); }
             const role = localStorage.getItem('role');
             const userStr = localStorage.getItem('user');
             const user = (userStr && userStr !== 'undefined') ? JSON.parse(userStr) : null;

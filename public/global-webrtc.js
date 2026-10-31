@@ -283,7 +283,6 @@
 
     // Group state
     let activeGroupIdForCall = null;
-        queuedCandidates = {};
 
     // Candidate buffering to prevent addIceCandidate on null remoteDescription
     let queuedCandidates = {};

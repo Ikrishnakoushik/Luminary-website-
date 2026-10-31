@@ -11,9 +11,16 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script>
-        if (localStorage.getItem('token')) {
-            window.location.href = '/main';
-        }
+        (function() {
+            var raw = localStorage.getItem('token');
+            if (raw && raw !== 'null' && raw !== 'undefined' && raw.trim() !== '') {
+                window.location.href = '/main';
+            } else {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                localStorage.removeItem('role');
+            }
+        })();
     </script>
     <style>
         :root {
@@ -1051,6 +1058,17 @@
             }
         }
 
+                // authURLParamCheck: Auto-select tab from query params
+        window.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const mode = urlParams.get('mode') || urlParams.get('tab');
+            if (mode === 'register' || mode === 'signup') {
+                switchTab('register');
+            } else {
+                switchTab('login');
+            }
+        });
+
         const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
 
         let pendingLoginEmail = '';
@@ -1059,7 +1077,7 @@
         // Handle Login
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
+            const email = document.getElementById('loginEmail').value.trim().toLowerCase();
             const password = document.getElementById('loginPassword').value;
             const errorMsg = document.getElementById('loginError');
             errorMsg.innerText = '';

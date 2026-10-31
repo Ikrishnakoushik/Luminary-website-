@@ -116,7 +116,14 @@ if ('serviceWorker' in navigator) {
 
 // Global WebRTC & Firebase Integration
 window.addEventListener('DOMContentLoaded', () => {
-    if (localStorage.getItem('token') && !window.GlobalWebRTCInit) {
+    const _t = localStorage.getItem('token');
+    const _validToken = (_t && _t !== 'null' && _t !== 'undefined' && _t.trim() !== '') ? _t : null;
+    if (_t && !_validToken) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        localStorage.removeItem('role');
+    }
+    if (_validToken && !window.GlobalWebRTCInit) {
         window.GlobalWebRTCInit = true;
         
         // 1. Load WebRTC CSS
