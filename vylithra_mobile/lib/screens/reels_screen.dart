@@ -23,6 +23,13 @@ class _ReelsScreenState extends State<ReelsScreen> {
     _reelsFuture = _apiService.fetchReels();
   }
 
+  Future<void> _refreshReels() async {
+    setState(() {
+      _reelsFuture = _apiService.fetchReels();
+    });
+    await _reelsFuture;
+  }
+
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<List<Post>>(
@@ -34,16 +41,38 @@ class _ReelsScreenState extends State<ReelsScreen> {
           );
         } else if (snapshot.hasError) {
           return Center(
-            child: Text(
-              'Error: ${snapshot.error}',
-              style: const TextStyle(color: Colors.red),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  'Error loading reels: ${snapshot.error}',
+                  style: const TextStyle(color: Colors.red),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _refreshReels,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Retry'),
+                ),
+              ],
             ),
           );
         } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return const Center(
-            child: Text(
-              'No reels available.',
-              style: TextStyle(color: Colors.white),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'No reels available.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _refreshReels,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                ),
+              ],
             ),
           );
         }
@@ -51,28 +80,43 @@ class _ReelsScreenState extends State<ReelsScreen> {
         final reels = snapshot.data!.where((p) => p.videoUrl != null).toList();
 
         if (reels.isEmpty) {
-          return const Center(
-            child: Text(
-              'No video reels available.',
-              style: TextStyle(color: Colors.white),
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text(
+                  'No video reels available.',
+                  style: TextStyle(color: Colors.white),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton.icon(
+                  onPressed: _refreshReels,
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Refresh'),
+                ),
+              ],
             ),
           );
         }
 
-        return PageView.builder(
-          scrollDirection: Axis.vertical,
-          itemCount: reels.length,
-          onPageChanged: (index) {
-            setState(() {
-              _currentPage = index;
-            });
-          },
-          itemBuilder: (context, index) {
-            return ReelVideoPlayer(
-              post: reels[index],
-              isCurrentPage: _currentPage == index,
-            );
-          },
+        return RefreshIndicator(
+          onRefresh: _refreshReels,
+          color: Colors.pinkAccent,
+          child: PageView.builder(
+            scrollDirection: Axis.vertical,
+            itemCount: reels.length,
+            onPageChanged: (index) {
+              setState(() {
+                _currentPage = index;
+              });
+            },
+            itemBuilder: (context, index) {
+              return ReelVideoPlayer(
+                post: reels[index],
+                isCurrentPage: _currentPage == index,
+              );
+            },
+          ),
         );
       },
     );

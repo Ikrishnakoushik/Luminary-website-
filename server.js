@@ -29,6 +29,7 @@ const User = require('./models/User');
 const Post = require('./models/Post');
 const Story = require('./models/Story');
 const Message = require('./models/Message');
+const MessageAttachment = require('./models/MessageAttachment');
 const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
 const HeroBanner = require('./models/HeroBanner'); // Added HeroBanner model
@@ -516,7 +517,7 @@ const gatewayAuth = async (req, res, next) => {
 };
 
 // Database Connection
-const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017/test?ssl=true&authSource=admin';
+const MONGO_URI = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://ikoushik:Ikrishna6@ac-dy5wekj-shard-00-00.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-01.yb8oi9f.mongodb.net:27017,ac-dy5wekj-shard-00-02.yb8oi9f.mongodb.net:27017/everything_spread?ssl=true&authSource=admin&replicaSet=atlas-nv3gv7-shard-0';
 let isConnecting = null;
 const connectDB = async () => {
     if (mongoose.connection.readyState === 1) {
@@ -529,25 +530,35 @@ const connectDB = async () => {
     try {
         console.error('[Startup] Checking Mongo connection...');
         isConnecting = mongoose.connect(MONGO_URI, {
-            serverSelectionTimeoutMS: 5000,
+            serverSelectionTimeoutMS: 15000,
             socketTimeoutMS: 45000,
+            maxPoolSize: 10,
         });
         await isConnecting;
         console.error('[Startup] MongoDB Connected');
     } catch (err) {
-        console.error('[Startup] MongoDB Error:', err);
+        console.error('[Startup] MongoDB Error:', err.message);
+        throw err;
     } finally {
         isConnecting = null;
     }
 };
 
-// Connect immediately to start the process
-connectDB();
+// Connect immediately to start the process (non-blocking for startup)
+connectDB().catch(e => console.warn('[Startup] Initial DB connect deferred:', e.message));
 
 // Middleware to ensure DB is connected before handling API requests
 app.use('/api', async (req, res, next) => {
-    await connectDB();
-    next();
+    try {
+        await connectDB();
+        next();
+    } catch (dbErr) {
+        console.error('[API Gateway] Database connection unavailable:', dbErr.message);
+        return res.status(503).json({
+            msg: 'Database connection is temporarily initializing. Please retry shortly.',
+            error: dbErr.message
+        });
+    }
 });
 
 // Dynamic Sitemap Generation
@@ -3460,37 +3471,80 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
     }
 });
 
-// Upload message attachment
+// Upload message attachment (Multi-tier: Vercel Blob -> Local FS -> MongoDB MessageAttachment fallback)
 app.post('/api/messages/upload', auth, upload.single('file'), async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ msg: 'No file uploaded' });
         }
         
-        let fileUrl;
-        if (process.env.VERCEL) {
-            // Upload to Vercel Blob
-            const uniqueName = `chat-attachments/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
-            const { put } = require('@vercel/blob');
-            const blob = await put(uniqueName, req.file.buffer, {
-                access: 'public',
-                token: process.env.BLOB_READ_WRITE_TOKEN
+        let fileUrl = null;
+
+        // 1. Try Vercel Blob if token is available
+        if (process.env.BLOB_READ_WRITE_TOKEN) {
+            try {
+                const uniqueName = `chat-attachments/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
+                const { put } = require('@vercel/blob');
+                const blob = await put(uniqueName, req.file.buffer, {
+                    access: 'public',
+                    token: process.env.BLOB_READ_WRITE_TOKEN
+                });
+                if (blob && blob.url) {
+                    fileUrl = blob.url;
+                }
+            } catch (blobErr) {
+                console.warn('[Upload] Vercel blob put failed, falling back:', blobErr.message);
+            }
+        }
+
+        // 2. Local filesystem write if not running in Vercel serverless
+        if (!fileUrl && !process.env.VERCEL) {
+            try {
+                const fs = require('fs');
+                const path = require('path');
+                const uniqueName = `chat-${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
+                const uploadDir = path.join(__dirname, 'public/uploads');
+                if (!fs.existsSync(uploadDir)) {
+                    fs.mkdirSync(uploadDir, { recursive: true });
+                }
+                fs.writeFileSync(path.join(uploadDir, uniqueName), req.file.buffer);
+                fileUrl = `/uploads/${uniqueName}`;
+            } catch (fsErr) {
+                console.warn('[Upload] Local fs write failed:', fsErr.message);
+            }
+        }
+
+        // 3. Guaranteed MongoDB fallback: store in MessageAttachment collection
+        if (!fileUrl) {
+            const attachment = await MessageAttachment.create({
+                filename: req.file.originalname || `upload-${Date.now()}`,
+                contentType: req.file.mimetype || 'application/octet-stream',
+                data: req.file.buffer,
+                size: req.file.size || req.file.buffer.length
             });
-            fileUrl = blob.url;
-        } else {
-            // Local fallback
-            const fs = require('fs');
-            const path = require('path');
-            const uniqueName = `chat-${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.]/g, '')}`;
-            const uploadDir = path.join(__dirname, 'public/uploads');
-            fs.writeFileSync(path.join(uploadDir, uniqueName), req.file.buffer);
-            fileUrl = `/uploads/${uniqueName}`;
+            fileUrl = `/api/messages/attachment/${attachment._id}`;
         }
 
         res.json({ url: fileUrl });
     } catch (err) {
         console.error('Chat Upload Error:', err);
         res.status(500).json({ msg: 'Server Error during file upload' });
+    }
+});
+
+// Serve message attachment from MongoDB
+app.get('/api/messages/attachment/:id', async (req, res) => {
+    try {
+        const attachment = await MessageAttachment.findById(req.params.id);
+        if (!attachment || !attachment.data) {
+            return res.status(404).send('Attachment not found');
+        }
+        res.setHeader('Content-Type', attachment.contentType || 'application/octet-stream');
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+        res.send(attachment.data);
+    } catch (err) {
+        console.error('Fetch Attachment Error:', err);
+        res.status(500).send('Error loading attachment');
     }
 });
 

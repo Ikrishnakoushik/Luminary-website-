@@ -434,7 +434,11 @@ class _ChatScreenState extends State<ChatScreen> {
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
-                  : ListView.builder(
+                  : RefreshIndicator(
+                      onRefresh: _fetchMessages,
+                      color: const Color(0xFF3B82F6),
+                      child: ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
                       controller: _scrollController,
                       padding: EdgeInsets.only(
                         top:
@@ -591,6 +595,7 @@ class _ChatScreenState extends State<ChatScreen> {
                         );
                       },
                     ),
+                  ),
             ),
             // Input Bar
             Container(

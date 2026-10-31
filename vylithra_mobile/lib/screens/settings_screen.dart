@@ -8,6 +8,7 @@ import 'saved_posts_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'professional_license_screen.dart';
 import 'legal_policies_screen.dart';
+import '../services/display_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -21,6 +22,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final Color bgColor = const Color(0xFFF8F6EB);
   final Color darkTextColor = const Color(0xFF3E2723);
   final Color lightTextColor = const Color(0xFF5D4037);
+
+  String _currentRefreshMode = 'high';
+  double _currentHz = 60.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDisplaySettings();
+  }
+
+  Future<void> _loadDisplaySettings() async {
+    final mode = await DisplayService().getSavedMode();
+    final hz = await DisplayService().getCurrentRefreshRate();
+    if (mounted) {
+      setState(() {
+        _currentRefreshMode = mode;
+        _currentHz = hz;
+      });
+    }
+  }
+
+  void _showRefreshRateDialog(bool isDark) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
+          decoration: BoxDecoration(
+            color: isDark ? const Color(0xFF1E293B) : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Display Refresh Rate',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? Colors.white : darkTextColor,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Higher refresh rates make animations and scrolling smoother.',
+                style: GoogleFonts.inter(
+                  fontSize: 13,
+                  color: isDark ? Colors.white60 : Colors.black54,
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildRefreshRateOption(
+                title: 'High / Smooth (120Hz / 90Hz)',
+                subtitle: 'Ultra-smooth UI, silky animations and scrolling',
+                modeKey: 'high',
+                isDark: isDark,
+              ),
+              _buildRefreshRateOption(
+                title: 'Standard (60Hz)',
+                subtitle: 'Saves battery life, standard screen refresh rate',
+                modeKey: 'standard',
+                isDark: isDark,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildRefreshRateOption({
+    required String title,
+    required String subtitle,
+    required String modeKey,
+    required bool isDark,
+  }) {
+    final isSelected = _currentRefreshMode == modeKey;
+    return InkWell(
+      onTap: () async {
+        Navigator.pop(context);
+        await DisplayService().applyMode(modeKey);
+        final newHz = await DisplayService().getCurrentRefreshRate();
+        if (mounted) {
+          setState(() {
+            _currentRefreshMode = modeKey;
+            _currentHz = newHz;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                modeKey == 'high' ? 'Display set to High Refresh Rate ($newHz Hz)' : 'Display set to Standard Refresh Rate (60Hz)',
+              ),
+            ),
+          );
+        }
+      },
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Row(
+          children: [
+            Icon(
+              isSelected ? Icons.radio_button_checked : Icons.radio_button_off,
+              color: isSelected ? const Color(0xFF3B82F6) : (isDark ? Colors.white54 : Colors.black45),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: GoogleFonts.inter(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: isDark ? Colors.white : darkTextColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: isDark ? Colors.white54 : Colors.black45,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   Widget _buildSectionHeader(String title, bool isDark) {
     return Padding(
@@ -156,6 +293,32 @@ class _SettingsScreenState extends State<SettingsScreen> {
               final themeProvider = Provider.of<ThemeProvider>(context, listen: false);
               themeProvider.toggleTheme(!themeProvider.isDarkMode);
             },
+          ),
+          _buildListTile(
+            icon: Icons.speed,
+            title: 'Display Refresh Rate',
+            isDark: isDark,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _currentRefreshMode == 'high'
+                      ? 'High (${_currentHz.toInt()}Hz)'
+                      : (_currentRefreshMode == '90' ? '90Hz' : 'Standard (60Hz)'),
+                  style: TextStyle(
+                    color: isDark ? Colors.white60 : Colors.black54,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Icon(
+                  Icons.chevron_right,
+                  color: isDark ? Colors.white30 : Colors.black26,
+                ),
+              ],
+            ),
+            onTap: () => _showRefreshRateDialog(isDark),
           ),
 
           const Divider(height: 30, thickness: 1, color: Colors.black12),

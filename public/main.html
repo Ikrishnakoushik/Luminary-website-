@@ -2417,16 +2417,16 @@
             }
         }
 
-        async function fetchPosts() {
-            console.log('fetchPosts called');
+        async function fetchPosts(isRetry = false) {
+            console.log('fetchPosts called, isRetry:', isRetry);
             const container = document.getElementById('feed-container');
             // Try to find the loading text paragraph to update it
-            const loadingText = container.querySelector('p');
+            const loadingText = container ? container.querySelector('p') : null;
             const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 15000); // Increased timeout for cold starts
+            const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s timeout for Vercel cold starts
 
             try {
-                if (loadingText) loadingText.innerText = `Connecting to ${API_URL}...`;
+                if (loadingText) loadingText.innerText = isRetry ? 'Waking up server, loading feed...' : `Connecting to ${API_URL}...`;
                 console.log(`Fetching from: ${API_URL}/posts`);
 
                 const res = await fetch(`${API_URL}/posts`, { signal: controller.signal });
@@ -2436,6 +2436,11 @@
                 if (loadingText) loadingText.innerText = 'Receiving data from server...';
 
                 if (!res.ok) {
+                    if (res.status === 503 && !isRetry) {
+                        if (loadingText) loadingText.innerText = 'Server initializing, retrying in 2s...';
+                        await new Promise(r => setTimeout(r, 2000));
+                        return fetchPosts(true);
+                    }
                     throw new Error(`Server responded with status ${res.status}`);
                 }
 
@@ -2447,6 +2452,11 @@
                 renderPosts(posts);
             } catch (err) {
                 console.error(err);
+
+                if (err.name === 'AbortError' && !isRetry) {
+                    console.log('Initial attempt timed out during cold start, retrying once...');
+                    return fetchPosts(true);
+                }
 
                 let errorMsg = err.message;
                 if (err.name === 'AbortError') errorMsg = "Connection timed out. Server is not responding.";

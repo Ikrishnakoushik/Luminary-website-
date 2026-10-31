@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
+import 'services/display_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
 
@@ -72,6 +73,7 @@ void main() async {
   try {
     await Firebase.initializeApp();
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
+    DisplayService().init();
 
     runApp(
       MultiProvider(

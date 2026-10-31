@@ -81,4 +81,7 @@ const PostSchema = new mongoose.Schema({
     }
 });
 
+PostSchema.index({ createdAt: -1 });
+PostSchema.index({ isUnderReview: 1, createdAt: -1 });
+
 module.exports = mongoose.model('Post', PostSchema);

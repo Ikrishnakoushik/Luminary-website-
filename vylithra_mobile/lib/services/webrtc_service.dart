@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'socket_service.dart';
 
 class WebRTCService {
@@ -30,6 +31,11 @@ class WebRTCService {
   Function()? onCallAccepted;
 
   StreamSubscription<Map<String, dynamic>>? _signalSubscription;
+  StreamSubscription<DatabaseEvent>? _firebaseSignalSub;
+  StreamSubscription<DatabaseEvent>? _firebaseGroupJoinedSub;
+  StreamSubscription<DatabaseEvent>? _firebaseGroupLeftSub;
+  final Set<String> _processedSignalKeys = {};
+
   // Group Calling State
   String? activeGroupId;
   final Map<String, RTCPeerConnection> _groupPeerConnections = {};
@@ -57,39 +63,89 @@ class WebRTCService {
   Map<String, dynamic>? _incomingOfferPayload;
   final List<RTCIceCandidate> _queuedIceCandidates = [];
 
+  String _generateSignalKey(String type, Map<String, dynamic> payload) {
+    final from = payload['from']?.toString() ?? '';
+    final to = payload['to']?.toString() ?? '';
+    final candidate = payload['candidate']?['candidate']?.toString() ?? '';
+    final offerSdp = payload['offer']?['sdp']?.toString();
+    final answerSdp = payload['answer']?['sdp']?.toString();
+    final sdpSnippet = offerSdp != null
+        ? (offerSdp.length > 30 ? offerSdp.substring(0, 30) : offerSdp)
+        : (answerSdp != null
+            ? (answerSdp.length > 30 ? answerSdp.substring(0, 30) : answerSdp)
+            : '');
+    return '$type|$from|$to|$candidate|$sdpSnippet';
+  }
+
   void _listenForSignals() {
     if (_currentUserId == null) return;
     
     _signalSubscription?.cancel();
     _groupUserJoinedSub?.cancel();
     _groupUserLeftSub?.cancel();
+    _firebaseSignalSub?.cancel();
+    _firebaseGroupJoinedSub?.cancel();
+    _firebaseGroupLeftSub?.cancel();
     if (activeGroupId != null) leaveGroupCall();
-    // Instead of Firebase, we listen to our global SocketService stream for 'webrtc_signal' events
-    _signalSubscription = _socketService.onWebRTCSignal.listen((data) {
-      final type = data['type'];
-      final payload = Map<String, dynamic>.from(data['payload'] ?? {});
-      _handleIncomingSignal(type, payload);
-    });
-    _groupUserJoinedSub?.cancel();
-    _groupUserJoinedSub = _socketService.onUserJoinedCall.listen((data) {
-      if (activeGroupId == null) return;
-      final participantId = data['userId'];
-      if (participantId != null && participantId != _currentUserId) {
-        _initiateGroupPeerConnection(participantId);
-        onGroupParticipantJoined?.call(participantId);
-      }
-    });
 
-    _groupUserLeftSub?.cancel();
-    _groupUserLeftSub = _socketService.onUserLeftCall.listen((data) {
-      if (activeGroupId == null) return;
-      final participantId = data['userId'];
-      if (participantId != null) {
-        _removeGroupPeer(participantId);
-        onGroupParticipantLeft?.call(participantId);
-      }
-    });
-    // end group listeners
+    // 1. Dual Transport: Firebase Realtime Database (Primary for production Vercel serverless)
+    try {
+      final db = FirebaseDatabase.instance;
+      final statusRef = db.ref('webrtc/status/$_currentUserId');
+      statusRef.set(true);
+      statusRef.onDisconnect().remove();
+
+      final signalsRef = db.ref('webrtc/signals/$_currentUserId');
+      _firebaseSignalSub = signalsRef.onChildAdded.listen((event) {
+        try {
+          final val = event.snapshot.value;
+          if (val is Map) {
+            final data = Map<String, dynamic>.from(val);
+            final type = data['type']?.toString();
+            final payload = Map<String, dynamic>.from(data['payload'] ?? {});
+            if (type != null) {
+              _handleIncomingSignal(type, payload);
+            }
+          }
+          event.snapshot.ref.remove().catchError((e) {
+            debugPrint('[WebRTC] Signal removal error: $e');
+          });
+        } catch (e) {
+          debugPrint('[WebRTC] Firebase signal parse error: $e');
+        }
+      });
+      debugPrint('[WebRTC] Dual Firebase RTDB signaling initialized for $_currentUserId');
+    } catch (e) {
+      debugPrint('[WebRTC] Firebase RTDB signaling not initialized (test or fallback mode): $e');
+    }
+
+    // 2. Dual Transport: SocketService (For local dev & WebSocket-enabled hosts)
+    try {
+      _signalSubscription = _socketService.onWebRTCSignal.listen((data) {
+        final type = data['type'];
+        final payload = Map<String, dynamic>.from(data['payload'] ?? {});
+        _handleIncomingSignal(type, payload);
+      });
+      _groupUserJoinedSub = _socketService.onUserJoinedCall.listen((data) {
+        if (activeGroupId == null) return;
+        final participantId = data['userId'];
+        if (participantId != null && participantId != _currentUserId) {
+          _initiateGroupPeerConnection(participantId);
+          onGroupParticipantJoined?.call(participantId);
+        }
+      });
+
+      _groupUserLeftSub = _socketService.onUserLeftCall.listen((data) {
+        if (activeGroupId == null) return;
+        final participantId = data['userId'];
+        if (participantId != null) {
+          _removeGroupPeer(participantId);
+          onGroupParticipantLeft?.call(participantId);
+        }
+      });
+    } catch (e) {
+      debugPrint('[WebRTC] Socket signaling subscription error: $e');
+    }
   }
 
     Future<RTCPeerConnection> _createGroupPeerConnection(String targetId) async {
@@ -220,6 +276,35 @@ class WebRTCService {
         'groupId': groupId,
         'userId': _currentUserId,
       });
+
+      // Firebase Realtime Database Group Presence & Discovery
+      try {
+        final now = DateTime.now().millisecondsSinceEpoch;
+        final myNode = FirebaseDatabase.instance.ref('webrtc/groups/$groupId/$_currentUserId');
+        await myNode.set(now);
+        myNode.onDisconnect().remove();
+
+        _firebaseGroupJoinedSub?.cancel();
+        _firebaseGroupJoinedSub = FirebaseDatabase.instance.ref('webrtc/groups/$groupId').onChildAdded.listen((event) {
+          final otherId = event.snapshot.key;
+          final joinTime = event.snapshot.value;
+          if (otherId != null && otherId != _currentUserId && joinTime is int && joinTime > now) {
+            _initiateGroupPeerConnection(otherId);
+            onGroupParticipantJoined?.call(otherId);
+          }
+        });
+
+        _firebaseGroupLeftSub?.cancel();
+        _firebaseGroupLeftSub = FirebaseDatabase.instance.ref('webrtc/groups/$groupId').onChildRemoved.listen((event) {
+          final otherId = event.snapshot.key;
+          if (otherId != null && otherId != _currentUserId) {
+            _removeGroupPeer(otherId);
+            onGroupParticipantLeft?.call(otherId);
+          }
+        });
+      } catch (e) {
+        debugPrint('[WebRTC] Firebase group join warning: $e');
+      }
     } catch (e) {
       leaveGroupCall();
       rethrow;
@@ -227,7 +312,14 @@ class WebRTCService {
   }
 
   void leaveGroupCall() {
+    _firebaseGroupJoinedSub?.cancel();
+    _firebaseGroupLeftSub?.cancel();
     if (activeGroupId != null) {
+      try {
+        FirebaseDatabase.instance.ref('webrtc/groups/$activeGroupId/$_currentUserId').remove();
+      } catch (e) {
+        // Safe ignore
+      }
       _socketService.emit('leave-group-call', {
         'groupId': activeGroupId,
         'userId': _currentUserId,
@@ -261,13 +353,25 @@ class WebRTCService {
   }
 
   Future<bool> isUserOnline(String targetId) async {
-    // With pure WebRTC via sockets, we can assume online, 
-    // or we could implement a ping/pong over socket.
-    // For now, always try.
+    try {
+      final snapshot = await FirebaseDatabase.instance.ref('webrtc/status/$targetId').get();
+      if (snapshot.exists && snapshot.value == true) {
+        return true;
+      }
+    } catch (e) {
+      debugPrint('[WebRTC] Online check fallback: $e');
+    }
     return true; 
   }
 
   Future<void> _handleIncomingSignal(String type, Map<String, dynamic> payload) async {
+    final key = _generateSignalKey(type, payload);
+    if (_processedSignalKeys.contains(key)) return;
+    _processedSignalKeys.add(key);
+    if (_processedSignalKeys.length > 300) {
+      _processedSignalKeys.remove(_processedSignalKeys.first);
+    }
+
     // Handle group signals if activeGroupId is set or payload indicates group call
     if (activeGroupId != null || payload['isGroupCall'] == true) {
       final senderId = payload['from']?.toString();
@@ -363,13 +467,30 @@ class WebRTCService {
   }
 
   void _sendSignal(String type, Map<String, dynamic> payload) {
-    if (payload['to'] == null) return;
-    // Emit through our global SocketService
-    _socketService.emit('webrtc_signal', {
-      'to': payload['to'],
-      'type': type,
-      'payload': payload,
-    });
+    final toId = payload['to']?.toString();
+    if (toId == null || toId.isEmpty) return;
+
+    // Dual Send 1: SocketService
+    try {
+      _socketService.emit('webrtc_signal', {
+        'to': toId,
+        'type': type,
+        'payload': payload,
+      });
+    } catch (e) {
+      debugPrint('[WebRTC] Socket emit warning: $e');
+    }
+
+    // Dual Send 2: Firebase Realtime Database
+    try {
+      FirebaseDatabase.instance.ref('webrtc/signals/$toId').push().set({
+        'type': type,
+        'payload': payload,
+        'timestamp': ServerValue.timestamp,
+      });
+    } catch (e) {
+      debugPrint('[WebRTC] Firebase emit warning: $e');
+    }
   }
 
   Future<void> _createPeerConnection(String targetId) async {

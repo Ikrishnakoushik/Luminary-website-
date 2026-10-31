@@ -76,8 +76,26 @@
 
     const eventHandlers = {};
 
+    const processedSignals = new Set();
+    function getSignalKey(type, payload) {
+        if (!payload) return type;
+        const from = payload.from || '';
+        const to = payload.to || '';
+        const candidate = payload.candidate ? (payload.candidate.candidate || '') : '';
+        const sdp = (payload.offer && payload.offer.sdp) ? payload.offer.sdp.slice(0, 30) : 
+                    ((payload.answer && payload.answer.sdp) ? payload.answer.sdp.slice(0, 30) : '');
+        return `${type}_${from}_${to}_${candidate}_${sdp}`;
+    }
+
     function handleIncomingSignal(type, payload) {
         if (!type || !payload) return;
+        const key = getSignalKey(type, payload);
+        if (processedSignals.has(key)) return;
+        processedSignals.add(key);
+        if (processedSignals.size > 300) {
+            const first = processedSignals.values().next().value;
+            processedSignals.delete(first);
+        }
         if (eventHandlers[type]) {
             eventHandlers[type](payload);
         }
@@ -118,26 +136,41 @@
         document.head.appendChild(s);
     }
 
-    // --- 2. Optional Firebase Signaling Adapter (Web fallback) ---
+    // --- 2. Guaranteed Firebase Realtime Database Dual Signaling Adapter ---
     let db = null;
-    if (window.firebase && window.firebase.database) {
-        try {
-            db = firebase.database();
-            const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
-            const statusRef = db.ref(`webrtc/status/${currentUserId}`);
-            
-            statusRef.set(true);
-            statusRef.onDisconnect().remove();
+    function initFirebaseSignaling() {
+        if (db) return;
+        if (window.firebase && window.firebase.database && currentUserId) {
+            try {
+                db = firebase.database();
+                const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
+                const statusRef = db.ref(`webrtc/status/${currentUserId}`);
+                
+                statusRef.set(true);
+                statusRef.onDisconnect().remove();
 
-            signalsRef.on('child_added', (snapshot) => {
-                const data = snapshot.val();
-                if (!data || !data.type) return;
-                handleIncomingSignal(data.type, data.payload);
-                snapshot.ref.remove().catch(e => console.error(e));
-            });
-        } catch (e) {
-            console.warn('[WebRTC] Firebase RTDB initialization skipped:', e);
+                signalsRef.on('child_added', (snapshot) => {
+                    const data = snapshot.val();
+                    if (!data || !data.type) return;
+                    handleIncomingSignal(data.type, data.payload);
+                    snapshot.ref.remove().catch(e => console.error(e));
+                });
+                console.log('[WebRTC] Dual Firebase RTDB signaling ready for user:', currentUserId);
+            } catch (e) {
+                console.warn('[WebRTC] Firebase RTDB initialization warning:', e);
+            }
         }
+    }
+
+    // Attempt immediately and poll until Firebase finishes async script load
+    initFirebaseSignaling();
+    if (!db) {
+        let attempts = 0;
+        const fbInterval = setInterval(() => {
+            attempts++;
+            initFirebaseSignaling();
+            if (db || attempts > 40) clearInterval(fbInterval);
+        }, 300);
     }
 
     window.globalSocket = {
@@ -145,6 +178,7 @@
             eventHandlers[event] = handler;
         },
         emit: async (event, data, callback) => {
+            if (!db) initFirebaseSignaling();
             if (event === 'check-online') {
                 const targetId = data;
                 if (db) {
