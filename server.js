@@ -141,36 +141,26 @@ io.on('connection', (socket) => {
     socket.on('webrtc_signal', (data) => {
         if (!data || !data.to) return;
         const targetUserId = String(data.to);
-        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        const senderId = socket.userId || (data.from ? String(data.from) : (data.payload && data.payload.from ? String(data.payload.from) : null));
         
-        // Stamp authenticated sender identity to prevent impersonation
+        // Stamp authenticated sender identity
         if (senderId) {
             data.from = senderId;
             if (data.payload && typeof data.payload === 'object') {
                 data.payload.from = senderId;
             }
-        }
-
-        // Check if recipient has active sockets
-        const recipientSockets = userSocketMap.get(targetUserId);
-        const isOnline = recipientSockets && recipientSockets.size > 0;
-        
-        // Forward signal to target room
-        io.to(targetUserId).emit('webrtc_signal', data);
-
-        // If initiating 1-on-1 call and target user is offline, notify caller
-        if (data.type === 'call-made' && !data.isGroupCall && !isOnline && senderId) {
-            socket.emit('webrtc_signal', {
-                type: 'call-rejected',
-                to: senderId,
-                from: targetUserId,
-                payload: {
-                    to: senderId,
-                    from: targetUserId,
-                    reason: 'offline'
+            if (!socket.userId) {
+                socket.userId = senderId;
+                socket.join(senderId);
+                if (!userSocketMap.has(senderId)) {
+                    userSocketMap.set(senderId, new Set());
                 }
-            });
+                userSocketMap.get(senderId).add(socket.id);
+            }
         }
+
+        // Forward signal to target user's active sockets / room
+        io.to(targetUserId).emit('webrtc_signal', data);
     });
     socket.on('disconnect', () => {
         if (socket.userId) {
@@ -362,8 +352,8 @@ app.use('/api/register', authLimiter);
 
 app.use(cors({
     origin: '*', // Allow all origins (including file://)
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'x-auth-token', 'x-gateway-token']
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'authorization', 'x-auth-token', 'x-gateway-token']
 }));
 app.use(express.json({ limit: '200mb' }));
 app.use(express.urlencoded({ extended: true, limit: '200mb' })); // Ensure bodies are parsed
@@ -414,16 +404,40 @@ app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/priv
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public/terms.html')));
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'public/robots.txt')));
 
+// Robust Token Extractor for Web & Mobile Clients
+const extractToken = (req) => {
+    let token = req.header('x-auth-token') || req.header('authorization') || req.header('Authorization');
+    if (!token && req.query && req.query.token) {
+        token = req.query.token;
+    }
+    if (token && typeof token === 'string') {
+        token = token.trim();
+        if (token.startsWith('Bearer ') || token.startsWith('bearer ')) {
+            token = token.slice(7).trim();
+        }
+        if ((token.startsWith('"') && token.endsWith('"')) || (token.startsWith("'") && token.endsWith("'"))) {
+            token = token.slice(1, -1).trim();
+        }
+        if (token === 'null' || token === 'undefined' || !token) {
+            token = null;
+        }
+    }
+    return token;
+};
+
 const auth = async (req, res, next) => {
-    const token = req.header('x-auth-token');
+    const token = extractToken(req);
     if (!token) return res.status(401).json({ msg: 'No token, authorization denied' });
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded.user;
+        req.user = decoded.user || decoded;
+        if (req.user && !req.user.id && req.user._id) {
+            req.user.id = String(req.user._id);
+        }
         
         // Stateful verification
-        if (req.user.sessionId) {
+        if (req.user && req.user.sessionId) {
             const dbUser = await User.findById(req.user.id);
             if (!dbUser) return res.status(401).json({ msg: 'Session invalid' });
             
@@ -436,21 +450,27 @@ const auth = async (req, res, next) => {
         
         next();
     } catch (err) {
-        console.log(`[DEBUG AUTH] Token validation failed. Error: ${err.message}. Token snippets: prefix(${token.substring(0, 10)}) length(${token.length}) secretLength(${JWT_SECRET.length})`);
+        console.log(`[DEBUG AUTH] Token validation failed. Error: ${err.message}. Token snippets: prefix(${token ? token.substring(0, 10) : 'null'}) length(${token ? token.length : 0}) secretLength(${JWT_SECRET.length})`);
         res.status(401).json({ msg: 'Token is not valid' });
     }
 };
 
 const optionalAuth = async (req, res, next) => {
-    const token = req.header('x-auth-token');
-    if (!token) return next();
+    const token = extractToken(req);
+    if (!token) {
+        req.user = null;
+        return next();
+    }
 
     try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded.user;
+        req.user = decoded.user || decoded;
+        if (req.user && !req.user.id && req.user._id) {
+            req.user.id = String(req.user._id);
+        }
         
         // Stateful verification
-        if (req.user.sessionId) {
+        if (req.user && req.user.sessionId) {
             const dbUser = await User.findById(req.user.id);
             if (!dbUser) return next();
             
@@ -463,6 +483,7 @@ const optionalAuth = async (req, res, next) => {
         
         next();
     } catch (err) {
+        req.user = null;
         next(); // Token invalid, treat as unauthenticated
     }
 };

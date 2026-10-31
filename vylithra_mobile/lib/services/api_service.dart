@@ -9,9 +9,22 @@ class ApiService {
   // Use https://www.vylithra.in for production (must include www to avoid 307 redirects)
   static const String baseUrl = 'https://www.vylithra.in';
 
-  Future<Map<String, String>> _getHeaders() async {
+  Future<String?> _getSanitizedToken() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('auth_token');
+    var token = prefs.getString('auth_token');
+    if (token == null) return null;
+    token = token.trim();
+    if (token.startsWith('"') && token.endsWith('"') && token.length > 1) {
+      token = token.substring(1, token.length - 1).trim();
+    }
+    if (token.isEmpty || token == 'null' || token == 'undefined') {
+      return null;
+    }
+    return token;
+  }
+
+  Future<Map<String, String>> _getHeaders() async {
+    final token = await _getSanitizedToken();
     final Map<String, String> headers = {
       'Content-Type': 'application/json',
     };
@@ -36,8 +49,7 @@ class ApiService {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/stories/upload'));
       
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await _getSanitizedToken();
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
         request.headers['x-auth-token'] = token;
@@ -206,8 +218,7 @@ class ApiService {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl$endpoint'));
       
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await _getSanitizedToken();
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
         request.headers['x-auth-token'] = token;
@@ -227,8 +238,7 @@ class ApiService {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts'));
       
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await _getSanitizedToken();
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
         request.headers['x-auth-token'] = token;
@@ -255,8 +265,7 @@ class ApiService {
     try {
       final request = http.MultipartRequest('POST', Uri.parse('$baseUrl/api/posts/reel'));
       
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final token = await _getSanitizedToken();
       if (token != null) {
         request.headers['Authorization'] = 'Bearer $token';
         request.headers['x-auth-token'] = token;

@@ -47,7 +47,18 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> _loadToken() async {
     final prefs = await SharedPreferences.getInstance();
-    _vylithraToken = prefs.getString('auth_token');
+    var token = prefs.getString('auth_token');
+    if (token != null) {
+      token = token.trim();
+      if (token.startsWith('"') && token.endsWith('"') && token.length > 1) {
+        token = token.substring(1, token.length - 1).trim();
+      }
+      if (token.isEmpty || token == 'null' || token == 'undefined') {
+        token = null;
+        await prefs.remove('auth_token');
+      }
+    }
+    _vylithraToken = token;
     _isAuthenticated = _vylithraToken != null;
     _isInitialized = true;
     notifyListeners();
@@ -141,9 +152,13 @@ class AuthProvider with ChangeNotifier {
   }
 
   Future<void> _saveToken(String token) async {
-    _vylithraToken = token;
+    var cleanToken = token.trim();
+    if (cleanToken.startsWith('"') && cleanToken.endsWith('"') && cleanToken.length > 1) {
+      cleanToken = cleanToken.substring(1, cleanToken.length - 1).trim();
+    }
+    _vylithraToken = cleanToken;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('auth_token', _vylithraToken!);
+    await prefs.setString('auth_token', cleanToken);
     _isAuthenticated = true;
     notifyListeners();
   }

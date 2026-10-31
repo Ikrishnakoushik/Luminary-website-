@@ -55,7 +55,11 @@ class _ChatScreenState extends State<ChatScreen> {
             base64Url.decode(base64Url.normalize(parts[1])),
           );
           final data = jsonDecode(payload);
-          _currentUserId = data['user']?['id'];
+          _currentUserId = data['user']?['id'] ?? data['id'] ?? data['user']?['_id'] ?? data['_id'];
+          if (_currentUserId != null) {
+            WebRTCService().initialize(_currentUserId!);
+            _socketService.connect(_currentUserId!);
+          }
         }
       } catch (e) {
         // ignore
@@ -184,15 +188,18 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    if (_currentUserId == null) {
+      _extractUserId();
+    }
     final text = _messageController.text.trim();
-    if (text.isEmpty || _currentUserId == null) return;
+    if (text.isEmpty) return;
 
     _messageController.clear();
 
     // Optimistic UI update
     final optimisticMsg = {
       '_id': DateTime.now().millisecondsSinceEpoch.toString(),
-      'sender': {'_id': _currentUserId},
+      'sender': {'_id': _currentUserId ?? 'me'},
       'content': text,
       'createdAt': DateTime.now().toIso8601String(),
     };
@@ -384,6 +391,13 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.phone),
             onPressed: () {
+              if (_currentUserId == null) {
+                _extractUserId();
+              }
+              if (_currentUserId != null) {
+                WebRTCService().initialize(_currentUserId!);
+                _socketService.connect(_currentUserId!);
+              }
               _logCall(false);
               Navigator.push(
                 context,
@@ -402,6 +416,13 @@ class _ChatScreenState extends State<ChatScreen> {
           IconButton(
             icon: const Icon(Icons.videocam),
             onPressed: () {
+              if (_currentUserId == null) {
+                _extractUserId();
+              }
+              if (_currentUserId != null) {
+                WebRTCService().initialize(_currentUserId!);
+                _socketService.connect(_currentUserId!);
+              }
               _logCall(true);
               Navigator.push(
                 context,
