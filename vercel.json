@@ -29,6 +29,10 @@
             "destination": "/server.js"
         },
         {
+            "source": "/socket.io/(.*)",
+            "destination": "/server.js"
+        },
+        {
             "source": "/sitemap.xml",
             "destination": "/server.js"
         },

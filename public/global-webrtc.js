@@ -165,17 +165,61 @@
 
     // --- 2. Guaranteed Firebase Realtime Database Dual Signaling Adapter ---
     let db = null;
+    const firebaseConfig = {
+        apiKey: "AIzaSyBMe2R5iWYj_H4IZ5OpkXSsyc9ULM5Esbw",
+        authDomain: "luminary-eae16.firebaseapp.com",
+        databaseURL: "https://luminary-eae16-default-rtdb.firebaseio.com",
+        projectId: "luminary-eae16",
+        storageBucket: "luminary-eae16.firebasestorage.app",
+        messagingSenderId: "271803460699",
+        appId: "1:271803460699:web:fcdd88f117dfe0817de37e"
+    };
+
+    function ensureFirebaseLoaded(cb) {
+        if (window.firebase && window.firebase.database) {
+            initFirebaseSignaling();
+            if (cb) cb();
+            return;
+        }
+        function loadScript(src, next) {
+            const s = document.createElement('script');
+            s.src = src;
+            s.async = true;
+            s.onload = next;
+            s.onerror = () => { console.warn('[WebRTC] Script load failed:', src); };
+            document.head.appendChild(s);
+        }
+        if (!window.firebase) {
+            loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js', () => {
+                loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
+                    initFirebaseSignaling();
+                    if (cb) cb();
+                });
+            });
+        } else if (!window.firebase.database) {
+            loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
+                initFirebaseSignaling();
+                if (cb) cb();
+            });
+        }
+    }
+
     function initFirebaseSignaling() {
         const uid = getCurrentUserId();
-        if (window.firebase && window.firebase.database && uid) {
+        if (!uid) return;
+        if (window.firebase && window.firebase.database) {
             try {
-                db = firebase.database();
+                if (!window.firebase.apps || !window.firebase.apps.length) {
+                    window.firebase.initializeApp(firebaseConfig);
+                }
+                db = window.firebase.database();
                 const signalsRef = db.ref(`webrtc/signals/${uid}`);
                 const statusRef = db.ref(`webrtc/status/${uid}`);
                 
                 statusRef.set(true);
                 statusRef.onDisconnect().remove();
 
+                signalsRef.off('child_added');
                 signalsRef.on('child_added', (snapshot) => {
                     const data = snapshot.val();
                     if (!data || !data.type) return;
@@ -189,16 +233,8 @@
         }
     }
 
-    // Attempt immediately and poll until Firebase finishes async script load
-    initFirebaseSignaling();
-    if (!db) {
-        let attempts = 0;
-        const fbInterval = setInterval(() => {
-            attempts++;
-            initFirebaseSignaling();
-            if (db || attempts > 40) clearInterval(fbInterval);
-        }, 300);
-    }
+    // Attempt immediately and bootstrap scripts if needed
+    ensureFirebaseLoaded();
 
     window.globalSocket = {
         on: (event, handler) => {
@@ -243,12 +279,21 @@
                     });
                 }
 
-                // Dual send via Firebase if available
+                // Dual send via Firebase Realtime Database
+                const sendViaFirebase = () => {
+                    if (db) {
+                        db.ref(`webrtc/signals/${data.to}`).push({
+                            type: translatedEvent,
+                            payload: data,
+                            timestamp: Date.now()
+                        }).catch(e => console.error('[WebRTC] Firebase RTDB push failed:', e));
+                    }
+                };
+
                 if (db) {
-                    db.ref(`webrtc/signals/${data.to}`).push({
-                        type: translatedEvent,
-                        payload: data
-                    }).catch(e => console.error(e));
+                    sendViaFirebase();
+                } else {
+                    ensureFirebaseLoaded(() => sendViaFirebase());
                 }
             } 
             // Group Call Logic
@@ -473,7 +518,7 @@
             window.globalSocket.emit('make-answer', {
                 answer: answer,
                 to: data.from,
-                from: currentUserId
+                from: getCurrentUserId()
             });
         } catch(e) { console.error("Error handling group offer", e); }
     }
