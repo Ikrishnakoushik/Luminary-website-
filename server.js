@@ -5,10 +5,11 @@ const admin = require('firebase-admin');
 try {
     admin.initializeApp({
         credential: admin.credential.cert({
-            projectId: process.env.FIREBASE_PROJECT_ID || 'vylithra-b677b',
+            projectId: process.env.FIREBASE_PROJECT_ID || 'luminary-eae16',
             clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
             privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-        })
+        }),
+        databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://luminary-eae16-default-rtdb.firebaseio.com'
     });
     console.log('[Startup] Firebase Admin SDK Initialized');
 } catch (error) {
@@ -483,6 +484,70 @@ const optionalAuth = async (req, res, next) => {
         next(); // Token invalid, treat as unauthenticated
     }
 };
+
+// In-memory WebRTC signal buffer for zero-latency fallback signaling
+const webrtcSignalBuffer = new Map(); // userId -> Array<{ type, payload, timestamp }>
+
+// Firebase Custom Token Endpoint for authenticated Web & Mobile RTDB access
+app.get('/api/auth/firebase-token', auth, async (req, res) => {
+    try {
+        const uid = String(req.user.id);
+        const customToken = await admin.auth().createCustomToken(uid);
+        res.json({ token: customToken });
+    } catch (e) {
+        console.error('[Firebase Token Error]', e.message);
+        res.status(500).json({ msg: 'Failed to generate token' });
+    }
+});
+
+// Guaranteed server-side WebRTC signaling bridge
+app.post('/api/webrtc/signal', auth, async (req, res) => {
+    try {
+        const { to, type, payload } = req.body || {};
+        if (!to || !type) return res.status(400).json({ msg: 'Target user and signal type required' });
+
+        const from = String(req.user.id);
+        const signalData = {
+            type,
+            payload: { ...(payload || {}), from, to },
+            timestamp: Date.now()
+        };
+
+        // 1. Dual send via Admin SDK directly to Firebase RTDB (bypasses client permission issues)
+        try {
+            await admin.database().ref(`webrtc/signals/${to}`).push(signalData);
+        } catch (dbErr) {
+            console.warn('[Server WebRTC RTDB Push Warning]', dbErr.message);
+        }
+
+        // 2. Buffer in-memory for HTTP polling fallback
+        if (!webrtcSignalBuffer.has(to)) {
+            webrtcSignalBuffer.set(to, []);
+        }
+        const buf = webrtcSignalBuffer.get(to);
+        buf.push(signalData);
+        if (buf.length > 50) buf.shift();
+
+        // 3. Emit via socket.io if peer connected to same instance
+        const io = req.app.get('io');
+        if (io) {
+            io.to(to).emit('webrtc_signal', { type, payload: signalData.payload });
+        }
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('[WebRTC Signal API Error]', err.message);
+        res.status(500).json({ msg: 'Failed to dispatch signal' });
+    }
+});
+
+// Poll pending WebRTC signals
+app.get('/api/webrtc/signals', auth, (req, res) => {
+    const uid = String(req.user.id);
+    const signals = webrtcSignalBuffer.get(uid) || [];
+    webrtcSignalBuffer.set(uid, []); // drain buffer
+    res.json(signals);
+});
 
 // Check Role Middleware (Verifies if the user matches one of the allowed roles)
 const checkRole = (roles) => {

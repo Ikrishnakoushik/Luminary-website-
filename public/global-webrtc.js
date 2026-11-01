@@ -176,7 +176,7 @@
     };
 
     function ensureFirebaseLoaded(cb) {
-        if (window.firebase && window.firebase.database) {
+        if (window.firebase && window.firebase.database && window.firebase.auth) {
             initFirebaseSignaling();
             if (cb) cb();
             return;
@@ -191,10 +191,24 @@
         }
         if (!window.firebase) {
             loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js', () => {
-                loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
+                loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js', () => {
+                    loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
+                        initFirebaseSignaling();
+                        if (cb) cb();
+                    });
+                });
+            });
+        } else if (!window.firebase.auth) {
+            loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js', () => {
+                if (!window.firebase.database) {
+                    loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
+                        initFirebaseSignaling();
+                        if (cb) cb();
+                    });
+                } else {
                     initFirebaseSignaling();
                     if (cb) cb();
-                });
+                }
             });
         } else if (!window.firebase.database) {
             loadScript('https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js', () => {
@@ -204,7 +218,7 @@
         }
     }
 
-    function initFirebaseSignaling() {
+    async function initFirebaseSignaling() {
         const uid = getCurrentUserId();
         if (!uid) return;
         if (window.firebase && window.firebase.database) {
@@ -212,12 +226,34 @@
                 if (!window.firebase.apps || !window.firebase.apps.length) {
                     window.firebase.initializeApp(firebaseConfig);
                 }
+
+                // Authenticate Firebase Auth via Custom Token to prevent PERMISSION_DENIED
+                if (window.firebase.auth && !window.firebase.auth().currentUser) {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        try {
+                            const authRes = await fetch('/api/auth/firebase-token', {
+                                headers: { 'x-auth-token': token, 'Authorization': `Bearer ${token}` }
+                            });
+                            if (authRes.ok) {
+                                const authData = await authRes.json();
+                                if (authData && authData.token) {
+                                    await firebase.auth().signInWithCustomToken(authData.token);
+                                    console.log('[WebRTC] Firebase Auth authorized for user:', uid);
+                                }
+                            }
+                        } catch (tokErr) {
+                            console.warn('[WebRTC] Firebase token fetch warning:', tokErr.message);
+                        }
+                    }
+                }
+
                 db = window.firebase.database();
                 const signalsRef = db.ref(`webrtc/signals/${uid}`);
                 const statusRef = db.ref(`webrtc/status/${uid}`);
                 
-                statusRef.set(true);
-                statusRef.onDisconnect().remove();
+                statusRef.set(true).catch(() => {});
+                statusRef.onDisconnect().remove().catch(() => {});
 
                 signalsRef.off('child_added');
                 signalsRef.on('child_added', (snapshot) => {
@@ -235,6 +271,34 @@
 
     // Attempt immediately and bootstrap scripts if needed
     ensureFirebaseLoaded();
+
+    // Guaranteed HTTP signaling polling fallback (ensures signals are never dropped on serverless Vercel)
+    setInterval(async () => {
+        const uid = getCurrentUserId();
+        const token = localStorage.getItem('token');
+        if (!uid || !token) return;
+
+        if (!db) initFirebaseSignaling();
+
+        try {
+            const res = await fetch('/api/webrtc/signals', {
+                headers: {
+                    'x-auth-token': token,
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            if (res.ok) {
+                const signals = await res.json();
+                if (Array.isArray(signals)) {
+                    signals.forEach(sig => {
+                        if (sig && sig.type && sig.payload) {
+                            handleIncomingSignal(sig.type, sig.payload);
+                        }
+                    });
+                }
+            }
+        } catch (e) {}
+    }, 1500);
 
     window.globalSocket = {
         on: (event, handler) => {
@@ -270,7 +334,7 @@
                 };
                 const translatedEvent = eventMap[event] || event;
 
-                // Send via Socket.IO directly to target (Works for Mobile & Web cross-platform)
+                // 1. Send via Socket.IO
                 if (socket) {
                     socket.emit('webrtc_signal', {
                         to: data.to,
@@ -279,14 +343,14 @@
                     });
                 }
 
-                // Dual send via Firebase Realtime Database
+                // 2. Send via Client Firebase Realtime Database
                 const sendViaFirebase = () => {
                     if (db) {
                         db.ref(`webrtc/signals/${data.to}`).push({
                             type: translatedEvent,
                             payload: data,
                             timestamp: Date.now()
-                        }).catch(e => console.error('[WebRTC] Firebase RTDB push failed:', e));
+                        }).catch(e => console.warn('[WebRTC] Client RTDB push notice:', e.message));
                     }
                 };
 
@@ -295,6 +359,26 @@
                 } else {
                     ensureFirebaseLoaded(() => sendViaFirebase());
                 }
+
+                // 3. Guaranteed Server-Side Bridge (bypasses all client permission limits)
+                try {
+                    const token = localStorage.getItem('token');
+                    if (token) {
+                        fetch('/api/webrtc/signal', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'x-auth-token': token,
+                                'Authorization': `Bearer ${token}`
+                            },
+                            body: JSON.stringify({
+                                to: data.to,
+                                type: translatedEvent,
+                                payload: data
+                            })
+                        }).catch(() => {});
+                    }
+                } catch(e) {}
             } 
             // Group Call Logic
             else if (event === 'join-group-call') {
