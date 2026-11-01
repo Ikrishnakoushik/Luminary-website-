@@ -3577,82 +3577,8 @@ app.get('/api/publisher/balance', auth, async (req, res) => {
     }
 });
 
-// Send a message
-app.post('/api/messages/:userId', auth, async (req, res) => {
-    try {
-        const sender = req.user.id;
-        const receiver = req.params.userId;
-        const { content, attachmentUrl, attachmentType } = req.body;
-
-        if (!content && !attachmentUrl) {
-            return res.status(400).json({ msg: 'Message content or attachment is required' });
-        }
-
-        const newMessage = new Message({
-            sender,
-            receiver,
-            content: content || '[Attachment]',
-            attachmentUrl: attachmentUrl || null,
-            attachmentType: attachmentType || 'none'
-        });
-
-        const savedMessage = await newMessage.save();
-        await savedMessage.populate('sender', 'username profilePicture displayName');
-        const io = req.app.get('io');
-        if (io) {
-            io.to(receiver).emit('new_message', savedMessage);
-            io.to(sender).emit('new_message', savedMessage);
-        }
-
-        // Dispatch FCM Push Notification
-        try {
-            const targetUser = await User.findById(receiver);
-            if (targetUser && targetUser.fcmToken) {
-                const isCall = attachmentType === 'call';
-                const messagePayload = {
-                    token: targetUser.fcmToken,
-                    data: {
-                        type: isCall ? 'call' : 'chat',
-                        senderId: sender,
-                        senderName: savedMessage.sender.displayName || savedMessage.sender.username,
-                        content: isCall ? 'Incoming Call' : savedMessage.content,
-                        // CallKit specifically looks for these keys
-                        uuid: savedMessage._id.toString(),
-                        callerName: savedMessage.sender.displayName || savedMessage.sender.username,
-                        hasVideo: content.includes('Video').toString() // e.g. "🎥 Video Call"
-                    },
-                    // We only show a standard notification if it's NOT a call, 
-                    // because calls are handled entirely by CallKit in the background data handler.
-                    ...(isCall ? {} : {
-                        notification: {
-                            title: savedMessage.sender.displayName || savedMessage.sender.username,
-                            body: savedMessage.content
-                        }
-                    }),
-                    android: {
-                        priority: 'high'
-                    },
-                    apns: {
-                        payload: {
-                            aps: {
-                                'content-available': 1
-                            }
-                        }
-                    }
-                };
-                await admin.messaging().send(messagePayload);
-            }
-        } catch (fcmErr) {
-            console.error('FCM Dispatch Error:', fcmErr.message);
-        }
-        res.json(savedMessage);
-    } catch (err) {
-        console.error(err.message);
-        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
-    }
-});
-
 // Upload message attachment (Multi-tier: Vercel Blob -> Local FS -> MongoDB MessageAttachment fallback)
+// IMPORTANT: Must be registered before /api/messages/:userId to avoid :userId matching the word 'upload'
 app.post('/api/messages/upload', auth, (req, res, next) => {
     upload.single('file')(req, res, (err) => {
         if (err) {
@@ -3676,6 +3602,7 @@ app.post('/api/messages/upload', auth, (req, res, next) => {
                 const { put } = require('@vercel/blob');
                 const blob = await put(uniqueName, req.file.buffer, {
                     access: 'public',
+                    contentType: req.file.mimetype || 'application/octet-stream',
                     token: process.env.BLOB_READ_WRITE_TOKEN
                 });
                 if (blob && blob.url) {
@@ -3718,6 +3645,82 @@ app.post('/api/messages/upload', auth, (req, res, next) => {
     } catch (err) {
         console.error('Chat Upload Error:', err);
         res.status(500).json({ msg: 'Server Error during file upload' });
+    }
+});
+
+// Send a message
+app.post('/api/messages/:userId', auth, async (req, res) => {
+    try {
+        const sender = req.user.id;
+        const receiver = req.params.userId;
+        if (receiver === 'upload' || receiver === 'conversations') {
+            return res.status(404).json({ msg: 'Invalid receiver ID' });
+        }
+        const { content, attachmentUrl, attachmentType } = req.body || {};
+
+        if (!content && !attachmentUrl) {
+            return res.status(400).json({ msg: 'Message content or attachment is required' });
+        }
+
+        const newMessage = new Message({
+            sender,
+            receiver,
+            content: content || '[Attachment]',
+            attachmentUrl: attachmentUrl || null,
+            attachmentType: attachmentType || 'none'
+        });
+
+        const savedMessage = await newMessage.save();
+        await savedMessage.populate('sender', 'username profilePicture displayName');
+        const io = req.app.get('io');
+        if (io) {
+            io.to(receiver).emit('new_message', savedMessage);
+            io.to(sender).emit('new_message', savedMessage);
+        }
+
+        // Dispatch FCM Push Notification
+        try {
+            const targetUser = await User.findById(receiver);
+            if (targetUser && targetUser.fcmToken) {
+                const isCall = attachmentType === 'call';
+                const messagePayload = {
+                    token: targetUser.fcmToken,
+                    data: {
+                        type: isCall ? 'call' : 'chat',
+                        senderId: sender,
+                        senderName: savedMessage.sender.displayName || savedMessage.sender.username,
+                        content: isCall ? 'Incoming Call' : savedMessage.content,
+                        // CallKit specifically looks for these keys
+                        uuid: savedMessage._id.toString(),
+                        callerName: savedMessage.sender.displayName || savedMessage.sender.username,
+                        hasVideo: content ? content.includes('Video').toString() : 'false'
+                    },
+                    ...(isCall ? {} : {
+                        notification: {
+                            title: savedMessage.sender.displayName || savedMessage.sender.username,
+                            body: savedMessage.content
+                        }
+                    }),
+                    android: {
+                        priority: 'high'
+                    },
+                    apns: {
+                        payload: {
+                            aps: {
+                                'content-available': 1
+                            }
+                        }
+                    }
+                };
+                await admin.messaging().send(messagePayload);
+            }
+        } catch (fcmErr) {
+            console.error('FCM Dispatch Error:', fcmErr.message);
+        }
+        res.json(savedMessage);
+    } catch (err) {
+        console.error(err.message);
+        res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
     }
 });
 

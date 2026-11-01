@@ -166,12 +166,12 @@
     // --- 2. Guaranteed Firebase Realtime Database Dual Signaling Adapter ---
     let db = null;
     function initFirebaseSignaling() {
-        if (db) return;
-        if (window.firebase && window.firebase.database && currentUserId) {
+        const uid = getCurrentUserId();
+        if (window.firebase && window.firebase.database && uid) {
             try {
                 db = firebase.database();
-                const signalsRef = db.ref(`webrtc/signals/${currentUserId}`);
-                const statusRef = db.ref(`webrtc/status/${currentUserId}`);
+                const signalsRef = db.ref(`webrtc/signals/${uid}`);
+                const statusRef = db.ref(`webrtc/status/${uid}`);
                 
                 statusRef.set(true);
                 statusRef.onDisconnect().remove();
@@ -182,7 +182,7 @@
                     handleIncomingSignal(data.type, data.payload);
                     snapshot.ref.remove().catch(e => console.error(e));
                 });
-                console.log('[WebRTC] Dual Firebase RTDB signaling ready for user:', currentUserId);
+                console.log('[WebRTC] Dual Firebase RTDB signaling ready for user:', uid);
             } catch (e) {
                 console.warn('[WebRTC] Firebase RTDB initialization warning:', e);
             }
@@ -639,7 +639,7 @@
 
     window.globalEndCall = async function() {
         if (activeGroupIdForCall) {
-            window.globalSocket.emit('leave-group-call', { groupId: activeGroupIdForCall, userId: currentUserId });
+            window.globalSocket.emit('leave-group-call', { groupId: activeGroupIdForCall, userId: getCurrentUserId() });
             // Log duration maybe? 
         } else if(currentCallTarget) {
             window.globalSocket.emit('end-call', { to: currentCallTarget });

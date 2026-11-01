@@ -555,7 +555,7 @@
             <div class="chat-input-container" id="chat-input-area" style="opacity: 0.5; pointer-events: none;">
                 <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileSelect(event)">
                 <div style="position: relative;">
-                    <button class="attach-btn" onclick="toggleAttachmentMenu()" id="attachMenuBtn" title="Attach Media">
+                    <button type="button" class="attach-btn" onclick="toggleAttachmentMenu(event)" id="attachMenuBtn" title="Attach Media">
                         <i class="fas fa-paperclip"></i>
                     </button>
                     <div id="attach-dropdown" style="display:none; position:absolute; bottom:50px; left:0; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:5px; box-shadow:0 10px 25px rgba(0,0,0,0.5); width:160px; z-index:100;">
@@ -572,7 +572,7 @@
                 </div>
                 <input type="text" id="message-input" class="chat-input" placeholder="Type an encrypted message..."
                     autocomplete="off" onkeypress="handleEnter(event)">
-                <button class="send-btn" onclick="sendMessage()">
+                <button type="button" class="send-btn" onclick="sendMessage(event)">
                     <i class="fas fa-paper-plane"></i>
                 </button>
             </div>
@@ -1190,7 +1190,8 @@
             document.getElementById('attachment-preview-container').style.display = 'none';
         }
 
-        async function sendMessage() {
+        async function sendMessage(e) {
+            if (e && e.preventDefault) e.preventDefault();
             if (!activeChatUserId && !activeGroupId) return;
             const input = document.getElementById('message-input');
             const content = input.value.trim();
@@ -1246,7 +1247,9 @@
 
         function handleEnter(e) {
             if (e.key === 'Enter') {
-                sendMessage();
+                if (e.preventDefault) e.preventDefault();
+                sendMessage(e);
+                return false;
             }
         }
 
