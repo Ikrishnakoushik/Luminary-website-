@@ -35,6 +35,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> _messages = [];
   bool _isLoading = true;
   String? _currentUserId;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -42,6 +43,16 @@ class _ChatScreenState extends State<ChatScreen> {
     _extractUserId();
     _fetchMessages();
     _initSocket();
+    _startPolling();
+  }
+
+  void _startPolling() {
+    _pollingTimer?.cancel();
+    _pollingTimer = Timer.periodic(const Duration(seconds: 4), (_) {
+      if (mounted) {
+        _fetchMessages(isBackground: true);
+      }
+    });
   }
 
   void _extractUserId() {
@@ -67,20 +78,35 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _fetchMessages() async {
+  Future<void> _fetchMessages({bool isBackground = false}) async {
     try {
       final messages = await _apiService.get(
         '/api/messages/${widget.targetUserId}',
       );
-      if (mounted) {
-        setState(() {
-          _messages = messages ?? [];
-          _isLoading = false;
-        });
-        _scrollToBottom();
+      if (mounted && messages is List) {
+        if (isBackground) {
+          bool hasNew = false;
+          for (final msg in messages) {
+            final msgId = msg['_id'];
+            if (msgId != null && !_messages.any((m) => m['_id'] == msgId)) {
+              _messages.add(msg);
+              hasNew = true;
+            }
+          }
+          if (hasNew) {
+            setState(() {});
+            _scrollToBottom();
+          }
+        } else {
+          setState(() {
+            _messages = messages;
+            _isLoading = false;
+          });
+          _scrollToBottom();
+        }
       }
     } catch (e) {
-      if (mounted) {
+      if (mounted && !isBackground) {
         setState(() => _isLoading = false);
       }
     }
@@ -360,6 +386,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   @override
   void dispose() {
+    _pollingTimer?.cancel();
     _messageSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();

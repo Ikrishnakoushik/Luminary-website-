@@ -20,25 +20,31 @@ class _MessagesScreenState extends State<MessagesScreen> {
   bool _isLoading = true;
   bool _isSearching = false;
   Timer? _debounce;
+  Timer? _pollTimer;
 
   @override
   void initState() {
     super.initState();
     _fetchConversations();
     _searchController.addListener(_onSearchChanged);
+    _pollTimer = Timer.periodic(const Duration(seconds: 8), (_) {
+      if (mounted && !_isSearching) {
+        _fetchConversations(isBackground: true);
+      }
+    });
   }
 
-  Future<void> _fetchConversations() async {
+  Future<void> _fetchConversations({bool isBackground = false}) async {
     try {
       final data = await _apiService.get('/api/messages/conversations');
       if (mounted) {
         setState(() {
           _conversations = data ?? [];
-          _isLoading = false;
+          if (!isBackground) _isLoading = false;
         });
       }
     } catch (e) {
-      if (mounted) setState(() => _isLoading = false);
+      if (mounted && !isBackground) setState(() => _isLoading = false);
     }
   }
 
@@ -84,6 +90,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _searchController.dispose();
     _debounce?.cancel();
     super.dispose();

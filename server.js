@@ -1133,7 +1133,7 @@ app.post('/api/register', async (req, res) => {
             
             // Login automatically and send the frontend Bypass Token
             const payload = { user: { id: user.id, role: user.role } };
-            const token = jwt.sign(payload, process.env.JWT_SECRET || 'secret', { expiresIn: '30d' });
+            const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '30d' });
             return res.status(200).json({ 
                 msg: 'Registration successful! (Auto-verified bypass)', 
                 token, 
@@ -2383,6 +2383,44 @@ app.get('/api/app/version', (req, res) => {
 
 // --- MESSAGES API ---
 
+// Decrypt client-side CryptoJS AES ciphertext if present (e2ee backward compatibility)
+function decryptCryptoJSAES(ciphertext, passphrase) {
+    if (!ciphertext || typeof ciphertext !== 'string' || !ciphertext.startsWith('U2FsdGVkX1')) {
+        return ciphertext;
+    }
+    try {
+        const raw = Buffer.from(ciphertext, 'base64');
+        if (raw.slice(0, 8).toString('utf8') !== 'Salted__') return ciphertext;
+        const salt = raw.slice(8, 16);
+        const data = raw.slice(16);
+
+        let d = Buffer.alloc(0);
+        let d_i = Buffer.alloc(0);
+        const passBuf = Buffer.from(passphrase, 'utf8');
+        while (d.length < 48) {
+            d_i = crypto.createHash('md5').update(Buffer.concat([d_i, passBuf, salt])).digest();
+            d = Buffer.concat([d, d_i]);
+        }
+        const key = d.slice(0, 32);
+        const iv = d.slice(32, 48);
+
+        const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+        let dec = decipher.update(data, undefined, 'utf8');
+        dec += decipher.final('utf8');
+        return dec || ciphertext;
+    } catch (e) {
+        return ciphertext;
+    }
+}
+
+function resolveMessagePlaintext(content, u1, u2) {
+    if (!content || typeof content !== 'string') return '';
+    if (!content.startsWith('U2FsdGVkX1')) return content;
+    const passphrase = crypto.createHash('sha256').update([String(u1), String(u2)].sort().join('-') + 'vylithra-e2ee-secret').digest('hex');
+    const decrypted = decryptCryptoJSAES(content, passphrase);
+    return decrypted === '[Attachment]' ? '📎 Attachment' : decrypted;
+}
+
 // Get all recent conversations for the current user
 app.get('/api/messages/conversations', auth, async (req, res) => {
     try {
@@ -2412,7 +2450,7 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
             if (!convosMap.has(otherUserId)) {
                 convosMap.set(otherUserId, {
                     user: otherUser,
-                    lastMessage: msg.content,
+                    lastMessage: resolveMessagePlaintext(msg.content, userId, otherUserId) || 'Start a conversation',
                     timestamp: msg.createdAt,
                     unread: !isSentByMe && (!msg.read && msg.unread !== false)
                 });
@@ -2447,7 +2485,15 @@ app.get('/api/messages/:userId', auth, async (req, res) => {
             { $set: { read: true, unread: false } }
         );
 
-        res.json(messages);
+        const cleanMessages = messages.map(m => {
+            const doc = m.toObject();
+            if (doc.content && typeof doc.content === 'string' && doc.content.startsWith('U2FsdGVkX1')) {
+                doc.content = resolveMessagePlaintext(doc.content, userId, otherUserId);
+            }
+            return doc;
+        });
+
+        res.json(cleanMessages);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
@@ -3662,10 +3708,15 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
             return res.status(400).json({ msg: 'Message content or attachment is required' });
         }
 
+        let cleanContent = content || '[Attachment]';
+        if (typeof cleanContent === 'string' && cleanContent.startsWith('U2FsdGVkX1')) {
+            cleanContent = resolveMessagePlaintext(cleanContent, sender, receiver);
+        }
+
         const newMessage = new Message({
             sender,
             receiver,
-            content: content || '[Attachment]',
+            content: cleanContent,
             attachmentUrl: attachmentUrl || null,
             attachmentType: attachmentType || 'none'
         });

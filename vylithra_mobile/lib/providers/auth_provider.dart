@@ -22,7 +22,7 @@ class AuthProvider with ChangeNotifier {
       final String normalized = base64Url.normalize(payload);
       final String resp = utf8.decode(base64Url.decode(normalized));
       final data = json.decode(resp);
-      return data['user']?['id'];
+      return data['user']?['id'] ?? data['id'] ?? data['user']?['_id'] ?? data['_id'];
     } catch (e) {
       return null;
     }
@@ -30,6 +30,33 @@ class AuthProvider with ChangeNotifier {
 
   AuthProvider() {
     _loadToken();
+  }
+
+  bool _isTokenExpired(String token) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return true;
+      final payload = parts[1];
+      final String normalized = base64Url.normalize(payload);
+      final String resp = utf8.decode(base64Url.decode(normalized));
+      final data = json.decode(resp);
+      final exp = data['exp'];
+      if (exp != null && exp is num) {
+        final expiry = DateTime.fromMillisecondsSinceEpoch(exp.toInt() * 1000);
+        return DateTime.now().isAfter(expiry);
+      }
+    } catch (_) {
+      return true;
+    }
+    return false;
+  }
+
+  Future<void> handleAuthError() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('auth_token');
+    _vylithraToken = null;
+    _isAuthenticated = false;
+    notifyListeners();
   }
 
   Future<void> syncFcmToken() async {
@@ -53,7 +80,7 @@ class AuthProvider with ChangeNotifier {
       if (token.startsWith('"') && token.endsWith('"') && token.length > 1) {
         token = token.substring(1, token.length - 1).trim();
       }
-      if (token.isEmpty || token == 'null' || token == 'undefined') {
+      if (token.isEmpty || token == 'null' || token == 'undefined' || _isTokenExpired(token)) {
         token = null;
         await prefs.remove('auth_token');
       }
