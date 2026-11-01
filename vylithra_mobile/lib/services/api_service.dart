@@ -110,7 +110,9 @@ class ApiService {
       return jsonDecode(response.body);
     } else {
       if (response.statusCode == 401) {
-        SharedPreferences.getInstance().then((prefs) => prefs.remove('auth_token')).catchError((_) {});
+        SharedPreferences.getInstance()
+            .then((prefs) => prefs.remove('auth_token'))
+            .catchError((_) => false);
       }
       String errorMessage = 'Oops! Our servers took a quick nap. Please try again. (Code: ${response.statusCode})';
       try {
