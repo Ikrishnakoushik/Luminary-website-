@@ -139,6 +139,10 @@ const UserSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'
     }],
+    unlockedDownloads: [{
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Book'
+    }],
     publishedBooks: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Book'

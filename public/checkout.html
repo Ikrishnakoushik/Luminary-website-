@@ -423,8 +423,18 @@
     </div>
 
         <script>
-        const API_URL = window.location.hostname === 'localhost' ? 'http://localhost:3000/api' : '/api';
-        const token = localStorage.getItem('token');
+        const API_URL = '/api';
+        const rawToken = localStorage.getItem('token');
+        const token = (rawToken && rawToken !== 'null' && rawToken !== 'undefined' && rawToken.trim() !== '')
+            ? rawToken.replace(/^["']|["']$/g, '').trim()
+            : null;
+
+        const authHeaders = token ? {
+            'Content-Type': 'application/json',
+            'x-auth-token': token,
+            'Authorization': `Bearer ${token}`
+        } : { 'Content-Type': 'application/json' };
+
         let currentBook = null;
         let currentUser = null;
         let basePrice = 0;
@@ -440,7 +450,7 @@
         async function init() {
             if (!token) {
                 VylithraUI.showToast("Please log in to checkout.", 'error');
-                setTimeout(() => window.location.href = '/auth', 1500);
+                setTimeout(() => window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`, 1500);
                 return;
             }
             if (!bookId) {
@@ -452,8 +462,14 @@
             try {
                 // Fetch User Profile concurrently
                 const userRes = await fetch(`${API_URL}/users/profile`, {
-                    headers: { 'x-auth-token': token }
+                    headers: authHeaders
                 });
+                if (userRes.status === 401) {
+                    localStorage.removeItem('token');
+                    VylithraUI.showToast("Your session has expired. Please log in again.", 'error');
+                    setTimeout(() => window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`, 1500);
+                    return;
+                }
                 if (userRes.ok) currentUser = await userRes.json();
 
                 // Fetch Book Details bypass auth to get raw book data
@@ -625,14 +641,19 @@
                     try {
                         const res = await fetch(`${API_URL}/books/${currentBook._id}/purchase-intent`, {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                            headers: authHeaders,
                             body: JSON.stringify({ gateway: 'paypal', couponCode: appliedCoupon ? appliedCoupon.code : '' })
                         });
                         const orderData = await res.json();
                         if (res.ok && orderData.type === 'paypal') {
                             return orderData.order_id;
                         } else {
-                            VylithraUI.showToast(orderData.msg || "PayPal initialization failed", 'error');
+                            if (orderData.code === 'PAYPAL_RESTRICTED' || (orderData.msg && orderData.msg.includes('restricted'))) {
+                                VylithraUI.showToast("PayPal is temporarily unavailable for this merchant. Please use Razorpay (UPI, Cards, NetBanking).", 'warning');
+                                selectGateway('razorpay');
+                            } else {
+                                VylithraUI.showToast(orderData.msg || "PayPal initialization failed", 'error');
+                            }
                             throw new Error("Initialization failed");
                         }
                     } catch (err) {
@@ -651,7 +672,7 @@
                     });
                 },
                 onError: function (err) {
-                    VylithraUI.showToast("PayPal checkout failed.", "error");
+                    VylithraUI.showToast("PayPal transaction could not be processed. Please use Razorpay (UPI/Cards).", "error");
                     console.error(err);
                 }
             }).render('#paypal-button-container');
@@ -668,7 +689,7 @@
                 try {
                     const res = await fetch(`${API_URL}/books/${currentBook._id}/purchase-free`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token }
+                        headers: authHeaders
                     });
                     const data = await res.json();
                     
@@ -701,9 +722,16 @@
                 try {
                     const res = await fetch(`${API_URL}/books/${currentBook._id}/purchase-intent`, {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                        headers: authHeaders,
                         body: JSON.stringify({ gateway: 'razorpay', couponCode: appliedCoupon ? appliedCoupon.code : '' })
                     });
+
+                    if (res.status === 401) {
+                        localStorage.removeItem('token');
+                        VylithraUI.showToast("Your session has expired. Please log in again.", 'error');
+                        setTimeout(() => window.location.href = `/auth?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`, 1500);
+                        return;
+                    }
 
                     let data = await res.json();
 
@@ -714,7 +742,7 @@
                             "currency": data.currency,
                             "name": "Vylithra Library",
                             "description": `Purchase ${currentBook.title}`,
-                            "image": "https://placehold.co/200x200/1a1a24/d4af37?text=V&font=Playfair+Display",
+                            "image": window.location.origin + "/favicon.ico",
                             "order_id": data.order_id,
                             "handler": async function (response) {
                                 btn.innerHTML = `<i class="fas fa-check"></i> Verifying...`;
@@ -728,7 +756,7 @@
                                 });
                             },
                             "prefill": {
-                                "name": currentUser && currentUser.displayName ? currentUser.displayName : "Reader",
+                                "name": currentUser && currentUser.displayName ? currentUser.displayName : (currentUser ? currentUser.username : "Reader"),
                                 "email": currentUser && currentUser.email ? currentUser.email : "reader@vylithra.in"
                             },
                             "theme": { "color": "#d4af37" },
@@ -741,7 +769,8 @@
                         };
                         const rzp = new window.Razorpay(options);
                         rzp.on('payment.failed', function (response) {
-                            VylithraUI.showToast('Payment failed.', 'error');
+                            const errDesc = response && response.error && response.error.description ? response.error.description : 'Payment was declined or cancelled.';
+                            VylithraUI.showToast('Payment Failed: ' + errDesc, 'error');
                             btn.disabled = false;
                             btn.innerHTML = `<i class="fas fa-lock"></i> Check Out Now`;
                         });
@@ -762,7 +791,7 @@
             try {
                 const res = await fetch(`${API_URL}/books/verify-purchase`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    headers: authHeaders,
                     body: JSON.stringify(paymentData)
                 });
 

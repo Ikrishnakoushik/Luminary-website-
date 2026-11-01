@@ -2178,7 +2178,7 @@ app.post('/api/posts/:id/save', auth, async (req, res) => {
         if (!user) return res.status(404).json({ msg: 'User not found' });
 
         const postId = req.params.id;
-        const isSaved = user.savedPosts.includes(postId);
+        const isSaved = (user.savedPosts || []).some(id => id.toString() === postId.toString());
 
         if (isSaved) {
             user.savedPosts = user.savedPosts.filter(id => id.toString() !== postId);
@@ -2519,8 +2519,9 @@ app.get('/api/books', async (req, res) => {
             if (book.isPublished !== false) return true; // Show if published or undefined
             if (!currentUser) return false;
             // Show unpublished only to author or someone who purchased it
-            if (book.author._id.toString() === currentUser._id.toString()) return true;
-            if (currentUser.purchasedBooks.includes(book._id)) return true;
+            const authorId = book.author && (book.author._id || book.author);
+            if (authorId && authorId.toString() === currentUser._id.toString()) return true;
+            if (currentUser.purchasedBooks && currentUser.purchasedBooks.some(id => id.toString() === book._id.toString())) return true;
             return false;
         });
 
@@ -2539,8 +2540,9 @@ app.get('/api/books/:id', auth, async (req, res) => {
 
         // Strip out content if not purchased and not the author
         const user = await User.findById(req.user.id);
-        const isAuthor = book.author._id.toString() === req.user.id;
-        const hasPurchased = user.purchasedBooks.includes(book._id);
+        const authorId = book.author && (book.author._id || book.author);
+        const isAuthor = authorId ? authorId.toString() === req.user.id : false;
+        const hasPurchased = user && user.purchasedBooks ? user.purchasedBooks.some(id => id.toString() === book._id.toString()) : false;
 
         if (book.isPublished === false && !isAuthor && !hasPurchased) {
             return res.status(404).json({ msg: 'Book not found or unpublished' });
@@ -2974,7 +2976,7 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
         const user = await User.findById(req.user.id);
-        if (user.purchasedBooks.includes(book._id)) {
+        if (user.purchasedBooks && user.purchasedBooks.some(id => id.toString() === book._id.toString())) {
             return res.status(400).json({ msg: 'You have already purchased this book' });
         }
 
@@ -3021,7 +3023,7 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
                 notes: {
                     bookId: book._id.toString(),
                     userId: req.user.id.toString(),
-                    publisherId: book.author.toString(),
+                    publisherId: book.author ? book.author.toString() : '',
                     couponCode: couponCode ? couponCode.toUpperCase() : ''
                 }
             };
@@ -3049,7 +3051,7 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
                     custom_id: JSON.stringify({
                         bookId: book._id.toString(),
                         userId: req.user.id.toString(),
-                        publisherId: book.author.toString(),
+                        publisherId: book.author ? book.author.toString() : '',
                         couponCode: couponCode ? couponCode.toUpperCase() : ''
                     })
                 }]
@@ -3068,6 +3070,12 @@ app.post('/api/books/:id/purchase-intent', auth, async (req, res) => {
     } catch (err) {
         console.error('Payment Intent Error:', err);
         const errorMsg = (err.error && err.error.description) || err.description || err.message || JSON.stringify(err);
+        if (typeof errorMsg === 'string' && errorMsg.includes('PAYEE_ACCOUNT_RESTRICTED')) {
+            return res.status(400).json({ 
+                msg: 'The PayPal merchant account is currently restricted. Please pay securely using Razorpay (UPI, Credit/Debit Cards, NetBanking).',
+                code: 'PAYPAL_RESTRICTED'
+            });
+        }
         res.status(500).json({ msg: 'Payment Service Error: ' + errorMsg });
     }
 });
@@ -3099,12 +3107,14 @@ app.post('/api/books/verify-purchase', auth, async (req, res) => {
 
         if (isAuthentic) {
             const user = await User.findById(req.user.id);
-            if (!user.purchasedBooks.includes(book_id)) {
+            if (!user.purchasedBooks) user.purchasedBooks = [];
+            const alreadyPurchased = user.purchasedBooks.some(id => id.toString() === book_id.toString());
+            if (!alreadyPurchased) {
                 user.purchasedBooks.push(book_id);
                 await user.save();
 
                 const book = await Book.findById(book_id);
-                if (book && book.price > 0) {
+                if (book && book.price > 0 && book.author) {
                     const publisher = await User.findById(book.author);
                     if (publisher) {
                         publisher.walletBalance = (publisher.walletBalance || 0) + book.price;
@@ -3156,9 +3166,9 @@ app.post('/api/books/:id/download-intent', auth, async (req, res) => {
         if (!book) return res.status(404).json({ msg: 'Book not found' });
 
         const user = await User.findById(req.user.id);
-        if (!user.unlockedDownloads) Object.assign(user, { unlockedDownloads: [] });
+        if (!user.unlockedDownloads) user.unlockedDownloads = [];
         
-        if (user.unlockedDownloads.includes(book._id)) {
+        if (user.unlockedDownloads.some(id => id.toString() === book._id.toString())) {
             return res.status(400).json({ msg: 'You have already unlocked local downloads for this book.' });
         }
 
@@ -3213,6 +3223,12 @@ app.post('/api/books/:id/download-intent', auth, async (req, res) => {
     } catch (err) {
         console.error('Download Intent Error:', err);
         const errorMsg = (err.error && err.error.description) || err.description || err.message || JSON.stringify(err);
+        if (typeof errorMsg === 'string' && errorMsg.includes('PAYEE_ACCOUNT_RESTRICTED')) {
+            return res.status(400).json({ 
+                msg: 'The PayPal merchant account is currently restricted. Please pay securely using Razorpay (UPI, Credit/Debit Cards, NetBanking).',
+                code: 'PAYPAL_RESTRICTED'
+            });
+        }
         res.status(500).json({ msg: 'Payment Service Error: ' + errorMsg });
     }
 });
@@ -3241,12 +3257,13 @@ app.post('/api/books/verify-download', auth, async (req, res) => {
             const user = await User.findById(req.user.id);
             if (!user.unlockedDownloads) user.unlockedDownloads = [];
             
-            if (!user.unlockedDownloads.includes(book_id)) {
+            const alreadyUnlocked = user.unlockedDownloads.some(id => id.toString() === book_id.toString());
+            if (!alreadyUnlocked) {
                 user.unlockedDownloads.push(book_id);
                 await user.save();
 
                 const book = await Book.findById(book_id);
-                if (book && book.price > 0) {
+                if (book && book.price > 0 && book.author) {
                     const publisher = await User.findById(book.author);
                     if (publisher) {
                         let settings = await PlatformSetting.findOne();
@@ -3285,7 +3302,7 @@ app.post('/api/books/:id/download-free', auth, async (req, res) => {
 
         const user = await User.findById(req.user.id);
         if (!user.unlockedDownloads) user.unlockedDownloads = [];
-        if (user.unlockedDownloads.includes(book._id)) {
+        if (user.unlockedDownloads.some(id => id.toString() === book._id.toString())) {
             return res.status(400).json({ msg: 'Download already unlocked.' });
         }
 
@@ -3309,7 +3326,8 @@ app.post('/api/books/:id/purchase-free', auth, async (req, res) => {
         }
 
         const user = await User.findById(req.user.id);
-        if (user.purchasedBooks.includes(book._id)) {
+        if (!user.purchasedBooks) user.purchasedBooks = [];
+        if (user.purchasedBooks.some(id => id.toString() === book._id.toString())) {
             return res.status(400).json({ msg: 'You already own this book' });
         }
 

@@ -1293,11 +1293,11 @@
                         
                         <div class="price-row" style="display:flex; align-items:center;">
                             <p class="book-price" style="margin-right:auto;">${book.price === 0 ? 'Free' : '₹' + book.price}</p>
-                            ${(currentUser && currentUser.purchasedBooks && currentUser.purchasedBooks.includes(book._id)) ?
+                            ${(currentUser && currentUser.purchasedBooks && (currentUser.purchasedBooks || []).map(String).includes(String(book._id))) ?
                             `<button class="book-action-btn" onclick="openReader('${book._id}')">Read Book</button>
-                             ${(currentUser.unlockedDownloads && currentUser.unlockedDownloads.includes(book._id)) ?
+                             ${(currentUser.unlockedDownloads && (currentUser.unlockedDownloads || []).map(String).includes(String(book._id))) ?
                                 `<button class="book-action-btn" onclick="exportBookAsPDF('${book._id}', event)" style="background:transparent; color:var(--primary); border: 1px solid var(--primary); margin-left:10px;"><i class="fas fa-download"></i> PDF</button>` :
-                                `<button class="book-action-btn" onclick="window.location.href='/checkout-download?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
+                                `<button class="book-action-btn" onclick="window.location.href='/checkout-download.html?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
                              }` :
                             `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
                         }
