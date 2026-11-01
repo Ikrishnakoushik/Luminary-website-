@@ -1,5 +1,5 @@
-const CACHE_NAME = 'vylithra-cache-v8';
-const API_CACHE_NAME = 'vylithra-api-cache-v8';
+const CACHE_NAME = 'vylithra-cache-v13';
+const API_CACHE_NAME = 'vylithra-api-cache-v13';
 
 // URLs to cache immediately upon installation
 const PRECACHE_URLS = [
@@ -8,6 +8,7 @@ const PRECACHE_URLS = [
     '/profile',
     '/messages',
     '/books',
+    '/forgot-password',
     '/ui-common.css',
     '/ui-common.js',
     '/vylithra_logo.svg',
@@ -42,15 +43,13 @@ self.addEventListener('fetch', event => {
 
     // 1. API Requests Strategy (Network First, fallback to Cache)
     if (url.pathname.startsWith('/api/')) {
-        // We only cache GET requests
         if (event.request.method !== 'GET') {
-            return; // Let the browser handle POST/PUT/DELETE normally
+            return;
         }
 
         event.respondWith(
             fetch(event.request)
                 .then(networkResponse => {
-                    // Only cache successful API responses
                     if (networkResponse && networkResponse.status === 200) {
                         const responseClone = networkResponse.clone();
                         caches.open(API_CACHE_NAME).then(cache => {
@@ -60,11 +59,9 @@ self.addEventListener('fetch', event => {
                     return networkResponse;
                 })
                 .catch(async () => {
-                    // Try to get from cache if offline
                     const cachedResponse = await caches.match(event.request);
                     if (cachedResponse) return cachedResponse;
                     
-                    // If no cache, return a generic JSON error so the app doesn't crash completely
                     return new Response(JSON.stringify({ msg: 'Offline mode active - Data unavailable' }), {
                         status: 503,
                         headers: { 'Content-Type': 'application/json' }
@@ -74,25 +71,45 @@ self.addEventListener('fetch', event => {
         return;
     }
 
-    // 2. Static Assets Strategy (Stale-While-Revalidate or Cache First)
+    // 2. Navigation & HTML Requests (Network First, fallback to Cache for offline)
+    if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+        event.respondWith(
+            fetch(event.request)
+                .then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        const responseClone = networkResponse.clone();
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, responseClone);
+                        });
+                    }
+                    return networkResponse;
+                })
+                .catch(async () => {
+                    const cachedResponse = await caches.match(event.request);
+                    if (cachedResponse) return cachedResponse;
+                    return caches.match('/main');
+                })
+        );
+        return;
+    }
+
+    // 3. Static Assets Strategy (Stale-While-Revalidate)
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
             if (cachedResponse) {
-                // Background fetch to update cache
                 fetch(event.request).then(networkResponse => {
                     if (networkResponse && networkResponse.status === 200) {
                         caches.open(CACHE_NAME).then(cache => {
                             cache.put(event.request, networkResponse.clone());
                         });
                     }
-                }).catch(() => { /* Ignore background fetch errors */ });
+                }).catch(() => {});
 
                 return cachedResponse;
             }
 
             return fetch(event.request)
                 .then(networkResponse => {
-                    // Optionally cache newly visited static pages
                     if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
                         const responseClone = networkResponse.clone();
                         caches.open(CACHE_NAME).then(cache => {

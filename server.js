@@ -400,6 +400,8 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/privacy.html')));
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public/terms.html')));
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'public/robots.txt')));
+app.get('/forgot-password', (req, res) => res.sendFile(path.join(__dirname, 'public/forgot-password.html')));
+app.get('/reset-password', (req, res) => res.sendFile(path.join(__dirname, 'public/reset-password.html')));
 
 // Robust Token Extractor for Web & Mobile Clients
 const extractToken = (req) => {
@@ -942,7 +944,24 @@ app.get('/api/messages/group/:groupId', auth, async (req, res) => {
         const messages = await Message.find({ groupId: req.params.groupId })
                                       .populate('sender', 'username profilePicture displayName')
                                       .sort({ createdAt: 1 });
-        res.json(messages);
+        const clean = messages
+            .filter(m => !m.deletedFor || !m.deletedFor.map(id => id.toString()).includes(req.user.id.toString()))
+            .map(m => {
+                const doc = m.toObject();
+                if (doc.isDeleted) {
+                    doc.content = '[This message was deleted]';
+                    doc.attachmentUrl = null;
+                    doc.attachmentType = 'none';
+                } else if (doc.isViewOnce) {
+                    const hasViewed = doc.viewedBy && doc.viewedBy.map(id => id.toString()).includes(req.user.id.toString());
+                    doc.isViewed = !!hasViewed;
+                    if (hasViewed) {
+                        doc.attachmentUrl = null;
+                    }
+                }
+                return doc;
+            });
+        res.json(clean);
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
@@ -954,7 +973,7 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
         const group = await Group.findById(req.params.groupId);
         if(!group || !group.members.includes(req.user.id)) return res.status(403).json({ msg: 'Not a member of this group' });
 
-        const { content, attachmentUrl, attachmentType, isSystemLog } = req.body;
+        const { content, attachmentUrl, attachmentType, isSystemLog, isViewOnce } = req.body;
 
         const newMessage = new Message({
             sender: req.user.id,
@@ -962,7 +981,8 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
             content,
             attachmentUrl,
             attachmentType,
-            isSystemLog: isSystemLog || false
+            isSystemLog: isSystemLog || false,
+            isViewOnce: !!isViewOnce
         });
 
         const msg = await newMessage.save();
@@ -2550,13 +2570,28 @@ app.get('/api/messages/:userId', auth, async (req, res) => {
             { $set: { read: true, unread: false } }
         );
 
-        const cleanMessages = messages.map(m => {
-            const doc = m.toObject();
-            if (doc.content && typeof doc.content === 'string' && doc.content.startsWith('U2FsdGVkX1')) {
-                doc.content = resolveMessagePlaintext(doc.content, userId, otherUserId);
-            }
-            return doc;
-        });
+        const cleanMessages = messages
+            .filter(m => !m.deletedFor || !m.deletedFor.map(id => id.toString()).includes(userId.toString()))
+            .map(m => {
+                const doc = m.toObject();
+                if (doc.isDeleted) {
+                    doc.content = '[This message was deleted]';
+                    doc.attachmentUrl = null;
+                    doc.attachmentType = 'none';
+                    return doc;
+                }
+                if (doc.isViewOnce) {
+                    const hasViewed = doc.viewedBy && doc.viewedBy.map(id => id.toString()).includes(userId.toString());
+                    doc.isViewed = !!hasViewed;
+                    if (hasViewed) {
+                        doc.attachmentUrl = null;
+                    }
+                }
+                if (doc.content && typeof doc.content === 'string' && doc.content.startsWith('U2FsdGVkX1')) {
+                    doc.content = resolveMessagePlaintext(doc.content, userId, otherUserId);
+                }
+                return doc;
+            });
 
         res.json(cleanMessages);
     } catch (err) {
@@ -2674,10 +2709,7 @@ app.post('/api/books', auth, (req, res) => {
         try {
             const { title, description, price, coverImage, content, penName, category } = req.body;
 
-            // Check if publisher or admin
-            if (req.user.role !== 'publisher' && req.user.role !== 'admin') {
-                return res.status(403).json({ msg: 'Only publishers and admins can create books' });
-            }
+            // Any authenticated user can create books regardless of role
 
             let finalCoverImage = coverImage || '';
             if (req.file) {
@@ -3767,7 +3799,7 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
         if (receiver === 'upload' || receiver === 'conversations') {
             return res.status(404).json({ msg: 'Invalid receiver ID' });
         }
-        const { content, attachmentUrl, attachmentType } = req.body || {};
+        const { content, attachmentUrl, attachmentType, isViewOnce } = req.body || {};
 
         if (!content && !attachmentUrl) {
             return res.status(400).json({ msg: 'Message content or attachment is required' });
@@ -3783,7 +3815,8 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
             receiver,
             content: cleanContent,
             attachmentUrl: attachmentUrl || null,
-            attachmentType: attachmentType || 'none'
+            attachmentType: attachmentType || 'none',
+            isViewOnce: !!isViewOnce
         });
 
         const savedMessage = await newMessage.save();
@@ -3837,6 +3870,147 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
+// Delete a message (sender deletes for everyone; receiver deletes for self)
+app.delete('/api/messages/:messageId', auth, async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (!message) {
+            return res.status(404).json({ msg: 'Message not found' });
+        }
+        const userId = req.user.id.toString();
+        const isSender = message.sender.toString() === userId;
+        const io = req.app.get('io');
+
+        if (isSender) {
+            message.isDeleted = true;
+            message.content = '[This message was deleted]';
+            message.attachmentUrl = null;
+            message.attachmentType = 'none';
+            await message.save();
+
+            const deletePayload = {
+                messageId: message._id.toString(),
+                isDeleted: true,
+                content: '[This message was deleted]',
+                groupId: message.groupId,
+                receiver: message.receiver,
+                sender: message.sender
+            };
+
+            if (io) {
+                if (message.groupId) {
+                    io.to(message.groupId.toString()).emit('message_deleted', deletePayload);
+                } else {
+                    if (message.receiver) io.to(message.receiver.toString()).emit('message_deleted', deletePayload);
+                    io.to(message.sender.toString()).emit('message_deleted', deletePayload);
+                }
+            }
+            return res.json({ success: true, messageId: message._id, isDeleted: true });
+        } else {
+            if (!message.deletedFor) message.deletedFor = [];
+            if (!message.deletedFor.map(id => id.toString()).includes(userId)) {
+                message.deletedFor.push(req.user.id);
+                await message.save();
+            }
+            return res.json({ success: true, messageId: message._id, deletedForSelf: true });
+        }
+    } catch (err) {
+        console.error('Delete Message Error:', err.message);
+        res.status(500).json({ msg: 'Failed to delete message' });
+    }
+});
+
+// Mark View-Once media as viewed
+app.put('/api/messages/:messageId/view-once', auth, async (req, res) => {
+    try {
+        const message = await Message.findById(req.params.messageId);
+        if (!message) {
+            return res.status(404).json({ msg: 'Message not found' });
+        }
+        const userId = req.user.id.toString();
+        const isParticipant = (message.sender && message.sender.toString() === userId) ||
+                              (message.receiver && message.receiver.toString() === userId) ||
+                              (message.groupId);
+        if (!isParticipant) {
+            return res.status(403).json({ msg: 'Not authorized' });
+        }
+
+        if (!message.viewedBy) message.viewedBy = [];
+        if (!message.viewedBy.map(id => id.toString()).includes(userId)) {
+            message.viewedBy.push(req.user.id);
+            await message.save();
+        }
+
+        const io = req.app.get('io');
+        const viewPayload = {
+            messageId: message._id.toString(),
+            viewedBy: userId,
+            isViewOnce: true,
+            isViewed: true
+        };
+        if (io) {
+            if (message.groupId) {
+                io.to(message.groupId.toString()).emit('message_viewed', viewPayload);
+            } else {
+                if (message.receiver) io.to(message.receiver.toString()).emit('message_viewed', viewPayload);
+                io.to(message.sender.toString()).emit('message_viewed', viewPayload);
+            }
+        }
+        return res.json({ success: true, messageId: message._id, isViewed: true });
+    } catch (err) {
+        console.error('View-Once Error:', err.message);
+        res.status(500).json({ msg: 'Failed to mark as viewed' });
+    }
+});
+
+// HTTP WebRTC Signal Bridge (guarantees signal delivery between Web & Mobile)
+app.post('/api/webrtc/signal', auth, async (req, res) => {
+    try {
+        const { to, type, payload } = req.body || {};
+        if (!to || !type) {
+            return res.status(400).json({ msg: 'Target user and signal type required' });
+        }
+        const senderId = req.user.id.toString();
+        const signalData = {
+            to: String(to),
+            type: String(type),
+            from: senderId,
+            payload: {
+                ...(payload || {}),
+                from: senderId,
+                to: String(to)
+            }
+        };
+
+        const io = req.app.get('io');
+        if (io) {
+            io.to(String(to)).emit('webrtc_signal', signalData);
+            const targetSockets = userSocketMap.get(String(to));
+            if (targetSockets) {
+                for (const sockId of targetSockets) {
+                    io.to(sockId).emit('webrtc_signal', signalData);
+                }
+            }
+        }
+
+        try {
+            const db = admin.database();
+            if (db) {
+                await db.ref(`webrtc/signals/${to}`).push({
+                    type: String(type),
+                    payload: signalData.payload,
+                    timestamp: admin.database.ServerValue.TIMESTAMP
+                });
+            }
+        } catch(e) {}
+
+        res.json({ success: true });
+    } catch (err) {
+        console.error('WebRTC Signal Bridge Error:', err.message);
+        res.status(500).json({ msg: 'Signal failed' });
     }
 });
 

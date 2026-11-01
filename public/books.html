@@ -947,20 +947,22 @@
 
     <!-- Top Navigation -->
     <nav class="top-nav">
-        <a href="/" class="brand" style="text-decoration: none;">
-            Vylithra <span style="font-weight: 300; color: var(--text-muted);">Library</span>
-        </a>
+        <a href="/" class="brand" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.45));">
+        <span>Vylithra <span style="font-weight: 300; color: var(--text-muted);">Library</span></span>
+    </a>
         <div class="nav-links">
             <a href="/books" class="nav-link active">Library</a>
             <a href="/reels" class="nav-link" style="color:var(--primary); font-weight:600;"><i class="fas fa-play-circle" style="margin-right:5px;"></i>Reels</a>
             <a href="#" class="nav-link" onclick="VylithraUI.showToast('Author directory coming soon!', 'info'); return false;">Authors</a>
-            <a href="/studio" class="nav-link" id="studioLink" style="display: none;"> Studio</a>
+            
             <a href="/settings" class="nav-link">Account</a>
         </div>
         <div class="header-right">
             <div class="search-icon"><i class="fas fa-search"></i></div>
-            <a href="/publish-book" id="publishBtn"
-                style="display: none; padding: 8px 16px; border-radius: 6px; text-decoration: none; color: #fff; font-weight: 600; font-size: 0.9rem; background: var(--primary);">Publish</a>
+            <a href="/publish-book" id="publishBtn" class="upload-book-btn" style="display: inline-flex; align-items: center; gap: 8px; padding: 7px 18px; border-radius: 20px; text-decoration: none; color: #07090e; font-weight: 700; font-size: 0.88rem; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); box-shadow: 0 0 15px rgba(0, 242, 254, 0.4); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 0 22px rgba(0, 242, 254, 0.65)'; this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='0 0 15px rgba(0, 242, 254, 0.4)'; this.style.transform='scale(1)'">
+                <i class="fas fa-cloud-arrow-up"></i> Upload Book
+            </a>
             <a href="/profile" class="user-avatar" title="Profile" style="text-decoration: none; display: flex; align-items: center; justify-content: center; color: inherit;">
                 <i class="fas fa-user"></i>
             </a>
@@ -1030,11 +1032,16 @@
                     <div class="tab" onclick="switchTab('my-books')">My Library</div>
                 </div>
             </div>
-            <div class="collection-header">
+            <div class="collection-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <h2 class="collection-title">Explore Library</h2>
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search books, authors, genres...">
+                <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search books, authors, genres...">
+                    </div>
+                    <a href="/publish-book" style="display: inline-flex; align-items: center; gap: 8px; padding: 9px 20px; border-radius: 20px; text-decoration: none; color: #07090e; font-weight: 700; font-size: 0.88rem; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); box-shadow: 0 0 16px rgba(0, 242, 254, 0.4); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 0 24px rgba(0, 242, 254, 0.65)'; this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='0 0 16px rgba(0, 242, 254, 0.4)'; this.style.transform='scale(1)'">
+                        <i class="fas fa-cloud-arrow-up"></i> Upload Book
+                    </a>
                 </div>
             </div>
 
@@ -1143,11 +1150,9 @@
 
         // Check User Role from localStorage
         function checkUserRole() {
-            const role = localStorage.getItem('role');
-            if (role === 'publisher' || role === 'admin') {
-                document.getElementById('publishBtn').style.display = 'inline-flex';
-                document.getElementById('studioLink').style.display = 'inline-block';
-            }
+            const btn = document.getElementById('publishBtn');
+            if (btn) btn.style.display = 'inline-flex';
+        }
         }
 
         // Fetch Books

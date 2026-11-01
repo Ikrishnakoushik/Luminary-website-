@@ -132,6 +132,25 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
         actions: [
           TextButton(
+            onPressed: () async {
+              try {
+                await Provider.of<AuthProvider>(context, listen: false).resendVerification(email);
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Verification code resent! Check your inbox.')),
+                  );
+                }
+              } catch (e) {
+                if (ctx.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Failed to resend: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Resend Code', style: TextStyle(color: Colors.blueAccent)),
+          ),
+          TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
             child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
           ),

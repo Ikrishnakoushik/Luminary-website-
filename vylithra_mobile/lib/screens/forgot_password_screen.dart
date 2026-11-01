@@ -213,6 +213,32 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 ),
                         ),
                       ),
+                      if (_otpSent) ...[
+                        const SizedBox(height: 20),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Didn't receive code? ",
+                              style: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black54,
+                                fontSize: 14,
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: _isLoading ? null : _sendResetLink,
+                              child: const Text(
+                                'Resend OTP',
+                                style: TextStyle(
+                                  color: Color(0xFF3B82F6),
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),

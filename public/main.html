@@ -187,31 +187,38 @@
             flex: 1;
             max-width: 520px;
             position: relative;
-            margin: 0 24px;
+            margin: 0 28px;
         }
 
         .search-bar input {
             width: 100%;
-            padding: 11px 20px 11px 46px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 11px 22px 11px 48px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
             border-radius: 25px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(14, 18, 27, 0.85);
             outline: none;
             font-family: inherit;
             font-size: 0.92rem;
-            color: var(--text-main);
+            color: #ffffff;
             backdrop-filter: blur(14px);
             transition: all 0.25s ease;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.4);
         }
 
         .search-bar input::placeholder {
             color: #94a3b8;
+            font-weight: 400;
+        }
+
+        .search-bar input:hover {
+            border-color: rgba(0, 242, 254, 0.35);
+            background: rgba(18, 24, 38, 0.92);
         }
 
         .search-bar input:focus {
             border-color: var(--primary);
-            box-shadow: 0 0 22px rgba(0, 242, 254, 0.3);
-            background: rgba(255, 255, 255, 0.09);
+            box-shadow: 0 0 22px rgba(0, 242, 254, 0.35), inset 0 2px 5px rgba(0,0,0,0.4);
+            background: rgba(20, 28, 44, 0.98);
         }
 
         .search-bar i {
@@ -220,8 +227,9 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary);
-            font-size: 0.95rem;
-            transition: color 0.2s;
+            font-size: 1rem;
+            transition: color 0.2s, transform 0.2s;
+            pointer-events: none;
         }
 
         .user-menu {
@@ -317,14 +325,14 @@
             color: var(--text-muted);
             text-decoration: none;
             transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-            margin-bottom: 4px;
+            margin-bottom: 5px;
             font-weight: 600;
             font-size: 0.92rem;
             border: 1px solid transparent;
         }
 
         .nav-item i {
-            width: 22px;
+            width: 24px;
             text-align: center;
             font-size: 1.05rem;
             transition: transform 0.2s, color 0.2s;
@@ -334,7 +342,7 @@
             color: #ffffff;
             background: rgba(255, 255, 255, 0.06);
             border-color: rgba(255, 255, 255, 0.08);
-            transform: translateX(3px);
+            transform: translateX(4px);
         }
 
         .nav-item:hover i {
@@ -344,16 +352,10 @@
 
         .nav-item.active {
             color: var(--primary);
-            background: rgba(0, 242, 254, 0.08);
-            border-left: 3px solid var(--primary);
-            border-color: rgba(0, 242, 254, 0.2);
-        }
-
-        .nav-item.active {
-            color: var(--primary);
             background: linear-gradient(90deg, rgba(0, 242, 254, 0.12) 0%, rgba(0, 242, 254, 0.02) 100%);
+            border-left: 3px solid var(--primary);
             border-color: rgba(0, 242, 254, 0.25);
-            box-shadow: 0 0 20px rgba(0, 242, 254, 0.15);
+            box-shadow: 0 0 18px rgba(0, 242, 254, 0.12);
         }
 
         .nav-item.active i {
@@ -361,23 +363,12 @@
             text-shadow: 0 0 10px rgba(0, 242, 254, 0.6);
         }
 
-        .nav-item i {
-            width: 25px;
-            margin-right: 12px;
-            font-size: 1.1rem;
-            transition: transform 0.2s;
-        }
-
-        .nav-item:hover i {
-            transform: scale(1.1);
-        }
-
         .section-label {
             font-size: 0.75rem;
             text-transform: uppercase;
-            letter-spacing: 1.2px;
-            color: var(--text-light);
-            margin: 24px 0 10px 18px;
+            letter-spacing: 1.5px;
+            color: #94a3b8;
+            margin: 24px 0 10px 16px;
             font-weight: 700;
         }
 
@@ -526,17 +517,23 @@
             color: var(--text-muted);
         }
 
-        /* Post Card re-used/adapted */
+                /* Post Card - Cyber-Luxe Glassmorphism */
         .post-card {
-            background: var(--card-bg);
+            background: rgba(255, 255, 255, 0.03);
             border-radius: var(--border-radius);
-            padding: 25px;
-            margin-bottom: 30px;
-            /* Increased spacing */
-            box-shadow: var(--shadow);
-            transition: transform 0.2s;
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            animation: fadeIn 0.5s ease;
+            padding: 24px 26px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: fadeIn 0.4s ease;
+        }
+
+        .post-card:hover {
+            border-color: rgba(255, 255, 255, 0.14);
+            box-shadow: 0 12px 38px rgba(0, 0, 0, 0.55);
         }
 
         @keyframes fadeIn {
@@ -574,18 +571,42 @@
         }
 
         .post-tag {
-            font-size: 0.75rem;
-            background: var(--border);
-            padding: 4px 10px;
-            border-radius: 12px;
-            color: var(--text-muted);
+            font-size: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 20px;
+            color: #cbd5e1;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
         }
 
-        .post-content {
-            font-size: 1rem;
-            line-height: 1.6;
+        .post-tag:hover {
+            background: rgba(0, 242, 254, 0.12);
+            border-color: rgba(0, 242, 254, 0.4);
+            color: #00f2fe;
+            transform: translateY(-2px);
+            box-shadow: 0 0 14px rgba(0, 242, 254, 0.25);
+        }
+
+                .post-content {
+            font-size: 0.98rem;
+            line-height: 1.65;
             color: var(--text-main);
-            white-space: pre-wrap;
+        }
+
+        .post-text-body {
+            display: block;
+            white-space: pre-line;
+            word-break: break-word;
+            line-height: 1.65;
+            color: #e2e8f0;
+            font-size: 0.96rem;
+            margin: 0;
+            padding: 0;
         }
 
         .post-actions {
@@ -651,29 +672,31 @@
         /* Right Sidebar - Trending/Spreaders */
         .sidebar-right {
             position: sticky;
-            top: calc(var(--header-height) + 30px);
-            max-height: calc(100vh - 100px);
+            top: calc(var(--header-height) + 20px);
+            max-height: calc(100vh - 84px);
             overflow-y: auto;
-            scrollbar-width: none;
-            /* Firefox */
-            -ms-overflow-style: none;
-            /* IE/Edge */
+            scrollbar-width: thin;
+            scrollbar-color: rgba(0, 242, 254, 0.2) transparent;
+            transition: opacity 0.3s ease;
         }
-
         .sidebar-right::-webkit-scrollbar {
-            display: none;
+            width: 4px;
+        }
+        .sidebar-right::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 254, 0.25);
+            border-radius: 4px;
         }
 
         .widget {
             background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: var(--border-radius);
-            padding: 22px;
+            border-radius: 18px;
+            padding: 18px 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            margin-bottom: 24px;
-            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            transition: all 0.25s ease;
         }
 
         .widget:hover {
@@ -681,9 +704,9 @@
         }
 
         .widget-title {
-            font-size: 1.05rem;
+            font-size: 1rem;
             font-weight: 700;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             color: #ffffff;
             letter-spacing: -0.3px;
             display: flex;
@@ -694,8 +717,9 @@
         .spreader-item {
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
-            padding: 12px 0;
+            padding: 8px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease;
         }
@@ -706,69 +730,39 @@
 
         .spreader-info {
             flex: 1;
+            min-width: 0;
         }
 
         .spreader-name {
             font-weight: 600;
-            font-size: 0.95rem;
+            font-size: 0.92rem;
             color: var(--text-main);
             display: block;
-        }
-
-        .spreader-role {
-            font-size: 0.8rem;
-            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .follow-btn {
             background: rgba(0, 242, 254, 0.1);
             color: var(--primary);
             border: 1px solid rgba(0, 242, 254, 0.3);
-            padding: 5px 14px;
-            border-radius: 20px;
-            font-size: 0.8rem;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.25s ease;
+            transition: all 0.2s ease;
             text-decoration: none;
             display: inline-block;
+            flex-shrink: 0;
         }
 
         .follow-btn:hover {
             background: var(--primary);
             color: #07090e;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.45);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.45);
             transform: scale(1.05);
-        }
-
-        /* --- Auto-Hide Sidebar on Scroll --- */
-        .sidebar-right {
-            position: sticky;
-            top: calc(var(--header-height) + 30px);
-            max-height: calc(100vh - 100px);
-            overflow-y: auto;
-            scrollbar-width: none;
-            -ms-overflow-style: none;
-            transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1), transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), margin-right 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            transform-origin: right center;
-            opacity: 1;
-            transform: translateX(0) scale(1);
-        }
-
-        .container {
-            transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .sidebar-hidden-layout .sidebar-right {
-            opacity: 0;
-            transform: translateX(40px) scale(0.95);
-            pointer-events: none;
-            margin-right: -260px;
-        }
-
-        .container.sidebar-hidden-layout {
-            grid-template-columns: 260px 1fr 0px; 
-            gap: 0; 
         }
         /* Mobile Responsive */
         @media (max-width: 900px) {
@@ -1514,15 +1508,23 @@
             font-weight: 700;
             color: #ffffff;
         }
+                .story-avatar-wrapper.story-viewed {
+            background: rgba(255, 255, 255, 0.18) !important;
+            box-shadow: none !important;
+        }
+        .story-avatar-wrapper.story-viewed:hover {
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.25) !important;
+        }
         .story-username {
-            font-size: 0.8rem;
-            color: var(--text-main);
+            font-size: 0.78rem;
+            color: #cbd5e1;
             font-weight: 500;
-            max-width: 75px;
+            max-width: 86px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             text-align: center;
+            margin-top: 3px;
         }
         
         /* === PROFESSIONAL NATIVE MOBILE REDESIGN (MAIN FEED) === */
@@ -1821,10 +1823,7 @@
                     <span>Books</span>
                 </a>
 
-                <a href="/publisher" class="nav-item" id="publisher-link" data-type="core" style="display: none;">
-                    <i class="fas fa-pen-nib"></i>
-                    <span>Publisher Studio</span>
-                </a>
+                
             </div>
 
             <div class="section-label" style="text-transform: uppercase;">Resources</div>
@@ -1873,105 +1872,269 @@
             margin-bottom: 30px;
         }
 
-        /* Hero Banner (Figma Cyber-Luxe) */
+        /* Featured Editorial Banner - Split Layout & Carousel */
         .dv-hero {
             position: relative;
             width: 100%;
-            height: clamp(280px, 35vh, 320px);
+            min-height: 290px;
             border-radius: var(--border-radius);
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(14, 18, 27, 0.95) 0%, rgba(20, 26, 40, 0.95) 50%, rgba(10, 14, 22, 0.95) 100%);
+            background: linear-gradient(135deg, rgba(14, 18, 27, 0.98) 0%, rgba(20, 26, 40, 0.95) 50%, rgba(10, 14, 22, 0.98) 100%);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255,255,255,0.09);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            margin-bottom: 22px;
+            transition: all 0.3s ease;
+        }
+
+        .dv-hero-backdrop-glow {
+            position: absolute;
+            top: -50px;
+            left: -50px;
+            width: 350px;
+            height: 350px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.18) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(30px);
+        }
+
+        .dv-hero-split {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 28px;
+            padding: 24px 30px;
+            align-items: center;
+            min-height: 290px;
+        }
+
+        /* Left Column: Visual Showcase Card */
+        .dv-hero-visual-col {
             display: flex;
             align-items: center;
-            justify-content: flex-end;
-            padding: 40px 60px;
-            box-shadow: 0 12px 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            border: 1px solid rgba(255,255,255,0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-        }
-        
-        .dv-hero-bg {
-            position: absolute;
-            inset: 0;
-            background: url('/uploads/curation-banner.png') center/cover no-repeat;
-            opacity: 0.6;
-            z-index: 0;
-        }
-        
-        .dv-hero-gradient {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(to right, transparent 0%, rgba(7, 9, 14, 0.5) 30%, rgba(7, 9, 14, 0.95) 75%, rgba(7, 9, 14, 1) 100%);
-            z-index: 1;
+            justify-content: center;
         }
 
-        .dv-hero-content {
+        .dv-hero-visual-card {
             position: relative;
-            z-index: 2;
-            width: 480px;
-            text-align: left;
-            color: #f8fafc;
+            width: 100%;
+            height: 230px;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 242, 254, 0.2);
+            background: #0e121b;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
         }
 
-        .dv-hero-content h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.3rem;
+        .dv-hero:hover .dv-hero-visual-card {
+            transform: scale(1.02);
+            box-shadow: 0 14px 36px rgba(0, 0, 0, 0.7), 0 0 28px rgba(0, 242, 254, 0.35);
+        }
+
+        .dv-hero-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+        }
+
+        .dv-hero-visual-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, transparent 40%, rgba(7, 9, 14, 0.85) 100%);
+            pointer-events: none;
+        }
+
+        .dv-hero-visual-tag {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            right: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
             font-weight: 700;
-            line-height: 1.15;
-            margin-bottom: 15px;
-            letter-spacing: -0.5px;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            color: #ffffff;
+            background: rgba(7, 9, 14, 0.75);
+            backdrop-filter: blur(10px);
+            padding: 5px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
-        .dv-hero-content p {
-            font-size: 0.95rem;
+        .dv-hero-visual-tag i {
+            color: #00f2fe;
+        }
+
+        /* Right Column: Information & Controls */
+        .dv-hero-info-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100%;
+            min-height: 220px;
+        }
+
+        .dv-editorial-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .dv-editorial-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            background: rgba(0, 242, 254, 0.12);
+            color: #00f2fe;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.2px;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            text-transform: uppercase;
+        }
+
+        .dv-editorial-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+
+        .dv-hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 10px;
+            letter-spacing: -0.4px;
+            color: #ffffff;
+            transition: opacity 0.3s ease;
+        }
+
+        .dv-hero-desc {
+            font-size: 0.92rem;
             line-height: 1.6;
             color: var(--text-muted);
             font-weight: 400;
+            margin-bottom: 18px;
+            max-width: 580px;
+            transition: opacity 0.3s ease;
+        }
+
+        .dv-hero-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 16px;
+        }
+
+        .dv-hero-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dv-author-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(0, 242, 254, 0.15);
+            color: #00f2fe;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+        }
+
+        .dv-author-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #cbd5e1;
+        }
+
+        .dv-hero-carousel-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dv-carousel-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.75rem;
+            transition: all 0.2s ease;
+        }
+
+        .dv-carousel-btn:hover {
+            background: var(--primary);
+            color: #07090e;
+            border-color: var(--primary);
+            transform: scale(1.08);
         }
 
         .dv-hero-dots {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 2;
             display: flex;
-            gap: 8px;
+            gap: 6px;
+            align-items: center;
         }
+
         .dv-hero-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: rgba(255,255,255,0.25);
-            transition: all 0.3s;
-        }
-        .dv-hero-dot.active {
-            width: 24px;
-            background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
-            border-radius: 8px;
-            box-shadow: 0 0 12px rgba(0, 242, 254, 0.5);
+            background: rgba(255, 255, 255, 0.25);
+            cursor: pointer;
+            transition: all 0.3s ease;
         }
 
-        /* Composer Bar (Figma Cyber-Luxe) */
+        .dv-hero-dot:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .dv-hero-dot.active {
+            width: 22px;
+            background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
+            border-radius: 6px;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        /* Post Composer Pill (Cyber-Luxe) */
         .dv-composer {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.04);
             border-radius: 50px;
-            padding: 10px 16px 10px 18px;
-            border: 1px solid rgba(255,255,255,0.08);
+            padding: 8px 14px 8px 16px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px rgba(0,0,0,0.35);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             transition: all 0.3s ease;
+            position: relative;
         }
+
         .dv-composer:hover, .dv-composer:focus-within {
             border-color: rgba(0, 242, 254, 0.35);
             box-shadow: 0 8px 32px rgba(0, 242, 254, 0.15);
@@ -1979,8 +2142,8 @@
         }
         
         .dv-composer-icon {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(168, 85, 247, 0.15));
             border: 1px solid rgba(0, 242, 254, 0.3);
@@ -1988,11 +2151,13 @@
             align-items: center;
             justify-content: center;
             color: #00f2fe;
-            margin-right: 15px;
+            margin-right: 14px;
             overflow: hidden;
+            flex-shrink: 0;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             transition: all 0.25s ease;
         }
+
         .dv-composer:hover .dv-composer-icon {
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
             transform: scale(1.05);
@@ -2006,65 +2171,111 @@
             font-size: 0.95rem;
             outline: none;
             font-family: inherit;
+            padding: 8px 4px;
         }
+
         .dv-composer-input::placeholder {
-            color: var(--text-muted);
+            color: #94a3b8;
         }
 
         .dv-composer-tools {
             display: flex;
             align-items: center;
             gap: 14px;
-            margin-right: 20px;
+            margin-right: 16px;
             color: var(--text-muted);
             font-size: 1.05rem;
         }
+
         .dv-composer-tools i {
             cursor: pointer;
             transition: all 0.2s ease;
+            padding: 6px;
+            border-radius: 6px;
         }
+
         .dv-composer-tools i:hover {
             color: #00f2fe;
+            background: rgba(0, 242, 254, 0.1);
             transform: scale(1.15);
             text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
         }
+
         .dv-composer-tools .divider {
             width: 1px;
             height: 20px;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.12);
+        }
+
+        .composer-media-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(0, 242, 254, 0.15);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            color: #00f2fe;
+            border-radius: 20px;
+            padding: 3px 10px;
+            font-size: 0.78rem;
+            margin-right: 10px;
+            max-width: 130px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .composer-media-chip .remove-media {
+            cursor: pointer;
+            opacity: 0.7;
+            font-size: 0.75rem;
+        }
+        .composer-media-chip .remove-media:hover {
+            opacity: 1;
+            color: #ef4444;
         }
 
         .dv-composer-actions {
             display: flex;
             gap: 10px;
         }
+
         .dv-btn {
-            padding: 8px 22px;
+            padding: 0 20px;
+            height: 38px;
             border-radius: 20px;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             font-weight: 600;
             border: none;
             cursor: pointer;
             transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
         }
+
         .dv-btn-ghost {
-            background: rgba(255, 255, 255, 0.04);
-            color: var(--text-muted);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #cbd5e1;
+            border: 1px solid rgba(255,255,255,0.12);
         }
+
         .dv-btn-ghost:hover {
-            background: rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.1);
             color: white;
-            border-color: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-1px);
         }
+
         .dv-btn-solid {
             background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
             color: #07090e;
             font-weight: 700;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.3);
+            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);
         }
+
         .dv-btn-solid:hover {
-            box-shadow: 0 4px 25px rgba(0, 242, 254, 0.6);
+            box-shadow: 0 4px 25px rgba(0, 242, 254, 0.65);
             transform: translateY(-1px) scale(1.02);
         }
 
@@ -2190,46 +2401,75 @@
 
     <div class="dashboard-layout">
         
-        <!-- 1. Hero Banner -->
-        <div class="dv-hero">
-            <div class="dv-hero-bg" id="heroBgElement"></div>
-            <div class="dv-hero-gradient"></div>
-            <div class="dv-hero-content">
-                <div style="margin-bottom: 12px;">
-                    <span style="display:inline-flex; align-items:center; gap:6px; padding: 4px 12px; border-radius: 20px; background: rgba(0, 242, 254, 0.12); color: #00f2fe; font-size: 0.75rem; font-weight: 700; letter-spacing: 1.2px; border: 1px solid rgba(0, 242, 254, 0.3); text-transform: uppercase;">
-                        <i class="fas fa-sparkles" style="font-size:0.7rem;"></i> Vylithra Editorial
-                    </span>
+        <!-- 1. Featured Editorial Carousel (Split Layout) -->
+        <div class="dv-hero" id="editorialCarousel">
+            <div class="dv-hero-backdrop-glow"></div>
+            <div class="dv-hero-split">
+                <!-- Left Side: Featured Artwork / Visual Illustration -->
+                <div class="dv-hero-visual-col">
+                    <div class="dv-hero-visual-card">
+                        <img id="heroVisualImg" src="/uploads/curation-banner.png" alt="Featured Editorial" class="dv-hero-img">
+                        <div class="dv-hero-visual-overlay"></div>
+                        <div class="dv-hero-visual-tag" id="heroVisualTag">
+                            <i class="fas fa-gem"></i> Curated Issue #42
+                        </div>
+                    </div>
                 </div>
-                <h1 id="heroTitleElement">Reclaiming the art of curation</h1>
-                <p id="heroSubtitleElement">Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives can elevate common collections.<br><br>— The Curators.</p>
-            </div>
-            <div class="dv-hero-dots">
-                <div class="dv-hero-dot active"></div>
-                <div class="dv-hero-dot"></div>
-                <div class="dv-hero-dot"></div>
+                <!-- Right Side: Editorial Content & Typography -->
+                <div class="dv-hero-info-col">
+                    <div class="dv-editorial-badge-row">
+                        <span class="dv-editorial-badge">
+                            <i class="fas fa-sparkles"></i> Vylithra Editorial
+                        </span>
+                        <span class="dv-editorial-date" id="heroDateElement">Curated Collection</span>
+                    </div>
+                    <h1 id="heroTitleElement" class="dv-hero-title">Reclaiming the art of curation</h1>
+                    <p id="heroSubtitleElement" class="dv-hero-desc">Explore the ancient and modern interplay between aesthetic presentation and foundational knowledge. Discover how premium digital narratives elevate visionary creators.</p>
+                    <div class="dv-hero-footer-row">
+                        <div class="dv-hero-author">
+                            <span class="dv-author-avatar"><i class="fas fa-feather-pointed"></i></span>
+                            <span id="heroAuthorElement" class="dv-author-name">The Curators</span>
+                        </div>
+                        <div class="dv-hero-carousel-controls">
+                            <button class="dv-carousel-btn" onclick="prevHeroSlide()" title="Previous Story" aria-label="Previous Story"><i class="fas fa-chevron-left"></i></button>
+                            <div class="dv-hero-dots">
+                                <div class="dv-hero-dot active" onclick="setHeroSlide(0)" title="Slide 1"></div>
+                                <div class="dv-hero-dot" onclick="setHeroSlide(1)" title="Slide 2"></div>
+                                <div class="dv-hero-dot" onclick="setHeroSlide(2)" title="Slide 3"></div>
+                            </div>
+                            <button class="dv-carousel-btn" onclick="nextHeroSlide()" title="Next Story" aria-label="Next Story"><i class="fas fa-chevron-right"></i></button>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
         <!-- 2. Composer Pill -->
         <div class="dv-composer">
-            <div class="dv-composer-icon"><i class="fas fa-pen"></i></div>
-            <input type="text" class="dv-composer-input" placeholder="Start a new spread..." onclick="handleCreatePostClick()" readonly style="cursor: pointer;">
+            <div class="dv-composer-icon" onclick="handleCreatePostClick()" title="Create Spread"><i class="fas fa-pen"></i></div>
+            <input type="text" id="quickSpreadInput" class="dv-composer-input" placeholder="Start a new spread..." onkeydown="if(event.key==='Enter') publishQuickSpread()">
             
-            <div class="dv-composer-tools">
-                <i class="fas fa-bold"></i>
-                <i class="fas fa-italic"></i>
-                <i class="fas fa-font"></i>
+            <div id="composerAttachmentPreview" style="display:none;" class="composer-media-chip">
                 <i class="fas fa-image"></i>
-                <i class="fas fa-link"></i>
+                <span id="composerMediaName">image.png</span>
+                <i class="fas fa-times remove-media" onclick="clearComposerMedia(event)" title="Remove media"></i>
+            </div>
+            <input type="file" id="composerMediaInput" accept="image/*" style="display:none;" onchange="handleComposerMedia(event)">
+
+            <div class="dv-composer-tools">
+                <i class="fas fa-bold" title="Bold text" onclick="wrapSpreadFormat('**')"></i>
+                <i class="fas fa-italic" title="Italic text" onclick="wrapSpreadFormat('*')"></i>
+                <i class="fas fa-heading" title="Heading" onclick="wrapSpreadFormat('### ')"></i>
+                <i class="fas fa-image" title="Attach image" onclick="document.getElementById('composerMediaInput').click()"></i>
+                <i class="fas fa-link" title="Insert link" onclick="insertSpreadLink()"></i>
                 <div class="divider"></div>
             </div>
 
             <div class="dv-composer-actions">
-                <button class="dv-btn dv-btn-ghost" onclick="handleCreatePostClick()">New Spread</button>
-                <button class="dv-btn dv-btn-solid" onclick="handleCreatePostClick()">Publish</button>
+                <button class="dv-btn dv-btn-ghost" onclick="handleCreatePostClick()" title="Start New Spread">New Spread</button>
+                <button class="dv-btn dv-btn-solid" onclick="publishQuickSpread()" title="Publish to Feed">Publish</button>
             </div>
         </div>
-
 
     </div>
 
@@ -2264,10 +2504,12 @@
             <div class="widget">
                 <h3 class="widget-title">Suggested Topics</h3>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                    <span class="post-tag">#Design</span>
-                    <span class="post-tag">#Coding</span>
-                    <span class="post-tag">#LifeHacks</span>
-                    <span class="post-tag">#AI</span>
+                    <span class="post-tag" onclick="filterPosts('Design')">#Design</span>
+                    <span class="post-tag" onclick="filterPosts('Technology & Innovation')">#Technology</span>
+                    <span class="post-tag" onclick="filterPosts('Business & Finance')">#Business</span>
+                    <span class="post-tag" onclick="filterPosts('Global Affairs')">#GlobalAffairs</span>
+                    <span class="post-tag" onclick="filterPosts('trending')">#Trending</span>
+                    <span class="post-tag" onclick="filterPosts('all')">#AllTopics</span>
                 </div>
             </div>
             <div class="widget">
@@ -2450,7 +2692,15 @@
                     const banner = await res.json();
                     if (banner && banner.title) {
                         editorialStories[0].title = banner.title;
-                        if (banner.subtitle) editorialStories[0].desc = banner.subtitle;
+                        let descText = banner.subtitle || editorialStories[0].desc;
+                        let authorText = "The Curators";
+                        if (descText.includes('\n\n-')) {
+                            const parts = descText.split('\n\n-');
+                            descText = parts[0].trim();
+                            if (parts[1]) authorText = parts[1].replace(/^[.\s-]+|[.\s-]+$/g, '').trim();
+                        }
+                        editorialStories[0].desc = descText;
+                        editorialStories[0].author = authorText;
                         if (banner.imageUrl) editorialStories[0].image = banner.imageUrl;
                         updateHeroSlideUI();
                     }
@@ -2676,63 +2926,27 @@
                     // Image
                     if (post.image) {
                         postContentHTML += `
-                    <div style="width: 100%; margin: 15px 0 20px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(0,0,0,0.06); box-shadow: 0 4px 20px rgba(0,0,0,0.03); max-height: 480px; background: var(--input-bg); display: flex; justify-content: center; align-items: center;">
-                        <img src="${(post.image) && String(post.image).startsWith('http') ? (post.image) : '/' + (post.image)}" alt="Post Attached Photo" loading="lazy" decoding="async" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block; filter: brightness(0.98);">
-                    </div>`;
+                    <div class="post-media-box" onclick="openFullscreenMedia(this.querySelector('img').src, 'image')" title="Click to view full screen" style="width: 100%; margin: 14px 0 18px 0; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); box-shadow: 0 4px 20px rgba(0,0,0,0.3); max-height: 480px; background: rgba(14, 18, 27, 0.6); display: flex; justify-content: center; align-items: center; cursor: zoom-in; position: relative; transition: transform 0.2s ease, border-color 0.2s ease;" onmouseover="this.style.borderColor='rgba(0, 242, 254, 0.45)'; this.style.transform='scale(1.005)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.transform='scale(1)';"><img src="${(post.image && String(post.image).startsWith('http')) ? post.image : '/' + post.image}" alt="Post Photo" loading="lazy" decoding="async" onerror="this.onerror=null; const b=this.closest('.post-media-box'); if(b) b.style.display='none';" style="width: 100%; max-height: 480px; height: auto; object-fit: cover; object-position: center; display: block;"><div style="position: absolute; bottom: 12px; right: 12px; background: rgba(7, 9, 14, 0.75); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 4px 10px; color: #f8fafc; font-size: 0.72rem; font-weight: 600; display: flex; align-items: center; gap: 5px; pointer-events: none;"><i class="fas fa-expand"></i> Full Screen</div></div>`;
                     }
 
                     // Text Content Logic
                     let fullContent = linkify(post.content || '');
-                    // Basic formatting for preview (converts newlines to <br>)
                     let formattedFull = fullContent.replace(/\n/g, '<br>');
-
-                    let displayContent = formattedFull;
-                    // Read Button Logic
                     let readActionBtn = '';
-                    const isLong = fullContent.length > 800; // Threshold for "Long Article"
+                    const isLong = fullContent.length > 800;
 
                     if (isLong) {
-                        // Full Reader Mode for very long content
                         const safeTitle = (post.title || 'Post').replace(/'/g, "&apos;");
                         const safeAuthor = (authorName).replace(/'/g, "&apos;");
                         const safeTime = (dateStr).replace(/'/g, "&apos;");
-
-                        readActionBtn = `
-                                                                        <div class="action-btn read-btn"
-                                                                            onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')"
-                                                                            style="margin-left: auto; color: var(--accent); font-weight: 600; background: rgba(99, 102, 241, 0.1); padding: 5px 15px; border-radius: 20px;">
-                                                                            <i class="fas fa-book-open" style="margin-right: 5px;"></i> Read Story
-                                                                        </div>
-                                                                        <div id="content-store-${post._id}" style="display:none;">${LinkifyAndFormat(post.content)}</div>
-                                                                        `;
-                    } else if (fullContent.length > 300) {
-                        // Medium length: Use inline expand (keep as text link in content)
-                        const displayContent = formattedFull.substring(0, 300) + '...';
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
-                                                                            <span class="post-text-body">${displayContent}</span>
-                                                                            <span class="read-more-btn" onclick="toggleReadMore(this)"
-                                                                                data-full="${encodeURIComponent(formattedFull)}"
-                                                                                data-short="${encodeURIComponent(displayContent)}"
-                                                                                style="color: var(--accent); cursor: pointer; font-weight: 600; margin-left: 5px; font-size: 0.9rem;">Read More</span>
-                                                                        </div>`;
-                    } else {
-                        // Short content
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
-                        <span class="post-text-body">${formattedFull}</span>
-                    </div>`;
-                    }
-
-                    // If isLong, we skipped adding content block above to avoid duplication? 
-                    // Wait, logic above was adding postContentHTML. 
-                    // Let's rewrite strictly:
-
-                    if (isLong) {
-                        // Show teaser text for long posts too? Yes, usually good.
-                        // Let's show the first 300 chars then the button is in action bar.
+                        readActionBtn = `<div class="action-btn read-btn" onclick="openReaderFromId('${post._id}', '${safeTitle}', '${safeAuthor}', '${safeTime}')" style="margin-left: auto; color: var(--primary); font-weight: 600; background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.25); padding: 5px 14px; border-radius: 20px;"><i class="fas fa-book-open" style="margin-right: 5px;"></i> Read Story</div><div id="content-store-${post._id}" style="display:none;">${LinkifyAndFormat(post.content)}</div>`;
                         const displayTeaser = formattedFull.substring(0, 300) + '...';
-                        postContentHTML += `<div style="margin-bottom: 15px; line-height: 1.7; color: var(--text-main);">
-                                                                            <span class="post-text-body">${displayTeaser}</span>
-                                                                        </div>`;
+                        postContentHTML += `<div style="margin-bottom: 14px; line-height: 1.65;"><span class="post-text-body">${displayTeaser}</span></div>`;
+                    } else if (fullContent.length > 300) {
+                        const displayContent = formattedFull.substring(0, 300) + '...';
+                        postContentHTML += `<div style="margin-bottom: 14px; line-height: 1.65;"><span class="post-text-body">${displayContent}</span> <span class="read-more-btn" onclick="toggleReadMore(this)" data-full="${encodeURIComponent(formattedFull)}" data-short="${encodeURIComponent(displayContent)}" style="color: var(--primary); cursor: pointer; font-weight: 600; margin-left: 5px; font-size: 0.88rem;">Read More</span></div>`;
+                    } else {
+                        postContentHTML += `<div style="margin-bottom: 14px; line-height: 1.65;"><span class="post-text-body">${formattedFull}</span></div>`;
                     }
 
                     // Video Embed
@@ -2740,15 +2954,20 @@
                         const videoId = getYouTubeID(post.videoUrl);
                         if (videoId) {
                             postContentHTML += `
-                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px;">
+                        <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 15px; border: 1px solid rgba(255,255,255,0.08); background: #000;">
                             <iframe style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
-                                src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen>
+                                src="https://www.youtube.com/embed/${videoId}?rel=0" frameborder="0" allowfullscreen allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture">
                             </iframe>
+                            <button onclick="openFullscreenMedia('https://www.youtube.com/embed/${videoId}?autoplay=1', 'iframe')" title="View in Full Screen" style="position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(0, 242, 254, 0.4); color: #00f2fe; border-radius: 20px; padding: 5px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="fas fa-expand"></i> Full Screen</button>
                         </div>`;
-                        }
-                    }
-
-                    // Attachment
+                        } else if (post.videoUrl.endsWith('.mp4') || post.videoUrl.endsWith('.webm')) {
+                            const vUrl = post.videoUrl.startsWith('http') ? post.videoUrl : '/' + post.videoUrl;
+                            postContentHTML += `
+                        <div style="position: relative; margin-bottom: 15px; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255,255,255,0.08); background: #000;">
+                            <video src="${vUrl}" controls playsinline style="width: 100%; max-height: 480px; display: block;"></video>
+                            <button onclick="openFullscreenMedia('${vUrl}', 'video')" title="View in Full Screen" style="position: absolute; top: 12px; right: 12px; z-index: 5; background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(8px); border: 1px solid rgba(0, 242, 254, 0.4); color: #00f2fe; border-radius: 20px; padding: 5px 12px; font-size: 0.75rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 5px; box-shadow: 0 4px 15px rgba(0,0,0,0.5);"><i class="fas fa-expand"></i> Full Screen</button>
+                        </div>`;
+                        } } // Attachment
                     if (post.attachment) {
                         const fileName = post.attachment.split('/').pop().replace(/^\d+-/, '');
                         postContentHTML += `
@@ -2771,19 +2990,7 @@
                             ? `<img src="${(cProfilePic) && String(cProfilePic).startsWith('http') ? (cProfilePic) : '/' + (cProfilePic)}" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;">`
                             : `<div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 0.8rem; flex-shrink: 0;">${cInitial}</div>`;
 
-                        return `
-                                                                            <div style="display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--bg-color); padding-bottom: 8px;">
-                                                                                ${commentAvatar}
-                                                                                <div>
-                                                                                    <div style="font-size: 0.9rem;">
-                                                                                        <a href="/profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a>
-                                                                                        <span style="font-size: 0.8rem; color: var(--text-muted);">â€¢ Commented</span>
-                                                                                    </div>
-                                                                                    <div style="font-size: 0.95rem; color: var(--text-main); margin-top: 2px;">
-                                                                                        ${c.text}
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>`;
+                        return `<div style="display: flex; gap: 10px; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.06); padding-bottom: 8px;">${commentAvatar}<div><div style="font-size: 0.88rem;"><a href="/profile?user=${cUserId}" style="text-decoration: none; color: var(--primary); font-weight: 700; margin-right: 5px;">${cName}</a><span style="font-size: 0.78rem; color: var(--text-muted);">Commented</span></div><div style="font-size: 0.92rem; color: #e2e8f0; margin-top: 2px;">${c.text}</div></div></div>`;
                     }).join('');
 
                     const likeText = likesCount > 0 ? `${likesCount}` : 'Like';
@@ -2809,52 +3016,44 @@
                         }
                     } catch (e) { }
 
-                    return `
-                                                                            <div class="post-card" id="post-${post._id}">
-                                                                                <div class="post-header">
-                                                                                    <div class="post-user-info">
-                                                                                        <a href="/profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
-                                                                                            ${postAvatar}
-                                                                                            <div>
-                                                                                                <div class="post-author">${authorName}</div>
-                                                                                                <div class="post-time">${dateStr}</div>
-                                                                                            </div>
-                                                                                        </a>
-                                                                                    </div>
-                                                                                    <span class="post-tag" style="background: var(--tag-bg); color: var(--tag-text); padding: 4px 10px; border-radius: 12px; font-size: 0.8rem;">${post.category || 'General'}</span>
-                                                                                </div>
-                                                                                <div class="post-content">${postContentHTML}</div>
-
-                                                                                <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
-                                                                                    <div class="action-btn" onclick="toggleLike('${post._id}')">
-                                                                                        <i class="${likesCount > 0 ? 'fas' : 'far'} fa-heart" style="${likesCount > 0 ? 'color: #e11d48;' : ''}"></i> ${likeText}
-                                                                                    </div>
-                                                                                    <div class="action-btn" onclick="toggleComments('${post._id}')">
-                                                                                        <i class="far fa-comment"></i> ${commentText}
-                                                                                    </div>
-                                                                                    <div class="action-btn" onclick="sharePost('${post._id}')">
-                                                                                        <i class="far fa-share-square"></i> Share
-                                                                                    </div>
-
-                        <!-- Read Story Action -->
-                                                                                    ${readActionBtn}
-
-                                                                                    <!-- Edit & Delete Action -->
-                                                                                    ${editBtn}
-                                                                                    ${deleteBtn}
-                                                                                </div>
-
-                                                                                <!-- Comment Section -->
-                                                                                <div id="comments-${post._id}" style="display: ${commentsCount > 0 ? 'block' : 'none'}; margin-top: 20px; border-top: 1px solid #f0f0f0; padding-top: 15px;">
-                                                                                    <div style="margin-bottom: 15px; max-height: 200px; overflow-y: auto;">
-                                                                                        ${commentsList.length > 0 ? commentsList : '<div style="color:#aaa; font-style:italic;">No comments yet. Be the first!</div>'}
-                                                                                    </div>
-                                                                                    <div style="display: flex; gap: 10px;">
-                                                                                        <input type="text" id="input-${post._id}" placeholder="Write a comment..." style="flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 20px; outline: none;">
-                                                                                            <button onclick="submitComment('${post._id}')" class="btn btn-primary" style="padding: 8px 20px; border-radius: 20px; background: var(--accent); color: var(--btn-text, #ffffff); border: none; cursor: pointer; font-weight: 600;">Post</button>
-                                                                                    </div>
-                                                                                </div>
-                                                                            </div>`;
+                    return `<div class="post-card" id="post-${post._id}">
+    <div class="post-header">
+        <div class="post-user-info">
+            <a href="/profile?user=${authorId}" style="text-decoration: none; color: inherit; display: flex; align-items: center; gap: 10px;">
+                ${postAvatar}
+                <div>
+                    <div class="post-author">${authorName}</div>
+                    <div class="post-time">${dateStr}</div>
+                </div>
+            </a>
+        </div>
+        <span class="post-tag">${post.category || 'General'}</span>
+    </div>
+    <div class="post-content">${postContentHTML}</div>
+    <div class="post-actions" style="display: flex; align-items: center; flex-wrap: wrap;">
+        <div class="action-btn" onclick="toggleLike('${post._id}')">
+            <i class="${likesCount > 0 ? 'fas' : 'far'} fa-heart" style="${likesCount > 0 ? 'color: #e11d48;' : ''}"></i> ${likeText}
+        </div>
+        <div class="action-btn" onclick="toggleComments('${post._id}')">
+            <i class="far fa-comment"></i> ${commentText}
+        </div>
+        <div class="action-btn" onclick="sharePost('${post._id}')">
+            <i class="far fa-share-square"></i> Share
+        </div>
+        ${readActionBtn}
+        ${editBtn}
+        ${deleteBtn}
+    </div>
+    <div id="comments-${post._id}" style="display: ${commentsCount > 0 ? 'block' : 'none'}; margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 14px;">
+        <div style="margin-bottom: 12px; max-height: 200px; overflow-y: auto;">
+            ${commentsList.length > 0 ? commentsList : '<div style="color:#64748b; font-style:italic; font-size:0.88rem;">No comments yet. Be the first!</div>'}
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="input-${post._id}" placeholder="Write a comment..." style="flex: 1; padding: 9px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; outline: none; background: rgba(14, 18, 27, 0.85); color: #fff; font-size: 0.9rem;">
+            <button onclick="submitComment('${post._id}')" class="btn btn-primary" style="padding: 8px 18px; border-radius: 20px; background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #07090e; border: none; cursor: pointer; font-weight: 700; font-size: 0.88rem;">Post</button>
+        </div>
+    </div>
+</div>`;
                 }).join('');
             } catch (err) {
                 console.error("Render error:", err);
@@ -3028,9 +3227,108 @@
             });
         }
 
+        let composerSelectedFile = null;
+
+        function handleComposerMedia(event) {
+            const file = event.target.files[0];
+            if (file) {
+                composerSelectedFile = file;
+                const chip = document.getElementById('composerAttachmentPreview');
+                const nameEl = document.getElementById('composerMediaName');
+                if (chip && nameEl) {
+                    nameEl.innerText = file.name;
+                    chip.style.display = 'inline-flex';
+                }
+            }
+        }
+
+        function clearComposerMedia(event) {
+            if (event) event.stopPropagation();
+            composerSelectedFile = null;
+            const input = document.getElementById('composerMediaInput');
+            if (input) input.value = '';
+            const chip = document.getElementById('composerAttachmentPreview');
+            if (chip) chip.style.display = 'none';
+        }
+
+        function wrapSpreadFormat(prefix) {
+            const input = document.getElementById('quickSpreadInput');
+            if (!input) return;
+            const start = input.selectionStart || 0;
+            const end = input.selectionEnd || 0;
+            const text = input.value;
+            const selected = text.substring(start, end);
+            if (prefix.endsWith(' ')) {
+                input.value = text.substring(0, start) + prefix + selected + text.substring(end);
+            } else {
+                input.value = text.substring(0, start) + prefix + (selected || 'text') + prefix + text.substring(end);
+            }
+            input.focus();
+        }
+
+        function insertSpreadLink() {
+            const url = prompt('Enter URL (e.g. https://...):');
+            if (!url) return;
+            const input = document.getElementById('quickSpreadInput');
+            if (!input) return;
+            input.value += (input.value ? ' ' : '') + url;
+            input.focus();
+        }
+
         function handleCreatePostClick() {
-            // Allow everyone to access the studio for now
-            window.location.href = 'publisher';
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth';
+                return;
+            }
+            const input = document.getElementById('quickSpreadInput');
+            if (input) {
+                input.focus();
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+
+        async function publishQuickSpread() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                window.location.href = '/auth';
+                return;
+            }
+            const input = document.getElementById('quickSpreadInput');
+            const content = input ? input.value.trim() : '';
+            if (!content && !composerSelectedFile) {
+                if (window.VylithraUI) VylithraUI.showToast('Please enter text or attach an image.', 'info');
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('content', content || 'Shared a moment on Vylithra');
+                formData.append('category', 'General');
+                formData.append('type', 'quick');
+                if (composerSelectedFile) {
+                    formData.append('image', composerSelectedFile);
+                }
+
+                const res = await fetch(`${API_URL}/posts`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token },
+                    body: formData
+                });
+
+                if (res.ok) {
+                    if (input) input.value = '';
+                    clearComposerMedia();
+                    if (window.VylithraUI) VylithraUI.showToast('Spread published to community feed!', 'success');
+                    fetchPosts();
+                } else {
+                    const err = await res.json().catch(() => ({}));
+                    if (window.VylithraUI) VylithraUI.showToast(err.msg || 'Failed to publish spread.', 'error');
+                }
+            } catch (e) {
+                console.error(e);
+                if (window.VylithraUI) VylithraUI.showToast('Network error publishing spread.', 'error');
+            }
         }
 
         // --- Filter Logic ---
@@ -3261,21 +3559,11 @@
                 const createCard = document.getElementById('create-post-card');
                 if(createCard) createCard.style.display = 'block';
                 // Logged in: show messages icon, profile avatar, and logout
-                let publisherLink = '';
-                if (role === 'publisher' || role === 'admin') {
-                    publisherLink = `
-                        <a href="/publisher" style="color: var(--primary); font-size: 1.1rem; font-weight: 600; text-decoration: none; transition: 0.2s; display: flex; align-items: center; gap: 6px; margin-right: 6px;" title="Publisher Page">
-                            <i class="fas fa-pen-nib"></i> <span style="font-size: 0.9rem;">Studio</span>
-                        </a>
-                    `;
-                }
-
                 authSection.innerHTML = `
-                    <div style="display: flex; gap: 16px; align-items: center;">
-                        <a href="/studio" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #07090e; height: 38px; padding: 0 18px; border-radius: 20px; font-weight: 700; font-size: 0.88rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 16px rgba(0, 242, 254, 0.4); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 0 24px rgba(0, 242, 254, 0.65)'; this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='0 0 16px rgba(0, 242, 254, 0.4)'; this.style.transform='scale(1)'" title="Upload Content">
-                            <i class="fas fa-plus"></i> Upload
+                    <div style="display: flex; gap: 14px; align-items: center;">
+                        <a href="/publish-book" style="background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%); color: #07090e; height: 38px; padding: 0 18px; border-radius: 20px; font-weight: 700; font-size: 0.88rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 16px rgba(0, 242, 254, 0.4); transition: all 0.25s ease;" onmouseover="this.style.boxShadow='0 0 24px rgba(0, 242, 254, 0.65)'; this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='0 0 16px rgba(0, 242, 254, 0.4)'; this.style.transform='scale(1)'" title="Upload Book">
+                            <i class="fas fa-cloud-arrow-up"></i> Upload Book
                         </a>
-                        ${publisherLink}
                         <a href="messages" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 1.1rem; text-decoration: none; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center;" title="Messages" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'; this.style.boxShadow='0 0 15px rgba(0,242,254,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#cbd5e1'; this.style.boxShadow='none'">
                             <i class="fa-regular fa-envelope"></i>
                         </a>
@@ -3303,19 +3591,7 @@
             window.location.href = 'auth';
         }
 
-        let lastScrollTop = 0;
-        const mainContainer = document.querySelector('.container');
-
-        window.addEventListener('scroll', function () {
-            let st = window.pageYOffset || document.documentElement.scrollTop;
-            if (st > lastScrollTop) {
-                // downscroll code
-                if(mainContainer) mainContainer.classList.add('sidebar-hidden-layout');
-            } else {
-                mainContainer.classList.remove('sidebar-hidden-layout');
-            }
-            lastScrollTop = st <= 0 ? 0 : st;
-        }, false);
+        // Sidebar right is cleanly fixed in desktop 3-column layout
 
         // Initialize carousel (legacy cleanup)
         document.addEventListener('DOMContentLoaded', () => {
@@ -3331,9 +3607,9 @@
             
             // 1. My Story (Add)
             let htmlContent = `
-                <div class="story-item" onclick="alert('Stories upload coming soon! Tap + to draft.')">
+                <div class="story-item" onclick="document.getElementById('storyUploadInput').click()" title="Add your story">
                     <div class="story-avatar-wrapper add-story">
-                        <div class="story-avatar" style="color: #00f2fe; background: transparent; border: none; font-size: 1.1rem;">
+                        <div class="story-avatar" style="color: #00f2fe; background: transparent; border: none; font-size: 1.15rem;">
                             <i class="fas fa-plus"></i>
                         </div>
                     </div>
@@ -3362,14 +3638,20 @@
                 let displayCount = 0;
 
                 if (Array.isArray(activeUsers) && activeUsers.length > 0) {
-                    activeUsers.forEach(u => {
+                    activeUsers.forEach((u, idx) => {
                         if (u.username === currentUsername) return;
                         const initial = u.name ? u.name.charAt(0).toUpperCase() : u.username.charAt(0).toUpperCase();
                         const bg = `hsl(${(u.username.charCodeAt(0) * 35) % 360}, 75%, 55%)`;
+                        const isViewed = (idx % 3 === 2); // Sample viewed state for distinction
+                        const ringClass = isViewed ? 'story-avatar-wrapper story-viewed' : 'story-avatar-wrapper';
+                        
                         htmlContent += `
-                            <div class="story-item" onclick="window.location.href='/profile?user=${u._id}'">
-                                <div class="story-avatar-wrapper">
-                                    <div class="story-avatar" style="background: ${bg};">${initial}</div>
+                            <div class="story-item" onclick="window.location.href='/profile?user=${u._id}'" title="${u.name || u.username}">
+                                <div class="${ringClass}">
+                                    ${u.profilePicture 
+                                        ? `<img src="${u.profilePicture}" class="story-avatar">`
+                                        : `<div class="story-avatar" style="background: ${bg};">${initial}</div>`
+                                    }
                                 </div>
                                 <div class="story-username">${u.name || u.username}</div>
                             </div>
@@ -3378,12 +3660,14 @@
                     });
                 }
 
-                // If fewer than 4 live users, supplement with community featured creators
-                if (displayCount < 4) {
-                    featuredCreators.slice(0, 6 - displayCount).forEach(c => {
+                // If fewer than 5 live users, supplement with community featured creators
+                if (displayCount < 5) {
+                    featuredCreators.slice(0, 6 - displayCount).forEach((c, idx) => {
+                        const isViewed = idx === 1;
+                        const ringClass = isViewed ? 'story-avatar-wrapper story-viewed' : 'story-avatar-wrapper';
                         htmlContent += `
-                            <div class="story-item" onclick="filterPosts('trending')">
-                                <div class="story-avatar-wrapper">
+                            <div class="story-item" onclick="filterPosts('trending')" title="${c.name}">
+                                <div class="${ringClass}">
                                     <div class="story-avatar" style="background: ${c.color}; font-weight: 700;">${c.initial}</div>
                                 </div>
                                 <div class="story-username">${c.name}</div>
@@ -3511,6 +3795,216 @@
             }
         });
     </script>
+
+<!-- ============================================== -->
+<!-- CYBER-LUXE FULLSCREEN MEDIA LIGHTBOX (WEB & MOBILE) -->
+<!-- ============================================== -->
+<style>
+.vylithra-lightbox-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(5, 7, 12, 0.95);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.vylithra-lightbox-overlay.active {
+    display: flex;
+    opacity: 1;
+}
+.vylithra-lightbox-topbar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 64px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 10;
+    background: linear-gradient(to bottom, rgba(5,7,12,0.9), transparent);
+}
+.vylithra-lightbox-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 14px;
+    border-radius: 20px;
+    background: rgba(0, 242, 254, 0.12);
+    border: 1px solid rgba(0, 242, 254, 0.3);
+    color: #00f2fe;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+.vylithra-lightbox-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+.vylithra-lightbox-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #f8fafc;
+    font-size: 1.15rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.vylithra-lightbox-btn:hover {
+    background: rgba(0, 242, 254, 0.2);
+    border-color: #00f2fe;
+    color: #00f2fe;
+    transform: scale(1.08);
+    box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+}
+.vylithra-lightbox-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    padding: 70px 20px 24px 20px;
+    box-sizing: border-box;
+    overflow: auto;
+}
+.vylithra-lightbox-content img {
+    max-width: 95vw;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 14px;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.85), 0 0 40px rgba(0, 242, 254, 0.2);
+    cursor: zoom-out;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+}
+.vylithra-lightbox-content img.zoomed {
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
+    transform: scale(1.4);
+    cursor: grab;
+}
+.vylithra-lightbox-content video {
+    max-width: 95vw;
+    max-height: 85vh;
+    border-radius: 14px;
+    outline: none;
+    box-shadow: 0 12px 50px rgba(0,0,0,0.85);
+}
+.vylithra-lightbox-content iframe {
+    width: 90vw;
+    height: 80vh;
+    max-width: 1200px;
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.15);
+    box-shadow: 0 12px 50px rgba(0,0,0,0.85);
+}
+</style>
+
+<div id="vylithraMediaLightbox" class="vylithra-lightbox-overlay" onclick="closeFullscreenMedia(event)">
+    <div class="vylithra-lightbox-topbar">
+        <div class="vylithra-lightbox-info">
+            <span class="vylithra-lightbox-badge"><i class="fas fa-expand"></i> FULLSCREEN PREVIEW</span>
+        </div>
+        <div class="vylithra-lightbox-actions">
+            <button class="vylithra-lightbox-btn" id="lightboxZoomBtn" onclick="toggleLightboxZoom(event)" title="Zoom / Fit"><i class="fas fa-search-plus" id="lightboxZoomIcon"></i></button>
+            <button class="vylithra-lightbox-btn" onclick="closeFullscreenMediaDirect()" title="Close (Esc)"><i class="fas fa-times"></i></button>
+        </div>
+    </div>
+    <div class="vylithra-lightbox-content" onclick="closeFullscreenMedia(event)">
+        <img id="lightboxImage" src="" alt="Full Screen View" style="display: none;" onclick="event.stopPropagation(); toggleLightboxZoom(event);">
+        <video id="lightboxVideo" controls autoplay playsinline style="display: none;" onclick="event.stopPropagation();"></video>
+        <iframe id="lightboxIframe" frameborder="0" allowfullscreen allow="autoplay; fullscreen" style="display: none;" onclick="event.stopPropagation();"></iframe>
+    </div>
+</div>
+
+<script>
+window.openFullscreenMedia = function(src, type) {
+    const overlay = document.getElementById('vylithraMediaLightbox');
+    const imgEl = document.getElementById('lightboxImage');
+    const videoEl = document.getElementById('lightboxVideo');
+    const iframeEl = document.getElementById('lightboxIframe');
+    const zoomBtn = document.getElementById('lightboxZoomBtn');
+
+    if (!overlay) return;
+
+    // Reset visibility
+    imgEl.style.display = 'none';
+    imgEl.classList.remove('zoomed');
+    videoEl.style.display = 'none';
+    videoEl.pause();
+    iframeEl.style.display = 'none';
+    iframeEl.src = '';
+
+    if (type === 'image') {
+        imgEl.src = src;
+        imgEl.style.display = 'block';
+        zoomBtn.style.display = 'flex';
+    } else if (type === 'video') {
+        videoEl.src = src;
+        videoEl.style.display = 'block';
+        videoEl.play().catch(() => {});
+        zoomBtn.style.display = 'none';
+    } else if (type === 'iframe') {
+        iframeEl.src = src;
+        iframeEl.style.display = 'block';
+        zoomBtn.style.display = 'none';
+    }
+
+    overlay.classList.add('active');
+    document.body.style.overflow = 'hidden';
+};
+
+window.closeFullscreenMedia = function(e) {
+    if (e && e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO' || e.target.tagName === 'IFRAME')) {
+        return;
+    }
+    closeFullscreenMediaDirect();
+};
+
+window.closeFullscreenMediaDirect = function() {
+    const overlay = document.getElementById('vylithraMediaLightbox');
+    const videoEl = document.getElementById('lightboxVideo');
+    const iframeEl = document.getElementById('lightboxIframe');
+    if (!overlay) return;
+    overlay.classList.remove('active');
+    if (videoEl) videoEl.pause();
+    if (iframeEl) iframeEl.src = '';
+    document.body.style.overflow = '';
+};
+
+window.toggleLightboxZoom = function(e) {
+    if (e) e.stopPropagation();
+    const imgEl = document.getElementById('lightboxImage');
+    const icon = document.getElementById('lightboxZoomIcon');
+    if (!imgEl || imgEl.style.display === 'none') return;
+    imgEl.classList.toggle('zoomed');
+    if (imgEl.classList.contains('zoomed')) {
+        icon.className = 'fas fa-search-minus';
+    } else {
+        icon.className = 'fas fa-search-plus';
+    }
+};
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        closeFullscreenMediaDirect();
+    }
+});
+</script>
+
 </body>
 
 </html>

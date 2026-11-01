@@ -400,14 +400,14 @@
 
     <!-- Top Navigation -->
     <nav class="top-nav">
-        <a href="/books" class="nav-logo">
-            <i class="fas fa-book-open"></i> Vylithra Books
-        </a>
+        <a href="/books" class="nav-logo" style="text-decoration: none; display: flex; align-items: center; gap: 10px;">
+        <img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.45));">
+        <span style="font-weight: 700; font-size: 1.4rem;">Vylithra <span style="font-weight: 300; opacity: 0.8;">Books</span></span>
+    </a>
         <div class="nav-links">
             <a href="/main" class="nav-link"><i class="fas fa-home"></i> App Home</a>
             <a href="/books" class="nav-link"><i class="fas fa-swatchbook"></i> Library</a>
-            <a href="/publisher" class="nav-link active" id="studioLink" style="display:none;"><i
-                    class="fas fa-pen-nib"></i> Publisher</a>
+            
             <a href="#" class="nav-link" id="logoutBtn" title="Logout"><i class="fas fa-sign-out-alt"></i></a>
         </div>
     </nav>
@@ -563,20 +563,12 @@
                 const res = await fetch(`${API_URL}/users/profile`, {
                     headers: { 'x-auth-token': currentToken }
                 });
-                if (res.ok) {
-                    const user = await res.json();
-                    if (user.role !== 'publisher' && user.role !== 'admin') {
-                        VylithraUI.showToast('Only publishers can create books.', 'error');
-                        window.location.href = '/books';
-                    } else {
-                        document.getElementById('studioLink').style.display = 'flex';
-                    }
-                } else if (res.status === 401) {
+                if (!res.ok && res.status === 401) {
                     localStorage.removeItem('token');
                     window.location.href = '/auth';
                 }
             } catch (err) {
-                console.error("Error fetching user:", err);
+                console.error("Error verifying user session:", err);
             }
         }
 

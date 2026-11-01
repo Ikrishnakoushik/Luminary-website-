@@ -754,8 +754,31 @@
             }
 
             try {
-                // Use popup for maximum reliability cross-device/browser instead of redirects.
-                const result = await firebase.auth().signInWithPopup(provider);
+                                // Attempt safe persistence config to avoid web storage exceptions
+                try {
+                    await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+                } catch (persErr) {
+                    try {
+                        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+                    } catch (sessErr) {
+                        try {
+                            await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.NONE);
+                        } catch (noneErr) {}
+                    }
+                }
+
+                let result;
+                try {
+                    result = await firebase.auth().signInWithPopup(provider);
+                } catch (popupErr) {
+                    if (popupErr.code === 'auth/operation-not-supported-in-this-environment' || 
+                        (popupErr.message && popupErr.message.includes('operation-not-supported-in-this-environment'))) {
+                        const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                        if (errDiv) errDiv.innerText = 'Notice: Social login is restricted in this private or embedded browser environment. Please sign in directly using your email and password below, or enable cookies/storage.';
+                        return;
+                    }
+                    throw popupErr;
+                }
                 if (result && result.user) {
                     const idToken = await result.user.getIdToken();
                     

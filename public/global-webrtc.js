@@ -739,7 +739,15 @@
 
         pc.onicecandidate = event => {
             if(event.candidate) {
-                window.globalSocket.emit('ice-candidate', { candidate: event.candidate, to: targetId, from: getCurrentUserId() });
+                window.globalSocket.emit('ice-candidate', { 
+                    candidate: {
+                        candidate: event.candidate.candidate,
+                        sdpMid: event.candidate.sdpMid,
+                        sdpMLineIndex: event.candidate.sdpMLineIndex
+                    }, 
+                    to: targetId, 
+                    from: getCurrentUserId() 
+                });
             }
         };
 
@@ -751,8 +759,12 @@
             const pc = createPeerConnection(targetId, isGroup);
             const offer = await pc.createOffer();
             await pc.setLocalDescription(offer);
+            const plainOffer = {
+                type: offer.type || 'offer',
+                sdp: offer.sdp
+            };
             window.globalSocket.emit('call-user', {
-                offer: offer,
+                offer: plainOffer,
                 to: targetId,
                 from: getCurrentUserId(),
                 callerName: getCurrentUsername(),
@@ -843,8 +855,12 @@
             const answer = await pc.createAnswer();
             await pc.setLocalDescription(answer);
 
+            const plainAnswer = {
+                type: answer.type || 'answer',
+                sdp: answer.sdp
+            };
             window.globalSocket.emit('make-answer', {
-                answer: answer,
+                answer: plainAnswer,
                 to: incomingCallData.from,
                 from: getCurrentUserId()
             });
@@ -1002,7 +1018,24 @@
             }
             document.getElementById('global-call-name').innerText = displayName.startsWith('@') ? displayName : `@${displayName}`;
             document.getElementById('global-call-title').innerText = 'Connecting...';
-            document.getElementById('global-audio-avatar').classList.add('pulsing');
+            // Dispatch call initiation message to wake up Mobile app with high-priority FCM VoIP CallKit
+            try {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    fetch(`/api/messages/${targetUserId}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'x-auth-token': token,
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            content: isVideoCall ? 'Video Call' : 'Voice Call',
+                            attachmentType: 'call'
+                        })
+                    }).catch(() => {});
+                }
+            } catch(callMsgErr) {}
 
             await initiatePeerConnection(targetUserId, isVideoCall, false);
             isCallActive = true;

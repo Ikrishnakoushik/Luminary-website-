@@ -475,7 +475,129 @@
         .attachment-file-link:hover { background: rgba(0,0,0,0.1); }
         
         /* Custom Scrollbar for Theme Consistency */
-        </style>
+        
+        /* Delete Message & View-Once Styles */
+        .message-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+            position: relative;
+        }
+        .message-row.sent-row {
+            justify-content: flex-end;
+        }
+        .message-row.received-row {
+            justify-content: flex-start;
+        }
+        .msg-delete-btn {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            color: #ef4444;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+        .message-row:hover .msg-delete-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .msg-delete-btn:hover {
+            background: #ef4444;
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+        .view-once-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 16px;
+            border-radius: 24px;
+            background: rgba(20, 184, 166, 0.15);
+            border: 1px solid rgba(20, 184, 166, 0.4);
+            color: #14b8a6;
+            font-weight: 600;
+            font-size: 0.92rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .view-once-pill:hover {
+            background: rgba(20, 184, 166, 0.25);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(20, 184, 166, 0.2);
+        }
+        .view-once-pill.viewed {
+            background: rgba(148, 163, 184, 0.1);
+            border-color: rgba(148, 163, 184, 0.2);
+            color: #94a3b8;
+            cursor: default;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+        .view-once-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px dashed #14b8a6;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75rem;
+            font-weight: 800;
+        }
+        .view-once-pill.viewed .view-once-circle {
+            border-style: solid;
+            border-color: #94a3b8;
+            color: #94a3b8;
+        }
+        .view-once-toggle-btn {
+            background: rgba(20, 184, 166, 0.1);
+            border: 1px solid rgba(20, 184, 166, 0.3);
+            color: #14b8a6;
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+        .view-once-toggle-btn.active {
+            background: #14b8a6;
+            color: #ffffff;
+            border-color: #14b8a6;
+            box-shadow: 0 0 12px rgba(20, 184, 166, 0.4);
+        }
+        /* View Once Modal */
+        #viewOnceModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(5, 7, 15, 0.95);
+            backdrop-filter: blur(16px);
+            z-index: 100000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+    </style>
 
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4334731678615084" crossorigin="anonymous"></script>
     <script src="/socket.io/socket.io.js"></script>
@@ -556,6 +678,11 @@
             </div>
             <div class="chat-input-container" id="chat-input-area" style="opacity: 0.5; pointer-events: none;">
                 <input type="file" id="file-upload-input" style="display: none;" onchange="handleFileSelect(event)">
+                
+                <button type="button" class="view-once-toggle-btn" id="viewOnceToggleBtn" onclick="toggleViewOnce()" title="Single-View (View Once)" style="display: none;">
+                    <span class="view-once-circle" style="width:18px; height:18px; font-size:0.65rem;">1</span> View Once
+                </button>
+
                 <div style="position: relative;">
                     <button type="button" class="attach-btn" onclick="toggleAttachmentMenu(event)" id="attachMenuBtn" title="Attach Media">
                         <i class="fas fa-paperclip"></i>
@@ -1078,16 +1205,126 @@
             }
         }
 
+        let isViewOnceActive = false;
+        let currentViewingMsgId = null;
+
+        function toggleViewOnce() {
+            isViewOnceActive = !isViewOnceActive;
+            const btn = document.getElementById('viewOnceToggleBtn');
+            if (btn) {
+                btn.classList.toggle('active', isViewOnceActive);
+            }
+        }
+
+        async function deleteMessage(messageId, isSent) {
+            if (!messageId) return;
+            const confirmMsg = isSent 
+                ? 'Are you sure you want to delete this message for everyone?' 
+                : 'Are you sure you want to delete this message for yourself?';
+            if (!confirm(confirmMsg)) return;
+
+            try {
+                const res = await fetch(`${API_URL}/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) {
+                    const row = document.getElementById(`msg-row-${messageId}`);
+                    if (row) {
+                        if (isSent) {
+                            const bubble = document.getElementById(`msg-bubble-${messageId}`);
+                            if (bubble) {
+                                bubble.innerHTML = '<i class="fas fa-ban" style="margin-right: 6px; font-size: 0.85rem; opacity: 0.7;"></i> <i>This message was deleted</i>';
+                                bubble.style.opacity = '0.7';
+                            }
+                        } else {
+                            row.style.transition = 'all 0.3s ease';
+                            row.style.opacity = '0';
+                            row.style.transform = 'scale(0.9)';
+                            setTimeout(() => row.remove(), 300);
+                        }
+                    }
+                    if (window.VylithraUI && VylithraUI.showToast) {
+                        VylithraUI.showToast('Message deleted', 'info');
+                    }
+                } else {
+                    if (window.VylithraUI && VylithraUI.showToast) {
+                        VylithraUI.showToast('Could not delete message', 'error');
+                    }
+                }
+            } catch (err) {
+                console.error('Delete error:', err);
+            }
+        }
+
+        async function openViewOnceMedia(messageId, mediaUrl, mediaType) {
+            currentViewingMsgId = messageId;
+            const modal = document.getElementById('viewOnceModal');
+            const holder = document.getElementById('viewOnceMediaHolder');
+            if (!modal || !holder) return;
+
+            if (mediaType === 'video') {
+                holder.innerHTML = `<video src="${mediaUrl}" controls autoplay playsinline style="max-width:90vw; max-height:80vh; border-radius:12px;"></video>`;
+            } else {
+                holder.innerHTML = `<img src="${mediaUrl}" alt="View Once" style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:12px;">`;
+            }
+            modal.style.display = 'flex';
+
+            // Mark as viewed on server
+            if (messageId) {
+                try {
+                    await fetch(`${API_URL}/messages/${messageId}/view-once`, {
+                        method: 'PUT',
+                        headers: getAuthHeaders()
+                    });
+                } catch(e) {}
+            }
+        }
+
+        function closeViewOnceMedia() {
+            const modal = document.getElementById('viewOnceModal');
+            const holder = document.getElementById('viewOnceMediaHolder');
+            if (modal) modal.style.display = 'none';
+            if (holder) holder.innerHTML = '';
+
+            if (currentViewingMsgId) {
+                const el = document.querySelector(`[data-view-once-id="${currentViewingMsgId}"]`);
+                if (el) {
+                    el.className = 'view-once-pill viewed';
+                    el.onclick = null;
+                    el.style.cursor = 'default';
+                    el.innerHTML = '<span class="view-once-circle"><i class="fas fa-check"></i></span> <span>Opened</span>';
+                }
+                currentViewingMsgId = null;
+            }
+        }
+
         function renderMessage(msg) {
             const stream = document.getElementById('chat-stream');
             const isSent = msg.sender === currentUserId || (msg.sender && msg.sender._id === currentUserId);
+            const msgId = msg._id || '';
 
             const timeClass = new Date(msg.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             // Remove empty state if present
             const emptyState = stream.querySelector('.empty-state');
             if (emptyState) {
-                if (stream.children.length === 1) stream.innerHTML = ''; // Clear if only empty state
+                if (stream.children.length === 1) stream.innerHTML = '';
+            }
+
+            // If message was deleted
+            if (msg.isDeleted) {
+                stream.innerHTML += `
+                    <div class="message-row ${isSent ? 'sent-row' : 'received-row'}" id="msg-row-${msgId}">
+                        ${isSent ? '' : `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', false)" title="Delete for me"><i class="fas fa-trash-alt"></i></button>`}
+                        <div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}" id="msg-bubble-${msgId}" style="opacity: 0.7; font-style: italic;">
+                            <i class="fas fa-ban" style="margin-right: 6px; font-size: 0.85rem;"></i> This message was deleted
+                            <div class="message-time">${timeClass}</div>
+                        </div>
+                        ${isSent ? `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', true)" title="Delete for everyone"><i class="fas fa-trash-alt"></i></button>` : ''}
+                    </div>
+                `;
+                return;
             }
 
             // Decrypt content 
@@ -1096,9 +1333,7 @@
                 const bytes = CryptoJS.AES.decrypt(msg.content, chatKey);
                 const decrypted = bytes.toString(CryptoJS.enc.Utf8);
                 if (decrypted) displayContent = decrypted;
-            } catch (e) {
-                // Ignore decryption errors for unencrypted legacy messages
-            }
+            } catch (e) {}
 
             function getValidMediaUrl(url) {
                 if (!url) return '';
@@ -1109,7 +1344,26 @@
             }
 
             let attachmentHtml = '';
-            if (msg.attachmentUrl) {
+            if (msg.isViewOnce) {
+                const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
+                const typeLabel = msg.attachmentType === 'video' ? 'Video' : 'Photo';
+                if (msg.isViewed || !msg.attachmentUrl) {
+                    attachmentHtml = `
+                        <div class="view-once-pill viewed" data-view-once-id="${msgId}">
+                            <span class="view-once-circle"><i class="fas fa-check"></i></span>
+                            <span>${typeLabel} · Opened</span>
+                        </div>
+                    `;
+                } else {
+                    attachmentHtml = `
+                        <div class="view-once-pill" data-view-once-id="${msgId}" onclick="openViewOnceMedia('${msgId}', '${mediaUrl}', '${msg.attachmentType}')">
+                            <span class="view-once-circle">1</span>
+                            <span>${typeLabel} · View once</span>
+                            <i class="fas fa-play" style="font-size:0.75rem; margin-left:6px;"></i>
+                        </div>
+                    `;
+                }
+            } else if (msg.attachmentUrl) {
                 const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
                 if (msg.attachmentType === 'image') {
                     attachmentHtml = `<div class="message-attachment"><img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" style="cursor:pointer; max-height:260px; object-fit:cover; border-radius:12px;"></div>`;
@@ -1121,10 +1375,14 @@
             }
 
             stream.innerHTML += `
-                <div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}">
-                    ${displayContent === '[Attachment]' && attachmentHtml ? '' : displayContent}
-                    ${attachmentHtml}
-                    <div class="message-time">${timeClass}</div>
+                <div class="message-row ${isSent ? 'sent-row' : 'received-row'}" id="msg-row-${msgId}">
+                    ${isSent ? '' : (msgId ? `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', false)" title="Delete for me"><i class="fas fa-trash-alt"></i></button>` : '')}
+                    <div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}" id="msg-bubble-${msgId}">
+                        ${displayContent === '[Attachment]' && attachmentHtml ? '' : displayContent}
+                        ${attachmentHtml}
+                        <div class="message-time">${timeClass}</div>
+                    </div>
+                    ${isSent ? (msgId ? `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', true)" title="Delete for everyone"><i class="fas fa-trash-alt"></i></button>` : '') : ''}
                 </div>
             `;
         }
@@ -1136,6 +1394,9 @@
 
         let pendingAttachmentUrl = null;
         let pendingAttachmentType = 'none';
+            isViewOnceActive = false;
+            const voBtn = document.getElementById('viewOnceToggleBtn');
+            if (voBtn) { voBtn.style.display = 'none'; voBtn.classList.remove('active'); }
 
         async function handleFileSelect(event) {
             const file = event.target.files[0];
@@ -1143,7 +1404,11 @@
 
             const previewContainer = document.getElementById('attachment-preview-container');
             previewContainer.style.display = 'block';
-            previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-spinner fa-spin"></i> Uploading ${file.name}...</div>`;
+            const voBtn = document.getElementById('viewOnceToggleBtn');
+                    if (voBtn && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
+                        voBtn.style.display = 'inline-flex';
+                    }
+                    previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-spinner fa-spin"></i> Uploading ${file.name}...</div>`;
 
             const formData = new FormData();
             formData.append('file', file);
@@ -1211,6 +1476,7 @@
                 attachmentType: pendingAttachmentType,
                 createdAt: new Date(),
                 sender: currentUserId,
+                isViewOnce: sendAsViewOnce,
             };
             if (isGroupChatActive) optimisticMsg.groupId = activeGroupId;
             else optimisticMsg.receiver = activeChatUserId;
@@ -1235,7 +1501,8 @@
                     body: JSON.stringify({ 
                         content: encryptedContent, 
                         attachmentUrl: payloadAttachmentUrl, 
-                        attachmentType: payloadAttachmentType 
+                        attachmentType: payloadAttachmentType,
+                        isViewOnce: sendAsViewOnce 
                     })
                 });
 
@@ -1289,6 +1556,24 @@
                         scrollToBottom();
                     }
                     loadConversations();
+                });
+                chatSocket.on('message_deleted', (data) => {
+                    if (!data || !data.messageId) return;
+                    const bubble = document.getElementById(`msg-bubble-${data.messageId}`);
+                    if (bubble) {
+                        bubble.innerHTML = '<i class="fas fa-ban" style="margin-right: 6px; font-size: 0.85rem; opacity: 0.7;"></i> <i>This message was deleted</i>';
+                        bubble.style.opacity = '0.7';
+                    }
+                });
+                chatSocket.on('message_viewed', (data) => {
+                    if (!data || !data.messageId) return;
+                    const el = document.querySelector(`[data-view-once-id="${data.messageId}"]`);
+                    if (el) {
+                        el.className = 'view-once-pill viewed';
+                        el.onclick = null;
+                        el.style.cursor = 'default';
+                        el.innerHTML = '<span class="view-once-circle"><i class="fas fa-check"></i></span> <span>Opened</span>';
+                    }
                 });
             }
         }
@@ -1381,6 +1666,23 @@
             <i class="fas fa-user-circle"></i><span>Profile</span>
         </a>
     </nav>
+
+
+    <!-- View-Once Single-View Fullscreen Lightbox -->
+    <div id="viewOnceModal">
+        <div style="position: absolute; top: 24px; right: 28px; z-index: 10; display: flex; align-items: center; gap: 16px;">
+            <div style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15); padding: 6px 16px; border-radius: 20px; color: #fff; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 8px;">
+                <span class="view-once-circle" style="border-color:#14b8a6; color:#14b8a6;">1</span> View Once Media
+            </div>
+            <button onclick="closeViewOnceMedia()" style="background: rgba(255,255,255,0.15); border: none; color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.8)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="viewOnceMediaHolder" style="max-width: 90vw; max-height: 85vh; display: flex; align-items: center; justify-content: center; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
+            <!-- Dynamic Media Content -->
+        </div>
+        <p style="color: rgba(255,255,255,0.6); font-size: 0.85rem; margin-top: 18px;">This media will disappear permanently once closed.</p>
+    </div>
 
 </body>
 

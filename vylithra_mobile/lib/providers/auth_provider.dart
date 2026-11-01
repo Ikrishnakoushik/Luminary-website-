@@ -157,6 +157,15 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
+  Future<void> resendVerification(String email) async {
+    try {
+      if (email.isEmpty) throw Exception('Please enter your email address');
+      await _apiService.post('/api/resend-verification', {'email': email});
+    } catch (e) {
+      throw Exception('Resend Error: $e');
+    }
+  }
+
   Future<void> forgotPassword(String email) async {
     try {
       if (email.isEmpty) throw Exception('Please enter your email address');
