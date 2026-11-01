@@ -66,30 +66,23 @@ app.get('/api/webrtc/ice-servers', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-    socket.on('join_chat', (userId) => {
-        if (userId) {
-            const uid = String(userId);
-            socket.userId = uid;
-            socket.join(uid);
-            if (!userSocketMap.has(uid)) {
-                userSocketMap.set(uid, new Set());
-            }
-            userSocketMap.get(uid).add(socket.id);
+    function registerUserSocket(userId) {
+        if (!userId) return;
+        const uid = String(userId).trim();
+        if (!uid || uid === 'null' || uid === 'undefined') return;
+        socket.userId = uid;
+        socket.join(uid);
+        if (!userSocketMap.has(uid)) {
+            userSocketMap.set(uid, new Set());
         }
-    });
-    socket.on('join_room', (roomId) => {
-        if (roomId) {
-            const rid = String(roomId);
-            socket.join(rid);
-            if (!socket.userId) {
-                socket.userId = rid;
-                if (!userSocketMap.has(rid)) {
-                    userSocketMap.set(rid, new Set());
-                }
-                userSocketMap.get(rid).add(socket.id);
-            }
-        }
-    });
+        userSocketMap.get(uid).add(socket.id);
+    }
+
+    socket.on('join_chat', registerUserSocket);
+    socket.on('join-chat', registerUserSocket);
+    socket.on('join_room', registerUserSocket);
+    socket.on('join-room', registerUserSocket);
+
     socket.on('join-group-call', (data) => {
         if (!data || !data.groupId) return;
         const groupId = String(data.groupId);
@@ -149,18 +142,21 @@ io.on('connection', (socket) => {
             if (data.payload && typeof data.payload === 'object') {
                 data.payload.from = senderId;
             }
-            if (!socket.userId) {
-                socket.userId = senderId;
-                socket.join(senderId);
-                if (!userSocketMap.has(senderId)) {
-                    userSocketMap.set(senderId, new Set());
-                }
-                userSocketMap.get(senderId).add(socket.id);
-            }
+            registerUserSocket(senderId);
         }
 
-        // Forward signal to target user's active sockets / room
+        // Forward signal to target user's active room
         io.to(targetUserId).emit('webrtc_signal', data);
+
+        // Forward to all active sockets for target user to guarantee delivery
+        const targetSockets = userSocketMap.get(targetUserId);
+        if (targetSockets) {
+            for (const sockId of targetSockets) {
+                if (sockId !== socket.id) {
+                    io.to(sockId).emit('webrtc_signal', data);
+                }
+            }
+        }
     });
     socket.on('disconnect', () => {
         if (socket.userId) {
@@ -653,18 +649,14 @@ const upload = multer({
 
 // Check File Type
 function checkFileType(file, cb) {
-    // Allowed ext
-    const filetypes = /jpeg|jpg|png|gif|pdf|doc|docx|mp4|webm|mkv|zip|rar|txt|csv/;
-    // Check ext
-    const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
-    // Check mime
-    const mimetype = filetypes.test(file.mimetype);
-
-    if (mimetype && extname) {
+    // Whitelist covering modern images, videos, audio, documents, and books
+    const filetypes = /jpeg|jpg|png|gif|webp|svg|bmp|ico|pdf|doc|docx|mp4|webm|mkv|mov|avi|mp3|wav|ogg|m4a|aac|zip|rar|txt|csv|epub/;
+    const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+    const isAllowed = !ext || filetypes.test(ext);
+    if (isAllowed) {
         return cb(null, true);
     } else {
-        // More lenient check for frontend ease on mobile where mimetypes can be weird
-        return cb(null, true); 
+        return cb(new Error(`File type .${ext} is not allowed`));
     }
 }
 
@@ -3661,7 +3653,15 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
 });
 
 // Upload message attachment (Multi-tier: Vercel Blob -> Local FS -> MongoDB MessageAttachment fallback)
-app.post('/api/messages/upload', auth, upload.single('file'), async (req, res) => {
+app.post('/api/messages/upload', auth, (req, res, next) => {
+    upload.single('file')(req, res, (err) => {
+        if (err) {
+            console.error('[Upload Multer Error]', err.message);
+            return res.status(400).json({ msg: err.message || 'File upload failed' });
+        }
+        next();
+    });
+}, async (req, res) => {
     try {
         if (!req.file) {
             return res.status(400).json({ msg: 'No file uploaded' });

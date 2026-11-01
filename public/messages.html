@@ -702,11 +702,43 @@
                 return;
             }
             try {
-                const payload = JSON.parse(atob(token.split('.')[1]));
-                currentUserId = payload.user.id;
+                const base64Url = token.split('.')[1];
+                if (!base64Url) throw new Error('Invalid token');
+                const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                const payload = JSON.parse(jsonPayload);
+                currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
+                if (!currentUserId) throw new Error('No user id in token');
             } catch (e) {
                 window.location.href = 'auth';
             }
+        }
+
+        function getAuthHeaders() {
+            const token = localStorage.getItem('token');
+            return {
+                'x-auth-token': token || '',
+                'Authorization': token ? `Bearer ${token}` : ''
+            };
+        }
+
+        function decryptPreview(ciphertext, otherUserId, isGroup = false) {
+            if (!ciphertext || typeof ciphertext !== 'string') return '';
+            if (ciphertext.startsWith('[SystemLog:')) return ciphertext;
+            if (ciphertext === '[Attachment]') return '📎 Attachment';
+            if (ciphertext.startsWith('U2FsdGVkX1')) {
+                try {
+                    const key = isGroup
+                        ? CryptoJS.SHA256(otherUserId + 'vylithra-group-e2ee-secret').toString()
+                        : CryptoJS.SHA256([currentUserId, otherUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
+                    const bytes = CryptoJS.AES.decrypt(ciphertext, key);
+                    const dec = bytes.toString(CryptoJS.enc.Utf8);
+                    if (dec) {
+                        return dec === '[Attachment]' ? '📎 Attachment' : dec;
+                    }
+                } catch(e) {}
+            }
+            return ciphertext;
         }
 
         function enforceLogin(e) {
@@ -724,7 +756,7 @@
             const list = document.getElementById('groupConnectionsList');
             try {
                 const token = localStorage.getItem('token');
-                const res = await fetch(`${API_URL}/users/me/connections`, { headers: { 'x-auth-token': token } });
+                const res = await fetch(`${API_URL}/users/me/connections`, { headers: getAuthHeaders() });
                 if (res.ok) {
                     const connections = await res.json();
                     if (connections.length === 0) {
@@ -754,7 +786,7 @@
                 const token = localStorage.getItem('token');
                 const res = await fetch(`${API_URL}/groups`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'x-auth-token': token },
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ name, memberIds })
                 });
                 if (res.ok) {
@@ -771,13 +803,14 @@
 
         async function loadConversations() {
             const token = localStorage.getItem('token');
+            if (!token) return;
             try {
                 const res = await fetch(`${API_URL}/messages/conversations`, {
-                    headers: { 'x-auth-token': token }
+                    headers: getAuthHeaders()
                 });
                 
                 const groupRes = await fetch(`${API_URL}/groups`, {
-                    headers: { 'x-auth-token': token }
+                    headers: getAuthHeaders()
                 });
 
                 const list = document.getElementById('convos-list');
@@ -786,25 +819,25 @@
                     const dms = await res.json();
                     const groups = await groupRes.json();
                     
-                    // Normalize DMs
+                    // Normalize DMs with client-side decryption
                     const normalizedDMs = dms.map(c => ({
                         type: 'dm',
                         id: c.user._id,
                         name: c.user.username,
                         avatar: c.user.profilePicture,
                         timestamp: c.timestamp,
-                        lastMessage: c.lastMessage || 'Start a conversation',
+                        lastMessage: decryptPreview(c.lastMessage, c.user._id, false) || 'Start a conversation',
                         unread: c.unread
                     }));
 
-                    // Normalize Groups
+                    // Normalize Groups with client-side decryption
                     const normalizedGroups = groups.map(g => ({
                         type: 'group',
                         id: g._id,
                         name: g.name,
                         avatar: g.avatar,
-                        timestamp: g.createdAt, // Or last message if added later
-                        lastMessage: 'Tap to view group',
+                        timestamp: g.createdAt,
+                        lastMessage: decryptPreview(g.lastMessage, g._id, true) || 'Tap to view group',
                         unread: false
                     }));
 
@@ -898,7 +931,10 @@
             }
         }
 
-        async function openGroupChat(groupId, groupName, profilePic) {
+        let activeRenderedMsgIds = new Set();
+
+        async function openGroupChat(groupId, groupName, profilePic, isBackground = false) {
+            const isSwitching = activeGroupId !== groupId || !isGroupChatActive;
             activeGroupId = groupId;
             activeChatUserId = null; // Important: Clear DM active state
             isGroupChatActive = true;
@@ -911,42 +947,64 @@
 
             document.getElementById('chat-input-area').style.opacity = '1';
             document.getElementById('chat-input-area').style.pointerEvents = 'auto';
-            document.getElementById('message-input').focus();
+            if (!isBackground) {
+                document.getElementById('message-input').focus();
+                loadConversations();
+            }
 
-            loadConversations();
-
-            // Setup group chat key
-            // Note: In an E2E mesh, group keys should ideally be securely distributed among members using Double Ratchets (Signal Protocol).
-            // For now, we will fallback to a symmetric secret key based on the groupId.
             chatKey = CryptoJS.SHA256(groupId + 'vylithra-group-e2ee-secret').toString();
 
-            // Load Chat History
-            const token = localStorage.getItem('token');
             const stream = document.getElementById('chat-stream');
-            stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px;">Loading group messages...</div>';
+            if (!isBackground && isSwitching) {
+                activeRenderedMsgIds.clear();
+                stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px;">Loading group messages...</div>';
+            }
 
             try {
                 const res = await fetch(`${API_URL}/messages/group/${groupId}`, {
-                    headers: { 'x-auth-token': token }
+                    headers: getAuthHeaders()
                 });
                 if (res.ok) {
                     const msgs = await res.json();
-                    stream.innerHTML = '';
-                    if (msgs.length === 0) {
-                        stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px; font-style:italic;">This group is quiet. Break the ice!</div>';
+                    if (isSwitching || !isBackground) {
+                        stream.innerHTML = '';
+                        activeRenderedMsgIds.clear();
+                        if (msgs.length === 0) {
+                            stream.innerHTML = '<div class="empty-state" style="padding-top:10%;"><p style="color:#94a3b8; font-style:italic;">This group is quiet. Break the ice!</p></div>';
+                        } else {
+                            msgs.forEach(m => {
+                                activeRenderedMsgIds.add(m._id || m.createdAt);
+                                renderMessage(m);
+                            });
+                            scrollToBottom();
+                        }
                     } else {
-                        msgs.forEach(m => renderMessage(m));
-                        scrollToBottom();
+                        // Silent Background Sync
+                        let hasNew = false;
+                        msgs.forEach(m => {
+                            const key = m._id || m.createdAt;
+                            if (!activeRenderedMsgIds.has(key)) {
+                                activeRenderedMsgIds.add(key);
+                                renderMessage(m);
+                                hasNew = true;
+                            }
+                        });
+                        if (hasNew) scrollToBottom();
                     }
                 }
             } catch(e) {
                 console.error(e);
-                stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Oops! Our servers took a quick nap. Please try again.</div>';
+                if (isSwitching && !isBackground) {
+                    stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Failed to load messages. Please try again.</div>';
+                }
             }
         }
 
-        async function openChat(userId, username, profilePic) {
+        async function openChat(userId, username, profilePic, isBackground = false) {
+            const isSwitching = activeChatUserId !== userId || isGroupChatActive;
             activeChatUserId = userId;
+            activeGroupId = null;
+            isGroupChatActive = false;
 
             // UI Updates
             const initial = (username || 'U').charAt(0).toUpperCase();
@@ -956,44 +1014,63 @@
 
             document.getElementById('chat-input-area').style.opacity = '1';
             document.getElementById('chat-input-area').style.pointerEvents = 'auto';
-            document.getElementById('message-input').focus();
-
-            // Refresh sidebar highlighting
-            loadConversations();
+            if (!isBackground) {
+                document.getElementById('message-input').focus();
+                loadConversations();
+            }
 
             // Set up E2EE Key
             chatKey = CryptoJS.SHA256([currentUserId, activeChatUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
 
-            // Load Chat History
-            const token = localStorage.getItem('token');
             const stream = document.getElementById('chat-stream');
-            stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px;">Loading messages...</div>';
+            if (!isBackground && isSwitching) {
+                activeRenderedMsgIds.clear();
+                stream.innerHTML = '<div style="text-align:center; color:#94a3b8; padding: 20px;">Loading messages...</div>';
+            }
 
             try {
                 const res = await fetch(`${API_URL}/messages/${userId}`, {
-                    headers: { 'x-auth-token': token }
+                    headers: getAuthHeaders()
                 });
                 if (res.ok) {
                     const msgs = await res.json();
-                    stream.innerHTML = '';
-
-                    if (msgs.length === 0) {
-                        stream.innerHTML = `
-                            <div class="empty-state" style="padding-top:10%;">
-                                <div class="avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 20px auto;">${initial}</div>
-                                <h3>@${username}</h3>
-                                <p>This is the beginning of your direct message history.</p>
-                            </div>
-                        `;
+                    if (isSwitching || !isBackground) {
+                        stream.innerHTML = '';
+                        activeRenderedMsgIds.clear();
+                        if (msgs.length === 0) {
+                            stream.innerHTML = `
+                                <div class="empty-state" style="padding-top:10%;">
+                                    <div class="avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 20px auto;">${initial}</div>
+                                    <h3>@${username}</h3>
+                                    <p>This is the beginning of your direct message history.</p>
+                                </div>
+                            `;
+                        } else {
+                            msgs.forEach(msg => {
+                                activeRenderedMsgIds.add(msg._id || msg.createdAt);
+                                renderMessage(msg);
+                            });
+                            scrollToBottom();
+                        }
                     } else {
+                        // Silent Background Sync
+                        let hasNew = false;
                         msgs.forEach(msg => {
-                            renderMessage(msg);
+                            const key = msg._id || msg.createdAt;
+                            if (!activeRenderedMsgIds.has(key)) {
+                                activeRenderedMsgIds.add(key);
+                                renderMessage(msg);
+                                hasNew = true;
+                            }
                         });
-                        scrollToBottom();
+                        if (hasNew) scrollToBottom();
                     }
                 }
             } catch (e) {
                 console.error(e);
+                if (isSwitching && !isBackground) {
+                    stream.innerHTML = '<div style="text-align:center; color:#ef4444; padding:20px;">Failed to load messages. Please try again.</div>';
+                }
             }
         }
 
@@ -1068,10 +1145,9 @@
             formData.append('file', file);
             
             try {
-                const token = localStorage.getItem('token');
                 const res = await fetch(`${API_URL}/messages/upload`, {
                     method: 'POST',
-                    headers: { 'x-auth-token': token },
+                    headers: getAuthHeaders(),
                     body: formData
                 });
                 if (res.ok) {
@@ -1092,12 +1168,18 @@
                         </div>
                     `;
                 } else {
-                    previewContainer.innerHTML = `<div style="color:red; font-size:0.85rem; padding: 10px;">Oops! Our servers took a quick nap. Please try again.</div>`;
-                    setTimeout(cancelAttachment, 2000);
+                    let errMsg = 'File upload failed';
+                    try {
+                        const errData = await res.json();
+                        if (errData && (errData.msg || errData.error)) errMsg = errData.msg || errData.error;
+                    } catch(e) {}
+                    previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">${errMsg}</div>`;
+                    setTimeout(cancelAttachment, 2500);
                 }
             } catch (e) {
                 console.error(e);
-                cancelAttachment();
+                previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">Upload failed. Please try again.</div>`;
+                setTimeout(cancelAttachment, 2500);
             }
         }
 
@@ -1143,7 +1225,7 @@
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-auth-token': token
+                        ...getAuthHeaders()
                     },
                     body: JSON.stringify({ 
                         content: encryptedContent, 
@@ -1174,8 +1256,12 @@
             if (typeof io !== 'undefined') {
                 chatSocket = io();
                 chatSocket.on('connect', () => {
-                    if (currentUserId) {
-                        chatSocket.emit('join_chat', currentUserId);
+                    const uid = currentUserId || (window.getCurrentUserId && window.getCurrentUserId());
+                    if (uid) {
+                        chatSocket.emit('join_chat', uid);
+                        chatSocket.emit('join-chat', uid);
+                        chatSocket.emit('join_room', uid);
+                        chatSocket.emit('join-room', uid);
                     }
                 });
                 chatSocket.on('new_message', (msg) => {
@@ -1189,13 +1275,21 @@
                     }
                     loadConversations();
                 });
+                chatSocket.on('new_group_message', (msg) => {
+                    if (!msg) return;
+                    if (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId) {
+                        renderMessage(msg);
+                        scrollToBottom();
+                    }
+                    loadConversations();
+                });
             }
         }
 
         // Init
         document.addEventListener('DOMContentLoaded', () => {
-            initChatSocket();
             checkAuth();
+            initChatSocket();
 
             // Check if user came from profile with a target user id
             const urlParams = new URLSearchParams(window.location.search);
@@ -1207,18 +1301,18 @@
 
             loadConversations();
 
-            // Setup polling for new messages every 10 seconds
+            // Setup polling for new messages every 8 seconds (silent background sync)
             setInterval(() => {
                 if (isGroupChatActive && activeGroupId) {
-                    openGroupChat(activeGroupId, document.getElementById('active-name').innerText, null);
+                    openGroupChat(activeGroupId, document.getElementById('active-name').innerText, null, true);
                 }
                 else if (activeChatUserId) {
-                    openChat(activeChatUserId, document.getElementById('active-name').innerText.replace('@', ''), null); 
+                    openChat(activeChatUserId, document.getElementById('active-name').innerText.replace('@', ''), null, true); 
                 }
                 else {
                     loadConversations();
                 }
-            }, 10000);
+            }, 8000);
         });
 
         // --- Attachment Menu Helpers ---

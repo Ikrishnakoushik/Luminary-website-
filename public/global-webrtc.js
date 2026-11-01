@@ -60,11 +60,13 @@
         if(!token) return null;
         try {
             const base64Url = token.split('.')[1];
+            if (!base64Url) return null;
             const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
             const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
-            return JSON.parse(jsonPayload).user.id;
+            const parsed = JSON.parse(jsonPayload);
+            return (parsed.user && (parsed.user.id || parsed.user._id)) || parsed.id || parsed._id || null;
         } catch(e) { return null; }
     }
 
@@ -72,7 +74,26 @@
         const token = localStorage.getItem('token');
         return parseJwt(token);
     }
-    const currentUserId = getCurrentUserId();
+    window.getCurrentUserId = getCurrentUserId;
+
+    function getCurrentUsername() {
+        try {
+            const token = localStorage.getItem('token');
+            if (token) {
+                const base64Url = token.split('.')[1];
+                if (base64Url) {
+                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+                        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+                    }).join(''));
+                    const parsed = JSON.parse(jsonPayload);
+                    const uname = (parsed.user && parsed.user.username) || parsed.username;
+                    if (uname) return uname;
+                }
+            }
+        } catch(e) {}
+        return localStorage.getItem('username') || 'User';
+    }
 
     const eventHandlers = {};
 
@@ -107,7 +128,13 @@
         if (typeof io !== 'undefined') {
             socket = io();
             socket.on('connect', () => {
-                socket.emit('join_chat', currentUserId);
+                const uid = getCurrentUserId();
+                if (uid) {
+                    socket.emit('join_chat', uid);
+                    socket.emit('join-chat', uid);
+                    socket.emit('join_room', uid);
+                    socket.emit('join-room', uid);
+                }
             });
             socket.on('webrtc_signal', (data) => {
                 if (data && data.type) {
@@ -317,8 +344,23 @@
         ]
     };
 
+    // Dynamically retrieve configured ICE/TURN servers from backend
+    try {
+        fetch('/api/webrtc/ice-servers')
+            .then(r => r.json())
+            .then(data => {
+                if (data && data.iceServers && data.iceServers.length > 0) {
+                    servers.iceServers = data.iceServers;
+                }
+            })
+            .catch(() => {});
+    } catch(e) {}
+
     window.globalSocket.on('connect', () => {
-        window.globalSocket.emit('join-room', currentUserId);
+        const uid = getCurrentUserId();
+        if (uid) {
+            window.globalSocket.emit('join-room', uid);
+        }
     });
 
     // ----------------------------------------------------
@@ -340,9 +382,10 @@
         }
 
         // Standard 1-on-1 Incoming Call
+        const callerName = data.callerName || (data.payload && data.payload.callerName) || (data.from ? 'User' : 'Someone');
         document.getElementById('global-call-overlay').style.display = 'flex';
         document.getElementById('global-call-title').innerText = data.isVideo ? 'Incoming Video Call...' : 'Incoming Audio Call...';
-        document.getElementById('global-call-name').innerText = 'User calling...';
+        document.getElementById('global-call-name').innerText = `@${callerName} is calling you`;
         document.getElementById('global-call-controls-incoming').style.display = 'flex';
         document.getElementById('global-call-controls-active').style.display = 'none';
         
@@ -436,7 +479,12 @@
     }
 
     function createPeerConnection(targetId, isGroup) {
-        if (peerConnections[targetId]) return peerConnections[targetId];
+        if (peerConnections[targetId]) {
+            const existingPc = peerConnections[targetId];
+            if (existingPc.signalingState !== 'closed') {
+                return existingPc;
+            }
+        }
 
         const pc = new RTCPeerConnection(servers);
         peerConnections[targetId] = pc;
@@ -482,7 +530,7 @@
 
         pc.onicecandidate = event => {
             if(event.candidate) {
-                window.globalSocket.emit('ice-candidate', { candidate: event.candidate, to: targetId, from: currentUserId });
+                window.globalSocket.emit('ice-candidate', { candidate: event.candidate, to: targetId, from: getCurrentUserId() });
             }
         };
 
@@ -497,7 +545,8 @@
             window.globalSocket.emit('call-user', {
                 offer: offer,
                 to: targetId,
-                from: currentUserId,
+                from: getCurrentUserId(),
+                callerName: getCurrentUsername(),
                 isVideo: isVideo,
                 isGroupCall: isGroup
             });
@@ -761,7 +810,7 @@
             document.getElementById('global-audio-avatar').classList.remove('pulsing');
 
             // Tell server we joined the room
-            window.globalSocket.emit('join-group-call', { groupId, userId: currentUserId });
+            window.globalSocket.emit('join-group-call', { groupId, userId: getCurrentUserId() });
             isCallActive = true;
         } catch(e) {
             console.error(e);
