@@ -694,6 +694,7 @@
         }
 
         let activeChatUserId = null;
+        let activeChatUsername = '';
         let chatKey = '';
 
         // Verify Auth
@@ -1005,6 +1006,7 @@
         async function openChat(userId, username, profilePic, isBackground = false) {
             const isSwitching = activeChatUserId !== userId || isGroupChatActive;
             activeChatUserId = userId;
+            activeChatUsername = username || '';
             activeGroupId = null;
             isGroupChatActive = false;
 
@@ -1343,7 +1345,10 @@
         // --- Global Call Wrapper ---
         function startCall(isVideo) {
             if(!activeChatUserId && !activeGroupId) return;
-            const name = document.getElementById('active-name').innerText.replace('@', '').replace('E2EE', '').trim();
+            let name = document.getElementById('active-name').innerText.replace('@', '').replace('E2EE', '').trim();
+            if (!name || name === 'Select a conversation' || name === 'undefined' || name === 'null') {
+                name = activeChatUsername || 'User';
+            }
             
             if (isGroupChatActive && activeGroupId) {
                 if(window.globalInitiateGroupCall) {

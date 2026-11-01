@@ -78,6 +78,22 @@
 
     function getCurrentUsername() {
         try {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const u = JSON.parse(userStr);
+                const uname = u.username || u.name;
+                if (uname && uname !== 'undefined' && uname !== 'null' && String(uname).trim() !== '') {
+                    return String(uname).trim();
+                }
+            }
+        } catch(e) {}
+        try {
+            const stored = localStorage.getItem('username');
+            if (stored && stored !== 'undefined' && stored !== 'null' && String(stored).trim() !== '') {
+                return String(stored).trim();
+            }
+        } catch(e) {}
+        try {
             const token = localStorage.getItem('token');
             if (token) {
                 const base64Url = token.split('.')[1];
@@ -87,12 +103,14 @@
                         return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
                     }).join(''));
                     const parsed = JSON.parse(jsonPayload);
-                    const uname = (parsed.user && parsed.user.username) || parsed.username;
-                    if (uname) return uname;
+                    const uname = (parsed.user && (parsed.user.username || parsed.user.name)) || parsed.username || parsed.name;
+                    if (uname && uname !== 'undefined' && uname !== 'null' && String(uname).trim() !== '') {
+                        return String(uname).trim();
+                    }
                 }
             }
         } catch(e) {}
-        return localStorage.getItem('username') || 'User';
+        return 'User';
     }
 
     const eventHandlers = {};
@@ -496,6 +514,31 @@
     // Signaling Event Listeners
     // ----------------------------------------------------
 
+    let callTimerInterval = null;
+    function startCallTimer() {
+        if (callTimerInterval) clearInterval(callTimerInterval);
+        if (!currentCallStartTime) currentCallStartTime = Date.now();
+        const updateTimer = () => {
+            if (!isCallActive) return;
+            const diff = Math.max(0, Math.floor((Date.now() - currentCallStartTime) / 1000));
+            const mins = String(Math.floor(diff / 60)).padStart(2, '0');
+            const secs = String(diff % 60).padStart(2, '0');
+            const titleEl = document.getElementById('global-call-title');
+            if (titleEl) {
+                titleEl.innerText = activeGroupIdForCall ? `Group Call (${mins}:${secs})` : `Connected (${mins}:${secs})`;
+            }
+        };
+        updateTimer();
+        callTimerInterval = setInterval(updateTimer, 1000);
+    }
+
+    function stopCallTimer() {
+        if (callTimerInterval) {
+            clearInterval(callTimerInterval);
+            callTimerInterval = null;
+        }
+    }
+
     // Receive an offer from another user
     window.globalSocket.on('call-made', async data => {
         if(isCallActive && !activeGroupIdForCall) {
@@ -511,12 +554,16 @@
         }
 
         // Standard 1-on-1 Incoming Call
-        const callerName = data.callerName || (data.payload && data.payload.callerName) || (data.from ? 'User' : 'Someone');
+        let callerName = data.callerName || (data.payload && data.payload.callerName);
+        if (!callerName || callerName === 'undefined' || callerName === 'null' || String(callerName).trim() === '') {
+            callerName = 'User';
+        }
         document.getElementById('global-call-overlay').style.display = 'flex';
         document.getElementById('global-call-title').innerText = data.isVideo ? 'Incoming Video Call...' : 'Incoming Audio Call...';
-        document.getElementById('global-call-name').innerText = `@${callerName} is calling you`;
+        document.getElementById('global-call-name').innerText = `@${callerName.replace('@', '')} is calling you`;
         document.getElementById('global-call-controls-incoming').style.display = 'flex';
         document.getElementById('global-call-controls-active').style.display = 'none';
+        document.getElementById('global-audio-avatar').classList.add('pulsing');
         
         incomingCallData = data;
         currentCallTarget = data.from;
@@ -550,6 +597,7 @@
         document.getElementById('global-audio-avatar').classList.remove('pulsing');
         if (!currentCallStartTime) currentCallStartTime = Date.now();
         if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+        startCallTimer();
     });
 
     window.globalSocket.on('call-rejected', data => {
@@ -622,9 +670,39 @@
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
         }
 
+        pc.onconnectionstatechange = () => {
+            console.log('[WebRTC] connectionState changed:', pc.connectionState);
+            if (pc.connectionState === 'connected') {
+                const avatar = document.getElementById('global-audio-avatar');
+                if (avatar) avatar.classList.remove('pulsing');
+                startCallTimer();
+            }
+        };
+
+        pc.oniceconnectionstatechange = () => {
+            console.log('[WebRTC] iceConnectionState changed:', pc.iceConnectionState);
+            if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                const avatar = document.getElementById('global-audio-avatar');
+                if (avatar) avatar.classList.remove('pulsing');
+                startCallTimer();
+            }
+        };
+
         pc.ontrack = event => {
             const stream = event.streams[0];
             remoteStreams[targetId] = stream;
+
+            // Dedicated audio player for guaranteed audio playback (even if video wrapper is hidden)
+            let audioEl = document.getElementById('global-remote-audio');
+            if (!audioEl) {
+                audioEl = document.createElement('audio');
+                audioEl.id = 'global-remote-audio';
+                audioEl.autoplay = true;
+                audioEl.playsInline = true;
+                document.body.appendChild(audioEl);
+            }
+            audioEl.srcObject = stream;
+            audioEl.play().catch(e => console.log('[WebRTC] Remote audio autoplay blocked:', e));
 
             if (isGroup) {
                 // Add dynamically to grid
@@ -639,6 +717,7 @@
                     container.insertBefore(vid, document.getElementById('global-local-video')); // insert before local video
                 }
                 vid.srcObject = stream;
+                vid.play().catch(e => console.log('[WebRTC] Group video autoplay blocked:', e));
             } else {
                 // 1-on-1 logic - use the single video wrapper
                 let vid = document.getElementById('global-remote-video');
@@ -654,6 +733,7 @@
                     container.insertBefore(vid, document.getElementById('global-local-video'));
                 }
                 vid.srcObject = stream;
+                vid.play().catch(e => console.log('[WebRTC] 1-on-1 video autoplay blocked:', e));
             }
         };
 
@@ -720,6 +800,12 @@
                 console.error('No incoming call data available to accept');
                 return;
             }
+            if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+            const ringbox = document.getElementById('global-ringtone');
+            if (ringbox) {
+                ringbox.pause();
+                ringbox.currentTime = 0;
+            }
             try {
                 if (isVideoCall) {
                     localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -742,7 +828,12 @@
             
             document.getElementById('global-call-controls-incoming').style.display = 'none';
             document.getElementById('global-call-controls-active').style.display = 'flex';
-            document.getElementById('global-call-title').innerText = 'Connecting...';
+            document.getElementById('global-call-title').innerText = 'Connected';
+            let calleeDisplayCaller = incomingCallData.callerName || (incomingCallData.payload && incomingCallData.payload.callerName);
+            if (!calleeDisplayCaller || calleeDisplayCaller === 'undefined' || calleeDisplayCaller === 'null' || String(calleeDisplayCaller).trim() === '') {
+                calleeDisplayCaller = 'User';
+            }
+            document.getElementById('global-call-name').innerText = `@${calleeDisplayCaller.replace('@', '')}`;
             document.getElementById('global-audio-avatar').classList.remove('pulsing');
 
             const pc = createPeerConnection(incomingCallData.from, false);
@@ -760,6 +851,7 @@
             
             isCallActive = true;
             currentCallStartTime = Date.now();
+            startCallTimer();
         } catch(e) {
             console.error('Call Accept Error:', e);
             window.globalRejectCall();
@@ -789,6 +881,7 @@
 
     function globalEndUI() {
         if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+        stopCallTimer();
         const ringbox = document.getElementById('global-ringtone');
         if (ringbox) {
             ringbox.pause();
@@ -802,11 +895,19 @@
         activeGroupIdForCall = null;
 
         document.getElementById('global-call-overlay').style.display = 'none';
+        document.getElementById('global-call-title').innerText = 'Incoming Call...';
+        document.getElementById('global-call-name').innerText = 'Someone is calling you';
         document.getElementById('global-btn-toggle-mic').innerHTML = '<i class="fas fa-microphone"></i>';
         
         if (localStream) {
             localStream.getTracks().forEach(track => track.stop());
             localStream = null;
+        }
+
+        const remoteAudio = document.getElementById('global-remote-audio');
+        if (remoteAudio) {
+            remoteAudio.srcObject = null;
+            remoteAudio.remove();
         }
 
         Object.keys(peerConnections).forEach(id => removePeer(id));
@@ -895,7 +996,11 @@
             document.getElementById('global-call-controls-active').style.display = 'flex';
             document.getElementById('global-btn-toggle-cam').style.display = isVideoCall ? 'flex' : 'none';
             
-            document.getElementById('global-call-name').innerText = targetUsername || 'User';
+            let displayName = targetUsername;
+            if (!displayName || displayName === 'Select a conversation' || displayName === 'undefined' || displayName === 'null' || String(displayName).trim() === '') {
+                displayName = 'User';
+            }
+            document.getElementById('global-call-name').innerText = displayName.startsWith('@') ? displayName : `@${displayName}`;
             document.getElementById('global-call-title').innerText = 'Connecting...';
             document.getElementById('global-audio-avatar').classList.add('pulsing');
 
