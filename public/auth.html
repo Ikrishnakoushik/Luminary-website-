@@ -1180,12 +1180,20 @@
                 const res = await fetch(`${API_URL}/register`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, displayName, role })
+                    body: JSON.stringify({ email, password, username: displayName, displayName, role })
                 });
 
                 const data = await res.json();
                 
                 if (res.ok) {
+                    if (data.token) {
+                        localStorage.setItem('token', data.token);
+                        localStorage.setItem('role', data.role || 'reader');
+                        localStorage.setItem('username', data.username || displayName);
+                        if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+                        window.location.href = '/main';
+                        return;
+                    }
                     pendingLoginEmail = email;
                     document.getElementById('verifyEmailDisplay').innerText = email;
                     switchTab('verify');

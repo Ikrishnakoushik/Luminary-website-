@@ -1128,7 +1128,13 @@ app.post('/api/auth/sync', async (req, res) => {
 app.post('/api/register', async (req, res) => {
     try {
         console.log('Register request received:', req.body);
-        const { username, email, password, role } = req.body;
+        const username = String(req.body.username || req.body.displayName || '').trim();
+        const email = String(req.body.email || '').trim().toLowerCase();
+        const { password, role } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ msg: 'Please provide username, email, and password' });
+        }
 
         // Check if user exists
         let user = await User.findOne({ email });
@@ -1136,8 +1142,9 @@ app.post('/api/register', async (req, res) => {
             return res.status(400).json({ msg: 'Email already registered' });
         }
 
-        // Check if username exists
-        let existingUsername = await User.findOne({ username });
+        // Check if username exists (case-insensitive)
+        const escapedUser = username.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        let existingUsername = await User.findOne({ username: { $regex: '^' + escapedUser + '$', $options: 'i' } });
         if (existingUsername && (!user || existingUsername.id !== user.id)) {
             return res.status(400).json({ msg: 'Username already taken' });
         }
@@ -1516,16 +1523,17 @@ app.post('/api/login', async (req, res) => {
     try {
         const { email, password, totpCode } = req.body;
 
-        const identifier = String(email || '').trim().toLowerCase();
+        const identifier = String(email || '').trim();
         if (!identifier || !password) {
             return res.status(400).json({ msg: 'Please provide both email/username and password' });
         }
 
+        const escaped = identifier.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
         // Check if user exists by email OR username (case-insensitive)
         const user = await User.findOne({
             $or: [
-                { email: identifier },
-                { username: { $regex: '^' + identifier + '$', $options: 'i' } }
+                { email: { $regex: '^' + escaped + '$', $options: 'i' } },
+                { username: { $regex: '^' + escaped + '$', $options: 'i' } }
             ]
         });
 
