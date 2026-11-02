@@ -868,6 +868,65 @@ app.post('/api/users/follow-requests/:requesterId/reject', auth, async (req, res
     }
 });
 
+// Get user's connections (followers + following + suggestions for group/messaging)
+app.get('/api/users/me/connections', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id)
+            .populate('following', 'username displayName profilePicture bio')
+            .populate('followers', 'username displayName profilePicture bio');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const connectionsMap = new Map();
+        (user.following || []).forEach(u => {
+            if (u && u._id && u._id.toString() !== req.user.id.toString()) {
+                connectionsMap.set(u._id.toString(), {
+                    _id: u._id,
+                    username: u.username,
+                    displayName: u.displayName || u.username,
+                    profilePicture: u.profilePicture || '',
+                    bio: u.bio || ''
+                });
+            }
+        });
+        (user.followers || []).forEach(u => {
+            if (u && u._id && u._id.toString() !== req.user.id.toString()) {
+                if (!connectionsMap.has(u._id.toString())) {
+                    connectionsMap.set(u._id.toString(), {
+                        _id: u._id,
+                        username: u.username,
+                        displayName: u.displayName || u.username,
+                        profilePicture: u.profilePicture || '',
+                        bio: u.bio || ''
+                    });
+                }
+            }
+        });
+
+        // If user has few or no connections, provide network discover suggestions
+        if (connectionsMap.size < 8) {
+            const suggestions = await User.find({ _id: { $ne: req.user.id } })
+                .select('username displayName profilePicture bio')
+                .limit(20);
+            suggestions.forEach(u => {
+                if (u && u._id && !connectionsMap.has(u._id.toString())) {
+                    connectionsMap.set(u._id.toString(), {
+                        _id: u._id,
+                        username: u.username,
+                        displayName: u.displayName || u.username,
+                        profilePicture: u.profilePicture || '',
+                        bio: u.bio || ''
+                    });
+                }
+            });
+        }
+
+        res.json(Array.from(connectionsMap.values()));
+    } catch (err) {
+        console.error('Connections Fetch Error:', err.message);
+        res.status(500).json({ msg: 'Failed to fetch connections' });
+    }
+});
+
 app.get('/api/users/me/following', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).populate('following', 'username displayName profilePicture bio');

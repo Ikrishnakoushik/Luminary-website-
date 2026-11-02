@@ -1363,23 +1363,23 @@
     </div>
 
     <!-- Clear Chat Confirmation Modal -->
-    <div id="clearChatModal" class="modal" style="display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.55); backdrop-filter: blur(6px);">
-        <div style="background-color: var(--surface); margin: 15vh auto; padding: 26px; border: 1px solid var(--border); width: 90%; max-width: 400px; border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.22); text-align: center;">
-            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin: 0 auto 16px;">
+    <div id="clearChatModal" class="modal vyl-modal" style="display: none;">
+        <div class="vyl-modal-card" style="max-width: 420px; text-align: center;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(239, 68, 68, 0.14); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin: 0 auto 16px;">
                 <i class="fas fa-trash-alt"></i>
             </div>
-            <h3 style="margin: 0 0 8px; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">Clear Chat</h3>
-            <p id="clearChatModalSubtext" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 22px; line-height: 1.45;">
-                Are you sure you want to clear this entire conversation?
+            <h2 class="vyl-modal-title" style="margin-bottom: 6px;">Clear Chat</h2>
+            <p id="clearChatModalSubtext" class="vyl-modal-subtitle" style="margin-bottom: 22px; line-height: 1.5;">
+                Are you sure you want to clear this entire conversation? This action cannot be undone.
             </p>
             <div style="display: flex; flex-direction: column; gap: 10px;">
-                <button id="clearChatForEveryoneBtn" onclick="submitClearChat(true)" style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;">
+                <button type="button" id="clearChatForEveryoneBtn" class="vyl-btn-danger" onclick="submitClearChat(true)">
                     <i class="fas fa-trash-alt"></i> Clear for Everyone
                 </button>
-                <button id="clearChatForMeBtn" onclick="submitClearChat(false)" style="width: 100%; padding: 12px; background: rgba(20, 184, 166, 0.1); border: 1px solid rgba(20, 184, 166, 0.25); color: var(--primary); border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                <button type="button" id="clearChatForMeBtn" class="vyl-btn-secondary" onclick="submitClearChat(false)" style="color: var(--primary); font-weight: 600;">
                     <i class="fas fa-user-minus"></i> Clear for Me Only
                 </button>
-                <button onclick="closeClearChatModal()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; font-weight: 500; font-size: 0.9rem; cursor: pointer; margin-top: 4px;">
+                <button type="button" class="vyl-btn-ghost" onclick="closeClearChatModal()">
                     Cancel
                 </button>
             </div>
@@ -1387,18 +1387,58 @@
     </div>
 
     <!-- Create Group Modal -->
-    <div id="createGroupModal" class="modal" style="display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); backdrop-filter: blur(5px);">
-        <div style="background-color: var(--surface); margin: 10% auto; padding: 25px; border: 1px solid var(--border); width: 90%; max-width: 450px; border-radius: 16px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                <h2 style="margin:0; font-size:1.5rem;">Create New Group</h2>
-                <span onclick="document.getElementById('createGroupModal').style.display='none'" style="cursor:pointer; font-size:1.5rem; color:var(--text-muted);">&times;</span>
+    <div id="createGroupModal" class="modal vyl-modal" style="display: none;">
+        <div class="vyl-modal-card" style="max-width: 480px;">
+            <div class="vyl-modal-header">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div style="width: 42px; height: 42px; border-radius: 12px; background: rgba(20, 184, 166, 0.15); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">
+                        <i class="fas fa-users-medical"></i>
+                    </div>
+                    <div>
+                        <h2 class="vyl-modal-title">Create New Group</h2>
+                        <p class="vyl-modal-subtitle">Start a group chat with friends or team</p>
+                    </div>
+                </div>
+                <button type="button" class="vyl-modal-close" onclick="closeCreateGroupModal()" title="Close">
+                    <i class="fas fa-times"></i>
+                </button>
             </div>
-            <input type="text" id="groupNameInput" placeholder="Group Name (e.g., Development Team...)" style="width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-color); color: var(--text-main); font-family: inherit; font-size: 1rem;">
-            <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 10px; font-weight: 600;">Select Members from Network</p>
-            <div id="groupConnectionsList" style="max-height: 200px; min-height: 100px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 10px; margin-bottom: 20px; background: var(--bg-color);">
-                <div style="color:var(--text-muted); text-align:center;">Loading...</div>
+            
+            <div style="padding: 10px 0 0 0;">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #cbd5e1; margin-bottom: 6px;">
+                        <i class="fas fa-layer-group" style="color: var(--primary); margin-right: 6px;"></i> Group Name
+                    </label>
+                    <input type="text" id="groupNameInput" class="vyl-input" placeholder="e.g. Design Team, Book Club..." maxlength="40">
+                </div>
+
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                        <label style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1;">
+                            <i class="fas fa-user-plus" style="color: var(--primary); margin-right: 6px;"></i> Select Members
+                        </label>
+                        <span id="groupSelectedCount" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; background: rgba(20, 184, 166, 0.12); padding: 2px 8px; border-radius: 10px;">0 selected</span>
+                    </div>
+                    <div style="position: relative; margin-bottom: 10px;">
+                        <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                        <input type="text" id="groupMemberSearch" class="vyl-input" style="padding-left: 36px; font-size: 0.88rem; margin-bottom: 0;" placeholder="Search your network..." oninput="filterGroupMembers(this.value)">
+                    </div>
+                </div>
+
+                <div id="groupConnectionsList" class="vyl-member-list">
+                    <div style="text-align:center; padding: 26px; color: var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 10px; display: block;"></i>
+                        Loading your connections...
+                    </div>
+                </div>
             </div>
-            <button onclick="submitCreateGroup()" style="width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">Ready. Create Group</button>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+                <button type="button" class="vyl-btn-secondary" onclick="closeCreateGroupModal()">Cancel</button>
+                <button type="button" id="submitCreateGroupBtn" class="vyl-btn-primary" onclick="submitCreateGroup()">
+                    <i class="fas fa-check"></i> Create Group
+                </button>
+            </div>
         </div>
     </div>
 
@@ -1559,51 +1599,147 @@
             return true;
         }
 
+        function closeCreateGroupModal() {
+            const modal = document.getElementById('createGroupModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         async function openCreateGroupModal() {
-            document.getElementById('createGroupModal').style.display = 'block';
+            const modal = document.getElementById('createGroupModal');
+            if (modal) modal.style.display = 'flex';
             const list = document.getElementById('groupConnectionsList');
+            const searchInput = document.getElementById('groupMemberSearch');
+            if (searchInput) searchInput.value = '';
+            
+            if (list) {
+                list.innerHTML = `
+                    <div style="text-align:center; padding: 26px; color: var(--text-muted);">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary); margin-bottom: 10px; display: block;"></i>
+                        Loading your connections...
+                    </div>
+                `;
+            }
+
             try {
-                const token = localStorage.getItem('token');
                 const res = await fetch(`${API_URL}/users/me/connections`, { headers: getAuthHeaders() });
                 if (res.ok) {
                     const connections = await res.json();
-                    if (connections.length === 0) {
-                        list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding-top: 20px;">No connections found. Build your network first!</div>';
-                        return;
-                    }
-                    list.innerHTML = connections.map(conn => `
-                        <label style="display: flex; align-items: center; gap: 12px; padding: 8px; cursor: pointer; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='transparent'">
-                            <input type="checkbox" class="group-member-checkbox" value="${conn._id}" style="width: 18px; height: 18px; cursor: pointer;">
-                            <span style="font-weight: 600; font-size: 0.95rem;">@${conn.username}</span>
-                        </label>
-                    `).join('');
+                    window._groupConnections = Array.isArray(connections) ? connections : [];
+                    renderGroupConnections(window._groupConnections);
+                } else {
+                    throw new Error('Connection fetch status ' + res.status);
                 }
             } catch (e) {
-                console.error(e);
-                list.innerHTML = '<div style="color:red; text-align:center;">Oops! Our servers took a quick nap. Please try again.</div>';
+                console.error('Group connections fetch error:', e);
+                // Graceful fallback: retrieve active users from search directory
+                try {
+                    const resSearch = await fetch(`${API_URL}/users/search?q=`, { headers: getAuthHeaders() });
+                    if (resSearch.ok) {
+                        const fallbackUsers = await resSearch.json();
+                        window._groupConnections = Array.isArray(fallbackUsers) ? fallbackUsers : [];
+                        renderGroupConnections(window._groupConnections);
+                        return;
+                    }
+                } catch (fallbackErr) {}
+
+                if (list) {
+                    list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 24px;">No connections found yet. You can connect with others in the discovery feed!</div>';
+                }
+            }
+        }
+
+        function renderGroupConnections(connections) {
+            const list = document.getElementById('groupConnectionsList');
+            if (!list) return;
+            if (!connections || connections.length === 0) {
+                list.innerHTML = '<div style="color:var(--text-muted); text-align:center; padding: 24px;">No connections found. Build your network first!</div>';
+                updateGroupSelectedCount();
+                return;
+            }
+
+            list.innerHTML = connections.map(conn => {
+                const pic = conn.profilePicture ? (conn.profilePicture.startsWith('http') ? conn.profilePicture : '/' + conn.profilePicture) : '';
+                const initial = (conn.displayName || conn.username || 'U').charAt(0).toUpperCase();
+                const avatarHtml = pic 
+                    ? `<img src="${pic}" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1);">` 
+                    : `<div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, var(--primary), #3b82f6); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem;">${initial}</div>`;
+                return `
+                    <label class="group-conn-row" style="display: flex; align-items: center; gap: 12px; padding: 10px 12px; cursor: pointer; border-radius: 12px; transition: all 0.2s ease; margin-bottom: 6px; background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08);" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.04)'">
+                        <input type="checkbox" class="group-member-checkbox" value="${conn._id}" onchange="updateGroupSelectedCount()" style="width: 18px; height: 18px; accent-color: var(--primary); cursor: pointer;">
+                        ${avatarHtml}
+                        <div style="flex: 1; overflow: hidden;">
+                            <div style="font-weight: 600; font-size: 0.92rem; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${conn.displayName || conn.username}</div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">@${conn.username}</div>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+            updateGroupSelectedCount();
+        }
+
+        function filterGroupMembers(term) {
+            const q = (term || '').trim().toLowerCase();
+            if (!window._groupConnections) return;
+            if (!q) {
+                renderGroupConnections(window._groupConnections);
+                return;
+            }
+            const filtered = window._groupConnections.filter(c => 
+                (c.username && c.username.toLowerCase().includes(q)) || 
+                (c.displayName && c.displayName.toLowerCase().includes(q))
+            );
+            renderGroupConnections(filtered);
+        }
+
+        function updateGroupSelectedCount() {
+            const countEl = document.getElementById('groupSelectedCount');
+            const selected = document.querySelectorAll('.group-member-checkbox:checked').length;
+            if (countEl) {
+                countEl.innerText = `${selected} selected`;
             }
         }
 
         async function submitCreateGroup() {
-            const name = document.getElementById('groupNameInput').value.trim();
+            const nameInput = document.getElementById('groupNameInput');
+            const name = nameInput ? nameInput.value.trim() : '';
             if (!name) return VylithraUI.showToast('Group name is required!', 'error');
             const checkboxes = document.querySelectorAll('.group-member-checkbox:checked');
             const memberIds = Array.from(checkboxes).map(cb => cb.value);
 
+            const btn = document.getElementById('submitCreateGroupBtn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
+            }
+
             try {
-                const token = localStorage.getItem('token');
                 const res = await fetch(`${API_URL}/groups`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ name, memberIds })
                 });
                 if (res.ok) {
-                    document.getElementById('createGroupModal').style.display = 'none';
-                    document.getElementById('groupNameInput').value = '';
-                    VylithraUI.showToast('Group created!', 'success');
-                    loadConversations();
+                    const group = await res.json();
+                    closeCreateGroupModal();
+                    if (nameInput) nameInput.value = '';
+                    VylithraUI.showToast('Group created successfully!', 'success');
+                    await loadConversations();
+                    if (group && group._id) {
+                        openGroupChat(group._id, group.name || name);
+                    }
+                } else {
+                    const data = await res.json();
+                    VylithraUI.showToast(data.msg || 'Failed to create group', 'error');
                 }
-            } catch(e) { console.error(e); }
+            } catch(e) {
+                console.error('Error creating group:', e);
+                VylithraUI.showToast('Network error creating group', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-check"></i> Create Group';
+                }
+            }
         }
 
         let isGroupChatActive = false;
@@ -2481,6 +2617,15 @@
             const chatOptionsBtn = document.getElementById('chatOptionsBtn');
             if (chatOptions && chatOptions.style.display === 'block' && !chatOptions.contains(e.target) && (!chatOptionsBtn || !chatOptionsBtn.contains(e.target))) {
                 chatOptions.style.display = 'none';
+            }
+
+            const groupModal = document.getElementById('createGroupModal');
+            if (e.target === groupModal) {
+                closeCreateGroupModal();
+            }
+            const clearModal = document.getElementById('clearChatModal');
+            if (e.target === clearModal) {
+                closeClearChatModal();
             }
         });
 
