@@ -7,6 +7,7 @@ import 'package:just_audio/just_audio.dart';
 class CallScreen extends StatefulWidget {
   final WebRTCService webrtcService;
   final bool isIncoming;
+  final bool autoAccept;
   final String targetUserId;
   final String targetUsername;
   final bool isVideoCall;
@@ -16,6 +17,7 @@ class CallScreen extends StatefulWidget {
     super.key,
     required this.webrtcService,
     required this.isIncoming,
+    this.autoAccept = false,
     required this.targetUserId,
     required this.targetUsername,
     required this.isVideoCall,
@@ -43,8 +45,12 @@ class _CallScreenState extends State<CallScreen> {
     _setupCallbacks();
     
     if (widget.isIncoming) {
-      // Incoming call: Play ringtone
-      _playRingtone(true);
+      if (widget.autoAccept) {
+        _acceptCall();
+      } else {
+        // Incoming call: Play ringtone
+        _playRingtone(true);
+      }
     } else {
       // Outgoing call: check if target is online
       _checkStatusAndCall();
@@ -163,6 +169,9 @@ class _CallScreenState extends State<CallScreen> {
 
   void _acceptCall() {
     _stopRingtone();
+    setState(() {
+      _isConnected = true;
+    });
     widget.webrtcService.acceptCall(widget.incomingData ?? {});
   }
 

@@ -1,9 +1,12 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'socket_service.dart';
+import 'api_service.dart';
 
 class WebRTCService {
   static final WebRTCService _instance = WebRTCService._internal();
@@ -11,6 +14,8 @@ class WebRTCService {
   WebRTCService._internal();
 
   final SocketService _socketService = SocketService();
+  final ApiService _apiService = ApiService();
+  Timer? _httpPollingTimer;
   
   RTCPeerConnection? _peerConnection;
   MediaStream? localStream;
@@ -55,8 +60,63 @@ class WebRTCService {
     ]
   };
 
+  Future<void> fetchIceServers() async {
+    try {
+      final res = await _apiService.get('/api/webrtc/ice-servers');
+      if (res is Map && res['iceServers'] is List) {
+        _iceServers['iceServers'] = res['iceServers'];
+        debugPrint('[WebRTC] Loaded ICE servers from server: ${_iceServers['iceServers']}');
+      }
+    } catch (e) {
+      debugPrint('[WebRTC] Falling back to default STUN servers: $e');
+    }
+  }
+
+  Future<String?> ensureUserId() async {
+    if (_currentUserId != null && _currentUserId!.isNotEmpty) return _currentUserId;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      var uid = prefs.getString('current_user_id');
+      if (uid != null && uid.isNotEmpty) {
+        _currentUserId = uid;
+        return uid;
+      }
+      var token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        final parts = token.split('.');
+        if (parts.length == 3) {
+          final payload = utf8.decode(base64Url.decode(base64Url.normalize(parts[1])));
+          final data = jsonDecode(payload);
+          final id = (data['user']?['id'] ?? data['id'] ?? data['user']?['_id'] ?? data['_id'])?.toString();
+          if (id != null && id.isNotEmpty) {
+            _currentUserId = id;
+            await prefs.setString('current_user_id', id);
+            return id;
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('[WebRTC] Error resolving currentUserId: $e');
+    }
+    return null;
+  }
+
+  Future<void> ensureInitialized([String? userId]) async {
+    if (userId != null && userId.isNotEmpty) {
+      _currentUserId = userId;
+    }
+    if (_currentUserId == null || _currentUserId!.isEmpty) {
+      await ensureUserId();
+    }
+    if (_currentUserId != null && _currentUserId!.isNotEmpty) {
+      fetchIceServers();
+      _listenForSignals();
+    }
+  }
+
   void initialize(String userId) {
     _currentUserId = userId;
+    fetchIceServers();
     _listenForSignals();
   }
 
@@ -77,10 +137,34 @@ class WebRTCService {
     return '$type|$from|$to|$candidate|$sdpSnippet';
   }
 
-  void _listenForSignals() {
-    if (_currentUserId == null) return;
+  void _listenForSignals() async {
+    if (_currentUserId == null) {
+      await ensureUserId();
+      if (_currentUserId == null) return;
+    }
     
+    _httpPollingTimer?.cancel();
     _signalSubscription?.cancel();
+    _httpPollingTimer = Timer.periodic(const Duration(milliseconds: 1200), (timer) async {
+      if (_currentUserId == null) {
+        await ensureUserId();
+        if (_currentUserId == null) return;
+      }
+      try {
+        final signals = await _apiService.get('/api/webrtc/signals');
+        if (signals is List) {
+          for (final sig in signals) {
+            if (sig is Map && sig['type'] != null && sig['payload'] != null) {
+              final type = sig['type'].toString();
+              final payload = Map<String, dynamic>.from(sig['payload']);
+              _handleIncomingSignal(type, payload);
+            }
+          }
+        }
+      } catch (e) {
+        // Silent catch polling error
+      }
+    });
     _groupUserJoinedSub?.cancel();
     _groupUserLeftSub?.cancel();
     _firebaseSignalSub?.cancel();
@@ -470,6 +554,10 @@ class WebRTCService {
     final toId = payload['to']?.toString();
     if (toId == null || toId.isEmpty) return;
 
+    if (_currentUserId != null && (payload['from'] == null || payload['from'].toString().isEmpty)) {
+      payload['from'] = _currentUserId;
+    }
+
     // Dual Send 1: SocketService
     try {
       _socketService.emit('webrtc_signal', {
@@ -490,6 +578,19 @@ class WebRTCService {
       });
     } catch (e) {
       debugPrint('[WebRTC] Firebase emit warning: $e');
+    }
+
+    // Dual Send 3: Guaranteed Server-Side Bridge (Crucial for Web <-> Mobile cross-platform)
+    try {
+      _apiService.post('/api/webrtc/signal', {
+        'to': toId,
+        'type': type,
+        'payload': payload,
+      }).catchError((e) {
+        debugPrint('[WebRTC] Server signal bridge error: $e');
+      });
+    } catch (e) {
+      debugPrint('[WebRTC] HTTP bridge exception: $e');
     }
   }
 
@@ -518,6 +619,20 @@ class WebRTCService {
       if (event.streams.isNotEmpty) {
         remoteStream = event.streams[0];
         if (onRemoteStream != null) onRemoteStream!(remoteStream!);
+      }
+    };
+
+    _peerConnection!.onAddStream = (MediaStream stream) {
+      remoteStream = stream;
+      if (onRemoteStream != null) onRemoteStream!(stream);
+    };
+
+    _peerConnection!.onIceConnectionState = (RTCIceConnectionState state) {
+      debugPrint('[WebRTC] Mobile ICE connection state: $state');
+      if (state == RTCIceConnectionState.RTCIceConnectionStateConnected ||
+          state == RTCIceConnectionState.RTCIceConnectionStateCompleted) {
+        _isCallConnected = true;
+        onCallAccepted?.call();
       }
     };
   }
@@ -567,6 +682,7 @@ class WebRTCService {
   }
 
   Future<void> initiateCall(String targetId, bool isVideo) async {
+    await ensureInitialized();
     _currentCallTarget = targetId;
     isVideoCall = isVideo;
     _isCallConnected = false;
@@ -611,7 +727,83 @@ class WebRTCService {
 
   Future<void> acceptCall(Map<String, dynamic> incomingData) async {
     try {
-      final payloadToUse = incomingData.isNotEmpty ? incomingData : _incomingOfferPayload;
+      await ensureInitialized();
+      Map<String, dynamic>? payloadToUse;
+      if (incomingData['offer'] != null) {
+        payloadToUse = incomingData;
+      } else if (_incomingOfferPayload?['offer'] != null) {
+        payloadToUse = _incomingOfferPayload;
+      } else {
+        // Immediate drain from server signals
+        try {
+          final sigs = await _apiService.get('/api/webrtc/signals');
+          if (sigs is List) {
+            for (final sig in sigs) {
+              if (sig is Map && sig['type'] == 'call-made' && sig['payload'] != null) {
+                final p = Map<String, dynamic>.from(sig['payload']);
+                if (p['offer'] != null) {
+                  payloadToUse = p;
+                  _incomingOfferPayload = p;
+                  break;
+                }
+              }
+            }
+          }
+        } catch (_) {
+          // Polling signals fallback
+        }
+      }
+
+      if (payloadToUse == null || payloadToUse['offer'] == null) {
+        for (int i = 0; i < 15; i++) {
+          await Future.delayed(const Duration(milliseconds: 300));
+          if (_incomingOfferPayload?['offer'] != null) {
+            payloadToUse = _incomingOfferPayload;
+            break;
+          }
+          try {
+            final sigs = await _apiService.get('/api/webrtc/signals');
+            if (sigs is List) {
+              for (final sig in sigs) {
+                if (sig is Map && sig['type'] == 'call-made' && sig['payload'] != null) {
+                  final p = Map<String, dynamic>.from(sig['payload']);
+                  if (p['offer'] != null) {
+                    payloadToUse = p;
+                    _incomingOfferPayload = p;
+                    break;
+                  }
+                }
+              }
+            }
+          } catch (_) {
+            // Retry polling signals
+          }
+          if (payloadToUse != null) break;
+
+          if (_currentUserId != null) {
+            try {
+              final snap = await FirebaseDatabase.instance.ref('webrtc/signals/$_currentUserId').get();
+              if (snap.exists && snap.value is Map) {
+                final map = Map<String, dynamic>.from(snap.value as Map);
+                for (final entry in map.values) {
+                  if (entry is Map && entry['type'] == 'call-made' && entry['payload'] != null) {
+                    final p = Map<String, dynamic>.from(entry['payload']);
+                    if (p['offer'] != null) {
+                      payloadToUse = p;
+                      _incomingOfferPayload = p;
+                      break;
+                    }
+                  }
+                }
+              }
+            } catch (_) {
+              // Firebase RTDB fallback read
+            }
+          }
+          if (payloadToUse != null) break;
+        }
+      }
+
       if (payloadToUse == null || payloadToUse['offer'] == null) {
         throw Exception("No incoming offer payload found");
       }
@@ -620,7 +812,11 @@ class WebRTCService {
       localStream = await _acquireMedia(isVideoCall);
       if (onLocalStream != null && localStream != null) onLocalStream!(localStream!);
 
-      final targetId = payloadToUse['from'];
+      final targetId = payloadToUse['from']?.toString() ?? _currentCallTarget;
+      if (targetId == null || targetId.isEmpty) {
+        throw Exception("No target user found");
+      }
+      _currentCallTarget = targetId;
       await _createPeerConnection(targetId);
 
       final offer = RTCSessionDescription(payloadToUse['offer']['sdp'], payloadToUse['offer']['type']);
@@ -639,14 +835,18 @@ class WebRTCService {
         }
       });
       isCallActive = true;
+      _isCallConnected = true;
+      onCallAccepted?.call();
     } catch (e) {
+      debugPrint('[WebRTC] acceptCall error: $e');
       rejectCall();
     }
   }
 
-  void rejectCall() {
-    if (_currentCallTarget != null) {
-      _sendSignal('call-rejected', {'to': _currentCallTarget});
+  void rejectCall([String? targetId]) {
+    final target = targetId ?? _currentCallTarget;
+    if (target != null) {
+      _sendSignal('call-rejected', {'to': target});
     }
     endCall();
   }

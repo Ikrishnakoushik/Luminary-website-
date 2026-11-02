@@ -15,6 +15,8 @@ import 'providers/theme_provider.dart';
 import 'services/display_service.dart';
 import 'screens/home_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/call_screen.dart';
+import 'services/webrtc_service.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
@@ -104,6 +106,8 @@ void main() async {
   }
 }
 
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -116,16 +120,122 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     _setupCallKitListener();
+    _setupGlobalWebRTC();
+  }
+
+  void _setupGlobalWebRTC() {
+    WebRTCService().ensureInitialized();
+    WebRTCService().onIncomingCall = (incomingData) {
+      final callerId = incomingData['from']?.toString() ?? '';
+      final callerName = (incomingData['callerName'] != null && incomingData['callerName'].toString().isNotEmpty)
+          ? incomingData['callerName'].toString()
+          : 'Incoming Call';
+      final isVideo = incomingData['isVideo'] == true;
+      if (callerId.isNotEmpty) {
+        navigatorKey.currentState?.push(
+          MaterialPageRoute(
+            builder: (_) => CallScreen(
+              webrtcService: WebRTCService(),
+              isIncoming: true,
+              autoAccept: false,
+              targetUserId: callerId,
+              targetUsername: callerName,
+              isVideoCall: isVideo,
+              incomingData: incomingData,
+            ),
+          ),
+        );
+      }
+    };
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+      if (message.data['type'] == 'call') {
+        final params = CallKitParams(
+          id: message.data['uuid'] ?? 'call_id_${DateTime.now().millisecondsSinceEpoch}',
+          nameCaller: message.data['callerName'] ?? 'Unknown Caller',
+          appName: 'Vylithra',
+          avatar: 'https://i.pravatar.cc/100',
+          handle: message.data['hasVideo'] == 'true' ? 'Video Call' : 'Voice Call',
+          type: 0,
+          duration: 30000,
+          textAccept: 'Accept',
+          textDecline: 'Decline',
+          missedCallNotification: const NotificationParams(
+            showNotification: true,
+            isShowCallback: true,
+            subtitle: 'Missed call',
+            callbackText: 'Call back',
+          ),
+          extra: <String, dynamic>{'userId': message.data['senderId']},
+          headers: <String, dynamic>{'apiKey': 'vylithra_key'},
+          android: const AndroidParams(
+            isCustomNotification: true,
+            isShowLogo: false,
+            ringtonePath: 'system_ringtone_default',
+            backgroundColor: '#0955fa',
+            backgroundUrl: 'assets/test.png',
+            actionColor: '#4CAF50',
+          ),
+          ios: const IOSParams(
+            iconName: 'CallKitLogo',
+            handleType: '',
+            supportsVideo: true,
+            maximumCallGroups: 2,
+            maximumCallsPerCallGroup: 1,
+            audioSessionMode: 'default',
+            audioSessionActive: true,
+            audioSessionPreferredSampleRate: 44100.0,
+            audioSessionPreferredIOBufferDuration: 0.005,
+            supportsDTMF: true,
+            supportsHolding: true,
+            supportsGrouping: false,
+            supportsUngrouping: false,
+            ringtonePath: 'system_ringtone_default',
+          ),
+        );
+        await FlutterCallkitIncoming.showCallkitIncoming(params);
+      }
+    });
   }
 
   void _setupCallKitListener() {
     FlutterCallkitIncoming.onEvent.listen((CallEvent? event) async {
       switch (event?.event) {
         case Event.actionCallAccept:
-          // User accepted the native call. We would normally navigate to CallScreen here.
-          // For simplicity in main.dart, the CallScreen or HomeScreen will pick it up when app opens.
+          final body = event?.body;
+          if (body != null) {
+            final extra = body['extra'] is Map ? Map<String, dynamic>.from(body['extra']) : {};
+            final callerId = extra['userId']?.toString() ?? '';
+            final callerName = body['nameCaller']?.toString() ?? 'Incoming Call';
+            final isVideo = (body['handle']?.toString().contains('Video') ?? false) || (body['hasVideo'] == 'true');
+            if (callerId.isNotEmpty) {
+              await WebRTCService().ensureInitialized();
+              navigatorKey.currentState?.push(
+                MaterialPageRoute(
+                  builder: (_) => CallScreen(
+                    webrtcService: WebRTCService(),
+                    isIncoming: true,
+                    autoAccept: true,
+                    targetUserId: callerId,
+                    targetUsername: callerName,
+                    isVideoCall: isVideo,
+                    incomingData: {
+                      'from': callerId,
+                      'isVideo': isVideo,
+                      'callerName': callerName,
+                    },
+                  ),
+                ),
+              );
+            }
+          }
           break;
         case Event.actionCallDecline:
+          final body = event?.body;
+          final extra = (body != null && body['extra'] is Map) ? Map<String, dynamic>.from(body['extra']) : {};
+          final callerId = extra['userId']?.toString();
+          await WebRTCService().ensureInitialized();
+          WebRTCService().rejectCall(callerId);
           break;
         default:
           break;
@@ -138,6 +248,7 @@ class _MyAppState extends State<MyApp> {
     final themeProvider = Provider.of<ThemeProvider>(context);
 
     return MaterialApp(
+      navigatorKey: navigatorKey,
       title: 'Vylithra',
       debugShowCheckedModeBanner: false,
       themeMode: themeProvider.themeMode, // Controlled by ThemeProvider

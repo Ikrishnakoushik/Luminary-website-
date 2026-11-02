@@ -689,7 +689,8 @@
         };
 
         pc.ontrack = event => {
-            const stream = event.streams[0];
+            const stream = (event.streams && event.streams[0]) ? event.streams[0] : (event.track ? new MediaStream([event.track]) : null);
+            if (!stream) return;
             remoteStreams[targetId] = stream;
 
             // Dedicated audio player for guaranteed audio playback (even if video wrapper is hidden)

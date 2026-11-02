@@ -140,7 +140,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       webrtcService: _webrtcService,
                       isIncoming: true,
                       targetUserId: incomingData['from'],
-                      targetUsername: 'Incoming Call',
+                      targetUsername: (incomingData['callerName'] != null && incomingData['callerName'].toString().isNotEmpty)
+                          ? incomingData['callerName'].toString()
+                          : 'Incoming Call',
                       isVideoCall: incomingData['isVideo'] ?? false,
                       incomingData: incomingData,
                     ),

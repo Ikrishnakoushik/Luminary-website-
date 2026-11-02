@@ -3966,53 +3966,6 @@ app.put('/api/messages/:messageId/view-once', auth, async (req, res) => {
     }
 });
 
-// HTTP WebRTC Signal Bridge (guarantees signal delivery between Web & Mobile)
-app.post('/api/webrtc/signal', auth, async (req, res) => {
-    try {
-        const { to, type, payload } = req.body || {};
-        if (!to || !type) {
-            return res.status(400).json({ msg: 'Target user and signal type required' });
-        }
-        const senderId = req.user.id.toString();
-        const signalData = {
-            to: String(to),
-            type: String(type),
-            from: senderId,
-            payload: {
-                ...(payload || {}),
-                from: senderId,
-                to: String(to)
-            }
-        };
-
-        const io = req.app.get('io');
-        if (io) {
-            io.to(String(to)).emit('webrtc_signal', signalData);
-            const targetSockets = userSocketMap.get(String(to));
-            if (targetSockets) {
-                for (const sockId of targetSockets) {
-                    io.to(sockId).emit('webrtc_signal', signalData);
-                }
-            }
-        }
-
-        try {
-            const db = admin.database();
-            if (db) {
-                await db.ref(`webrtc/signals/${to}`).push({
-                    type: String(type),
-                    payload: signalData.payload,
-                    timestamp: admin.database.ServerValue.TIMESTAMP
-                });
-            }
-        } catch(e) {}
-
-        res.json({ success: true });
-    } catch (err) {
-        console.error('WebRTC Signal Bridge Error:', err.message);
-        res.status(500).json({ msg: 'Signal failed' });
-    }
-});
 
 // Serve message attachment from MongoDB
 app.get('/api/messages/attachment/:id', async (req, res) => {
