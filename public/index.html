@@ -794,15 +794,34 @@
                     }
                 }
 
+                // On mobile devices or smaller viewports, popups get detached or blocked. Prefer redirect:
+                const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || (window.innerWidth <= 768);
+                if (isMobile) {
+                    try {
+                        await firebase.auth().signInWithRedirect(provider);
+                        return;
+                    } catch (redErr) {
+                        console.warn('Mobile redirect initiation notice:', redErr);
+                    }
+                }
+
                 let result;
                 try {
                     result = await firebase.auth().signInWithPopup(provider);
                 } catch (popupErr) {
                     if (popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request') {
-                        // User closed or dismissed the popup - harmless cancel
                         console.log('Firebase popup closed by user.');
                         const errDiv = document.getElementById('loginError') || document.getElementById('regError');
-                        if (errDiv) errDiv.innerText = '';
+                        if (errDiv) {
+                            errDiv.innerHTML = '<span style="color:var(--text-muted); font-size:0.85rem;">Popup was closed. <a href="#" id="retryRedirectLink" style="color:var(--primary); font-weight:600; text-decoration:underline;">Click here to sign in with redirect instead</a></span>';
+                            const link = document.getElementById('retryRedirectLink');
+                            if (link) {
+                                link.onclick = (e) => {
+                                    e.preventDefault();
+                                    firebase.auth().signInWithRedirect(provider);
+                                };
+                            }
+                        }
                         return;
                     }
                     if (popupErr.code === 'auth/popup-blocked') {

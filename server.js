@@ -306,6 +306,7 @@ app.use((req, res, next) => {
     res.setHeader('X-XSS-Protection', '1; mode=block');
     res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
     res.setHeader('Permissions-Policy', 'camera=(self), microphone=(self), geolocation=()');
+    res.setHeader('Cross-Origin-Opener-Policy', 'same-origin-allow-popups');
     if (process.env.NODE_ENV === 'production') {
         res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
     }
@@ -316,7 +317,7 @@ app.use((req, res, next) => {
 app.use(helmet({
     contentSecurityPolicy: false,
     crossOriginEmbedderPolicy: false,
-    crossOriginOpenerPolicy: false,
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
     crossOriginResourcePolicy: false
 }));
 
