@@ -2533,6 +2533,7 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
 
         messages.forEach(msg => {
             if (!msg.sender) return;
+            if (msg.deletedFor && msg.deletedFor.map(id => id.toString()).includes(userId.toString())) return;
             const senderId = msg.sender._id ? msg.sender._id.toString() : msg.sender.toString();
             const isSentByMe = senderId === userId;
             const otherUser = isSentByMe ? msg.receiver : msg.sender;
@@ -3879,6 +3880,96 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
     } catch (err) {
         console.error(err.message);
         res.status(500).send('Oops! Our servers took a quick nap. Please try again.');
+    }
+});
+
+// Clear full chat in a conversation (1-on-1 or group)
+// Registered BEFORE /api/messages/:messageId to prevent route collision
+app.delete('/api/messages/clear/:targetId', auth, async (req, res) => {
+    try {
+        const userId = req.user.id.toString();
+        const targetId = req.params.targetId;
+        const forEveryone = req.query.forEveryone === 'true' || (req.body && req.body.forEveryone === true);
+        const isGroup = req.query.isGroup === 'true' || (req.body && req.body.isGroup === true);
+        const io = req.app.get('io');
+
+        if (isGroup) {
+            const group = await Group.findById(targetId);
+            if (!group || !group.members.map(m => m.toString()).includes(userId)) {
+                return res.status(403).json({ msg: 'Not a member of this group' });
+            }
+
+            if (forEveryone) {
+                const isAdmin = group.admin && group.admin.toString() === userId;
+                if (!isAdmin) {
+                    return res.status(403).json({ msg: 'Only group admin can clear chat for everyone' });
+                }
+                await Message.deleteMany({ groupId: targetId });
+                if (io) {
+                    io.to(targetId.toString()).emit('chat_cleared', {
+                        groupId: targetId,
+                        clearedBy: userId,
+                        forEveryone: true
+                    });
+                }
+            } else {
+                // Clear for me: add user to deletedFor for all existing messages in this group
+                await Message.updateMany(
+                    { groupId: targetId },
+                    { $addToSet: { deletedFor: req.user.id } }
+                );
+                if (io) {
+                    io.to(userId).emit('chat_cleared', {
+                        groupId: targetId,
+                        clearedBy: userId,
+                        forEveryone: false
+                    });
+                }
+            }
+        } else {
+            // 1-on-1 direct conversation
+            const filter = {
+                $or: [
+                    { sender: userId, receiver: targetId },
+                    { sender: targetId, receiver: userId }
+                ]
+            };
+
+            if (forEveryone) {
+                // Permanent wipe for everyone
+                await Message.deleteMany(filter);
+                if (io) {
+                    io.to(targetId.toString()).emit('chat_cleared', {
+                        chatWith: userId,
+                        clearedBy: userId,
+                        forEveryone: true
+                    });
+                    io.to(userId).emit('chat_cleared', {
+                        chatWith: targetId,
+                        clearedBy: userId,
+                        forEveryone: true
+                    });
+                }
+            } else {
+                // Clear for me: add user to deletedFor
+                await Message.updateMany(
+                    filter,
+                    { $addToSet: { deletedFor: req.user.id } }
+                );
+                if (io) {
+                    io.to(userId).emit('chat_cleared', {
+                        chatWith: targetId,
+                        clearedBy: userId,
+                        forEveryone: false
+                    });
+                }
+            }
+        }
+
+        res.json({ success: true, msg: 'Chat cleared successfully' });
+    } catch (err) {
+        console.error('Clear Chat Error:', err);
+        res.status(500).json({ msg: 'Failed to clear chat' });
     }
 });
 

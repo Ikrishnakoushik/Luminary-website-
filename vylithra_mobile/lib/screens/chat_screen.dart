@@ -31,6 +31,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final ScrollController _scrollController = ScrollController();
   final SocketService _socketService = SocketService();
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
+  StreamSubscription<Map<String, dynamic>>? _chatClearedSubscription;
 
   List<dynamic> _messages = [];
   bool _isLoading = true;
@@ -129,6 +130,22 @@ class _ChatScreenState extends State<ChatScreen> {
             }
           });
           _scrollToBottom();
+        }
+      }
+    });
+
+    _chatClearedSubscription?.cancel();
+    _chatClearedSubscription = _socketService.onChatCleared.listen((data) {
+      final chatWith = data['chatWith'];
+      final clearedBy = data['clearedBy'];
+      if (chatWith == widget.targetUserId || clearedBy == widget.targetUserId) {
+        if (mounted) {
+          setState(() {
+            _messages.clear();
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Chat was cleared')),
+          );
         }
       }
     });
@@ -384,10 +401,75 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  void _showClearChatDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Row(
+          children: [
+            Icon(Icons.delete_sweep_outlined, color: Colors.redAccent),
+            SizedBox(width: 8),
+            Text('Clear Chat'),
+          ],
+        ),
+        content: const Text(
+          'Are you sure you want to clear all messages in this conversation?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeClearChat(false);
+            },
+            child: const Text('Clear for Me'),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.redAccent,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _executeClearChat(true);
+            },
+            child: const Text('Clear for Everyone'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _executeClearChat(bool forEveryone) async {
+    try {
+      await _apiService.delete(
+        '/api/messages/clear/${widget.targetUserId}?forEveryone=$forEveryone',
+      );
+      if (mounted) {
+        setState(() {
+          _messages.clear();
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Chat cleared successfully')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to clear chat: $e')),
+        );
+      }
+    }
+  }
+
   @override
   void dispose() {
     _pollingTimer?.cancel();
     _messageSubscription?.cancel();
+    _chatClearedSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -464,6 +546,29 @@ class _ChatScreenState extends State<ChatScreen> {
                 ),
               );
             },
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
+              if (value == 'clear_chat') {
+                _showClearChatDialog();
+              }
+            },
+            itemBuilder: (BuildContext context) => [
+              const PopupMenuItem<String>(
+                value: 'clear_chat',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_sweep_outlined, color: Colors.redAccent, size: 20),
+                    SizedBox(width: 10),
+                    Text(
+                      'Clear Chat',
+                      style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),

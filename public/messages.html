@@ -817,6 +817,20 @@
                 transform: scale(0.92) !important;
             }
 
+            .chat-options-dropdown {
+                top: 44px;
+                right: 4px;
+                background: #161b22;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+            }
+            .chat-options-item {
+                color: #e2e8f0;
+            }
+            .chat-options-item:hover {
+                background: rgba(255, 255, 255, 0.08);
+            }
+
             /* Messages Stream */
             .chat-messages {
                 background: #f0fdfa !important;
@@ -1133,6 +1147,47 @@
             border-color: #14b8a6;
             box-shadow: 0 0 12px rgba(20, 184, 166, 0.4);
         }
+        /* Chat Options Dropdown & Clear Chat */
+        .chat-options-dropdown {
+            position: absolute;
+            top: 46px;
+            right: 0;
+            background: var(--surface, #ffffff);
+            border: 1px solid var(--border, #ccfbf1);
+            border-radius: 14px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+            min-width: 175px;
+            z-index: 120;
+            overflow: hidden;
+            padding: 6px;
+        }
+        .chat-options-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 14px;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            color: var(--text-main, #134e4a);
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.15s ease;
+        }
+        .chat-options-item:hover {
+            background: rgba(20, 184, 166, 0.08);
+        }
+        .chat-options-item.danger {
+            color: #ef4444;
+        }
+        .chat-options-item.danger:hover {
+            background: rgba(239, 68, 68, 0.1);
+            color: #dc2626;
+        }
+
         /* View Once Modal */
         #viewOnceModal {
             position: fixed;
@@ -1213,6 +1268,16 @@
                 <div class="header-actions-chat">
                     <button class="action-btn-circle" onclick="startCall(false)" title="Audio Call"><i class="fas fa-phone-alt"></i></button>
                     <button class="action-btn-circle" onclick="startCall(true)" title="Video Call"><i class="fas fa-video"></i></button>
+                    <div style="position: relative;">
+                        <button class="action-btn-circle" id="chatOptionsBtn" onclick="toggleChatOptionsMenu(event)" title="Options">
+                            <i class="fas fa-ellipsis-v"></i>
+                        </button>
+                        <div id="chat-options-dropdown" class="chat-options-dropdown" style="display: none;">
+                            <button type="button" class="chat-options-item danger" onclick="openClearChatModal()">
+                                <i class="fas fa-trash-alt"></i> Clear Chat
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1295,6 +1360,30 @@
                 </button>
             </div>
         </main>
+    </div>
+
+    <!-- Clear Chat Confirmation Modal -->
+    <div id="clearChatModal" class="modal" style="display: none; position: fixed; z-index: 10001; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.55); backdrop-filter: blur(6px);">
+        <div style="background-color: var(--surface); margin: 15vh auto; padding: 26px; border: 1px solid var(--border); width: 90%; max-width: 400px; border-radius: 20px; box-shadow: 0 16px 40px rgba(0,0,0,0.22); text-align: center;">
+            <div style="width: 52px; height: 52px; border-radius: 50%; background: rgba(239, 68, 68, 0.12); color: #ef4444; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin: 0 auto 16px;">
+                <i class="fas fa-trash-alt"></i>
+            </div>
+            <h3 style="margin: 0 0 8px; font-size: 1.25rem; font-weight: 700; color: var(--text-main);">Clear Chat</h3>
+            <p id="clearChatModalSubtext" style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 22px; line-height: 1.45;">
+                Are you sure you want to clear this entire conversation?
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 10px;">
+                <button id="clearChatForEveryoneBtn" onclick="submitClearChat(true)" style="width: 100%; padding: 12px; background: #ef4444; color: white; border: none; border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s;">
+                    <i class="fas fa-trash-alt"></i> Clear for Everyone
+                </button>
+                <button id="clearChatForMeBtn" onclick="submitClearChat(false)" style="width: 100%; padding: 12px; background: rgba(20, 184, 166, 0.1); border: 1px solid rgba(20, 184, 166, 0.25); color: var(--primary); border-radius: 12px; font-weight: 600; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s;">
+                    <i class="fas fa-user-minus"></i> Clear for Me Only
+                </button>
+                <button onclick="closeClearChatModal()" style="width: 100%; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-muted); border-radius: 12px; font-weight: 500; font-size: 0.9rem; cursor: pointer; margin-top: 4px;">
+                    Cancel
+                </button>
+            </div>
+        </div>
     </div>
 
     <!-- Create Group Modal -->
@@ -2128,6 +2217,93 @@
             }
         }
 
+        // --- Clear Chat Logic ---
+        function toggleChatOptionsMenu(e) {
+            if (e) e.stopPropagation();
+            const dropdown = document.getElementById('chat-options-dropdown');
+            if (dropdown) {
+                dropdown.style.display = dropdown.style.display === 'none' ? 'block' : 'none';
+            }
+        }
+
+        function openClearChatModal() {
+            const dropdown = document.getElementById('chat-options-dropdown');
+            if (dropdown) dropdown.style.display = 'none';
+
+            if (!activeChatUserId && !activeGroupId) {
+                if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                    VylithraUI.showToast('Please select a conversation first', 'info');
+                }
+                return;
+            }
+
+            const modal = document.getElementById('clearChatModal');
+            const subtext = document.getElementById('clearChatModalSubtext');
+            const everyoneBtn = document.getElementById('clearChatForEveryoneBtn');
+
+            if (isGroupChatActive) {
+                if (subtext) subtext.innerText = 'Clear all messages in this group? Cleared messages will be removed permanently.';
+            } else {
+                if (subtext) subtext.innerText = 'Are you sure you want to clear this entire conversation?';
+                if (everyoneBtn) everyoneBtn.style.display = 'flex';
+            }
+
+            if (modal) modal.style.display = 'block';
+        }
+
+        function closeClearChatModal() {
+            const modal = document.getElementById('clearChatModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitClearChat(forEveryone) {
+            const targetId = isGroupChatActive ? activeGroupId : activeChatUserId;
+            if (!targetId) return;
+
+            const btn1 = document.getElementById('clearChatForEveryoneBtn');
+            const btn2 = document.getElementById('clearChatForMeBtn');
+            if (btn1) btn1.disabled = true;
+            if (btn2) btn2.disabled = true;
+
+            try {
+                const res = await fetch(`${API_URL}/messages/clear/${targetId}?forEveryone=${forEveryone}&isGroup=${isGroupChatActive}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify({ forEveryone, isGroup: isGroupChatActive })
+                });
+
+                const data = await res.json();
+                if (res.ok) {
+                    closeClearChatModal();
+                    const stream = document.getElementById('chat-stream');
+                    if (stream) {
+                        stream.innerHTML = `
+                            <div class="empty-state">
+                                <i class="far fa-comments"></i>
+                                <h3>Chat Cleared</h3>
+                                <p>All messages in this conversation have been cleared.</p>
+                            </div>
+                        `;
+                    }
+                    if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                        VylithraUI.showToast('Chat cleared successfully', 'success');
+                    }
+                    loadConversations();
+                } else {
+                    alert(data.msg || 'Failed to clear chat');
+                }
+            } catch (err) {
+                console.error('Error clearing chat:', err);
+                alert('Failed to clear chat. Please try again.');
+            } finally {
+                if (btn1) btn1.disabled = false;
+                if (btn2) btn2.disabled = false;
+            }
+        }
+
         // Real-time Chat Socket
         let chatSocket = null;
         function initChatSocket() {
@@ -2178,6 +2354,27 @@
                         el.style.cursor = 'default';
                         el.innerHTML = '<span class="view-once-circle"><i class="fas fa-check"></i></span> <span>Opened</span>';
                     }
+                });
+                chatSocket.on('chat_cleared', (data) => {
+                    if (!data) return;
+                    const isCurrent = (isGroupChatActive && activeGroupId && data.groupId === activeGroupId) ||
+                                      (!isGroupChatActive && activeChatUserId && (data.chatWith === activeChatUserId || data.clearedBy === activeChatUserId));
+                    if (isCurrent) {
+                        const stream = document.getElementById('chat-stream');
+                        if (stream) {
+                            stream.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="far fa-comments"></i>
+                                    <h3>Chat Cleared</h3>
+                                    <p>All messages in this conversation have been cleared.</p>
+                                </div>
+                            `;
+                        }
+                        if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                            VylithraUI.showToast('Chat was cleared', 'info');
+                        }
+                    }
+                    loadConversations();
                 });
             }
         }
@@ -2278,6 +2475,12 @@
             const emojiBtn = document.getElementById('emojiBtn');
             if (emojiPopup && emojiPopup.style.display === 'block' && !emojiPopup.contains(e.target) && (!emojiBtn || !emojiBtn.contains(e.target))) {
                 emojiPopup.style.display = 'none';
+            }
+
+            const chatOptions = document.getElementById('chat-options-dropdown');
+            const chatOptionsBtn = document.getElementById('chatOptionsBtn');
+            if (chatOptions && chatOptions.style.display === 'block' && !chatOptions.contains(e.target) && (!chatOptionsBtn || !chatOptionsBtn.contains(e.target))) {
+                chatOptions.style.display = 'none';
             }
         });
 
