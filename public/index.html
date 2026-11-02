@@ -21,6 +21,33 @@
                 localStorage.removeItem('role');
             }
         })();
+
+        // Check redirect result on load in case redirect login was used
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                if (typeof firebase !== 'undefined' && firebase.auth) {
+                    const result = await firebase.auth().getRedirectResult();
+                    if (result && result.user) {
+                        const idToken = await result.user.getIdToken();
+                        const res = await fetch('/api/auth/sync', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ idToken, requestedRole: localStorage.getItem('signupRole') || 'reader' })
+                        });
+                        const data = await res.json();
+                        if (res.ok) {
+                            localStorage.setItem('token', data.token);
+                            localStorage.setItem('username', data.username);
+                            localStorage.setItem('role', data.role);
+                            if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+                            window.location.href = '/main';
+                        }
+                    }
+                }
+            } catch (e) {
+                console.warn('Redirect result check:', e.message);
+            }
+        });
     </script>
     <style>
         :root {
@@ -771,6 +798,22 @@
                 try {
                     result = await firebase.auth().signInWithPopup(provider);
                 } catch (popupErr) {
+                    if (popupErr.code === 'auth/popup-closed-by-user' || popupErr.code === 'auth/cancelled-popup-request') {
+                        // User closed or dismissed the popup - harmless cancel
+                        console.log('Firebase popup closed by user.');
+                        const errDiv = document.getElementById('loginError') || document.getElementById('regError');
+                        if (errDiv) errDiv.innerText = '';
+                        return;
+                    }
+                    if (popupErr.code === 'auth/popup-blocked') {
+                        console.log('Popup blocked, attempting redirect sign-in...');
+                        try {
+                            await firebase.auth().signInWithRedirect(provider);
+                            return;
+                        } catch (redErr) {
+                            console.error('Redirect sign-in error:', redErr);
+                        }
+                    }
                     if (popupErr.code === 'auth/operation-not-supported-in-this-environment' || 
                         (popupErr.message && popupErr.message.includes('operation-not-supported-in-this-environment'))) {
                         const errDiv = document.getElementById('loginError') || document.getElementById('regError');

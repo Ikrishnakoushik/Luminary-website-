@@ -389,14 +389,17 @@ class _PostCardState extends State<PostCard> {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
-        pageBuilder: (BuildContext context, _, __) {
+        pageBuilder: (BuildContext context, _, _) {
           return Scaffold(
             backgroundColor: Colors.black.withValues(alpha: 0.95),
             appBar: AppBar(
               backgroundColor: Colors.transparent,
               elevation: 0,
               iconTheme: const IconThemeData(color: Colors.white),
-              title: const Text('Photo Preview', style: TextStyle(color: Colors.white, fontSize: 16)),
+              title: const Text(
+                'Photo Preview',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
             ),
             body: Center(
               child: InteractiveViewer(
@@ -405,7 +408,7 @@ class _PostCardState extends State<PostCard> {
                 child: Image.network(
                   imageUrl,
                   fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => const Icon(
+                  errorBuilder: (_, _, _) => const Icon(
                     Icons.broken_image,
                     color: Colors.white54,
                     size: 64,
@@ -615,7 +618,8 @@ class _PostCardState extends State<PostCard> {
               // 2. MIDDLE: Cover Image (if exists)
               if (widget.post.image != null) ...[
                 GestureDetector(
-                  onTap: () => _openFullScreenImage(context, widget.post.image!),
+                  onTap: () =>
+                      _openFullScreenImage(context, widget.post.image!),
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
@@ -625,20 +629,24 @@ class _PostCardState extends State<PostCard> {
                           widget.post.image!,
                           width: double.infinity,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
-                            height: 200,
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withValues(alpha: 0.1),
-                            child: const Center(
-                              child: Icon(Icons.image_not_supported),
-                            ),
-                          ),
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
+                                height: 200,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.1),
+                                child: const Center(
+                                  child: Icon(Icons.image_not_supported),
+                                ),
+                              ),
                         ),
                       ),
                       Container(
                         margin: const EdgeInsets.all(10),
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.black.withValues(alpha: 0.7),
                           borderRadius: BorderRadius.circular(16),
@@ -647,9 +655,20 @@ class _PostCardState extends State<PostCard> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.fullscreen, color: Colors.white, size: 16),
+                            Icon(
+                              Icons.fullscreen,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                             SizedBox(width: 4),
-                            Text('Full Screen', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                            Text(
+                              'Full Screen',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ],
                         ),
                       ),

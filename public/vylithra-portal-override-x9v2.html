@@ -15,18 +15,18 @@
     <style>
         :root {
             /* Vylithra Global 3-Color Mint Theme */
-            --bg-color: #f0fdfa;
+            --bg-color: #1dc69f;
             /* Base background */
             --surface: #ffffff;
             /* Card backgrounds */
-            --primary: #14b8a6;
+            --primary: #0d8a7c;
             /* Main accent (Buttons/Links) */
 
             /* Derived mapping for existing elements */
             --accent: var(--primary);
             --accent-hover: #0d9488;
             --text-main: #134e4a;
-            --text-muted: #115e59;
+            --text-muted: #076689;
             --border: #ccfbf1;
             --input-bg: var(--bg-color);
             --card-bg: var(--surface);
@@ -83,7 +83,8 @@
             width: 100%;
             height: 100vh;
             box-sizing: border-box;
-            background: #f8fafc; /* Slightly darker body bg to contrast cards */
+            background: #f8fafc;
+            /* Slightly darker body bg to contrast cards */
         }
 
         .admin-layout {
@@ -106,7 +107,7 @@
             margin-bottom: 2rem;
             padding: 0 0.5rem;
         }
-        
+
         .sidebar-header h1 {
             font-size: 1.25rem;
             margin: 0;
@@ -358,7 +359,7 @@
             dashboard.style.justifyContent = 'center';
             dashboard.style.minHeight = '100vh';
             dashboard.style.background = 'var(--bg-light)';
-            
+
             dashboard.innerHTML = `
                 <div style = "background: white; padding: 3rem 2rem; border-radius: 1rem; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center; max-width: 400px; width: 100%;" >
                     <i class="fas fa-shield-alt" style="font-size: 3rem; color: var(--primary); margin-bottom: 1.5rem;"></i>
@@ -394,7 +395,7 @@
                     <p id="gateway-success" style="color: var(--success); font-size: 0.875rem; margin-top: 1rem; display: none;">OTP sent to email!</p>
                 </div>
                 `;
-            
+
             // Allow pressing Enter on step 1
             document.getElementById('gateway-key').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') requestGatewayOTP(user.username);
@@ -410,17 +411,17 @@
             const secretKey = document.getElementById('gateway-key').value;
             const errorMsg = document.getElementById('gateway-error');
             const successMsg = document.getElementById('gateway-success');
-            
+
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
-            
+
             try {
                 const res = await fetch('/api/admin/gateway-request', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ email, secretKey })
                 });
-                
+
                 if (res.ok) {
                     const data = await res.json();
                     document.getElementById('step-1-inputs').style.display = 'none';
@@ -444,17 +445,17 @@
             const otp = document.getElementById('gateway-otp').value;
             const errorMsg = document.getElementById('gateway-error');
             const successMsg = document.getElementById('gateway-success');
-            
+
             errorMsg.style.display = 'none';
             successMsg.style.display = 'none';
-            
+
             try {
                 const res = await fetch('/api/admin/gateway-verify', {
                     method: 'POST',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ otp })
                 });
-                
+
                 if (res.ok) {
                     const data = await res.json();
                     sessionStorage.setItem('gatewayToken', data.token); // Store secure token
@@ -525,7 +526,7 @@
         function switchTab(tab, el) {
             document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
             el.classList.add('active');
-            
+
             const area = document.getElementById('content-area');
             area.innerHTML = '<div class="spinner" style="margin: 40px auto;"></div>';
 
@@ -544,7 +545,7 @@
             try {
                 const res = await fetch('/api/admin/stats', { headers: { 'x-auth-token': token, 'x-gateway-token': sessionStorage.getItem('gatewayToken') } });
                 const stats = await res.json();
-                
+
                 document.getElementById('content-area').innerHTML = `
                 <h2 style = "margin-top: 0;" > Platform Statistics</h2>
                     <div class="stats-grid">
@@ -572,7 +573,7 @@
             try {
                 const res = await fetch('/api/admin/users', { headers: { 'x-auth-token': token, 'x-gateway-token': sessionStorage.getItem('gatewayToken') } });
                 const users = await res.json();
-                
+
                 let tbody = '';
                 users.forEach(u => {
                     tbody += `
@@ -582,7 +583,7 @@
                                 <div style="font-size: 0.875rem; color: var(--text-muted);">${u.email}</div>
                             </td>
                             <td><span class="badge ${u.role}">${u.role}</span></td>
-                            <td>${new Date(u.loginHistory?.[u.loginHistory.length-1] || u.createdAt || Date.now()).toLocaleDateString()}</td>
+                            <td>${new Date(u.loginHistory?.[u.loginHistory.length - 1] || u.createdAt || Date.now()).toLocaleDateString()}</td>
                             <td>
                                 <select onchange="updateUserRole('${u._id}', this.value)" style="padding: 0.25rem; border-radius: 0.25rem; border: 1px solid var(--border); margin-right: 0.5rem;">
                                     <option value="reader" ${u.role === 'reader' ? 'selected' : ''}>Reader</option>
@@ -620,7 +621,7 @@
             try {
                 const res = await fetch('/api/admin/books', { headers: { 'x-auth-token': token, 'x-gateway-token': sessionStorage.getItem('gatewayToken') } });
                 const books = await res.json();
-                
+
                 let tbody = '';
                 books.forEach(b => {
                     tbody += `
@@ -666,7 +667,7 @@
             try {
                 const res = await fetch('/api/admin/transactions', { headers: { 'x-auth-token': token, 'x-gateway-token': sessionStorage.getItem('gatewayToken') } });
                 const txs = await res.json();
-                
+
                 let tbody = '';
                 txs.forEach(t => {
                     tbody += `
@@ -690,7 +691,7 @@
                 `;
                 });
 
-                if(txs.length === 0) {
+                if (txs.length === 0) {
                     tbody = '<tr><td colspan="7" style="text-align:center; padding: 2rem;">No withdrawal history found across platform.</td></tr>';
                 }
 
@@ -722,10 +723,10 @@
             try {
                 const res = await fetch('/api/coupons/my-codes', { headers: { 'x-auth-token': token, 'x-gateway-token': sessionStorage.getItem('gatewayToken') } });
                 const promos = await res.json();
-                
+
                 let tbody = '';
                 promos.forEach(p => {
-                    const generator = p.generatedBy ? `${ p.generatedBy.username } (${ p.generatedBy.email })` : 'Master Admin';
+                    const generator = p.generatedBy ? `${p.generatedBy.username} (${p.generatedBy.email})` : 'Master Admin';
                     tbody += `
                 <tr>
                             <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${p.code}</td>
@@ -748,7 +749,7 @@
                 `;
                 });
 
-                if(promos.length === 0) {
+                if (promos.length === 0) {
                     tbody = '<tr><td colspan="6" style="text-align:center; padding: 2rem;">No pending or active promo codes.</td></tr>';
                 }
 
@@ -811,32 +812,32 @@
         }
 
         async function moderatePromo(id, status) {
-            if(!confirm(`Are you sure you want to mark this promo code as ${status}?`)) return;
+            if (!confirm(`Are you sure you want to mark this promo code as ${status}?`)) return;
             try {
                 const res = await fetch(`/api/coupons/${id}/moderate`, {
                     method: 'PUT',
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ status })
                 });
-                if(res.ok) alert(`Promo code marked as ${status}.`);
+                if (res.ok) alert(`Promo code marked as ${status}.`);
                 loadPromoCodes();
-            } catch(e) { console.error(e); alert('Error moderating promo code.'); }
+            } catch (e) { console.error(e); alert('Error moderating promo code.'); }
         }
 
         async function deletePromo(id, code) {
-             if(!confirm(`WARNING: Permanent Deletion.nErase Active Promo Code: ${code}?`)) return;
-             try {
-                 const res = await fetch(`/api/coupons/${id}`, {
-                     method: 'DELETE',
-                     headers: getAuthHeaders()
-                 });
-                 if(res.ok) loadPromoCodes();
-             } catch(e) { console.error(e); alert('Error deleting code.'); }
+            if (!confirm(`WARNING: Permanent Deletion.nErase Active Promo Code: ${code}?`)) return;
+            try {
+                const res = await fetch(`/api/coupons/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                if (res.ok) loadPromoCodes();
+            } catch (e) { console.error(e); alert('Error deleting code.'); }
         }
 
         function openDispatchModal(id, code, discountText) {
             const existingModal = document.getElementById('promo-dispatch-modal');
-            if(existingModal) existingModal.remove();
+            if (existingModal) existingModal.remove();
 
             const modalHtml = `
             <div id="promo-dispatch-modal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;">
@@ -871,7 +872,7 @@
         function toggleSpecificEmailInput() {
             const select = document.getElementById('dispatch-target-select');
             const container = document.getElementById('specific-email-container');
-            if(select.value === 'specific') {
+            if (select.value === 'specific') {
                 container.style.display = 'block';
             } else {
                 container.style.display = 'none';
@@ -880,22 +881,22 @@
 
         function closeDispatchModal() {
             const modal = document.getElementById('promo-dispatch-modal');
-            if(modal) modal.remove();
+            if (modal) modal.remove();
         }
 
         function confirmDispatchPromo(id, code) {
             const select = document.getElementById('dispatch-target-select');
             let target = select.value;
-            
-            if(target === 'specific') {
+
+            if (target === 'specific') {
                 target = document.getElementById('dispatch-specific-emails').value.trim();
-                if(!target) {
+                if (!target) {
                     alert('Please enter at least one email address.');
                     return;
                 }
             }
 
-            if(confirm(`Are you absolutely sure you want to dispatch code ${code} to ${target}?`)) {
+            if (confirm(`Are you absolutely sure you want to dispatch code ${code} to ${target}?`)) {
                 closeDispatchModal();
                 dispatchPromo(id, target);
             }
@@ -909,9 +910,9 @@
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ couponId: id, targetCriteria: target })
                 });
-                
+
                 const data = await res.json();
-                if(res.ok) {
+                if (res.ok) {
                     alert('SUCCESS: ' + data.msg);
                 } else {
                     alert('FAILED: ' + data.msg);
@@ -934,20 +935,20 @@
             const minSpend = document.getElementById('admin-promo-min-spend').value;
             const uses = document.getElementById('admin-promo-uses').value;
             const days = document.getElementById('admin-promo-days').value;
-            
-            if(!discountVal || parseInt(discountVal) < 1) {
+
+            if (!discountVal || parseInt(discountVal) < 1) {
                 alert('Please enter a valid discount value.');
                 return;
             }
-            if(type === 'percentage' && parseInt(discountVal) > 100) {
+            if (type === 'percentage' && parseInt(discountVal) > 100) {
                 alert('Percentage cannot exceed 100.');
                 return;
             }
-            if(!uses || uses < 1) {
+            if (!uses || uses < 1) {
                 alert('Please enter a valid number of max uses.');
                 return;
             }
-            if(!days || days < 1) {
+            if (!days || days < 1) {
                 alert('Please enter a valid number of validity days.');
                 return;
             }
@@ -960,7 +961,7 @@
                 const res = await fetch('/api/coupons/generate', {
                     method: 'POST',
                     headers: getAuthHeaders(),
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         discountType: type,
                         discountPercentage: type === 'percentage' ? parseInt(discountVal) : undefined,
                         discountAmount: type === 'fixed' ? parseInt(discountVal) : undefined,
@@ -969,16 +970,16 @@
                         validityDays: parseInt(days)
                     })
                 });
-                
+
                 const data = await res.json();
-                if(res.ok) {
+                if (res.ok) {
                     alert('SUCCESS: ' + data.msg);
                     loadPromoCodes();
                 } else {
                     alert('Error: ' + data.msg);
                     activeBtn.innerHTML = originalText;
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 alert('Network error generating promo code.');
                 activeBtn.innerHTML = originalText;
@@ -986,7 +987,7 @@
         }
 
         async function updateUserRole(id, role) {
-            if(!confirm(`Are you sure you want to change this user's role to ${role}?`)) {
+            if (!confirm(`Are you sure you want to change this user's role to ${role}?`)) {
                 loadUsers(); // reset select
                 return;
             }
@@ -996,9 +997,9 @@
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ role })
                 });
-                if(res.ok) alert('Role updated successfully.');
+                if (res.ok) alert('Role updated successfully.');
                 loadUsers();
-            } catch(e) { console.error(e); alert('Error updating role.'); }
+            } catch (e) { console.error(e); alert('Error updating role.'); }
         }
 
         async function deleteUser(id, name) {
@@ -1064,13 +1065,13 @@
         async function sendBroadcast() {
             const subject = document.getElementById('broadcast-subject').value;
             const message = document.getElementById('broadcast-message').value;
-            
-            if(!subject || !message) {
+
+            if (!subject || !message) {
                 alert('Subject and Message are required.');
                 return;
             }
 
-            if(!confirm('Are you ABSOLUTELY sure you want to mass-email ALL users? This cannot be undone.')) return;
+            if (!confirm('Are you ABSOLUTELY sure you want to mass-email ALL users? This cannot be undone.')) return;
 
             const btn = document.getElementById('broadcast-btn');
             const originalText = btn.innerHTML;
@@ -1083,16 +1084,16 @@
                     headers: getAuthHeaders(),
                     body: JSON.stringify({ subject, message })
                 });
-                
+
                 const data = await res.json();
-                if(res.ok) {
+                if (res.ok) {
                     alert('SUCCESS: ' + data.msg);
                     document.getElementById('broadcast-subject').value = '';
                     document.getElementById('broadcast-message').value = '';
                 } else {
                     alert('Error: ' + data.msg);
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 alert('Network error during broadcast dispatch.');
             } finally {
@@ -1103,11 +1104,11 @@
 
         async function loadPlatformSettings() {
             document.getElementById('content-area').innerHTML = '<div class="spinner" style="margin: 40px auto;"></div>';
-            
+
             try {
                 const res = await fetch('/api/admin/settings', { headers: getAuthHeaders() });
                 const settings = await res.json();
-                
+
                 document.getElementById('content-area').innerHTML = `
                     <h2 style="margin-top: 0;">Platform Settings</h2>
                     <p style="color: var(--text-muted); font-size: 0.875rem; margin-bottom: 2rem;">Manage global application state and configuration.</p>
@@ -1195,14 +1196,14 @@
                     headers: getAuthHeaders(),
                     body: JSON.stringify(payload)
                 });
-                
+
                 const data = await res.json();
-                if(res.ok) {
+                if (res.ok) {
                     showAdminToast('Settings updated instantly.', 'success');
                 } else {
                     showAdminToast(data.msg, 'error');
                 }
-            } catch(e) {
+            } catch (e) {
                 console.error(e);
                 showAdminToast('Network error saving settings.', 'error');
             }

@@ -113,6 +113,76 @@
         return 'User';
     }
 
+    
+    // --- Data Saving / Low-Bandwidth WebRTC Optimizations ---
+    function getCallMediaConstraints(videoRequested) {
+        const audioConstraints = {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1, // Mono for voice reduces bandwidth by 50%
+            sampleRate: 24000
+        };
+        if (!videoRequested) {
+            return { audio: audioConstraints, video: false };
+        }
+        // Optimized 480p @ 20-24fps uses ~80% less data than unconstrained 1080p
+        return {
+            audio: audioConstraints,
+            video: {
+                width: { ideal: 640, max: 854 },
+                height: { ideal: 480, max: 480 },
+                frameRate: { ideal: 20, max: 24 },
+                facingMode: 'user'
+            }
+        };
+    }
+
+    async function applyDataSavingBitrateLimits(pc) {
+        if (!pc || !pc.getSenders) return;
+        try {
+            const senders = pc.getSenders();
+            for (const sender of senders) {
+                if (sender && sender.track) {
+                    if (sender.track.kind === 'video') {
+                        const params = sender.getParameters();
+                        if (!params.encodings || params.encodings.length === 0) {
+                            params.encodings = [{}];
+                        }
+                        params.encodings[0].maxBitrate = 450000; // 450 kbps cap (saves 80%+ data)
+                        params.encodings[0].maxFramerate = 24;
+                        await sender.setParameters(params);
+                    } else if (sender.track.kind === 'audio') {
+                        const params = sender.getParameters();
+                        if (!params.encodings || params.encodings.length === 0) {
+                            params.encodings = [{}];
+                        }
+                        params.encodings[0].maxBitrate = 32000; // 32 kbps cap (saves 70%+ audio data)
+                        await sender.setParameters(params);
+                    }
+                }
+            }
+        } catch (e) {
+            console.warn('[WebRTC] Bitrate limit notice:', e.message);
+        }
+    }
+
+    function optimizeSdpForDataSaving(sdp) {
+        if (!sdp) return sdp;
+        try {
+            // Enable Opus DTX (Discontinuous Transmission) so silence uses ~0 data
+            if (sdp.includes('opus/48000')) {
+                sdp = sdp.replace(/a=fmtp:(d+) (.*opus.*)/gi, function(match, pt, rest) {
+                    if (!rest.includes('usedtx=1')) rest += ';usedtx=1';
+                    if (!rest.includes('stereo=0')) rest += ';stereo=0';
+                    if (!rest.includes('maxaveragebitrate=')) rest += ';maxaveragebitrate=32000';
+                    return `a=fmtp:${pt} ${rest}`;
+                });
+            }
+        } catch (e) {}
+        return sdp;
+    }
+
     const eventHandlers = {};
 
     const processedSignals = new Set();
@@ -668,6 +738,7 @@
 
         if (localStream) {
             localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+        setTimeout(() => applyDataSavingBitrateLimits(pc), 100);
         }
 
         pc.onconnectionstatechange = () => {
@@ -821,13 +892,13 @@
             }
             try {
                 if (isVideoCall) {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(true));
                 } else {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(false));
                 }
             } catch (mediaErr) {
                 if (isVideoCall) {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(false));
                     isVideoCall = false;
                 } else {
                     throw mediaErr;
@@ -993,15 +1064,15 @@
         try {
             if (isVideoCall) {
                 try {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(true));
                 } catch (mediaErr) {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(false));
                     isVideo = false;
                     isVideoCall = false;
                     if (window.showToast) window.showToast('Camera unavailable, continuing with audio only', 'info');
                 }
             } else {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(false));
             }
 
             document.getElementById('global-local-video').srcObject = localStream;
@@ -1054,10 +1125,10 @@
         
         try {
             try {
-                localStream = await navigator.mediaDevices.getUserMedia({ video: isVideo, audio: true });
+                localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(isVideo));
             } catch (mediaErr) {
                 if (isVideo) {
-                    localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+                    localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(false));
                     isVideo = false;
                     isVideoCall = false;
                 } else {

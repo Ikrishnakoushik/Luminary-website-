@@ -638,18 +638,24 @@ class WebRTCService {
   }
 
     Future<MediaStream?> _acquireMedia(bool requestVideo) async {
+    final Map<String, dynamic> audioConstraints = {
+      'audio': {
+        'echoCancellation': true,
+        'noiseSuppression': true,
+        'autoGainControl': true,
+      },
+      'video': false,
+    };
+
     if (!requestVideo) {
       final micStatus = await Permission.microphone.request();
       if (!micStatus.isGranted) {
         throw Exception('Microphone permission is required for voice calls.');
       }
-      return await navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': false,
-      });
+      return await navigator.mediaDevices.getUserMedia(audioConstraints);
     }
 
-    // Video Call: Request both mic and camera
+    // Video Call: Request optimized mic and camera constraints (480p @ 20-24fps saves 80%+ data)
     final micStatus = await Permission.microphone.request();
     final camStatus = await Permission.camera.request();
 
@@ -660,24 +666,33 @@ class WebRTCService {
     if (camStatus.isGranted) {
       try {
         return await navigator.mediaDevices.getUserMedia({
-          'audio': true,
-          'video': true,
+          'audio': {
+            'echoCancellation': true,
+            'noiseSuppression': true,
+            'autoGainControl': true,
+          },
+          'video': {
+            'facingMode': 'user',
+            'mandatory': {
+              'minWidth': '480',
+              'minHeight': '360',
+              'maxWidth': '640',
+              'maxHeight': '480',
+              'minFrameRate': '15',
+              'maxFrameRate': '24',
+            },
+            'optional': [],
+          },
         });
       } catch (e) {
         // Fallback to audio if camera hardware is busy or fails
         isVideoCall = false;
-        return await navigator.mediaDevices.getUserMedia({
-          'audio': true,
-          'video': false,
-        });
+        return await navigator.mediaDevices.getUserMedia(audioConstraints);
       }
     } else {
       // Camera denied, graceful fallback to audio-only
       isVideoCall = false;
-      return await navigator.mediaDevices.getUserMedia({
-        'audio': true,
-        'video': false,
-      });
+      return await navigator.mediaDevices.getUserMedia(audioConstraints);
     }
   }
 
