@@ -189,8 +189,10 @@
         .search-bar {
             flex: 1;
             max-width: 520px;
-            position: relative;
+            position: relative !important;
             margin: 0 28px;
+            display: flex;
+            align-items: center;
         }
 
         .search-bar input {
@@ -226,8 +228,9 @@
         }
 
         .search-bar i {
-            position: absolute;
-            left: 18px;
+            position: absolute !important;
+            left: 18px !important;
+            z-index: 5;
             top: 50%;
             transform: translateY(-50%);
             color: var(--primary);
@@ -1782,9 +1785,9 @@
             <span>Vylithra</span>
         </a>
 
-        <div class="search-bar" style="position: relative;">
-            <i class="fa-solid fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Search creators, topics, or ideas...">
+        <div class="search-bar" style="position: relative !important; display: flex; align-items: center;">
+            <i class="fa-solid fa-search" style="position: absolute !important; left: 18px !important; top: 50% !important; transform: translateY(-50%) !important; color: var(--primary); z-index: 5; pointer-events: none;"></i>
+            <input type="text" id="searchInput" placeholder="Search creators, topics, or ideas..." style="padding-left: 48px !important;">
         </div>
 
         <div class="header-right" id="auth-section">

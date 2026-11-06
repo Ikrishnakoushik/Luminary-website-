@@ -8,15 +8,16 @@ class E2EEService {
   E2EEService._internal();
 
   final _ecdh = Ecdh.p256(length: 32);
-  final _aesGcm = AesGcm.with256Bits();
+  final _aesGcm = AesGcm.with256bits();
 
-  SimpleKeyPair? _myKeyPair;
+  KeyPair? _myKeyPair;
   String? _myPublicKeyBase64;
   String? _currentUserId;
   final Map<String, String> _userPublicKeysCache = {};
   final Map<String, SecretKey> _sharedKeysCache = {};
 
   bool get isReady => _myKeyPair != null && _myPublicKeyBase64 != null;
+  String? get currentUserId => _currentUserId;
 
   /// Initialize device keys for the logged-in user
   Future<void> init(String userId, String token, String baseUrl) async {

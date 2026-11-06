@@ -37,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
   List<dynamic> _messages = [];
   bool _isLoading = true;
   String? _currentUserId;
+  String? _token;
   Timer? _pollingTimer;
 
   @override
@@ -60,6 +61,7 @@ class _ChatScreenState extends State<ChatScreen> {
   void _extractUserId() {
     final auth = Provider.of<AuthProvider>(context, listen: false);
     final token = auth.token;
+    _token = token;
     if (token != null) {
       try {
         final parts = token.split('.');
@@ -87,8 +89,7 @@ class _ChatScreenState extends State<ChatScreen> {
         '/api/messages/${widget.targetUserId}',
       );
       if (mounted && messages is List) {
-        final auth = Provider.of<AuthProvider>(context, listen: false);
-        final token = auth.token ?? '';
+        final token = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
 
         // Decrypt E2EE messages
         for (final msg in messages) {
@@ -141,9 +142,8 @@ class _ChatScreenState extends State<ChatScreen> {
       final senderId = senderData is Map ? senderData['_id'] : senderData;
 
       if (senderId == widget.targetUserId || senderId == _currentUserId) {
-        if (data is Map<String, dynamic> && data['isE2EE'] == true && data['iv'] != null) {
-          final auth = Provider.of<AuthProvider>(context, listen: false);
-          final token = auth.token ?? '';
+        if (data['isE2EE'] == true && data['iv'] != null) {
+          final token = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
           final dec = await E2EEService.instance.decryptMessage(
             data['content']?.toString() ?? '',
             data['iv']?.toString(),
