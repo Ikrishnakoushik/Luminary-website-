@@ -1711,10 +1711,23 @@
             }
 
             try {
+                let keyEnvelopes = [];
+                if (window.VylithraCrypto) {
+                    const allMemberIds = [currentUserId, ...memberIds];
+                    const envData = await window.VylithraCrypto.generateGroupEnvelopes(allMemberIds);
+                    keyEnvelopes = envData.envelopes;
+                    if (envData.groupKeyRaw) {
+                        const groupKey = await window.crypto.subtle.importKey(
+                            'raw', envData.groupKeyRaw, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+                        );
+                        window.VylithraCrypto.groupKeysCache.set('temp_new_group', groupKey);
+                    }
+                }
+
                 const res = await fetch(`${API_URL}/groups`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                    body: JSON.stringify({ name, memberIds })
+                    body: JSON.stringify({ name, memberIds, keyEnvelopes })
                 });
                 if (res.ok) {
                     const group = await res.json();
@@ -1914,6 +1927,23 @@
             }
 
             chatKey = CryptoJS.SHA256(groupId + 'vylithra-group-e2ee-secret').toString();
+            if (window.VylithraCrypto) {
+                fetch(`${API_URL}/groups`, { headers: getAuthHeaders() })
+                    .then(r => r.json())
+                    .then(async groups => {
+                        const g = groups.find(item => item._id === groupId);
+                        if (g && g.keyEnvelopes && g.keyEnvelopes.length > 0) {
+                            const adminId = g.admin && g.admin._id ? g.admin._id : g.admin;
+                            const unlockedKey = await window.VylithraCrypto.unlockGroupKey(groupId, g.keyEnvelopes, adminId);
+                            if (unlockedKey) {
+                                const activeNameEl = document.getElementById('active-name');
+                                if (activeNameEl) {
+                                    activeNameEl.innerHTML = `${groupName} <span style="font-size:0.75rem; color:#06b6d4; font-weight:normal; margin-left:6px;" title="Verified Group E2EE"><i class="fas fa-lock"></i> E2EE</span>`;
+                                }
+                            }
+                        }
+                    }).catch(() => {});
+            }
 
             const stream = document.getElementById('chat-stream');
             if (!isBackground && isSwitching) {
@@ -2207,7 +2237,17 @@
                     `;
                 }
             } else if (msg.attachmentUrl) {
-                const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
+                let mediaUrl = getValidMediaUrl(msg.attachmentUrl);
+                if (mediaEncMeta && window.VylithraCrypto) {
+                    try {
+                        const decryptedBlobUrl = await window.VylithraCrypto.decryptMediaUrl(
+                            mediaUrl, mediaEncMeta.fileKeyB64, mediaEncMeta.fileIvB64, mediaEncMeta.mimeType
+                        );
+                        if (decryptedBlobUrl) mediaUrl = decryptedBlobUrl;
+                    } catch(err) {
+                        console.warn('[Vylithra E2EE] Failed in-memory media decryption, using direct url:', err);
+                    }
+                }
                 if (msg.attachmentType === 'image') {
                     attachmentHtml = `<div class="message-attachment"><img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" style="cursor:pointer; max-height:260px; object-fit:cover; border-radius:12px;"></div>`;
                 } else if (msg.attachmentType === 'video') {
@@ -2237,6 +2277,7 @@
 
         let pendingAttachmentUrl = null;
         let pendingAttachmentType = 'none';
+        let pendingAttachmentEnc = null;
             isViewOnceActive = false;
             const voBtn = document.getElementById('viewOnceToggleBtn');
             if (voBtn) { voBtn.style.display = 'none'; voBtn.classList.remove('active'); }
@@ -2253,8 +2294,21 @@
                     }
                     previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-spinner fa-spin"></i> Uploading ${file.name}...</div>`;
 
+            let uploadPayload = file;
+            let fileEncMeta = null;
+
+            if (window.VylithraCrypto) {
+                previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-lock fa-spin"></i> Encrypting ${file.name}...</div>`;
+                try {
+                    fileEncMeta = await window.VylithraCrypto.encryptMediaFile(file);
+                    uploadPayload = fileEncMeta.blob;
+                } catch(encErr) {
+                    console.warn('[Vylithra E2EE] Media encryption fallback to standard upload:', encErr);
+                }
+            }
+
             const formData = new FormData();
-            formData.append('file', file);
+            formData.append('file', uploadPayload, fileEncMeta ? 'encrypted.bin' : file.name);
             
             try {
                 const res = await fetch(`${API_URL}/messages/upload`, {
@@ -2265,6 +2319,7 @@
                 if (res.ok) {
                     const data = await res.json();
                     pendingAttachmentUrl = data.url;
+                    pendingAttachmentEnc = fileEncMeta;
                     
                     if (file.type.startsWith('image/')) pendingAttachmentType = 'image';
                     else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
@@ -2298,6 +2353,7 @@
         function cancelAttachment() {
             pendingAttachmentUrl = null;
             pendingAttachmentType = 'none';
+            pendingAttachmentEnc = null;
             document.getElementById('file-upload-input').value = '';
             document.getElementById('attachment-preview-container').style.display = 'none';
         }
@@ -2314,15 +2370,35 @@
             let messageIv = null;
             let messageIsE2EE = false;
 
+            let messageTextToSend = content || (pendingAttachmentUrl ? '[Attachment]' : '');
+            if (pendingAttachmentEnc) {
+                messageTextToSend = JSON.stringify({
+                    caption: content || '',
+                    mediaEnc: {
+                        fileKeyB64: pendingAttachmentEnc.fileKeyB64,
+                        fileIvB64: pendingAttachmentEnc.fileIvB64,
+                        mimeType: pendingAttachmentEnc.mimeType,
+                        originalName: pendingAttachmentEnc.originalName
+                    }
+                });
+            }
+
             if (isGroupChatActive) {
-                encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
+                if (window.VylithraCrypto && window.VylithraCrypto.groupKeysCache.has(String(activeGroupId))) {
+                    const groupEnc = await window.VylithraCrypto.encryptGroupMessage(messageTextToSend, activeGroupId);
+                    encryptedContent = groupEnc.content;
+                    messageIv = groupEnc.iv;
+                    messageIsE2EE = groupEnc.isE2EE;
+                } else {
+                    encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
+                }
             } else if (window.VylithraCrypto) {
-                const enc = await window.VylithraCrypto.encrypt(content || '[Attachment]', activeChatUserId);
+                const enc = await window.VylithraCrypto.encrypt(messageTextToSend, activeChatUserId);
                 encryptedContent = enc.content;
                 messageIv = enc.iv;
                 messageIsE2EE = enc.isE2EE;
             } else {
-                encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
+                encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
             }
 
             // Optimistic UI Render (display plain content immediately for the sender)

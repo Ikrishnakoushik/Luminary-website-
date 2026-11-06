@@ -8,6 +8,7 @@ import 'dart:io';
 import '../services/api_service.dart';
 import '../services/webrtc_service.dart';
 import '../services/socket_service.dart';
+import '../services/e2ee_service.dart';
 import '../providers/auth_provider.dart';
 import 'call_screen.dart';
 
@@ -71,6 +72,7 @@ class _ChatScreenState extends State<ChatScreen> {
           if (_currentUserId != null) {
             WebRTCService().initialize(_currentUserId!);
             _socketService.connect(_currentUserId!);
+            E2EEService.instance.init(_currentUserId!, token, ApiService.baseUrl);
           }
         }
       } catch (e) {
@@ -85,6 +87,23 @@ class _ChatScreenState extends State<ChatScreen> {
         '/api/messages/${widget.targetUserId}',
       );
       if (mounted && messages is List) {
+        final auth = Provider.of<AuthProvider>(context, listen: false);
+        final token = auth.token ?? '';
+
+        // Decrypt E2EE messages
+        for (final msg in messages) {
+          if (msg is Map<String, dynamic> && msg['isE2EE'] == true && msg['iv'] != null) {
+            final dec = await E2EEService.instance.decryptMessage(
+              msg['content']?.toString() ?? '',
+              msg['iv']?.toString(),
+              widget.targetUserId,
+              token,
+              ApiService.baseUrl,
+            );
+            msg['content'] = dec;
+          }
+        }
+
         if (isBackground) {
           bool hasNew = false;
           for (final msg in messages) {
@@ -117,11 +136,24 @@ class _ChatScreenState extends State<ChatScreen> {
     if (_currentUserId == null) return;
 
     // We assume SocketService is already connected globally via HomeScreen.
-    _messageSubscription = _socketService.onNewMessage.listen((data) {
+    _messageSubscription = _socketService.onNewMessage.listen((data) async {
       final senderData = data['sender'];
       final senderId = senderData is Map ? senderData['_id'] : senderData;
 
       if (senderId == widget.targetUserId || senderId == _currentUserId) {
+        if (data is Map<String, dynamic> && data['isE2EE'] == true && data['iv'] != null) {
+          final auth = Provider.of<AuthProvider>(context, listen: false);
+          final token = auth.token ?? '';
+          final dec = await E2EEService.instance.decryptMessage(
+            data['content']?.toString() ?? '',
+            data['iv']?.toString(),
+            widget.targetUserId,
+            token,
+            ApiService.baseUrl,
+          );
+          data['content'] = dec;
+        }
+
         if (mounted) {
           setState(() {
             // Check if we already appended it optimistically
@@ -253,9 +285,24 @@ class _ChatScreenState extends State<ChatScreen> {
     _scrollToBottom();
 
     try {
+      final auth = Provider.of<AuthProvider>(context, listen: false);
+      final token = auth.token ?? '';
+
+      // Encrypt message for recipient
+      final enc = await E2EEService.instance.encryptMessage(
+        text,
+        widget.targetUserId,
+        token,
+        ApiService.baseUrl,
+      );
+
       final savedMsg = await _apiService.post(
         '/api/messages/${widget.targetUserId}',
-        {'content': text},
+        {
+          'content': enc['content'],
+          'iv': enc['iv'],
+          'isE2EE': enc['isE2EE'],
+        },
       );
 
       // Replace optimistic message with saved one
@@ -264,6 +311,9 @@ class _ChatScreenState extends State<ChatScreen> {
           (m) => m['_id'] == optimisticMsg['_id'],
         );
         if (index != -1) {
+          if (savedMsg is Map<String, dynamic>) {
+            savedMsg['content'] = text;
+          }
           _messages[index] = savedMsg;
         }
       });
