@@ -603,12 +603,20 @@
                 };
                 const translatedEvent = eventMap[event] || event;
 
+                const uid = getCurrentUserId();
+                const signalPayload = {
+                    ...data,
+                    from: data.from || uid,
+                    to: data.to
+                };
+
                 // 1. Send via Socket.IO
                 if (socket) {
                     socket.emit('webrtc_signal', {
                         to: data.to,
+                        from: data.from || uid,
                         type: translatedEvent,
-                        payload: data
+                        payload: signalPayload
                     });
                 }
 
@@ -617,7 +625,9 @@
                     if (db) {
                         db.ref(`webrtc/signals/${data.to}`).push({
                             type: translatedEvent,
-                            payload: data,
+                            from: data.from || uid,
+                            to: data.to,
+                            payload: signalPayload,
                             timestamp: Date.now()
                         }).catch(e => console.warn('[WebRTC] Client RTDB push notice:', e.message));
                     }
@@ -642,8 +652,9 @@
                             },
                             body: JSON.stringify({
                                 to: data.to,
+                                from: data.from || uid,
                                 type: translatedEvent,
-                                payload: data
+                                payload: signalPayload
                             })
                         }).catch(() => {});
                     }

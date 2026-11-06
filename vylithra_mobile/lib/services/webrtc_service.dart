@@ -157,6 +157,12 @@ class WebRTCService {
             if (sig is Map && sig['type'] != null && sig['payload'] != null) {
               final type = sig['type'].toString();
               final payload = Map<String, dynamic>.from(sig['payload']);
+              if (sig['from'] != null && payload['from'] == null) {
+                payload['from'] = sig['from'];
+              }
+              if (sig['to'] != null && payload['to'] == null) {
+                payload['to'] = sig['to'];
+              }
               _handleIncomingSignal(type, payload);
             }
           }
@@ -187,6 +193,12 @@ class WebRTCService {
             final data = Map<String, dynamic>.from(val);
             final type = data['type']?.toString();
             final payload = Map<String, dynamic>.from(data['payload'] ?? {});
+            if (data['from'] != null && payload['from'] == null) {
+              payload['from'] = data['from'];
+            }
+            if (data['to'] != null && payload['to'] == null) {
+              payload['to'] = data['to'];
+            }
             if (type != null) {
               _handleIncomingSignal(type, payload);
             }
@@ -206,8 +218,14 @@ class WebRTCService {
     // 2. Dual Transport: SocketService (For local dev & WebSocket-enabled hosts)
     try {
       _signalSubscription = _socketService.onWebRTCSignal.listen((data) {
-        final type = data['type'];
+        final type = data['type']?.toString() ?? '';
         final payload = Map<String, dynamic>.from(data['payload'] ?? {});
+        if (data['from'] != null && payload['from'] == null) {
+          payload['from'] = data['from'];
+        }
+        if (data['to'] != null && payload['to'] == null) {
+          payload['to'] = data['to'];
+        }
         _handleIncomingSignal(type, payload);
       });
       _groupUserJoinedSub = _socketService.onUserJoinedCall.listen((data) {
