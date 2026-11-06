@@ -45,7 +45,7 @@
         
         <!-- Native Audio Ringtone component -->
         <audio id="global-ringtone" loop preload="auto">
-            <source src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" type="audio/mpeg">
+            <source src="/ringtone.mp3" type="audio/mpeg">
         </audio>
     </div>
     <style>
@@ -54,6 +54,82 @@
     `;
     
     document.body.insertAdjacentHTML('beforeend', overlayHtml);
+
+    
+    // Call Ringtone Audio Controller (Local mp3 + Web Audio Synthesized Chime fallback)
+    let ringtoneAudioContext = null;
+    let ringtoneOscillatorTimer = null;
+
+    window.playCallRingtone = function() {
+        const ringbox = document.getElementById('global-ringtone');
+        let played = false;
+        if (ringbox) {
+            ringbox.currentTime = 0;
+            ringbox.play().then(() => { played = true; }).catch(e => {
+                console.log('Native audio play blocked, falling back to Web Audio chime:', e);
+                startWebAudioChime();
+            });
+        } else {
+            startWebAudioChime();
+        }
+    };
+
+    window.stopCallRingtone = function() {
+        if (window.stopCallRingtone) {
+            window.stopCallRingtone();
+        } else {
+            const ringbox = document.getElementById('global-ringtone');
+            if (ringbox) { ringbox.pause(); ringbox.currentTime = 0; }
+        }
+        stopWebAudioChime();
+    };
+
+    function startWebAudioChime() {
+        try {
+            if (!ringtoneAudioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                ringtoneAudioContext = new AudioCtx();
+            }
+            if (ringtoneAudioContext.state === 'suspended') {
+                ringtoneAudioContext.resume();
+            }
+            if (ringtoneOscillatorTimer) clearInterval(ringtoneOscillatorTimer);
+            
+            function playChimeTone() {
+                if (!ringtoneAudioContext) return;
+                const now = ringtoneAudioContext.currentTime;
+                // Double chime: 523Hz (C5) then 659Hz (E5)
+                [ { f: 523.25, t: 0 }, { f: 659.25, t: 0.15 } ].forEach(note => {
+                    const osc = ringtoneAudioContext.createOscillator();
+                    const gain = ringtoneAudioContext.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(note.f, now + note.t);
+                    gain.gain.setValueAtTime(0.2, now + note.t);
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + note.t + 0.35);
+                    osc.connect(gain);
+                    gain.connect(ringtoneAudioContext.destination);
+                    osc.start(now + note.t);
+                    osc.stop(now + note.t + 0.4);
+                });
+            }
+            playChimeTone();
+            ringtoneOscillatorTimer = setInterval(playChimeTone, 1800);
+        } catch (err) {
+            console.log('Web Audio ringtone fallback error:', err);
+        }
+    }
+
+    function stopWebAudioChime() {
+        if (ringtoneOscillatorTimer) {
+            clearInterval(ringtoneOscillatorTimer);
+            ringtoneOscillatorTimer = null;
+        }
+        if (ringtoneAudioContext) {
+            ringtoneAudioContext.close().catch(() => {});
+            ringtoneAudioContext = null;
+        }
+    }
 
     // 2. State configuration
     function parseJwt(token) {
@@ -885,11 +961,12 @@
                 return;
             }
             if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
+            if (window.stopCallRingtone) {
+            window.stopCallRingtone();
+        } else {
             const ringbox = document.getElementById('global-ringtone');
-            if (ringbox) {
-                ringbox.pause();
-                ringbox.currentTime = 0;
-            }
+            if (ringbox) { ringbox.pause(); ringbox.currentTime = 0; }
+        }
             try {
                 if (isVideoCall) {
                     localStream = await navigator.mediaDevices.getUserMedia(getCallMediaConstraints(true));
@@ -970,10 +1047,11 @@
     function globalEndUI() {
         if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
         stopCallTimer();
-        const ringbox = document.getElementById('global-ringtone');
-        if (ringbox) {
-            ringbox.pause();
-            ringbox.currentTime = 0;
+        if (window.stopCallRingtone) {
+            window.stopCallRingtone();
+        } else {
+            const ringbox = document.getElementById('global-ringtone');
+            if (ringbox) { ringbox.pause(); ringbox.currentTime = 0; }
         }
 
         isCallActive = false;

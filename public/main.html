@@ -69,7 +69,7 @@
             --card-bg: rgba(255, 255, 255, 0.03);
             --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45);
             --border-radius: 20px;
-            --header-height: 70px;
+            --header-height: 64px;
         }
 
         * {
@@ -183,6 +183,29 @@
             -webkit-text-fill-color: transparent;
         }
 
+        
+        .header-upload-book-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            height: 34px;
+            padding: 0 14px;
+            border-radius: 18px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: #00f2fe;
+            background: rgba(0, 242, 254, 0.08);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            transition: all 0.22s ease;
+        }
+        .header-upload-book-btn:hover {
+            background: rgba(0, 242, 254, 0.16);
+            border-color: rgba(0, 242, 254, 0.45);
+            box-shadow: 0 0 12px rgba(0, 242, 254, 0.25);
+            transform: translateY(-1px);
+        }
+
         .search-bar {
             flex: 1;
             max-width: 520px;
@@ -208,6 +231,7 @@
         .search-bar input::placeholder {
             color: #94a3b8;
             font-weight: 400;
+            opacity: 0.9;
         }
 
         .search-bar input:hover {
@@ -1466,20 +1490,20 @@
             transform: translateY(-3px);
         }
         .story-avatar-wrapper {
-            width: 68px;
-            height: 68px;
+            width: 66px;
+            height: 66px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #00f2fe 0%, #4facfe 50%, #ec4899 100%);
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.85) 0%, rgba(79, 172, 254, 0.75) 50%, rgba(168, 85, 247, 0.75) 100%);
             padding: 2.5px;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0 16px rgba(0, 242, 254, 0.35);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 6px rgba(0, 242, 254, 0.18);
             transition: all 0.25s ease;
         }
         .story-item:hover .story-avatar-wrapper {
-            box-shadow: 0 0 24px rgba(0, 242, 254, 0.6);
-            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5), 0 0 10px rgba(0, 242, 254, 0.35);
+            transform: scale(1.03);
         }
         .story-item:active .story-avatar-wrapper {
             transform: scale(0.95);
@@ -1516,15 +1540,16 @@
             box-shadow: 0 0 12px rgba(255, 255, 255, 0.25) !important;
         }
         .story-username {
-            font-size: 0.78rem;
-            color: #cbd5e1;
+            font-size: 0.76rem;
+            color: #e2e8f0;
             font-weight: 500;
-            max-width: 86px;
+            max-width: 82px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             text-align: center;
-            margin-top: 3px;
+            margin-top: 4px;
+            letter-spacing: 0.1px;
         }
         
         /* === PROFESSIONAL NATIVE MOBILE REDESIGN (MAIN FEED) === */
@@ -2408,7 +2433,7 @@
                 <!-- Left Side: Featured Artwork / Visual Illustration -->
                 <div class="dv-hero-visual-col">
                     <div class="dv-hero-visual-card">
-                        <img id="heroVisualImg" src="/uploads/curation-banner.png" alt="Featured Editorial" class="dv-hero-img">
+                        <img id="heroVisualImg" src="/curation-banner.png" alt="" class="dv-hero-img" onerror="this.onerror=null; this.src='/vylithra_logo.png';">
                         <div class="dv-hero-visual-overlay"></div>
                         <div class="dv-hero-visual-tag" id="heroVisualTag">
                             <i class="fas fa-gem"></i> Curated Issue #42
@@ -2512,69 +2537,17 @@
                     <span class="post-tag" onclick="filterPosts('all')">#AllTopics</span>
                 </div>
             </div>
-            <div class="widget">
-                <h3 class="widget-title">Resources</h3>
-                <ul style="list-style: none; padding: 0;">
-                    <li style="margin-bottom: 12px;">
-                        <a href="documentation"
-                            style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
-                            onmouseover="this.style.color='var(--primary)'"
-                            onmouseout="this.style.color='var(--text-main)'">
-                            <div
-                                style="width: 32px; height: 32px; background: rgba(99, 102, 241, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-book" style="color: var(--primary);"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.95rem;">Documentation</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">Learn how to use Vylithra</div>
-                            </div>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 12px;">
-                        <a href="/creator-kit"
-                            style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
-                            onmouseover="this.style.color='var(--accent)'"
-                            onmouseout="this.style.color='var(--text-main)'">
-                            <div
-                                style="width: 32px; height: 32px; background: rgba(236, 72, 153, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-palette" style="color: var(--accent);"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.95rem;">Creator Kit</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">Assets & Guidelines</div>
-                            </div>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 12px;">
-                        <a href="/community"
-                            style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
-                            onmouseover="this.style.color='var(--secondary)'"
-                            onmouseout="this.style.color='var(--text-main)'">
-                            <div
-                                style="width: 32px; height: 32px; background: rgba(168, 85, 247, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-shield-alt" style="color: var(--secondary);"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.95rem;">Community</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">Rules & Safety</div>
-                            </div>
-                        </a>
-                    </li>
-                    <li style="margin-bottom: 0;">
-                        <a href="/legal"
-                            style="color: var(--text-main); text-decoration: none; display: flex; align-items: center; gap: 10px; transition: 0.2s;"
-                            onmouseover="this.style.color='#64748b'" onmouseout="this.style.color='var(--text-main)'">
-                            <div
-                                style="width: 32px; height: 32px; background: rgba(100, 116, 139, 0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
-                                <i class="fas fa-balance-scale" style="color: var(--text-muted);"></i>
-                            </div>
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.95rem;">Legal</div>
-                                <div style="font-size: 0.8rem; color: var(--text-muted);">Privacy & Terms</div>
-                            </div>
-                        </a>
-                    </li>
-                </ul>
+            <div class="sidebar-footer" style="padding: 14px 16px; font-size: 0.78rem; color: #64748b; line-height: 1.6; border-top: 1px solid rgba(255, 255, 255, 0.06); margin-top: 10px;">
+                <div style="display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px;">
+                    <a href="documentation" style="color: #64748b; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#00f2fe'" onmouseout="this.style.color='#64748b'">Docs</a>
+                    <span>•</span>
+                    <a href="/creator-kit" style="color: #64748b; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#00f2fe'" onmouseout="this.style.color='#64748b'">Creator Kit</a>
+                    <span>•</span>
+                    <a href="/community" style="color: #64748b; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#00f2fe'" onmouseout="this.style.color='#64748b'">Community</a>
+                    <span>•</span>
+                    <a href="/legal" style="color: #64748b; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#00f2fe'" onmouseout="this.style.color='#64748b'">Legal</a>
+                </div>
+                <div>© 2026 Vylithra Platform</div>
             </div>
         </aside>
 
@@ -3560,14 +3533,17 @@
                 if(createCard) createCard.style.display = 'block';
                 // Logged in: show messages icon, profile avatar, and logout
                 authSection.innerHTML = `
-                    <div style="display: flex; gap: 14px; align-items: center;">
-                        <a href="messages" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 1.1rem; text-decoration: none; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center;" title="Messages" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'; this.style.boxShadow='0 0 15px rgba(0,242,254,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#cbd5e1'; this.style.boxShadow='none'">
+                                        <div style="display: flex; gap: 10px; align-items: center;">
+                        <a href="/publish-book" class="header-upload-book-btn" title="Upload Book">
+                            <i class="fas fa-book-medical"></i> <span>Upload Book</span>
+                        </a>
+                        <a href="messages" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); color: #cbd5e1; font-size: 1rem; text-decoration: none; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center;" title="Messages" onmouseover="this.style.borderColor='var(--primary)'; this.style.color='var(--primary)'; this.style.boxShadow='0 0 15px rgba(0,242,254,0.3)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)'; this.style.color='#cbd5e1'; this.style.boxShadow='none'">
                             <i class="fa-regular fa-envelope"></i>
                         </a>
-                        <a href="/profile" class="avatar-sm" style="width: 38px; height: 38px; text-decoration: none; border: 2px solid rgba(0, 242, 254, 0.4);" title="Profile">
+                        <a href="/profile" class="avatar-sm" style="width: 36px; height: 36px; text-decoration: none; border: 2px solid rgba(0, 242, 254, 0.4);" title="Profile">
                             <i class="fa-regular fa-user"></i>
                         </a>
-                        <a href="#" onclick="logoutUser(event)" style="width: 38px; height: 38px; border-radius: 50%; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; font-size: 1.05rem; text-decoration: none; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center;" title="Logout" onmouseover="this.style.background='#ef4444'; this.style.color='#ffffff'; this.style.boxShadow='0 0 15px rgba(239,68,68,0.4)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444'; this.style.boxShadow='none'">
+                        <a href="#" onclick="logoutUser(event)" style="width: 36px; height: 36px; border-radius: 50%; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #ef4444; font-size: 0.95rem; text-decoration: none; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center;" title="Logout" onmouseover="this.style.background='#ef4444'; this.style.color='#ffffff'; this.style.boxShadow='0 0 15px rgba(239,68,68,0.4)'" onmouseout="this.style.background='rgba(239,68,68,0.1)'; this.style.color='#ef4444'; this.style.boxShadow='none'">
                             <i class="fas fa-sign-out-alt"></i>
                         </a>
                     </div>
