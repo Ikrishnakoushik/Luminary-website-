@@ -26,3 +26,4 @@ const WebRTCSignalSchema = new mongoose.Schema({
 });
 
 module.exports = mongoose.models.WebRTCSignal || mongoose.model('WebRTCSignal', WebRTCSignalSchema);
+
