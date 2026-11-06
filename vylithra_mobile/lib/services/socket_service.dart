@@ -19,6 +19,7 @@ class SocketService {
   final _webrtcSignalController = StreamController<Map<String, dynamic>>.broadcast();
   final _userJoinedCallController = StreamController<Map<String, dynamic>>.broadcast();
   final _userLeftCallController = StreamController<Map<String, dynamic>>.broadcast();
+  final _messageViewedController = StreamController<Map<String, dynamic>>.broadcast();
 
   // Public Streams
   Stream<Map<String, dynamic>> get onNewPost => _postController.stream;
@@ -26,6 +27,7 @@ class SocketService {
   Stream<Map<String, dynamic>> get onNewComment => _commentController.stream;
   Stream<Map<String, dynamic>> get onNewMessage => _messageController.stream;
   Stream<Map<String, dynamic>> get onChatCleared => _chatClearedController.stream;
+  Stream<Map<String, dynamic>> get onMessageViewed => _messageViewedController.stream;
   Stream<Map<String, dynamic>> get onWebRTCSignal => _webrtcSignalController.stream;
   Stream<Map<String, dynamic>> get onUserJoinedCall => _userJoinedCallController.stream;
   Stream<Map<String, dynamic>> get onUserLeftCall => _userLeftCallController.stream;
@@ -58,6 +60,7 @@ class SocketService {
     _socket!.on('new_comment', (data) => _commentController.add(Map<String, dynamic>.from(data)));
     _socket!.on('new_message', (data) => _messageController.add(Map<String, dynamic>.from(data)));
     _socket!.on('chat_cleared', (data) => _chatClearedController.add(Map<String, dynamic>.from(data)));
+    _socket!.on('message_viewed', (data) => _messageViewedController.add(Map<String, dynamic>.from(data)));
     _socket!.on('webrtc_signal', (data) => _webrtcSignalController.add(Map<String, dynamic>.from(data)));
     _socket!.on('user-joined-call', (data) => _userJoinedCallController.add(Map<String, dynamic>.from(data)));
     _socket!.on('user-left-call', (data) => _userLeftCallController.add(Map<String, dynamic>.from(data)));

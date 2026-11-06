@@ -31,10 +31,10 @@ class E2EEService {
     if (privKeyB64 == null || pubKeyB64 == null) {
       // Generate fresh ECDH P-256 Keypair
       _myKeyPair = await _ecdh.newKeyPair();
-      final pubKey = await _myKeyPair!.extractPublicKey();
-      _myPublicKeyBase64 = base64Encode(pubKey.bytes);
+      final keyPairData = await _myKeyPair!.extract();
+      _myPublicKeyBase64 = base64Encode(keyPairData.publicKey.bytes);
 
-      final privBytes = await _myKeyPair!.extractPrivateKeyBytes();
+      final privBytes = keyPairData.bytes;
       await prefs.setString('vyl_e2ee_priv_$userId', base64Encode(privBytes));
       await prefs.setString('vyl_e2ee_pub_$userId', _myPublicKeyBase64!);
 

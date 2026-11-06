@@ -2314,6 +2314,17 @@
             }
         }
 
+        function getValidMediaUrl(url) {
+            if (!url) return '';
+            let str = String(url).trim();
+            if (/^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?(\/.*)$/i.test(str)) {
+                str = str.replace(/^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?/i, '');
+            }
+            if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('blob:')) return str;
+            if (str.startsWith('/')) return str;
+            return '/' + str;
+        }
+
         async function openViewOnceMedia(messageId, mediaUrl, mediaType, encMetaJson) {
             currentViewingMsgId = messageId;
             const modal = document.getElementById('viewOnceModal');
@@ -2328,11 +2339,11 @@
                 try { encMeta = typeof encMetaJson === 'string' ? JSON.parse(encMetaJson) : encMetaJson; } catch(e) {}
             }
 
-            let displayUrl = mediaUrl;
+            let displayUrl = getValidMediaUrl(mediaUrl);
             if (encMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:')) {
                 try {
                     const decryptedBlobUrl = await window.VylithraCrypto.decryptMediaUrl(
-                        mediaUrl, encMeta.fileKeyB64, encMeta.fileIvB64, encMeta.mimeType
+                        displayUrl, encMeta.fileKeyB64, encMeta.fileIvB64, encMeta.mimeType
                     );
                     if (decryptedBlobUrl) displayUrl = decryptedBlobUrl;
                 } catch(err) {
@@ -2340,10 +2351,11 @@
                 }
             }
 
-            if (mediaType === 'video') {
+            const isVideo = mediaType === 'video' || /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(displayUrl);
+            if (isVideo) {
                 holder.innerHTML = `<video src="${displayUrl}" controls autoplay playsinline style="max-width:90vw; max-height:80vh; border-radius:12px;"></video>`;
             } else {
-                holder.innerHTML = `<img src="${displayUrl}" alt="View Once" style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:12px;">`;
+                holder.innerHTML = `<img src="${displayUrl}" alt="View Once" style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:12px;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'color:#ef4444; padding:30px; text-align:center;\\'><i class=\\'fas fa-exclamation-triangle\\'></i> Unable to load image</div>';">`;
             }
 
             // Mark as viewed on server
@@ -2380,12 +2392,12 @@
             const stream = document.getElementById('chat-stream');
             if (!stream) return;
 
-            const msgId = msg._id || '';
-            // Prevent duplicate message renders
-            if (msgId && activeRenderedMsgIds.has(msgId)) {
-                return;
-            }
+            const msgId = msg._id ? String(msg._id) : '';
+            // Prevent duplicate message renders across socket/optimistic/fetch
             if (msgId) {
+                if (activeRenderedMsgIds.has(msgId) || document.getElementById(`msg-row-${msgId}`)) {
+                    return;
+                }
                 activeRenderedMsgIds.add(msgId);
             }
 
@@ -2453,18 +2465,10 @@
                 } catch(e) {}
             }
 
-            function getValidMediaUrl(url) {
-                if (!url) return '';
-                const str = String(url).trim();
-                if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('blob:')) return str;
-                if (str.startsWith('/')) return str;
-                return '/' + str;
-            }
-
             let attachmentHtml = '';
             if (msg.isViewOnce) {
                 const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
-                const typeLabel = msg.attachmentType === 'video' ? 'Video' : 'Photo';
+                const typeLabel = (msg.attachmentType === 'video' || /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(mediaUrl)) ? 'Video' : 'Photo';
                 if (msg.isViewed || !msg.attachmentUrl) {
                     attachmentHtml = `
                         <div class="view-once-pill viewed" data-view-once-id="${msgId}">
@@ -2495,17 +2499,24 @@
                     }
                 }
                 const originalFilename = (mediaEncMeta && mediaEncMeta.originalName) || 'photo.jpg';
-                if (msg.attachmentType === 'image') {
+                const isImage = msg.attachmentType === 'image' || 
+                                (mediaEncMeta && mediaEncMeta.mimeType && mediaEncMeta.mimeType.startsWith('image/')) ||
+                                /\.(jpeg|jpg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(mediaUrl);
+                const isVideo = msg.attachmentType === 'video' || 
+                                (mediaEncMeta && mediaEncMeta.mimeType && mediaEncMeta.mimeType.startsWith('video/')) ||
+                                /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(mediaUrl);
+
+                if (isImage) {
                     attachmentHtml = `
                         <div class="message-media-card">
                             <div class="media-image-wrap">
-                                <img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" loading="lazy">
+                                <img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'padding:20px; color:#ef4444;\\'><i class=\\'fas fa-image\\'></i> Photo preview</div>';">
                                 <a href="${mediaUrl}" download="${originalFilename}" class="media-download-floating-btn" title="Download Photo" onclick="event.stopPropagation();">
                                     <i class="fas fa-arrow-down"></i>
                                 </a>
                             </div>
                         </div>`;
-                } else if (msg.attachmentType === 'video') {
+                } else if (isVideo) {
                     attachmentHtml = `
                         <div class="message-media-card" style="position:relative;">
                             <video src="${mediaUrl}" controls playsinline preload="metadata" style="max-height:260px; max-width:320px; border-radius:12px; display:block;"></video>
@@ -2521,7 +2532,7 @@
             const isE2EEMsg = !!msg.isE2EE;
             const e2eeIcon = isE2EEMsg ? '<i class="fas fa-lock" style="font-size:0.65rem; color:#06b6d4; margin-right:4px;" title="Verified E2EE"></i>' : '';
 
-            const isPureAttachment = (displayContent === '[Attachment]' || displayContent === 'Photo' || !displayContent || displayContent.trim() === '');
+            const isPureAttachment = (displayContent === '[Attachment]' || displayContent === 'Photo' || displayContent === 'Sent an image' || displayContent === 'Sent a video' || !displayContent || displayContent.trim() === '');
             const textContentHtml = (isPureAttachment && attachmentHtml) ? '' : `<span class="msg-text">${escapeHtml(displayContent)}</span>`;
 
             const row = document.createElement('div');
@@ -2847,21 +2858,24 @@
                 });
                 chatSocket.on('new_message', async (msg) => {
                     if (!msg || !msg._id) return;
-                    if (activeRenderedMsgIds.has(msg._id)) return;
+                    const msgId = String(msg._id);
+                    if (activeRenderedMsgIds.has(msgId) || document.getElementById(`msg-row-${msgId}`)) return;
 
-                    const senderId = msg.sender && msg.sender._id ? msg.sender._id : msg.sender;
-                    const isSentByMe = senderId === currentUserId;
+                    const senderId = msg.sender && msg.sender._id ? String(msg.sender._id) : String(msg.sender);
+                    const isSentByMe = senderId === String(currentUserId);
 
                     if (isSentByMe) {
                         const optRow = document.querySelector('.message-row.sent-row.optimistic');
                         if (optRow) {
-                            optRow.id = `msg-row-${msg._id}`;
+                            optRow.id = `msg-row-${msgId}`;
                             optRow.classList.remove('optimistic');
-                            activeRenderedMsgIds.add(msg._id);
+                            activeRenderedMsgIds.add(msgId);
                             const delBtn = optRow.querySelector('.msg-delete-btn');
-                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msg._id}', true)`);
+                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msgId}', true)`);
                             const bubble = optRow.querySelector('.message-bubble');
-                            if (bubble) bubble.id = `msg-bubble-${msg._id}`;
+                            if (bubble) bubble.id = `msg-bubble-${msgId}`;
+                            return;
+                        } else if (document.getElementById(`msg-row-${msgId}`)) {
                             return;
                         }
                     }
@@ -2876,17 +2890,27 @@
                 });
                 chatSocket.on('new_group_message', async (msg) => {
                     if (!msg || !msg._id) return;
-                    if (activeRenderedMsgIds.has(msg._id)) return;
+                    const msgId = String(msg._id);
+                    if (activeRenderedMsgIds.has(msgId) || document.getElementById(`msg-row-${msgId}`)) return;
 
-                    const senderId = msg.sender && msg.sender._id ? msg.sender._id : msg.sender;
-                    const isSentByMe = senderId === currentUserId;
+                    const senderId = msg.sender && msg.sender._id ? String(msg.sender._id) : String(msg.sender);
+                    const isSentByMe = senderId === String(currentUserId);
 
                     if (isSentByMe) {
                         const optRow = document.querySelector('.message-row.sent-row.optimistic');
                         if (optRow) {
-                            optRow.id = `msg-row-${msg._id}`;
+                            optRow.id = `msg-row-${msgId}`;
                             optRow.classList.remove('optimistic');
-                            activeRenderedMsgIds.add(msg._id);
+                            activeRenderedMsgIds.add(msgId);
+                            const delBtn = optRow.querySelector('.msg-delete-btn');
+                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msgId}', true)`);
+                            const bubble = optRow.querySelector('.message-bubble');
+                            if (bubble) bubble.id = `msg-bubble-${msgId}`;
+                            return;
+                        } else if (document.getElementById(`msg-row-${msgId}`)) {
+                            return;
+                        }
+                    }
                             const delBtn = optRow.querySelector('.msg-delete-btn');
                             if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msg._id}', true)`);
                             const bubble = optRow.querySelector('.message-bubble');

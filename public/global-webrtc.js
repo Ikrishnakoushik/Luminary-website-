@@ -604,11 +604,10 @@
                 const translatedEvent = eventMap[event] || event;
 
                 const uid = getCurrentUserId();
-                const signalPayload = {
-                    ...data,
+                const signalPayload = Object.assign({}, data, {
                     from: data.from || uid,
                     to: data.to
-                };
+                });
 
                 // 1. Send via Socket.IO
                 if (socket) {
@@ -810,8 +809,13 @@
         const isGroupCall = data.isGroupCall || (data.payload && data.payload.isGroupCall);
         let callerName = data.callerName || (data.payload && data.payload.callerName);
 
-        if(isCallActive && !activeGroupIdForCall) {
-            // Busy in a 1-on-1 call
+        if (from === currentCallTarget) {
+            // Already connected or ringing with this user, do not reject duplicate offer!
+            return;
+        }
+
+        if (isCallActive && !activeGroupIdForCall) {
+            // Busy in another call
             window.globalSocket.emit('reject-call', { to: from });
             return;
         }

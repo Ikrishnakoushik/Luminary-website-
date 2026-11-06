@@ -33,6 +33,7 @@ class _ChatScreenState extends State<ChatScreen> {
   final SocketService _socketService = SocketService();
   StreamSubscription<Map<String, dynamic>>? _messageSubscription;
   StreamSubscription<Map<String, dynamic>>? _chatClearedSubscription;
+  StreamSubscription<Map<String, dynamic>>? _messageViewedSubscription;
 
   List<dynamic> _messages = [];
   bool _isLoading = true;
@@ -89,7 +90,7 @@ class _ChatScreenState extends State<ChatScreen> {
         '/api/messages/${widget.targetUserId}',
       );
       if (mounted && messages is List) {
-        final token = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
+        final currentToken = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
 
         // Decrypt E2EE messages
         for (final msg in messages) {
@@ -98,7 +99,7 @@ class _ChatScreenState extends State<ChatScreen> {
               msg['content']?.toString() ?? '',
               msg['iv']?.toString(),
               widget.targetUserId,
-              token,
+              currentToken,
               ApiService.baseUrl,
             );
             msg['content'] = dec;
@@ -143,12 +144,12 @@ class _ChatScreenState extends State<ChatScreen> {
 
       if (senderId == widget.targetUserId || senderId == _currentUserId) {
         if (data['isE2EE'] == true && data['iv'] != null) {
-          final token = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
+          final currentToken = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
           final dec = await E2EEService.instance.decryptMessage(
             data['content']?.toString() ?? '',
             data['iv']?.toString(),
             widget.targetUserId,
-            token,
+            currentToken,
             ApiService.baseUrl,
           );
           data['content'] = dec;
@@ -156,13 +157,37 @@ class _ChatScreenState extends State<ChatScreen> {
 
         if (mounted) {
           setState(() {
-            // Check if we already appended it optimistically
-            if (!_messages.any((m) => m['_id'] == data['_id'])) {
-              _messages.add(data);
+            final msgId = data['_id']?.toString();
+            // Check if we already have this message by _id
+            if (msgId != null && _messages.any((m) => m['_id']?.toString() == msgId)) {
+              return;
             }
+            // If sent by me, reconcile pending optimistic message
+            if (senderId == _currentUserId) {
+              final optIndex = _messages.indexWhere((m) => m['isOptimistic'] == true);
+              if (optIndex != -1) {
+                _messages[optIndex] = data;
+                return;
+              }
+            }
+            _messages.add(data);
           });
           _scrollToBottom();
         }
+      }
+    });
+
+    _messageViewedSubscription?.cancel();
+    _messageViewedSubscription = _socketService.onMessageViewed.listen((data) {
+      final msgId = data['messageId']?.toString();
+      if (msgId != null && mounted) {
+        setState(() {
+          final idx = _messages.indexWhere((m) => m['_id']?.toString() == msgId);
+          if (idx != -1) {
+            _messages[idx]['isViewed'] = true;
+            _messages[idx]['attachmentUrl'] = null;
+          }
+        });
       }
     });
 
@@ -250,10 +275,116 @@ class _ChatScreenState extends State<ChatScreen> {
             ),
             Positioned(
               top: 40,
+              right: 64,
+              child: IconButton(
+                icon: const Icon(Icons.download_rounded, color: Colors.white, size: 28),
+                onPressed: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Downloading file to device...')),
+                  );
+                },
+              ),
+            ),
+            Positioned(
+              top: 40,
               right: 20,
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 30),
                 onPressed: () => Navigator.pop(ctx),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _openViewOnceMedia(Map<String, dynamic> msg) {
+    final mediaUrl = msg['attachmentUrl']?.toString();
+    if (mediaUrl == null || mediaUrl.isEmpty) return;
+    final isVideo = msg['attachmentType'] == 'video';
+    final fullUrl = _resolveMediaUrl(mediaUrl);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.black,
+        insetPadding: EdgeInsets.zero,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            InteractiveViewer(
+              child: isVideo
+                  ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(Icons.play_circle_outline, color: Color(0xFF14B8A6), size: 72),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'View Once Video',
+                            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'This media will disappear permanently once closed.',
+                            style: TextStyle(color: Colors.white70, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    )
+                  : Image.network(
+                      fullUrl,
+                      fit: BoxFit.contain,
+                      errorBuilder: (context, error, stackTrace) => const Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 64,
+                      ),
+                    ),
+            ),
+            Positioned(
+              top: 40,
+              left: 20,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF14B8A6), width: 1.5),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('1', style: TextStyle(color: Color(0xFF14B8A6), fontWeight: FontWeight.bold, fontSize: 14)),
+                    SizedBox(width: 8),
+                    Text('View Once Media', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 40,
+              right: 20,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white, size: 30),
+                onPressed: () async {
+                  Navigator.pop(ctx);
+                  final msgId = msg['_id']?.toString();
+                  if (msgId != null && !msgId.startsWith('opt_')) {
+                    try {
+                      await _apiService.put('/api/messages/$msgId/view-once', {});
+                    } catch (_) {}
+                  }
+                  if (mounted) {
+                    setState(() {
+                      msg['isViewed'] = true;
+                      msg['attachmentUrl'] = null;
+                    });
+                  }
+                },
               ),
             ),
           ],
@@ -277,6 +408,7 @@ class _ChatScreenState extends State<ChatScreen> {
       'sender': {'_id': _currentUserId ?? 'me'},
       'content': text,
       'createdAt': DateTime.now().toIso8601String(),
+      'isOptimistic': true,
     };
 
     setState(() {
@@ -314,7 +446,12 @@ class _ChatScreenState extends State<ChatScreen> {
           if (savedMsg is Map<String, dynamic>) {
             savedMsg['content'] = text;
           }
-          _messages[index] = savedMsg;
+          final savedId = savedMsg['_id']?.toString();
+          if (savedId != null && _messages.any((m) => m['_id']?.toString() == savedId)) {
+            _messages.removeAt(index);
+          } else {
+            _messages[index] = savedMsg;
+          }
         }
       });
     } catch (e) {
@@ -346,7 +483,7 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
-  Future<void> _pickAndUploadMedia(bool isVideo) async {
+  Future<void> _pickAndUploadMedia(bool isVideo, {bool isViewOnce = false}) async {
     final picker = ImagePicker();
     final XFile? pickedFile = isVideo
         ? await picker.pickVideo(source: ImageSource.gallery)
@@ -360,7 +497,12 @@ class _ChatScreenState extends State<ChatScreen> {
     final optimisticMsg = {
       '_id': DateTime.now().millisecondsSinceEpoch.toString(),
       'sender': {'_id': _currentUserId},
-      'content': 'Uploading media...',
+      'content': isViewOnce 
+          ? (isVideo ? '1 Video · View once' : '1 Photo · View once')
+          : 'Uploading media...',
+      'attachmentType': isVideo ? 'video' : 'image',
+      'isViewOnce': isViewOnce,
+      'isOptimistic': true,
       'createdAt': DateTime.now().toIso8601String(),
     };
 
@@ -380,16 +522,26 @@ class _ChatScreenState extends State<ChatScreen> {
 
       final savedMsg = await _apiService
           .post('/api/messages/${widget.targetUserId}', {
-            'content': isVideo ? 'Sent a video' : 'Sent an image',
+            'content': isViewOnce
+                ? (isVideo ? '1 Video · View once' : '1 Photo · View once')
+                : (isVideo ? 'Sent a video' : 'Sent an image'),
             'attachmentUrl': fileUrl,
             'attachmentType': isVideo ? 'video' : 'image',
+            'isViewOnce': isViewOnce,
           });
 
       setState(() {
         final index = _messages.indexWhere(
           (m) => m['_id'] == optimisticMsg['_id'],
         );
-        if (index != -1) _messages[index] = savedMsg;
+        if (index != -1) {
+          final savedId = savedMsg['_id']?.toString();
+          if (savedId != null && _messages.any((m) => m['_id']?.toString() == savedId)) {
+            _messages.removeAt(index);
+          } else {
+            _messages[index] = savedMsg;
+          }
+        }
       });
     } catch (e) {
       setState(
@@ -410,7 +562,7 @@ class _ChatScreenState extends State<ChatScreen> {
       builder: (context) {
         final isDark = Theme.of(context).brightness == Brightness.dark;
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
           decoration: BoxDecoration(
             color: isDark ? const Color(0xFF1E293B) : Colors.white,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -419,29 +571,63 @@ class _ChatScreenState extends State<ChatScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(Icons.image, color: Colors.blue),
+                leading: const Icon(Icons.photo_library_outlined, color: Colors.blue),
                 title: Text(
-                  'Image',
+                  'Photo',
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                subtitle: Text('Send a photo in chat', style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12)),
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUploadMedia(false);
+                  _pickAndUploadMedia(false, isViewOnce: false);
                 },
               ),
               ListTile(
-                leading: const Icon(Icons.videocam, color: Colors.red),
+                leading: const Icon(Icons.looks_one_outlined, color: Color(0xFF14B8A6)),
+                title: Text(
+                  'View Once Photo',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text('Disappears after being viewed once', style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadMedia(false, isViewOnce: true);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.videocam_outlined, color: Colors.purple),
                 title: Text(
                   'Video',
                   style: TextStyle(
                     color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
+                subtitle: Text('Send a video in chat', style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12)),
                 onTap: () {
                   Navigator.pop(context);
-                  _pickAndUploadMedia(true);
+                  _pickAndUploadMedia(true, isViewOnce: false);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.looks_one_outlined, color: Colors.deepOrange),
+                title: Text(
+                  'View Once Video',
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black87,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text('Disappears after being played once', style: TextStyle(color: isDark ? Colors.white60 : Colors.black54, fontSize: 12)),
+                onTap: () {
+                  Navigator.pop(context);
+                  _pickAndUploadMedia(true, isViewOnce: true);
                 },
               ),
             ],
@@ -520,6 +706,7 @@ class _ChatScreenState extends State<ChatScreen> {
     _pollingTimer?.cancel();
     _messageSubscription?.cancel();
     _chatClearedSubscription?.cancel();
+    _messageViewedSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -720,77 +907,179 @@ class _ChatScreenState extends State<ChatScreen> {
                                     ],
                                   )
                                 else ...[
-                                  if (msg['attachmentUrl'] != null &&
-                                      msg['attachmentUrl']
-                                          .toString()
-                                          .isNotEmpty)
-                                    Container(
-                                      margin: const EdgeInsets.only(bottom: 8),
-                                      child: msg['attachmentType'] == 'image'
-                                          ? GestureDetector(
-                                              onTap: () => _openMediaViewer(
-                                                msg['attachmentUrl'].toString(),
-                                                false,
+                                  if (msg['isViewOnce'] == true) ...[
+                                    if (msg['isViewed'] == true || msg['attachmentUrl'] == null)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                        decoration: BoxDecoration(
+                                          color: isMe ? Colors.white.withValues(alpha: 0.15) : Colors.black12,
+                                          borderRadius: BorderRadius.circular(20),
+                                        ),
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(3),
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                border: Border.all(color: Colors.grey, width: 1.5),
                                               ),
-                                              child: ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
-                                                child: Image.network(
-                                                  _resolveMediaUrl(
-                                                    msg['attachmentUrl'],
-                                                  ),
-                                                  width: 200,
-                                                  height: 200,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder:
-                                                      (context, error, stackTrace) => Container(
-                                                    width: 200,
-                                                    height: 150,
-                                                    color: Colors.black12,
-                                                    child: const Center(
-                                                      child: Icon(
-                                                        Icons.broken_image,
-                                                        color: Colors.grey,
+                                              child: const Icon(Icons.check, size: 12, color: Colors.grey),
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              msg['attachmentType'] == 'video' ? 'Video · Opened' : 'Photo · Opened',
+                                              style: TextStyle(
+                                                color: isMe ? Colors.white70 : Colors.grey[600],
+                                                fontWeight: FontWeight.w600,
+                                                fontSize: 14,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      )
+                                    else
+                                      GestureDetector(
+                                        onTap: () => _openViewOnceMedia(msg),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: isMe ? Colors.white.withValues(alpha: 0.22) : const Color(0xFF0D9488).withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: const Color(0xFF14B8A6), width: 1.2),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Container(
+                                                width: 20,
+                                                height: 20,
+                                                alignment: Alignment.center,
+                                                decoration: BoxDecoration(
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(color: const Color(0xFF14B8A6), width: 1.5),
+                                                ),
+                                                child: const Text('1', style: TextStyle(color: Color(0xFF14B8A6), fontWeight: FontWeight.bold, fontSize: 11)),
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                msg['attachmentType'] == 'video' ? 'Video · View once' : 'Photo · View once',
+                                                style: TextStyle(
+                                                  color: isMe ? Colors.white : const Color(0xFF14B8A6),
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              const Icon(Icons.play_arrow, size: 16, color: Color(0xFF14B8A6)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                  ] else ...[
+                                    if (msg['attachmentUrl'] != null &&
+                                        msg['attachmentUrl']
+                                            .toString()
+                                            .isNotEmpty)
+                                      Container(
+                                        margin: const EdgeInsets.only(bottom: 8),
+                                        child: msg['attachmentType'] == 'image'
+                                            ? Stack(
+                                                children: [
+                                                  GestureDetector(
+                                                    onTap: () => _openMediaViewer(
+                                                      msg['attachmentUrl'].toString(),
+                                                      false,
+                                                    ),
+                                                    child: ClipRRect(
+                                                      borderRadius:
+                                                          BorderRadius.circular(12),
+                                                      child: Image.network(
+                                                        _resolveMediaUrl(
+                                                          msg['attachmentUrl'],
+                                                        ),
+                                                        width: 220,
+                                                        height: 220,
+                                                        fit: BoxFit.cover,
+                                                        errorBuilder:
+                                                            (context, error, stackTrace) => Container(
+                                                          width: 220,
+                                                          height: 150,
+                                                          color: Colors.black12,
+                                                          child: const Center(
+                                                            child: Icon(
+                                                              Icons.broken_image,
+                                                              color: Colors.grey,
+                                                            ),
+                                                          ),
+                                                        ),
                                                       ),
+                                                    ),
+                                                  ),
+                                                  Positioned(
+                                                    bottom: 8,
+                                                    right: 8,
+                                                    child: GestureDetector(
+                                                      onTap: () {
+                                                        _openMediaViewer(msg['attachmentUrl'].toString(), false);
+                                                      },
+                                                      child: Container(
+                                                        padding: const EdgeInsets.all(6),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.black.withValues(alpha: 0.65),
+                                                          shape: BoxShape.circle,
+                                                        ),
+                                                        child: const Icon(
+                                                          Icons.download_rounded,
+                                                          color: Colors.white,
+                                                          size: 18,
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              )
+                                            : GestureDetector(
+                                                onTap: () => _openMediaViewer(
+                                                  msg['attachmentUrl'].toString(),
+                                                  true,
+                                                ),
+                                                child: Container(
+                                                  width: 220,
+                                                  height: 120,
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.black26,
+                                                    borderRadius:
+                                                        BorderRadius.circular(12),
+                                                  ),
+                                                  child: const Center(
+                                                    child: Icon(
+                                                      Icons.play_circle_fill,
+                                                      size: 50,
+                                                      color: Colors.white,
                                                     ),
                                                   ),
                                                 ),
                                               ),
-                                            )
-                                          : GestureDetector(
-                                              onTap: () => _openMediaViewer(
-                                                msg['attachmentUrl'].toString(),
-                                                true,
-                                              ),
-                                              child: Container(
-                                                width: 200,
-                                                height: 100,
-                                                decoration: BoxDecoration(
-                                                  color: Colors.black26,
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
-                                                child: const Center(
-                                                  child: Icon(
-                                                    Icons.play_circle_fill,
-                                                    size: 50,
-                                                    color: Colors.white,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                    ),
-                                  Text(
-                                    msg['content'] ?? '',
-                                    style: TextStyle(
-                                      color: isMe
-                                          ? Colors.white
-                                          : (isDark
-                                                ? Colors.white
-                                                : Colors.black87),
-                                      fontSize: 16,
-                                    ),
-                                  ),
+                                      ),
+                                    if (msg['content'] != null &&
+                                        msg['content'].toString().isNotEmpty &&
+                                        msg['content'] != 'Sent an image' &&
+                                        msg['content'] != 'Sent a video' &&
+                                        msg['content'] != '[Attachment]' &&
+                                        msg['content'] != 'Photo')
+                                      Text(
+                                        msg['content'] ?? '',
+                                        style: TextStyle(
+                                          color: isMe
+                                              ? Colors.white
+                                              : (isDark
+                                                    ? Colors.white
+                                                    : Colors.black87),
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                  ],
                                 ],
                               ],
                             ),

@@ -523,13 +523,13 @@ class WebRTCService {
         final offerData = payload['offer'] ?? (payload['payload'] is Map ? payload['payload']['offer'] : null);
         final isVideo = payload['isVideo'] ?? (payload['payload'] is Map ? payload['payload']['isVideo'] : false);
         if (from == null || offerData == null) return;
-        if (isCallActive) {
-          _sendSignal('call-rejected', {'to': from});
+        if (_currentCallTarget == from) {
+          // Already ringing or connected with this user, update payload and ignore duplicate offer
+          _incomingOfferPayload = payload;
           return;
         }
-        if (_currentCallTarget == from) {
-          // Already ringing from this user, just update the payload and ignore
-          _incomingOfferPayload = payload;
+        if (isCallActive) {
+          _sendSignal('call-rejected', {'to': from});
           return;
         }
         _currentCallTarget = from;
