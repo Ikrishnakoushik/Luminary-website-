@@ -207,3 +207,62 @@ window.VylithraAnalytics = {
         }
     }
 };
+
+
+// Universal 5-Item Mobile Bottom Navigation Synchronizer
+function setupUniversalMobileNav() {
+    const p = (window.location.pathname || '').toLowerCase();
+    // Exclude full-screen standalone auth/reset pages
+    if (p.includes('/auth') || p.includes('/forgot-password') || p.includes('/reset-password') || p.includes('/call')) {
+        return;
+    }
+
+    const navItems = [
+        { name: 'Home', href: '/main', icon: 'fas fa-home', key: 'home' },
+        { name: 'Trending', href: '/main?filter=trending', icon: 'fas fa-fire', key: 'trending' },
+        { name: 'Reels', href: '/reels', icon: 'fas fa-play', key: 'reels' },
+        { name: 'Messages', href: '/messages', icon: 'fas fa-paper-plane', key: 'messages' },
+        { name: 'Profile', href: '/profile', icon: 'fas fa-user-circle', key: 'profile' }
+    ];
+
+    const search = window.location.search || '';
+    let activeKey = 'home';
+    if (p.includes('/reels')) activeKey = 'reels';
+    else if (p.includes('/messages')) activeKey = 'messages';
+    else if (p.includes('/profile')) activeKey = 'profile';
+    else if (p.includes('/main') && search.includes('filter=trending')) activeKey = 'trending';
+    else if (p.includes('/main') || p === '/' || p === '') activeKey = 'home';
+
+    const existingNavs = Array.from(document.querySelectorAll('.v-mobile-nav, .mobile-bottom-nav'));
+    let navContainer = existingNavs[0];
+
+    // Remove any extra duplicate navigation elements
+    for (let i = 1; i < existingNavs.length; i++) {
+        existingNavs[i].remove();
+    }
+
+    if (!navContainer) {
+        navContainer = document.createElement('nav');
+        navContainer.className = 'v-mobile-nav';
+        document.body.appendChild(navContainer);
+    } else {
+        navContainer.className = 'v-mobile-nav';
+    }
+
+    navContainer.innerHTML = navItems.map(item => {
+        const isActive = item.key === activeKey;
+        return `
+            <a href="${item.href}" class="nav-item ${isActive ? 'active' : ''}">
+                <i class="${item.icon}"></i>
+                <span>${item.name}</span>
+            </a>
+        `;
+    }).join('');
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupUniversalMobileNav);
+} else {
+    setupUniversalMobileNav();
+}
+window.setupUniversalMobileNav = setupUniversalMobileNav;

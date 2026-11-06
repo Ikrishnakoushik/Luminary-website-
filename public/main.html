@@ -3688,36 +3688,22 @@
         
 </script>
 
-    <!-- Global Mobile Bottom Nav -->
+    <!-- Global Mobile Bottom Nav (5 items) -->
     <nav class="v-mobile-nav">
-        <a href="main" class="nav-item">
+        <a href="/main" class="nav-item active">
             <i class="fas fa-home"></i><span>Home</span>
         </a>
-        <a href="reels" class="nav-item">
+        <a href="/main?filter=trending" class="nav-item">
+            <i class="fas fa-fire"></i><span>Trending</span>
+        </a>
+        <a href="/reels" class="nav-item">
             <i class="fas fa-play"></i><span>Reels</span>
         </a>
-        <a href="messages" class="nav-item">
+        <a href="/messages" class="nav-item">
             <i class="fas fa-paper-plane"></i><span>Messages</span>
         </a>
-        <a href="profile" class="nav-item">
+        <a href="/profile" class="nav-item" onclick="return enforceLogin(event)">
             <i class="fas fa-user-circle"></i><span>Profile</span>
-        </a>
-    </nav>
-
-
-    <!-- MOBILE BOTTOM NAVIGATION (OPTION 9 EXACT MATCH) -->
-    <nav class="mobile-bottom-nav">
-        <a href="/main" class="bottom-nav-item active">
-            <i class="fas fa-home"></i>
-        </a>
-        <a href="/reels" class="bottom-nav-item">
-            <i class="fas fa-play"></i>
-        </a>
-        <a href="/messages" class="bottom-nav-item">
-            <i class="fas fa-paper-plane"></i>
-        </a>
-        <a href="/profile" class="bottom-nav-item" onclick="return enforceLogin(event)">
-            <i class="fas fa-user-circle"></i>
         </a>
     </nav>
     <!-- Edit Post Modal -->
