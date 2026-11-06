@@ -145,7 +145,7 @@ class WebRTCService {
     
     _httpPollingTimer?.cancel();
     _signalSubscription?.cancel();
-    _httpPollingTimer = Timer.periodic(const Duration(milliseconds: 1200), (timer) async {
+    _httpPollingTimer = Timer.periodic(const Duration(milliseconds: 800), (timer) async {
       if (_currentUserId == null) {
         await ensureUserId();
         if (_currentUserId == null) return;
@@ -501,46 +501,63 @@ class WebRTCService {
 
     switch (type) {
       case 'call-made':
+        final from = payload['from']?.toString() ?? (payload['payload'] is Map ? payload['payload']['from']?.toString() : null);
+        final offerData = payload['offer'] ?? (payload['payload'] is Map ? payload['payload']['offer'] : null);
+        final isVideo = payload['isVideo'] ?? (payload['payload'] is Map ? payload['payload']['isVideo'] : false);
+        if (from == null || offerData == null) return;
         if (isCallActive) {
-          _sendSignal('call-rejected', {'to': payload['from']});
+          _sendSignal('call-rejected', {'to': from});
           return;
         }
-        if (_currentCallTarget == payload['from']) {
+        if (_currentCallTarget == from) {
           // Already ringing from this user, just update the payload and ignore
           _incomingOfferPayload = payload;
           return;
         }
-        _currentCallTarget = payload['from'];
-        isVideoCall = payload['isVideo'] ?? false;
-        _incomingOfferPayload = payload;
+        _currentCallTarget = from;
+        isVideoCall = isVideo == true;
+        _incomingOfferPayload = {
+          ...payload,
+          'from': from,
+          'offer': offerData,
+          'isVideo': isVideoCall,
+        };
         
         if (onIncomingCall != null) {
-          onIncomingCall!(payload);
+          onIncomingCall!(_incomingOfferPayload!);
         }
         break;
       case 'answer-made':
         _isCallConnected = true;
         _ringTimer?.cancel();
-        final answer = RTCSessionDescription(payload['answer']['sdp'], payload['answer']['type']);
-        await _peerConnection?.setRemoteDescription(answer);
-        await _drainQueuedCandidates();
-        if (onCallAccepted != null) onCallAccepted!();
+        final answerData = payload['answer'] ?? (payload['payload'] is Map ? payload['payload']['answer'] : null);
+        if (answerData != null && _peerConnection != null) {
+          final answer = RTCSessionDescription(answerData['sdp'], answerData['type']);
+          await _peerConnection?.setRemoteDescription(answer);
+          await _drainQueuedCandidates();
+          if (onCallAccepted != null) onCallAccepted!();
+        }
         break;
       case 'ice-candidate':
-        final candidate = RTCIceCandidate(
-          payload['candidate']['candidate'],
-          payload['candidate']['sdpMid'],
-          payload['candidate']['sdpMLineIndex'],
-        );
-        if (_peerConnection != null) {
+        final candidateData = payload['candidate'] ?? (payload['payload'] is Map ? payload['payload']['candidate'] : null);
+        if (candidateData != null && _peerConnection != null) {
+          final candidate = RTCIceCandidate(
+            candidateData['candidate'],
+            candidateData['sdpMid'],
+            candidateData['sdpMLineIndex'],
+          );
           final remoteDesc = await _peerConnection!.getRemoteDescription();
           if (remoteDesc != null) {
             await _peerConnection!.addCandidate(candidate);
           } else {
             _queuedIceCandidates.add(candidate);
           }
-        } else {
-          _queuedIceCandidates.add(candidate);
+        } else if (candidateData != null) {
+          _queuedIceCandidates.add(RTCIceCandidate(
+            candidateData['candidate'],
+            candidateData['sdpMid'],
+            candidateData['sdpMLineIndex'],
+          ));
         }
         break;
       case 'call-rejected':

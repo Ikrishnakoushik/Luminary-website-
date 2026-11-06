@@ -567,7 +567,7 @@
                 }
             }
         } catch (e) {}
-    }, 1500);
+    }, 800);
 
     window.globalSocket = {
         on: (event, handler) => {
@@ -792,33 +792,45 @@
 
     // Receive an offer from another user
     window.globalSocket.on('call-made', async (data) => {
+        if (!data) return;
+        const from = data.from || (data.payload && data.payload.from);
+        const offer = data.offer || (data.payload && data.payload.offer);
+        const isVideo = data.isVideo !== undefined ? data.isVideo : (data.payload && data.payload.isVideo);
+        const isGroupCall = data.isGroupCall || (data.payload && data.payload.isGroupCall);
+        let callerName = data.callerName || (data.payload && data.payload.callerName);
+
         if(isCallActive && !activeGroupIdForCall) {
             // Busy in a 1-on-1 call
-            window.globalSocket.emit('reject-call', { to: data.from });
+            window.globalSocket.emit('reject-call', { to: from });
             return;
         }
         
-        if (activeGroupIdForCall && data.isGroupCall) {
+        if (activeGroupIdForCall && isGroupCall) {
             // Auto-accept group mesh connections if we are already in the group call
             handleGroupOffer(data);
             return;
         }
 
         // Standard 1-on-1 Incoming Call
-        let callerName = data.callerName || (data.payload && data.payload.callerName);
         if (!callerName || callerName === 'undefined' || callerName === 'null' || String(callerName).trim() === '') {
             callerName = 'User';
         }
         document.getElementById('global-call-overlay').style.display = 'flex';
-        document.getElementById('global-call-title').innerText = data.isVideo ? 'Incoming Video Call...' : 'Incoming Audio Call...';
+        document.getElementById('global-call-title').innerText = isVideo ? 'Incoming Video Call...' : 'Incoming Audio Call...';
         document.getElementById('global-call-name').innerText = `@${callerName.replace('@', '')} is calling you`;
         document.getElementById('global-call-controls-incoming').style.display = 'flex';
         document.getElementById('global-call-controls-active').style.display = 'none';
         document.getElementById('global-audio-avatar').classList.add('pulsing');
         
-        incomingCallData = data;
-        currentCallTarget = data.from;
-        isVideoCall = data.isVideo;
+        incomingCallData = {
+            ...data,
+            from,
+            offer,
+            isVideo: !!isVideo,
+            callerName
+        };
+        currentCallTarget = from;
+        isVideoCall = !!isVideo;
 
         // Play Ringtone
         if (window.playCallRingtone) {
@@ -842,11 +854,14 @@
     });
 
     window.globalSocket.on('answer-made', async (data) => {
+        if (!data) return;
         if (window.stopOutgoingRingbackTone) window.stopOutgoingRingbackTone();
-        const targetPc = peerConnections[data.from] || Object.values(peerConnections)[0];
-        if (targetPc) {
-            await targetPc.setRemoteDescription(new RTCSessionDescription(data.answer));
-            await drainQueuedCandidates(data.from);
+        const from = data.from || (data.payload && data.payload.from);
+        const answer = data.answer || (data.payload && data.payload.answer);
+        const targetPc = peerConnections[from] || Object.values(peerConnections)[0];
+        if (targetPc && answer) {
+            await targetPc.setRemoteDescription(new RTCSessionDescription(answer));
+            await drainQueuedCandidates(from);
         }
 
         document.getElementById('global-call-title').innerText = activeGroupIdForCall ? 'Group Call Active' : 'Connected';
@@ -873,7 +888,12 @@
     });
 
     window.globalSocket.on('ice-candidate', data => {
-        addOrQueueCandidate(data.from, data.candidate);
+        if (!data) return;
+        const from = data.from || (data.payload && data.payload.from);
+        const candidate = data.candidate || (data.payload && data.payload.candidate);
+        if (from && candidate) {
+            addOrQueueCandidate(from, candidate);
+        }
     });
 
     // ----------------------------------------------------

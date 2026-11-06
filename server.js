@@ -35,6 +35,7 @@ const Book = require('./models/Book'); // Added Book model
 const Coupon = require('./models/Coupon'); // Added Coupon model
 const HeroBanner = require('./models/HeroBanner'); // Added HeroBanner model
 const PlatformSetting = require('./models/PlatformSetting');
+const WebRTCSignal = require('./models/WebRTCSignal');
 const seedDB = require('./seed.js'); // Required globally so Vercel traces dependencies like @faker-js/faker
 
 const app = express();
@@ -51,6 +52,10 @@ const activeGroupCalls = new Map(); // groupId -> Map(userId -> socket.id)
 app.get('/api/webrtc/ice-servers', (req, res) => {
     const iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
+        { urls: 'stun:stun1.l.google.com:19302' },
+        { urls: 'stun:stun2.l.google.com:19302' },
+        { urls: 'stun:stun3.l.google.com:19302' },
+        { urls: 'stun:stun4.l.google.com:19302' },
         { urls: 'stun:global.stun.twilio.com:3478' }
     ];
 
@@ -158,6 +163,16 @@ io.on('connection', (socket) => {
                 }
             }
         }
+
+        // Persist to MongoDB so polling clients (serverless or cellular) receive it immediately
+        try {
+            WebRTCSignal.create({
+                to: targetUserId,
+                from: senderId || 'unknown',
+                type: data.type || (data.payload && data.payload.type) || 'signal',
+                payload: data.payload || data
+            }).catch(() => {});
+        } catch(e) {}
     });
     socket.on('disconnect', () => {
         if (socket.userId) {
@@ -523,7 +538,19 @@ app.post('/api/webrtc/signal', auth, async (req, res) => {
             console.warn('[Server WebRTC RTDB Push Warning]', dbErr.message);
         }
 
-        // 2. Buffer in-memory for HTTP polling fallback
+        // 2. Persist to MongoDB WebRTCSignal collection (guaranteed shared state across all serverless lambda instances)
+        try {
+            await WebRTCSignal.create({
+                to: String(to),
+                from,
+                type,
+                payload: signalData.payload
+            });
+        } catch (mErr) {
+            console.warn('[Server WebRTC MongoDB Push Warning]', mErr.message);
+        }
+
+        // 3. Buffer in-memory for immediate single-process polling fallback
         if (!webrtcSignalBuffer.has(to)) {
             webrtcSignalBuffer.set(to, []);
         }
@@ -531,7 +558,7 @@ app.post('/api/webrtc/signal', auth, async (req, res) => {
         buf.push(signalData);
         if (buf.length > 50) buf.shift();
 
-        // 3. Emit via socket.io if peer connected to same instance
+        // 4. Emit via socket.io if peer connected to same instance
         const io = req.app.get('io');
         if (io) {
             io.to(to).emit('webrtc_signal', { type, payload: signalData.payload });
@@ -545,11 +572,23 @@ app.post('/api/webrtc/signal', auth, async (req, res) => {
 });
 
 // Poll pending WebRTC signals
-app.get('/api/webrtc/signals', auth, (req, res) => {
-    const uid = String(req.user.id);
-    const signals = webrtcSignalBuffer.get(uid) || [];
-    webrtcSignalBuffer.set(uid, []); // drain buffer
-    res.json(signals);
+app.get('/api/webrtc/signals', auth, async (req, res) => {
+    try {
+        const uid = String(req.user.id);
+        const docs = await WebRTCSignal.find({ to: uid }).sort({ createdAt: 1 }).lean();
+        if (docs.length > 0) {
+            await WebRTCSignal.deleteMany({ _id: { $in: docs.map(d => d._id) } });
+        }
+        const inMem = webrtcSignalBuffer.get(uid) || [];
+        webrtcSignalBuffer.set(uid, []);
+        const combined = [...docs.map(d => ({ type: d.type, payload: d.payload, timestamp: d.createdAt ? d.createdAt.getTime() : Date.now() })), ...inMem];
+        res.json(combined);
+    } catch (err) {
+        const uid = String(req.user.id);
+        const signals = webrtcSignalBuffer.get(uid) || [];
+        webrtcSignalBuffer.set(uid, []);
+        res.json(signals);
+    }
 });
 
 // Check Role Middleware (Verifies if the user matches one of the allowed roles)
