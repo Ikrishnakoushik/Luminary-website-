@@ -24,6 +24,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="/vylithra-e2ee.js"></script>
 
     <style>
                 :root {
@@ -1551,6 +1552,9 @@
                 const payload = JSON.parse(jsonPayload);
                 currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
                 if (!currentUserId) throw new Error('No user id in token');
+                if (window.VylithraCrypto) {
+                    window.VylithraCrypto.init(currentUserId);
+                }
             } catch (e) {
                 window.location.href = 'auth';
             }
@@ -1758,14 +1762,22 @@
                     const groups = await groupRes.json();
                     
                     // Normalize DMs with client-side decryption
-                    const normalizedDMs = dms.map(c => ({
-                        type: 'dm',
-                        id: c.user._id,
-                        name: c.user.username,
-                        avatar: c.user.profilePicture,
-                        timestamp: c.timestamp,
-                        lastMessage: decryptPreview(c.lastMessage, c.user._id, false) || 'Start a conversation',
-                        unread: c.unread
+                    const normalizedDMs = await Promise.all(dms.map(async c => {
+                        let preview = c.lastMessage;
+                        if (window.VylithraCrypto && c.isE2EE && c.lastMessageIv) {
+                            preview = await window.VylithraCrypto.decrypt({ content: c.lastMessage, iv: c.lastMessageIv, isE2EE: true }, c.user._id);
+                        } else {
+                            preview = decryptPreview(c.lastMessage, c.user._id, false) || 'Start a conversation';
+                        }
+                        return {
+                            type: 'dm',
+                            id: c.user._id,
+                            name: c.user.username,
+                            avatar: c.user.profilePicture,
+                            timestamp: c.timestamp,
+                            lastMessage: preview || 'Start a conversation',
+                            unread: c.unread
+                        };
                     }));
 
                     // Normalize Groups with client-side decryption
@@ -1975,6 +1987,14 @@
 
             // Set up E2EE Key
             chatKey = CryptoJS.SHA256([currentUserId, activeChatUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
+            if (window.VylithraCrypto) {
+                window.VylithraCrypto.getSharedKey(activeChatUserId).then(k => {
+                    const activeNameEl = document.getElementById('active-name');
+                    if (activeNameEl && k) {
+                        activeNameEl.innerHTML = `@${username} <span style="font-size:0.75rem; color:#06b6d4; font-weight:normal; margin-left:6px;" title="Verified End-to-End Encrypted with ECDH P-256 and AES-GCM"><i class="fas fa-lock"></i> E2EE</span>`;
+                    }
+                });
+            }
 
             const stream = document.getElementById('chat-stream');
             if (!isBackground && isSwitching) {
@@ -2000,23 +2020,23 @@
                                 </div>
                             `;
                         } else {
-                            msgs.forEach(msg => {
+                            for (const msg of msgs) {
                                 activeRenderedMsgIds.add(msg._id || msg.createdAt);
-                                renderMessage(msg);
-                            });
+                                await renderMessage(msg);
+                            }
                             scrollToBottom();
                         }
                     } else {
                         // Silent Background Sync
                         let hasNew = false;
-                        msgs.forEach(msg => {
+                        for (const msg of msgs) {
                             const key = msg._id || msg.createdAt;
                             if (!activeRenderedMsgIds.has(key)) {
                                 activeRenderedMsgIds.add(key);
-                                renderMessage(msg);
+                                await renderMessage(msg);
                                 hasNew = true;
                             }
-                        });
+                        }
                         if (hasNew) scrollToBottom();
                     }
                 }
@@ -2142,7 +2162,7 @@
                         ${isSent ? '' : `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', false)" title="Delete for me"><i class="fas fa-trash-alt"></i></button>`}
                         <div class="message-bubble ${isSent ? 'message-sent' : 'message-received'}" id="msg-bubble-${msgId}" style="opacity: 0.7; font-style: italic;">
                             <i class="fas fa-ban" style="margin-right: 6px; font-size: 0.85rem;"></i> This message was deleted
-                            <div class="message-time">${timeClass}</div>
+                            <div class="message-time">${isVerifiedE2EE ? '<i class="fas fa-lock" style="font-size:0.65rem; color:#06b6d4; margin-right:4px;" title="Verified E2EE"></i>' : ''}${timeClass}</div>
                         </div>
                         ${isSent ? `<button class="msg-delete-btn" onclick="deleteMessage('${msgId}', true)" title="Delete for everyone"><i class="fas fa-trash-alt"></i></button>` : ''}
                     </div>
@@ -2290,11 +2310,26 @@
             if (!content && !pendingAttachmentUrl) return;
 
             const token = localStorage.getItem('token');
-            const encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
+            let encryptedContent = '';
+            let messageIv = null;
+            let messageIsE2EE = false;
 
-            // Optimistic UI Render
+            if (isGroupChatActive) {
+                encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
+            } else if (window.VylithraCrypto) {
+                const enc = await window.VylithraCrypto.encrypt(content || '[Attachment]', activeChatUserId);
+                encryptedContent = enc.content;
+                messageIv = enc.iv;
+                messageIsE2EE = enc.isE2EE;
+            } else {
+                encryptedContent = content ? CryptoJS.AES.encrypt(content, chatKey).toString() : '';
+            }
+
+            // Optimistic UI Render (display plain content immediately for the sender)
             const optimisticMsg = {
-                content: encryptedContent || CryptoJS.AES.encrypt('[Attachment]', chatKey).toString(), 
+                content: content || '[Attachment]', 
+                iv: messageIv,
+                isE2EE: messageIsE2EE,
                 attachmentUrl: pendingAttachmentUrl,
                 attachmentType: pendingAttachmentType,
                 createdAt: new Date(),
@@ -2309,7 +2344,7 @@
             const payloadAttachmentType = pendingAttachmentType;
             cancelAttachment();
             
-            renderMessage(optimisticMsg);
+            await renderMessage(optimisticMsg);
             scrollToBottom();
 
             const url = isGroupChatActive ? `${API_URL}/messages/group/${activeGroupId}` : `${API_URL}/messages/${activeChatUserId}`;
@@ -2323,6 +2358,8 @@
                     },
                     body: JSON.stringify({ 
                         content: encryptedContent, 
+                        iv: messageIv,
+                        isE2EE: messageIsE2EE,
                         attachmentUrl: payloadAttachmentUrl, 
                         attachmentType: payloadAttachmentType,
                         isViewOnce: sendAsViewOnce 
@@ -2448,13 +2485,13 @@
                         chatSocket.emit('join-room', uid);
                     }
                 });
-                chatSocket.on('new_message', (msg) => {
+                chatSocket.on('new_message', async (msg) => {
                     if (!msg) return;
                     const senderId = msg.sender && msg.sender._id ? msg.sender._id : msg.sender;
                     const isCurrentChat = (activeChatUserId && (senderId === activeChatUserId || senderId === currentUserId)) ||
                                           (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId);
                     if (isCurrentChat) {
-                        renderMessage(msg);
+                        await renderMessage(msg);
                         scrollToBottom();
                     }
                     loadConversations();

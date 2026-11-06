@@ -23,6 +23,10 @@ const UserSchema = new mongoose.Schema({
     password: {
         type: String
     },
+    publicKey: {
+        type: String,
+        default: null
+    },
     role: {
         type: String,
         enum: ['publisher', 'reader', 'admin'],

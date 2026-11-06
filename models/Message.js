@@ -20,6 +20,14 @@ const MessageSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    iv: {
+        type: String,
+        default: null
+    },
+    isE2EE: {
+        type: Boolean,
+        default: false
+    },
     attachmentUrl: {
         type: String,
         default: null

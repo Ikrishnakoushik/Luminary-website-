@@ -2574,6 +2574,44 @@ function resolveMessagePlaintext(content, u1, u2) {
     return decrypted === '[Attachment]' ? '📎 Attachment' : decrypted;
 }
 
+// ----------------------------------------------------
+// End-to-End Encryption (E2EE) Public Key Management
+// ----------------------------------------------------
+
+// Register or update user's E2EE Public Key
+app.post('/api/users/keys', auth, async (req, res) => {
+    try {
+        const { publicKey } = req.body;
+        if (!publicKey || typeof publicKey !== 'string') {
+            return res.status(400).json({ msg: 'Valid public key string is required' });
+        }
+        await User.findByIdAndUpdate(req.user.id, { publicKey: publicKey.trim() });
+        res.json({ success: true, msg: 'E2EE Public key registered successfully' });
+    } catch (err) {
+        console.error('Register Public Key Error:', err.message);
+        res.status(500).json({ msg: 'Failed to register public key' });
+    }
+});
+
+// Fetch a user's E2EE Public Key
+app.get('/api/users/:userId/public-key', auth, async (req, res) => {
+    try {
+        const targetUser = await User.findById(req.params.userId).select('publicKey username displayName');
+        if (!targetUser) {
+            return res.status(404).json({ msg: 'User not found' });
+        }
+        res.json({
+            userId: targetUser._id,
+            username: targetUser.username,
+            displayName: targetUser.displayName,
+            publicKey: targetUser.publicKey || null
+        });
+    } catch (err) {
+        console.error('Get Public Key Error:', err.message);
+        res.status(500).json({ msg: 'Failed to retrieve public key' });
+    }
+});
+
 // Get all recent conversations for the current user
 app.get('/api/messages/conversations', auth, async (req, res) => {
     try {

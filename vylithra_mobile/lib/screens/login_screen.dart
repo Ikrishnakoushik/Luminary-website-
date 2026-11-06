@@ -135,13 +135,13 @@ class _LoginScreenState extends State<LoginScreen> {
             onPressed: () async {
               try {
                 await Provider.of<AuthProvider>(context, listen: false).resendVerification(email);
-                if (ctx.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Verification code resent! Check your inbox.')),
                   );
                 }
               } catch (e) {
-                if (ctx.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Failed to resend: $e')),
                   );

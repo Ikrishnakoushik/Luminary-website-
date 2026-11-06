@@ -791,7 +791,7 @@
     }
 
     // Receive an offer from another user
-    window.globalSocket.on('call-made', async data => {
+    window.globalSocket.on('call-made', async (data) => {
         if(isCallActive && !activeGroupIdForCall) {
             // Busy in a 1-on-1 call
             window.globalSocket.emit('reject-call', { to: data.from });
@@ -841,7 +841,7 @@
         }, 40000);
     });
 
-    window.globalSocket.on('answer-made', async data => {
+    window.globalSocket.on('answer-made', async (data) => {
         if (window.stopOutgoingRingbackTone) window.stopOutgoingRingbackTone();
         const targetPc = peerConnections[data.from] || Object.values(peerConnections)[0];
         if (targetPc) {
@@ -880,7 +880,7 @@
     // Group Call Specific Listeners
     // ----------------------------------------------------
     
-    window.globalSocket.on('user-joined-call', async data => {
+    window.globalSocket.on('user-joined-call', async (data) => {
         if (!activeGroupIdForCall) return; // Not in a group call
         console.log(`[WebRTC] User ${data.userId} joined the group. Initiating connection...`);
         // I am already in the room. Someone joined. I must initiate the offer to them.
