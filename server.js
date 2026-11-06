@@ -756,8 +756,8 @@ const upload = multer({
 
 // Check File Type
 function checkFileType(file, cb) {
-    // Whitelist covering modern images, videos, audio, documents, and books
-    const filetypes = /jpeg|jpg|png|gif|webp|svg|bmp|ico|pdf|doc|docx|mp4|webm|mkv|mov|avi|mp3|wav|ogg|m4a|aac|zip|rar|txt|csv|epub/;
+    // Whitelist covering modern images, videos, audio, documents, books, and encrypted binaries
+    const filetypes = /jpeg|jpg|png|gif|webp|svg|bmp|ico|pdf|doc|docx|mp4|webm|mkv|mov|avi|mp3|wav|ogg|m4a|aac|zip|rar|txt|csv|epub|bin/;
     const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
     const isAllowed = !ext || filetypes.test(ext);
     if (isAllowed) {

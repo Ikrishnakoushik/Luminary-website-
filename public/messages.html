@@ -2449,7 +2449,7 @@
             }
 
             const formData = new FormData();
-            formData.append('file', uploadPayload, fileEncMeta ? 'encrypted.bin' : file.name);
+            formData.append('file', uploadPayload, file.name || 'encrypted.bin');
             
             try {
                 const res = await fetch(`${API_URL}/messages/upload`, {
