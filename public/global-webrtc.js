@@ -56,16 +56,18 @@
     document.body.insertAdjacentHTML('beforeend', overlayHtml);
 
     
-    // Call Ringtone Audio Controller (Local mp3 + Web Audio Synthesized Chime fallback)
+    // Call Audio Controller: Incoming Call Ringtone & Outgoing Receiver Tone (Ringback)
     let ringtoneAudioContext = null;
     let ringtoneOscillatorTimer = null;
+    let ringbackAudioContext = null;
+    let ringbackTimer = null;
 
+    // --- INCOMING CALL RINGTONE ---
     window.playCallRingtone = function() {
         const ringbox = document.getElementById('global-ringtone');
-        let played = false;
         if (ringbox) {
             ringbox.currentTime = 0;
-            ringbox.play().then(() => { played = true; }).catch(e => {
+            ringbox.play().catch(e => {
                 console.log('Native audio play blocked, falling back to Web Audio chime:', e);
                 startWebAudioChime();
             });
@@ -75,11 +77,10 @@
     };
 
     window.stopCallRingtone = function() {
-        if (window.stopCallRingtone) {
-            window.stopCallRingtone();
-        } else {
-            const ringbox = document.getElementById('global-ringtone');
-            if (ringbox) { ringbox.pause(); ringbox.currentTime = 0; }
+        const ringbox = document.getElementById('global-ringtone');
+        if (ringbox) {
+            ringbox.pause();
+            ringbox.currentTime = 0;
         }
         stopWebAudioChime();
     };
@@ -130,6 +131,57 @@
             ringtoneAudioContext = null;
         }
     }
+
+    // --- OUTGOING RECEIVER TONE (RINGBACK) ---
+    // Standard European/ITU-T pleasant telephone ringback tone: 440Hz + 480Hz dual sine chime
+    window.playOutgoingRingbackTone = function() {
+        try {
+            if (!ringbackAudioContext) {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                ringbackAudioContext = new AudioCtx();
+            }
+            if (ringbackAudioContext.state === 'suspended') {
+                ringbackAudioContext.resume();
+            }
+            if (ringbackTimer) clearInterval(ringbackTimer);
+
+            function playRingbackPulse() {
+                if (!ringbackAudioContext) return;
+                const now = ringbackAudioContext.currentTime;
+                // Dual frequency 440Hz & 480Hz burst (1.5 seconds on)
+                [440, 480].forEach(freq => {
+                    const osc = ringbackAudioContext.createOscillator();
+                    const gain = ringbackAudioContext.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, now);
+                    gain.gain.setValueAtTime(0.08, now);
+                    gain.gain.setValueAtTime(0.08, now + 1.4);
+                    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.5);
+                    osc.connect(gain);
+                    gain.connect(ringbackAudioContext.destination);
+                    osc.start(now);
+                    osc.stop(now + 1.5);
+                });
+            }
+
+            playRingbackPulse();
+            ringbackTimer = setInterval(playRingbackPulse, 3500); // 1.5s tone, 2s silence cadence
+        } catch (err) {
+            console.log('Outgoing ringback tone error:', err);
+        }
+    };
+
+    window.stopOutgoingRingbackTone = function() {
+        if (ringbackTimer) {
+            clearInterval(ringbackTimer);
+            ringbackTimer = null;
+        }
+        if (ringbackAudioContext) {
+            ringbackAudioContext.close().catch(() => {});
+            ringbackAudioContext = null;
+        }
+    };
 
     // 2. State configuration
     function parseJwt(token) {
@@ -733,6 +785,7 @@
     });
 
     window.globalSocket.on('answer-made', async data => {
+        if (window.stopOutgoingRingbackTone) window.stopOutgoingRingbackTone();
         const targetPc = peerConnections[data.from] || Object.values(peerConnections)[0];
         if (targetPc) {
             await targetPc.setRemoteDescription(new RTCSessionDescription(data.answer));
@@ -1045,6 +1098,8 @@
     };
 
     function globalEndUI() {
+        if (window.stopCallRingtone) window.stopCallRingtone();
+        if (window.stopOutgoingRingbackTone) window.stopOutgoingRingbackTone();
         if (callTimeoutTimer) clearTimeout(callTimeoutTimer);
         stopCallTimer();
         if (window.stopCallRingtone) {
@@ -1167,7 +1222,8 @@
                 displayName = 'User';
             }
             document.getElementById('global-call-name').innerText = displayName.startsWith('@') ? displayName : `@${displayName}`;
-            document.getElementById('global-call-title').innerText = 'Connecting...';
+            document.getElementById('global-call-title').innerText = 'Calling...';
+            if (window.playOutgoingRingbackTone) window.playOutgoingRingbackTone();
             // Dispatch call initiation message to wake up Mobile app with high-priority FCM VoIP CallKit
             try {
                 const token = localStorage.getItem('token');
