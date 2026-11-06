@@ -61,16 +61,69 @@
     let ringtoneOscillatorTimer = null;
     let ringbackAudioContext = null;
     let ringbackTimer = null;
+    let audioUnlocked = false;
+
+    // Browser Autoplay Policy Unlocker: Pre-unlock audio on the very first user interaction
+    function unlockAudio() {
+        if (audioUnlocked) return;
+        const ringbox = document.getElementById('global-ringtone');
+        if (ringbox) {
+            ringbox.volume = 0;
+            const p = ringbox.play();
+            if (p !== undefined) {
+                p.then(() => {
+                    ringbox.pause();
+                    ringbox.currentTime = 0;
+                    ringbox.volume = 1;
+                    audioUnlocked = true;
+                }).catch(() => {});
+            }
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+            if (!ringtoneAudioContext) ringtoneAudioContext = new AudioCtx();
+            if (ringtoneAudioContext.state === 'suspended') {
+                ringtoneAudioContext.resume().then(() => { audioUnlocked = true; }).catch(() => {});
+            }
+        }
+    }
+    ['click', 'pointerdown', 'touchstart', 'keydown'].forEach(evt => {
+        window.addEventListener(evt, unlockAudio, { passive: true, capture: true });
+    });
 
     // --- INCOMING CALL RINGTONE ---
     window.playCallRingtone = function() {
         const ringbox = document.getElementById('global-ringtone');
         if (ringbox) {
             ringbox.currentTime = 0;
-            ringbox.play().catch(e => {
-                console.log('Native audio play blocked, falling back to Web Audio chime:', e);
-                startWebAudioChime();
-            });
+            ringbox.volume = 1;
+            const playPromise = ringbox.play();
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    // Audio playing successfully
+                }).catch(e => {
+                    console.warn('[Vylithra Call] Autoplay blocked ringtone; triggering Web Audio chime fallback:', e);
+                    startWebAudioChime();
+
+                    // Modern browser fallback: as soon as user touches or moves their mouse on screen, start audio!
+                    const resumeOnInteraction = () => {
+                        window.removeEventListener('pointerdown', resumeOnInteraction);
+                        window.removeEventListener('mousemove', resumeOnInteraction);
+                        window.removeEventListener('touchstart', resumeOnInteraction);
+                        window.removeEventListener('keydown', resumeOnInteraction);
+                        if (incomingCallData) {
+                            ringbox.currentTime = 0;
+                            ringbox.play().then(() => {
+                                stopWebAudioChime();
+                            }).catch(() => {});
+                        }
+                    };
+                    window.addEventListener('pointerdown', resumeOnInteraction, { once: true, passive: true });
+                    window.addEventListener('mousemove', resumeOnInteraction, { once: true, passive: true });
+                    window.addEventListener('touchstart', resumeOnInteraction, { once: true, passive: true });
+                    window.addEventListener('keydown', resumeOnInteraction, { once: true, passive: true });
+                });
+            }
         } else {
             startWebAudioChime();
         }
@@ -768,10 +821,14 @@
         isVideoCall = data.isVideo;
 
         // Play Ringtone
-        const ringbox = document.getElementById('global-ringtone');
-        if (ringbox) {
-            ringbox.currentTime = 0;
-            ringbox.play().catch(e => console.log('Autoplay audio blocked', e));
+        if (window.playCallRingtone) {
+            window.playCallRingtone();
+        } else {
+            const ringbox = document.getElementById('global-ringtone');
+            if (ringbox) {
+                ringbox.currentTime = 0;
+                ringbox.play().catch(e => console.log('Autoplay audio blocked', e));
+            }
         }
 
         // 40 second auto-miss timeout
