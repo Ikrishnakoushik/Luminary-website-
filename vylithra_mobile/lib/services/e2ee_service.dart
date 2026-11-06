@@ -164,6 +164,32 @@ class E2EEService {
       final decryptedBytes = await _aesGcm.decrypt(secretBox, secretKey: sharedKey);
       return utf8.decode(decryptedBytes);
     } catch (e) {
+      // Invalidate cache and retry once with freshly fetched public key
+      try {
+        _sharedKeysCache.remove(otherUserId);
+        _userPublicKeysCache.remove(otherUserId);
+        final freshKey = await getSharedKey(otherUserId, token, baseUrl);
+        if (freshKey != null) {
+          final allBytes = base64Decode(ciphertextB64);
+          if (allBytes.length > 16) {
+            final cipherBytes = allBytes.sublist(0, allBytes.length - 16);
+            final macBytes = allBytes.sublist(allBytes.length - 16);
+            final nonceBytes = base64Decode(ivB64);
+            final secretBox = SecretBox(
+              cipherBytes,
+              nonce: nonceBytes,
+              mac: Mac(macBytes),
+            );
+            final decryptedBytes = await _aesGcm.decrypt(secretBox, secretKey: freshKey);
+            return utf8.decode(decryptedBytes);
+          }
+        }
+      } catch (_) {}
+
+      // If already readable text (not base64 ciphertext)
+      if (!ciphertextB64.contains('+') && !ciphertextB64.contains('/') && !ciphertextB64.endsWith('=')) {
+        return ciphertextB64;
+      }
       return '🔒 [Encrypted Message]';
     }
   }

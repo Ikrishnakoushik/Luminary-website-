@@ -37,6 +37,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   List<dynamic> _messages = [];
   bool _isLoading = true;
+  bool _isSending = false;
   String? _currentUserId;
   String? _token;
   Timer? _pollingTimer;
@@ -394,12 +395,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _sendMessage() async {
+    if (_isSending) return;
     if (_currentUserId == null) {
       _extractUserId();
     }
     final text = _messageController.text.trim();
     if (text.isEmpty) return;
 
+    _isSending = true;
     _messageController.clear();
 
     // Optimistic UI update
@@ -464,6 +467,8 @@ class _ChatScreenState extends State<ChatScreen> {
           context,
         ).showSnackBar(SnackBar(content: Text('Failed to send: $e')));
       }
+    } finally {
+      _isSending = false;
     }
   }
 

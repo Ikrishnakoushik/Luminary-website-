@@ -2433,8 +2433,13 @@
             let displayContent = msg.content || '';
             if (msg.isE2EE && msg.iv && window.VylithraCrypto) {
                 try {
-                    const senderId = msg.sender && msg.sender._id ? msg.sender._id : msg.sender;
-                    const otherUser = isSent ? (msg.receiver || activeChatUserId) : senderId;
+                    const senderId = msg.sender && (msg.sender._id || msg.sender.id) 
+                        ? String(msg.sender._id || msg.sender.id) 
+                        : (msg.sender ? String(msg.sender) : '');
+                    const receiverId = msg.receiver && (msg.receiver._id || msg.receiver.id) 
+                        ? String(msg.receiver._id || msg.receiver.id) 
+                        : (msg.receiver ? String(msg.receiver) : String(activeChatUserId || ''));
+                    const otherUser = isSent ? (receiverId || String(activeChatUserId || '')) : senderId;
                     const dec = await window.VylithraCrypto.decrypt(msg, otherUser);
                     if (dec) displayContent = dec;
                 } catch (decErr) {
@@ -2466,10 +2471,11 @@
             }
 
             let attachmentHtml = '';
+            const rawAttachmentUrl = msg.attachmentUrl || msg.fileUrl || msg.mediaUrl || '';
             if (msg.isViewOnce) {
-                const mediaUrl = getValidMediaUrl(msg.attachmentUrl);
+                const mediaUrl = getValidMediaUrl(rawAttachmentUrl);
                 const typeLabel = (msg.attachmentType === 'video' || /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(mediaUrl)) ? 'Video' : 'Photo';
-                if (msg.isViewed || !msg.attachmentUrl) {
+                if (msg.isViewed || !rawAttachmentUrl) {
                     attachmentHtml = `
                         <div class="view-once-pill viewed" data-view-once-id="${msgId}">
                             <span class="view-once-circle"><i class="fas fa-check"></i></span>
@@ -2486,8 +2492,8 @@
                         </div>
                     `;
                 }
-            } else if (msg.attachmentUrl) {
-                let mediaUrl = getValidMediaUrl(msg.attachmentUrl);
+            } else if (rawAttachmentUrl) {
+                let mediaUrl = getValidMediaUrl(rawAttachmentUrl);
                 if (mediaEncMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:')) {
                     try {
                         const decryptedBlobUrl = await window.VylithraCrypto.decryptMediaUrl(
@@ -2495,24 +2501,24 @@
                         );
                         if (decryptedBlobUrl) mediaUrl = decryptedBlobUrl;
                     } catch(err) {
-                        console.warn('[Vylithra E2EE] Failed media decryption:', err);
+                        console.warn('[Vylithra E2EE] Media decryption notice:', err);
                     }
                 }
                 const originalFilename = (mediaEncMeta && mediaEncMeta.originalName) || 'photo.jpg';
-                const isImage = msg.attachmentType === 'image' || 
-                                (mediaEncMeta && mediaEncMeta.mimeType && mediaEncMeta.mimeType.startsWith('image/')) ||
-                                /\.(jpeg|jpg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(mediaUrl);
                 const isVideo = msg.attachmentType === 'video' || 
                                 (mediaEncMeta && mediaEncMeta.mimeType && mediaEncMeta.mimeType.startsWith('video/')) ||
                                 /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(mediaUrl);
+                const isImage = msg.attachmentType === 'image' || 
+                                (mediaEncMeta && mediaEncMeta.mimeType && mediaEncMeta.mimeType.startsWith('image/')) ||
+                                /\.(jpeg|jpg|png|gif|webp|bmp|svg)(\?.*)?$/i.test(mediaUrl) || (!isVideo && msg.attachmentType !== 'file');
 
                 if (isImage) {
                     attachmentHtml = `
                         <div class="message-media-card">
                             <div class="media-image-wrap">
-                                <img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'padding:20px; color:#ef4444;\\'><i class=\\'fas fa-image\\'></i> Photo preview</div>';">
+                                <img src="${mediaUrl}" alt="Photo" onclick="window.open('${mediaUrl}', '_blank')" loading="lazy">
                                 <a href="${mediaUrl}" download="${originalFilename}" class="media-download-floating-btn" title="Download Photo" onclick="event.stopPropagation();">
-                                    <i class="fas fa-arrow-down"></i>
+                                    <i class="fas fa-download"></i>
                                 </a>
                             </div>
                         </div>`;
@@ -2520,8 +2526,8 @@
                     attachmentHtml = `
                         <div class="message-media-card" style="position:relative;">
                             <video src="${mediaUrl}" controls playsinline preload="metadata" style="max-height:260px; max-width:320px; border-radius:12px; display:block;"></video>
-                            <a href="${mediaUrl}" download="${originalFilename}" class="media-download-floating-btn" title="Download Video" style="top:10px; right:10px; bottom:auto;">
-                                <i class="fas fa-arrow-down"></i>
+                            <a href="${mediaUrl}" download="${originalFilename}" class="media-download-floating-btn" title="Download Video" style="top:10px; right:10px; bottom:auto;" onclick="event.stopPropagation();">
+                                <i class="fas fa-download"></i>
                             </a>
                         </div>`;
                 } else if (msg.attachmentType === 'file') {
@@ -2532,8 +2538,8 @@
             const isE2EEMsg = !!msg.isE2EE;
             const e2eeIcon = isE2EEMsg ? '<i class="fas fa-lock" style="font-size:0.65rem; color:#06b6d4; margin-right:4px;" title="Verified E2EE"></i>' : '';
 
-            const isPureAttachment = (displayContent === '[Attachment]' || displayContent === 'Photo' || displayContent === 'Sent an image' || displayContent === 'Sent a video' || !displayContent || displayContent.trim() === '');
-            const textContentHtml = (isPureAttachment && attachmentHtml) ? '' : `<span class="msg-text">${escapeHtml(displayContent)}</span>`;
+            const isPureAttachment = (displayContent === '[Attachment]' || displayContent === 'Photo' || displayContent === 'Sent an image' || displayContent === 'Sent a video' || displayContent === '1 Photo · View once' || displayContent === '1 Video · View once' || !displayContent || displayContent.trim() === '');
+            const textContentHtml = (isPureAttachment && (attachmentHtml || rawAttachmentUrl)) ? '' : `<span class="msg-text">${escapeHtml(displayContent)}</span>`;
 
             const row = document.createElement('div');
             row.className = `message-row ${isSent ? 'sent-row' : 'received-row'}${msg.isOptimistic ? ' optimistic' : ''}`;
@@ -2565,27 +2571,37 @@
 
             const previewContainer = document.getElementById('attachment-preview-container');
             previewContainer.style.display = 'block';
+            
+            pendingLocalBlobUrl = URL.createObjectURL(file);
+            if (file.type.startsWith('image/')) pendingAttachmentType = 'image';
+            else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
+            else pendingAttachmentType = 'file';
+
             const voBtn = document.getElementById('viewOnceToggleBtn');
-                    if (voBtn && (file.type.startsWith('image/') || file.type.startsWith('video/'))) {
-                        voBtn.style.display = 'inline-flex';
-                    }
-                    previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-spinner fa-spin"></i> Uploading ${file.name}...</div>`;
+            if (voBtn && (pendingAttachmentType === 'image' || pendingAttachmentType === 'video')) {
+                voBtn.style.display = 'inline-flex';
+            }
+
+            const immediateThumb = pendingAttachmentType === 'image'
+                ? `<img src="${pendingLocalBlobUrl}" style="width:40px; height:40px; object-fit:cover; border-radius:8px;">`
+                : (pendingAttachmentType === 'video' ? `<i class="fas fa-video" style="color:var(--primary); font-size:1.5rem;"></i>` : `<i class="fas fa-file-alt" style="color:var(--primary); font-size:1.5rem;"></i>`);
+
+            previewContainer.innerHTML = `
+                <div class="attachment-preview">
+                    ${immediateThumb}
+                    <div style="flex:1; overflow:hidden; margin-left:10px;">
+                        <div style="font-size:0.85rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(file.name)}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8;"><i class="fas fa-spinner fa-spin"></i> Uploading...</div>
+                    </div>
+                    <button class="attach-btn" style="width:24px;height:24px;" onclick="cancelAttachment()"><i class="fas fa-times"></i></button>
+                </div>
+            `;
 
             let uploadPayload = file;
             let fileEncMeta = null;
 
-            if (window.VylithraCrypto) {
-                previewContainer.innerHTML = `<div class="attachment-preview"><i class="fas fa-lock fa-spin"></i> Encrypting ${file.name}...</div>`;
-                try {
-                    fileEncMeta = await window.VylithraCrypto.encryptMediaFile(file);
-                    uploadPayload = fileEncMeta.blob;
-                } catch(encErr) {
-                    console.warn('[Vylithra E2EE] Media encryption fallback to standard upload:', encErr);
-                }
-            }
-
             const formData = new FormData();
-            formData.append('file', uploadPayload, file.name || 'encrypted.bin');
+            formData.append('file', uploadPayload, file.name);
             
             try {
                 const res = await fetch(`${API_URL}/messages/upload`, {
@@ -2597,17 +2613,14 @@
                     const data = await res.json();
                     pendingAttachmentUrl = data.url;
                     pendingAttachmentEnc = fileEncMeta;
-                    
-                    if (file.type.startsWith('image/')) pendingAttachmentType = 'image';
-                    else if (file.type.startsWith('video/')) pendingAttachmentType = 'video';
-                    else pendingAttachmentType = 'file';
 
-                    const previewUrl = (pendingAttachmentUrl && (pendingAttachmentUrl.startsWith('http') || pendingAttachmentUrl.startsWith('/'))) ? pendingAttachmentUrl : '/' + pendingAttachmentUrl;
-                    let iconHtml = pendingAttachmentType === 'image' ? `<img src="${previewUrl}">` : `<i class="fas fa-file"></i>`;
                     previewContainer.innerHTML = `
                         <div class="attachment-preview">
-                            ${iconHtml}
-                            <span style="flex:1; font-size: 0.85rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-left:10px;">Ready to send</span>
+                            ${immediateThumb}
+                            <div style="flex:1; overflow:hidden; margin-left:10px;">
+                                <div style="font-size:0.85rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(file.name)}</div>
+                                <div style="font-size:0.75rem; color:#10b981;"><i class="fas fa-check-circle"></i> Ready to send</div>
+                            </div>
                             <button class="attach-btn" style="width:24px;height:24px;" onclick="cancelAttachment()"><i class="fas fa-times"></i></button>
                         </div>
                     `;
@@ -2627,87 +2640,109 @@
             }
         }
 
+        let isSendingMessage = false;
+        let pendingLocalBlobUrl = null;
+
         function cancelAttachment() {
             pendingAttachmentUrl = null;
             pendingAttachmentType = 'none';
             pendingAttachmentEnc = null;
+            pendingLocalBlobUrl = null;
+            isViewOnceActive = false;
+            const voBtn = document.getElementById('viewOnceToggleBtn');
+            if (voBtn) {
+                voBtn.style.display = 'none';
+                voBtn.classList.remove('active');
+            }
             document.getElementById('file-upload-input').value = '';
             document.getElementById('attachment-preview-container').style.display = 'none';
         }
 
         async function sendMessage(e) {
             if (e && e.preventDefault) e.preventDefault();
+            if (isSendingMessage) return;
             if (!activeChatUserId && !activeGroupId) return;
+
             const input = document.getElementById('message-input');
-            const content = input.value.trim();
-            if (!content && !pendingAttachmentUrl) return;
+            const content = input ? input.value.trim() : '';
+            if (!content && !pendingAttachmentUrl && !pendingLocalBlobUrl) return;
+
+            // Instantly clear input and acquire send mutex to eliminate double/duplicate sending
+            isSendingMessage = true;
+            if (input) input.value = '';
 
             const token = localStorage.getItem('token');
             let encryptedContent = '';
             let messageIv = null;
             let messageIsE2EE = false;
 
-            let messageTextToSend = content || (pendingAttachmentUrl ? '[Attachment]' : '');
-            if (pendingAttachmentEnc) {
+            const payloadAttachmentUrl = pendingAttachmentUrl;
+            const payloadAttachmentType = pendingAttachmentType;
+            const sentViewOnce = isViewOnceActive;
+            const optimisticMediaUrl = pendingLocalBlobUrl || payloadAttachmentUrl;
+            const currentAttachmentEnc = pendingAttachmentEnc;
+            cancelAttachment();
+
+            let messageTextToSend = content || (payloadAttachmentUrl ? '[Attachment]' : '');
+            if (currentAttachmentEnc) {
                 messageTextToSend = JSON.stringify({
                     caption: content || '',
                     mediaEnc: {
-                        fileKeyB64: pendingAttachmentEnc.fileKeyB64,
-                        fileIvB64: pendingAttachmentEnc.fileIvB64,
-                        mimeType: pendingAttachmentEnc.mimeType,
-                        originalName: pendingAttachmentEnc.originalName
+                        fileKeyB64: currentAttachmentEnc.fileKeyB64,
+                        fileIvB64: currentAttachmentEnc.fileIvB64,
+                        mimeType: currentAttachmentEnc.mimeType,
+                        originalName: currentAttachmentEnc.originalName
                     }
                 });
             }
 
-            if (isGroupChatActive) {
-                if (window.VylithraCrypto && window.VylithraCrypto.groupKeysCache.has(String(activeGroupId))) {
-                    const groupEnc = await window.VylithraCrypto.encryptGroupMessage(messageTextToSend, activeGroupId);
-                    encryptedContent = groupEnc.content;
-                    messageIv = groupEnc.iv;
-                    messageIsE2EE = groupEnc.isE2EE;
-                } else {
-                    encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
-                }
-            } else if (window.VylithraCrypto) {
-                const enc = await window.VylithraCrypto.encrypt(messageTextToSend, activeChatUserId);
-                encryptedContent = enc.content;
-                messageIv = enc.iv;
-                messageIsE2EE = enc.isE2EE;
-            } else {
-                encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
-            }
-
-            // Optimistic UI Render (instant WhatsApp-speed send)
-            const optimisticId = 'opt_' + Date.now();
-            const optimisticMsg = {
-                _id: optimisticId,
-                content: content || (pendingAttachmentUrl ? '' : ''), 
-                iv: messageIv,
-                isE2EE: messageIsE2EE,
-                attachmentUrl: pendingAttachmentUrl,
-                attachmentType: pendingAttachmentType,
-                mediaEncMeta: pendingAttachmentEnc,
-                createdAt: new Date(),
-                sender: currentUserId,
-                isViewOnce: isViewOnceActive,
-                isOptimistic: true
-            };
-            if (isGroupChatActive) optimisticMsg.groupId = activeGroupId;
-            else optimisticMsg.receiver = activeChatUserId;
-            
-            input.value = '';
-            const payloadAttachmentUrl = pendingAttachmentUrl;
-            const payloadAttachmentType = pendingAttachmentType;
-            const sentViewOnce = isViewOnceActive;
-            cancelAttachment();
-            
-            await renderMessage(optimisticMsg);
-            scrollToBottom();
-
-            const url = isGroupChatActive ? `${API_URL}/messages/group/${activeGroupId}` : `${API_URL}/messages/${activeChatUserId}`;
-
             try {
+                if (isGroupChatActive) {
+                    if (window.VylithraCrypto && window.VylithraCrypto.groupKeysCache.has(String(activeGroupId))) {
+                        const groupEnc = await window.VylithraCrypto.encryptGroupMessage(messageTextToSend, activeGroupId);
+                        encryptedContent = groupEnc.content;
+                        messageIv = groupEnc.iv;
+                        messageIsE2EE = groupEnc.isE2EE;
+                    } else if (window.CryptoJS) {
+                        encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
+                    } else {
+                        encryptedContent = messageTextToSend;
+                    }
+                } else if (window.VylithraCrypto) {
+                    const enc = await window.VylithraCrypto.encrypt(messageTextToSend, activeChatUserId);
+                    encryptedContent = enc.content;
+                    messageIv = enc.iv;
+                    messageIsE2EE = enc.isE2EE;
+                } else if (window.CryptoJS) {
+                    encryptedContent = messageTextToSend ? CryptoJS.AES.encrypt(messageTextToSend, chatKey).toString() : '';
+                } else {
+                    encryptedContent = messageTextToSend;
+                }
+
+                // Optimistic UI Render (instant WhatsApp-speed send)
+                const optimisticId = 'opt_' + Date.now();
+                activeRenderedMsgIds.add(optimisticId);
+                const optimisticMsg = {
+                    _id: optimisticId,
+                    content: content || (payloadAttachmentUrl ? '' : ''), 
+                    iv: messageIv,
+                    isE2EE: messageIsE2EE,
+                    attachmentUrl: optimisticMediaUrl,
+                    attachmentType: payloadAttachmentType,
+                    mediaEncMeta: currentAttachmentEnc,
+                    createdAt: new Date(),
+                    sender: currentUserId,
+                    isViewOnce: sentViewOnce,
+                    isOptimistic: true
+                };
+                if (isGroupChatActive) optimisticMsg.groupId = activeGroupId;
+                else optimisticMsg.receiver = activeChatUserId;
+                
+                await renderMessage(optimisticMsg);
+                scrollToBottom();
+
+                const url = isGroupChatActive ? `${API_URL}/messages/group/${activeGroupId}` : `${API_URL}/messages/${activeChatUserId}`;
+
                 const res = await fetch(url, {
                     method: 'POST',
                     headers: {
@@ -2727,7 +2762,7 @@
                 if (res.ok) {
                     const savedMsg = await res.json();
                     if (savedMsg && savedMsg._id) {
-                        activeRenderedMsgIds.add(savedMsg._id);
+                        activeRenderedMsgIds.add(String(savedMsg._id));
                         const optRow = document.getElementById(`msg-row-${optimisticId}`);
                         if (optRow) {
                             optRow.id = `msg-row-${savedMsg._id}`;
@@ -2744,11 +2779,13 @@
                 }
             } catch (e) {
                 console.error(e);
+            } finally {
+                isSendingMessage = false;
             }
         }
 
         function handleEnter(e) {
-            if (e.key === 'Enter') {
+            if (e.key === 'Enter' && !e.shiftKey) {
                 if (e.preventDefault) e.preventDefault();
                 sendMessage(e);
                 return false;

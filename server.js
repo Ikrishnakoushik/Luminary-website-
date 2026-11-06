@@ -48,7 +48,7 @@ app.set('io', io);
 const userSocketMap = new Map(); // userId -> Set of socket.id
 const activeGroupCalls = new Map(); // groupId -> Map(userId -> socket.id)
 
-// Secure ICE servers endpoint for both Web and Flutter mobile
+// Secure ICE servers endpoint for both Web and Flutter mobile (STUN + TURN for NAT traversal)
 app.get('/api/webrtc/ice-servers', (req, res) => {
     const iceServers = [
         { urls: 'stun:stun.l.google.com:19302' },
@@ -56,7 +56,16 @@ app.get('/api/webrtc/ice-servers', (req, res) => {
         { urls: 'stun:stun2.l.google.com:19302' },
         { urls: 'stun:stun3.l.google.com:19302' },
         { urls: 'stun:stun4.l.google.com:19302' },
-        { urls: 'stun:global.stun.twilio.com:3478' }
+        { urls: 'stun:global.stun.twilio.com:3478' },
+        {
+            urls: [
+                'turn:openrelay.metered.ca:80',
+                'turn:openrelay.metered.ca:443',
+                'turn:openrelay.metered.ca:443?transport=tcp'
+            ],
+            username: 'openrelayproject',
+            credential: 'openrelayproject'
+        }
     ];
 
     if (process.env.TURN_URLS) {

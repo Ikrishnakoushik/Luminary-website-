@@ -258,13 +258,51 @@
 
             try {
                 const pubBuf = this.base64ToBuf(recipientPubB64);
-                const importedRecipientPub = await window.crypto.subtle.importKey(
-                    'spki',
-                    pubBuf,
-                    { name: 'ECDH', namedCurve: 'P-256' },
-                    false,
-                    []
-                );
+                let importedRecipientPub = null;
+
+                // 1. Try 'raw' if exact 65-byte uncompressed point (format exported by Mobile)
+                if (pubBuf.byteLength === 65) {
+                    try {
+                        importedRecipientPub = await window.crypto.subtle.importKey(
+                            'raw',
+                            pubBuf,
+                            { name: 'ECDH', namedCurve: 'P-256' },
+                            false,
+                            []
+                        );
+                    } catch(e) {}
+                }
+
+                // 2. Try 'spki' if standard SubjectPublicKeyInfo (format exported by Web)
+                if (!importedRecipientPub) {
+                    try {
+                        importedRecipientPub = await window.crypto.subtle.importKey(
+                            'spki',
+                            pubBuf,
+                            { name: 'ECDH', namedCurve: 'P-256' },
+                            false,
+                            []
+                        );
+                    } catch(e) {}
+                }
+
+                // 3. Fallback: extract last 65 bytes as raw uncompressed EC point
+                if (!importedRecipientPub && pubBuf.byteLength >= 65) {
+                    try {
+                        const rawTail = pubBuf.slice(pubBuf.byteLength - 65);
+                        importedRecipientPub = await window.crypto.subtle.importKey(
+                            'raw',
+                            rawTail,
+                            { name: 'ECDH', namedCurve: 'P-256' },
+                            false,
+                            []
+                        );
+                    } catch(e) {}
+                }
+
+                if (!importedRecipientPub) {
+                    throw new Error(`Unable to import public key format (len: ${pubBuf.byteLength})`);
+                }
 
                 const sharedKey = await window.crypto.subtle.deriveKey(
                     { name: 'ECDH', public: importedRecipientPub },
@@ -324,10 +362,11 @@
         async decrypt(msg, otherUserId) {
             if (!msg || !msg.content) return '';
             const ciphertext = msg.content;
+            const uid = String(otherUserId || '');
 
             // Genuine E2EE message with AES-GCM + IV
             if (msg.isE2EE && msg.iv) {
-                const sharedKey = await this.getSharedKey(otherUserId);
+                let sharedKey = await this.getSharedKey(uid);
                 if (sharedKey) {
                     try {
                         const ivBuf = this.base64ToBuf(msg.iv);
@@ -339,6 +378,38 @@
                         );
                         return new TextDecoder().decode(decryptedBuf);
                     } catch (decErr) {
+                        // Invalidate cache and retry once with a freshly fetched public key
+                        try {
+                            this.sharedKeysCache.delete(uid);
+                            this.userPublicKeysCache.delete(uid);
+                            const freshKey = await this.getSharedKey(uid);
+                            if (freshKey) {
+                                const ivBuf = this.base64ToBuf(msg.iv);
+                                const cipherBuf = this.base64ToBuf(ciphertext);
+                                const decryptedBuf = await window.crypto.subtle.decrypt(
+                                    { name: 'AES-GCM', iv: ivBuf },
+                                    freshKey,
+                                    cipherBuf
+                                );
+                                return new TextDecoder().decode(decryptedBuf);
+                            }
+                        } catch (retryErr) {}
+
+                        // Try legacy CryptoJS fallback
+                        if (window.CryptoJS) {
+                            try {
+                                const legacyKey = CryptoJS.SHA256([this.currentUserId, uid].sort().join('-') + 'vylithra-e2ee-secret').toString();
+                                const bytes = CryptoJS.AES.decrypt(ciphertext, legacyKey);
+                                const dec = bytes.toString(CryptoJS.enc.Utf8);
+                                if (dec) return dec === '[Attachment]' ? '📎 Attachment' : dec;
+                            } catch (e) {}
+                        }
+
+                        // If already readable text
+                        if (typeof ciphertext === 'string' && !ciphertext.includes('+') && !ciphertext.includes('/') && !ciphertext.endsWith('=')) {
+                            return ciphertext;
+                        }
+
                         return '🔒 [Encrypted Message - Key Not Available]';
                     }
                 }

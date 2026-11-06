@@ -56,7 +56,16 @@ class WebRTCService {
   final Map<String, dynamic> _iceServers = {
     'iceServers': [
       {'urls': 'stun:stun.l.google.com:19302'},
-      {'urls': 'stun:global.stun.twilio.com:3478'}
+      {'urls': 'stun:global.stun.twilio.com:3478'},
+      {
+        'urls': [
+          'turn:openrelay.metered.ca:80',
+          'turn:openrelay.metered.ca:443',
+          'turn:openrelay.metered.ca:443?transport=tcp'
+        ],
+        'username': 'openrelayproject',
+        'credential': 'openrelayproject'
+      }
     ]
   };
 
@@ -558,24 +567,24 @@ class WebRTCService {
         break;
       case 'ice-candidate':
         final candidateData = payload['candidate'] ?? (payload['payload'] is Map ? payload['payload']['candidate'] : null);
-        if (candidateData != null && _peerConnection != null) {
+        if (candidateData != null) {
+          final mLine = candidateData['sdpMLineIndex'];
+          final parsedMLine = mLine is int ? mLine : int.tryParse(mLine?.toString() ?? '');
           final candidate = RTCIceCandidate(
-            candidateData['candidate'],
-            candidateData['sdpMid'],
-            candidateData['sdpMLineIndex'],
+            candidateData['candidate']?.toString(),
+            candidateData['sdpMid']?.toString(),
+            parsedMLine,
           );
-          final remoteDesc = await _peerConnection!.getRemoteDescription();
-          if (remoteDesc != null) {
-            await _peerConnection!.addCandidate(candidate);
+          if (_peerConnection != null) {
+            final remoteDesc = await _peerConnection!.getRemoteDescription();
+            if (remoteDesc != null) {
+              await _peerConnection!.addCandidate(candidate);
+            } else {
+              _queuedIceCandidates.add(candidate);
+            }
           } else {
             _queuedIceCandidates.add(candidate);
           }
-        } else if (candidateData != null) {
-          _queuedIceCandidates.add(RTCIceCandidate(
-            candidateData['candidate'],
-            candidateData['sdpMid'],
-            candidateData['sdpMLineIndex'],
-          ));
         }
         break;
       case 'call-rejected':
