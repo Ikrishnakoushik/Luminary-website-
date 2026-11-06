@@ -30,7 +30,8 @@
         try {
             const colors = JSON.parse(themeData);
             // If the user had an old light theme cached, reset to signature dark obsidian
-            if (colors['--bg-color'] === '#f0fdfa' || colors['--bg-color'] === '#ffffff' || colors['--bg-color'] === '#f8fafc' || colors['--bg-color'] === '#f1f5f9') {
+            const lightBgs = ['#f0fdfa', '#ffffff', '#f8fafc', '#f1f5f9', '#fff1f2', '#f0fdf4', '#ecfeff', '#fff7ed', '#faf5ff', '#fdf2f8'];
+            if (lightBgs.includes(colors['--bg-color']) || colors['--surface'] === '#ffffff') {
                 localStorage.removeItem('spectra-theme-data');
             } else {
                 Object.entries(colors).forEach(([key, value]) => {

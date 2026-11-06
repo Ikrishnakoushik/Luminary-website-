@@ -1413,9 +1413,9 @@
                         </label>
                         <span id="groupSelectedCount" style="font-size: 0.78rem; color: var(--primary); font-weight: 600; background: rgba(20, 184, 166, 0.12); padding: 2px 8px; border-radius: 10px;">0 selected</span>
                     </div>
-                    <div style="position: relative; margin-bottom: 10px;">
-                        <i class="fas fa-search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
-                        <input type="text" id="groupMemberSearch" class="vyl-input" style="padding-left: 36px; font-size: 0.88rem; margin-bottom: 0;" placeholder="Search your network..." oninput="filterGroupMembers(this.value)">
+                    <div class="vyl-search-wrap" style="margin-bottom: 12px;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="groupMemberSearch" class="vyl-input vyl-input-search" placeholder="Search your network..." oninput="filterGroupMembers(this.value)">
                     </div>
                 </div>
 

@@ -438,3 +438,52 @@
         max-width: 95% !important;
     }
 }
+
+/* --- Vylithra Universal Search Components & Non-Overlapping Icon System --- */
+.vyl-search-wrap,
+.vyl-search-wrapper,
+.vyl-search-container {
+    position: relative !important;
+    width: 100% !important;
+    display: block !important;
+    margin-bottom: 12px !important;
+}
+
+.vyl-search-wrap i,
+.vyl-search-wrapper i,
+.vyl-search-container i,
+.vyl-search-wrap .search-icon,
+.vyl-search-wrapper .search-icon {
+    position: absolute !important;
+    left: 14px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    color: #00f2fe !important;
+    font-size: 0.92rem !important;
+    pointer-events: none !important;
+    z-index: 5 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: 16px !important;
+    height: 16px !important;
+}
+
+.vyl-search-wrap input,
+.vyl-search-wrapper input,
+.vyl-search-container input,
+.vyl-input-search,
+input.vyl-input-search,
+.modal input.vyl-input-search {
+    padding-left: 42px !important;
+    padding-right: 16px !important;
+    box-sizing: border-box !important;
+}
+
+.vyl-search-wrap input:focus,
+.vyl-search-wrapper input:focus,
+.vyl-search-container input:focus,
+.vyl-input-search:focus {
+    border-color: #00f2fe !important;
+    box-shadow: 0 0 16px rgba(0, 242, 254, 0.25) !important;
+}

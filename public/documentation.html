@@ -14,20 +14,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
                 :root {
-            /* Vylithra Global 3-Color Mint Theme */
-            --bg-color: #f0fdfa; /* Base background */
-            --surface: #ffffff; /* Card backgrounds */
-            --primary: #14b8a6; /* Main accent (Buttons/Links) */
-            
-            /* Derived mapping for existing elements */
-            --accent: var(--primary);
-            --accent-hover: #0d9488;
-            --text-main: #134e4a;
-            --text-muted: #115e59;
-            --border: #ccfbf1;
-            --input-bg: var(--bg-color);
-            --card-bg: var(--surface);
-            --card-shadow: 0 4px 6px -1px rgba(20, 184, 166, 0.15);}
+            --bg-color: #07090e;
+            --surface: #0e121b;
+            --primary: #00f2fe;
+            --accent: #4facfe;
+            --accent-hover: #00d2de;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.08);
+            --input-bg: rgba(255, 255, 255, 0.05);
+            --card-bg: #0e121b;
+            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --sidebar-width: 260px;
+        }
 
         body {
             background-color: var(--bg-color);
@@ -41,9 +40,9 @@
         /* Sidebar similar to Publish page */
         .sidebar {
             width: var(--sidebar-width);
-            background: var(--surface);
+            background: #0d1117;
             border-right: 1px solid var(--border);
-            padding: 30px;
+            padding: 30px 20px;
             position: fixed;
             height: 100vh;
             overflow-y: auto;
@@ -65,19 +64,27 @@
 
         .nav-item {
             display: block;
-            padding: 10px 15px;
+            padding: 10px 16px;
             color: var(--text-muted);
             text-decoration: none;
-            border-radius: 8px;
-            margin-bottom: 5px;
-            transition: 0.2s;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
             font-weight: 500;
+            border: 1px solid transparent;
         }
 
-        .nav-item:hover,
+        .nav-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+        }
+
         .nav-item.active {
-            background: #e0e7ff;
-            color: var(--primary);
+            background: rgba(0, 242, 254, 0.12);
+            color: #00f2fe;
+            border-color: rgba(0, 242, 254, 0.35);
+            font-weight: 600;
+            box-shadow: 0 0 14px rgba(0, 242, 254, 0.18);
         }
 
         .nav-section {
@@ -176,12 +183,23 @@
         }
 
         .card {
-            background: white;
+            background: #0e121b;
             padding: 30px;
             border-radius: 16px;
             border: 1px solid var(--border);
             margin-bottom: 30px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--card-shadow);
+            color: var(--text-main);
+        }
+
+        .card h3 {
+            color: #ffffff;
+            margin-top: 0;
+        }
+
+        .card p {
+            color: var(--text-muted);
+            margin-bottom: 0;
         }
 
         .back-btn {
@@ -201,11 +219,12 @@
         }
 
         code {
-            background: #f1f5f9;
-            padding: 2px 6px;
-            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.08);
+            padding: 3px 8px;
+            border-radius: 6px;
             font-family: monospace;
-            color: #ef4444;
+            color: #00f2fe;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
     </style>
 
