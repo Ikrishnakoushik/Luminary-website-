@@ -1572,6 +1572,7 @@
         let activeChatUserId = null;
         let activeChatUsername = '';
         let chatKey = '';
+        const activeRenderedMsgIds = new Set();
 
         // Verify Auth
         function checkAuth() {
@@ -2550,7 +2551,7 @@
                 attachmentType: pendingAttachmentType,
                 createdAt: new Date(),
                 sender: currentUserId,
-                isViewOnce: sendAsViewOnce,
+                isViewOnce: isViewOnceActive,
             };
             if (isGroupChatActive) optimisticMsg.groupId = activeGroupId;
             else optimisticMsg.receiver = activeChatUserId;
@@ -2578,7 +2579,7 @@
                         isE2EE: messageIsE2EE,
                         attachmentUrl: payloadAttachmentUrl, 
                         attachmentType: payloadAttachmentType,
-                        isViewOnce: sendAsViewOnce 
+                        isViewOnce: isViewOnceActive 
                     })
                 });
 

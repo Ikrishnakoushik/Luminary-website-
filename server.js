@@ -1072,12 +1072,14 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
         const group = await Group.findById(req.params.groupId);
         if(!group || !group.members.includes(req.user.id)) return res.status(403).json({ msg: 'Not a member of this group' });
 
-        const { content, attachmentUrl, attachmentType, isSystemLog, isViewOnce } = req.body;
+        const { content, iv, isE2EE, attachmentUrl, attachmentType, isSystemLog, isViewOnce } = req.body || {};
 
         const newMessage = new Message({
             sender: req.user.id,
             groupId: req.params.groupId,
             content,
+            iv: iv || null,
+            isE2EE: !!isE2EE,
             attachmentUrl,
             attachmentType,
             isSystemLog: isSystemLog || false,
@@ -3951,7 +3953,7 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
         if (receiver === 'upload' || receiver === 'conversations') {
             return res.status(404).json({ msg: 'Invalid receiver ID' });
         }
-        const { content, attachmentUrl, attachmentType, isViewOnce } = req.body || {};
+        const { content, iv, isE2EE, attachmentUrl, attachmentType, isViewOnce } = req.body || {};
 
         if (!content && !attachmentUrl) {
             return res.status(400).json({ msg: 'Message content or attachment is required' });
@@ -3966,6 +3968,8 @@ app.post('/api/messages/:userId', auth, async (req, res) => {
             sender,
             receiver,
             content: cleanContent,
+            iv: iv || null,
+            isE2EE: !!isE2EE,
             attachmentUrl: attachmentUrl || null,
             attachmentType: attachmentType || 'none',
             isViewOnce: !!isViewOnce
