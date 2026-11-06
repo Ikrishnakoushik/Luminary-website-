@@ -2640,9 +2640,15 @@ app.get('/api/messages/conversations', auth, async (req, res) => {
             const otherUserId = otherUser._id.toString();
 
             if (!convosMap.has(otherUserId)) {
+                let previewText = msg.content;
+                if (!msg.isE2EE) {
+                    previewText = resolveMessagePlaintext(msg.content, userId, otherUserId) || 'Start a conversation';
+                }
                 convosMap.set(otherUserId, {
                     user: otherUser,
-                    lastMessage: resolveMessagePlaintext(msg.content, userId, otherUserId) || 'Start a conversation',
+                    lastMessage: previewText,
+                    lastMessageIv: msg.iv || null,
+                    isE2EE: !!msg.isE2EE,
                     timestamp: msg.createdAt,
                     unread: !isSentByMe && (!msg.read && msg.unread !== false)
                 });

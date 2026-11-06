@@ -15,43 +15,70 @@
     const KeyStore = {
         dbName: 'VylithraVault',
         storeName: 'crypto_keys',
+        _memCache: new Map(),
         dbPromise: null,
 
-        getDB() {
+        async getDB() {
+            if (typeof indexedDB === 'undefined') {
+                throw new Error('IndexedDB not supported');
+            }
             if (!this.dbPromise) {
                 this.dbPromise = new Promise((resolve, reject) => {
-                    const req = indexedDB.open(this.dbName, 1);
-                    req.onupgradeneeded = () => {
-                        const db = req.result;
-                        if (!db.objectStoreNames.contains(this.storeName)) {
-                            db.createObjectStore(this.storeName);
-                        }
-                    };
-                    req.onsuccess = () => resolve(req.result);
-                    req.onerror = () => reject(req.error);
+                    const timer = setTimeout(() => reject(new Error('IndexedDB timeout')), 800);
+                    try {
+                        const req = indexedDB.open(this.dbName, 1);
+                        req.onupgradeneeded = (e) => {
+                            const db = (e && e.target && e.target.result) || req.result;
+                            if (db && !db.objectStoreNames.contains(this.storeName)) {
+                                db.createObjectStore(this.storeName);
+                            }
+                        };
+                        req.onsuccess = (e) => {
+                            clearTimeout(timer);
+                            resolve((e && e.target && e.target.result) || req.result);
+                        };
+                        req.onerror = () => {
+                            clearTimeout(timer);
+                            reject(req.error || new Error('IndexedDB open error'));
+                        };
+                    } catch (err) {
+                        clearTimeout(timer);
+                        reject(err);
+                    }
                 });
             }
             return this.dbPromise;
         },
 
         async set(key, value) {
-            const db = await this.getDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(this.storeName, 'readwrite');
-                tx.objectStore(this.storeName).put(value, key);
-                tx.oncomplete = () => resolve();
-                tx.onerror = () => reject(tx.error);
-            });
+            try {
+                const db = await this.getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(this.storeName, 'readwrite');
+                    tx.objectStore(this.storeName).put(value, key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => {
+                        this._memCache.set(key, value);
+                        resolve();
+                    };
+                });
+            } catch (err) {
+                this._memCache.set(key, value);
+            }
         },
 
         async get(key) {
-            const db = await this.getDB();
-            return new Promise((resolve, reject) => {
-                const tx = db.transaction(this.storeName, 'readonly');
-                const req = tx.objectStore(this.storeName).get(key);
-                req.onsuccess = () => resolve(req.result);
-                req.onerror = () => reject(req.error);
-            });
+            try {
+                const db = await this.getDB();
+                return new Promise((resolve) => {
+                    const tx = db.transaction(this.storeName, 'readonly');
+                    const req = tx.objectStore(this.storeName).get(key);
+                    req.onsuccess = () => resolve(req.result || this._memCache.get(key) || null);
+                    req.onerror = () => resolve(this._memCache.get(key) || null);
+                });
+            } catch (err) {
+                return this._memCache.get(key) || null;
+            }
         }
     };
 
@@ -208,7 +235,21 @@
                 return this.sharedKeysCache.get(uid);
             }
             if (!this.myPrivateKey) {
-                await this.init(this.currentUserId || localStorage.getItem('userId'));
+                if (!this.currentUserId) {
+                    try {
+                        const token = localStorage.getItem('token');
+                        if (token) {
+                            const base64Url = token.split('.')[1];
+                            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                            const payload = JSON.parse(jsonPayload);
+                            this.currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
+                        }
+                    } catch(e) {}
+                }
+                if (this.currentUserId) {
+                    await this.init(this.currentUserId);
+                }
             }
             if (!this.myPrivateKey) return null;
 
