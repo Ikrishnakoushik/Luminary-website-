@@ -2972,13 +2972,6 @@
                             return;
                         }
                     }
-                            const delBtn = optRow.querySelector('.msg-delete-btn');
-                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msg._id}', true)`);
-                            const bubble = optRow.querySelector('.message-bubble');
-                            if (bubble) bubble.id = `msg-bubble-${msg._id}`;
-                            return;
-                        }
-                    }
 
                     if (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId) {
                         await renderMessage(msg);

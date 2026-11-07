@@ -32,9 +32,21 @@ class E2EEService {
       // Generate fresh ECDH P-256 Keypair
       _myKeyPair = await _ecdh.newKeyPair();
       final keyPairData = await _myKeyPair!.extract();
-      _myPublicKeyBase64 = base64Encode(keyPairData.publicKey.bytes);
-
-      final privBytes = keyPairData.bytes;
+      List<int> privBytes;
+      List<int> pubBytes;
+      if (keyPairData is EcKeyPairData) {
+        privBytes = keyPairData.d;
+        pubBytes = [0x04, ...keyPairData.publicKey.x, ...keyPairData.publicKey.y];
+      } else {
+        final pk = await _myKeyPair!.extractPublicKey();
+        if (pk is EcPublicKey) {
+          pubBytes = [0x04, ...pk.x, ...pk.y];
+        } else {
+          pubBytes = (pk as SimplePublicKey).bytes;
+        }
+        privBytes = (keyPairData as dynamic).d ?? (keyPairData as dynamic).bytes;
+      }
+      _myPublicKeyBase64 = base64Encode(pubBytes);
       await prefs.setString('vyl_e2ee_priv_$userId', base64Encode(privBytes));
       await prefs.setString('vyl_e2ee_pub_$userId', _myPublicKeyBase64!);
 
@@ -101,7 +113,16 @@ class E2EEService {
       if (pubBytes.length > 65) {
         rawPointBytes = pubBytes.sublist(pubBytes.length - 65);
       }
-      final remotePublicKey = SimplePublicKey(rawPointBytes, type: KeyPairType.p256);
+      PublicKey remotePublicKey;
+      if (rawPointBytes.length == 65 && rawPointBytes[0] == 0x04) {
+        remotePublicKey = EcPublicKey(
+          x: rawPointBytes.sublist(1, 33),
+          y: rawPointBytes.sublist(33, 65),
+          curve: KeyPairType.p256,
+        );
+      } else {
+        remotePublicKey = SimplePublicKey(rawPointBytes, type: KeyPairType.p256);
+      }
 
       final sharedSecret = await _ecdh.sharedSecretKey(
         keyPair: _myKeyPair!,
