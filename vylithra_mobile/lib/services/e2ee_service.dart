@@ -66,7 +66,20 @@ class E2EEService {
       }
     } else {
       final privBytes = base64Decode(privKeyB64);
-      _myKeyPair = await _ecdh.newKeyPairFromSeed(privBytes);
+      final pubBytes = base64Decode(pubKeyB64);
+      if (pubBytes.length == 65 && pubBytes[0] == 0x04) {
+        final ecPublicKey = EcPublicKey(
+          x: pubBytes.sublist(1, 33),
+          y: pubBytes.sublist(33, 65),
+          curve: KeyPairType.p256,
+        );
+        _myKeyPair = EcKeyPairData(
+          d: privBytes,
+          publicKey: ecPublicKey,
+        );
+      } else {
+        _myKeyPair = await _ecdh.newKeyPairFromSeed(privBytes);
+      }
       _myPublicKeyBase64 = pubKeyB64;
     }
   }
