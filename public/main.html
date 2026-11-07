@@ -268,14 +268,16 @@
 
         /* Layout */
         .container {
-            max-width: 1800px;
+            max-width: 1480px;
             margin: 0 auto;
+            width: 100%;
             display: grid;
-            grid-template-columns: 240px 1fr 300px;
+            grid-template-columns: 240px minmax(0, 1fr) 300px;
             gap: 24px;
             padding: 24px 30px;
             position: relative;
             z-index: 1;
+            box-sizing: border-box;
         }
 
         .card,
@@ -502,6 +504,8 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            min-width: 0;
+            max-width: 100%;
         }
 
         .chip {
@@ -682,9 +686,14 @@
             top: calc(var(--header-height) + 20px);
             max-height: calc(100vh - 84px);
             overflow-y: auto;
+            overflow-x: hidden;
             scrollbar-width: thin;
             scrollbar-color: rgba(0, 242, 254, 0.2) transparent;
             transition: opacity 0.3s ease;
+            box-sizing: border-box;
+            padding-right: 6px;
+            width: 100%;
+            min-width: 0;
         }
         .sidebar-right::-webkit-scrollbar {
             width: 4px;
@@ -704,6 +713,8 @@
             -webkit-backdrop-filter: blur(20px);
             margin-bottom: 16px;
             transition: all 0.25s ease;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .widget:hover {
@@ -726,9 +737,11 @@
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            padding: 8px 0;
+            padding: 10px 0;
             border-bottom: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.2s ease;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .spreader-item:last-child {
@@ -754,15 +767,21 @@
             background: rgba(0, 242, 254, 0.1);
             color: var(--primary);
             border: 1px solid rgba(0, 242, 254, 0.3);
-            padding: 4px 12px;
+            padding: 5px 14px;
             border-radius: 16px;
             font-size: 0.78rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.2s ease;
             text-decoration: none;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
+            white-space: nowrap;
+            line-height: 1.2;
+            min-width: 58px;
+            box-sizing: border-box;
         }
 
         .follow-btn:hover {
@@ -771,31 +790,74 @@
             box-shadow: 0 0 12px rgba(0, 242, 254, 0.45);
             transform: scale(1.05);
         }
-        /* Mobile Responsive */
-        @media (max-width: 900px) {
+
+        /* Fluid Desktop / Laptop Layout: Prevents Sidebar Clipping */
+        @media (max-width: 1360px) and (min-width: 1025px) {
             .container {
-                grid-template-columns: 80px 1fr;
+                grid-template-columns: 80px minmax(0, 1fr) 280px !important;
+                gap: 18px !important;
+                padding: 20px 22px !important;
+            }
+
+            .sidebar-left {
+                width: 80px !important;
+            }
+
+            .sidebar-left .nav-item span {
+                display: none !important;
+            }
+
+            .sidebar-left .section-label {
+                display: none !important;
+            }
+
+            .sidebar-left .nav-item {
+                justify-content: center !important;
+                padding: 12px 0 !important;
+            }
+
+            .sidebar-left .nav-item i {
+                margin: 0 !important;
+                font-size: 1.25rem !important;
             }
 
             .sidebar-right {
-                display: none;
+                width: 280px !important;
+            }
+        }
+
+        /* Tablets & Compact Screens: Gracefully hide right sidebar to prioritize feed */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .container {
+                grid-template-columns: 80px minmax(0, 1fr) !important;
+                gap: 18px !important;
+                padding: 18px 20px !important;
             }
 
-            .nav-item span {
-                display: none;
+            .sidebar-right {
+                display: none !important;
             }
 
-            .section-label {
-                display: none;
+            .sidebar-left {
+                width: 80px !important;
             }
 
-            .nav-item {
-                justify-content: center;
+            .sidebar-left .nav-item span {
+                display: none !important;
             }
 
-            .nav-item i {
-                margin: 0;
-                font-size: 1.2rem;
+            .sidebar-left .section-label {
+                display: none !important;
+            }
+
+            .sidebar-left .nav-item {
+                justify-content: center !important;
+                padding: 12px 0 !important;
+            }
+
+            .sidebar-left .nav-item i {
+                margin: 0 !important;
+                font-size: 1.25rem !important;
             }
         }
 
@@ -2132,15 +2194,19 @@
         .dv-composer {
             display: flex;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
             background: rgba(255, 255, 255, 0.04);
-            border-radius: 50px;
-            padding: 8px 14px 8px 16px;
+            border-radius: 20px;
+            padding: 10px 16px;
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 8px 32px rgba(0,0,0,0.35);
             backdrop-filter: blur(24px);
             -webkit-backdrop-filter: blur(24px);
             transition: all 0.3s ease;
             position: relative;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .dv-composer:hover, .dv-composer:focus-within {
@@ -2244,7 +2310,9 @@
 
         .dv-composer-actions {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
         }
 
         .dv-btn {
@@ -2401,9 +2469,16 @@
             margin-bottom: 10px;
         }
 
-        /* 3-Column Desktop Layout */
-        .container {
-            grid-template-columns: 240px 1fr 300px;
+        /* Fluid Hero & Subgrid Layout on Medium Displays */
+        @media (max-width: 1280px) {
+            .dv-hero-split {
+                grid-template-columns: 200px minmax(0, 1fr) !important;
+                gap: 20px !important;
+                padding: 20px !important;
+            }
+            .dv-hero-visual-card {
+                height: 190px !important;
+            }
         }
     </style>
 
