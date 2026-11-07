@@ -36,7 +36,7 @@ class E2EEService {
       List<int> pubBytes;
       if (keyPairData is EcKeyPairData) {
         privBytes = keyPairData.d;
-        pubBytes = [0x04, ...keyPairData.publicKey.x, ...keyPairData.publicKey.y];
+        pubBytes = [0x04, ...keyPairData.x, ...keyPairData.y];
       } else {
         final pk = await _myKeyPair!.extractPublicKey();
         if (pk is EcPublicKey) {
@@ -68,14 +68,11 @@ class E2EEService {
       final privBytes = base64Decode(privKeyB64);
       final pubBytes = base64Decode(pubKeyB64);
       if (pubBytes.length == 65 && pubBytes[0] == 0x04) {
-        final ecPublicKey = EcPublicKey(
-          x: pubBytes.sublist(1, 33),
-          y: pubBytes.sublist(33, 65),
-          curve: KeyPairType.p256,
-        );
         _myKeyPair = EcKeyPairData(
           d: privBytes,
-          publicKey: ecPublicKey,
+          x: pubBytes.sublist(1, 33),
+          y: pubBytes.sublist(33, 65),
+          type: KeyPairType.p256,
         );
       } else {
         _myKeyPair = await _ecdh.newKeyPairFromSeed(privBytes);
@@ -131,7 +128,7 @@ class E2EEService {
         remotePublicKey = EcPublicKey(
           x: rawPointBytes.sublist(1, 33),
           y: rawPointBytes.sublist(33, 65),
-          curve: KeyPairType.p256,
+          type: KeyPairType.p256,
         );
       } else {
         remotePublicKey = SimplePublicKey(rawPointBytes, type: KeyPairType.p256);

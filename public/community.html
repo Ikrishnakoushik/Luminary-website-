@@ -567,6 +567,14 @@
         let allCommunities = [];
         let activeTopic = 'All';
 
+        function showNotify(msg, type = 'info') {
+            if (window.VylithraUI && window.VylithraUI.showToast) {
+                window.VylithraUI.showToast(msg, type);
+            } else {
+                alert(msg);
+            }
+        }
+
         async function init() {
             await fetchCommunities();
         }
@@ -574,7 +582,8 @@
         async function fetchCommunities() {
             try {
                 const res = await fetch(`${API_URL}/communities`);
-                allCommunities = await res.json();
+                const data = await res.json();
+                allCommunities = Array.isArray(data) ? data : [];
                 renderCommunities();
                 renderDiscussions();
                 renderCourses();
@@ -582,6 +591,7 @@
                 populateCommunitySelect();
             } catch (err) {
                 console.error('Error fetching communities:', err);
+                allCommunities = [];
                 const container = document.getElementById('communityCardsContainer');
                 if (container) container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px; grid-column: 1 / -1;">Failed to load communities network.</div>';
             }
@@ -798,7 +808,7 @@
         async function toggleJoinCommunity(communityId, e) {
             if (e) e.stopPropagation();
             if (!token) {
-                VylithraUI.showToast('Please sign in to join communities', 'error');
+                showNotify('Please sign in to join communities', 'error');
                 return;
             }
             try {
@@ -809,15 +819,15 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Failed to update membership');
                 await fetchCommunities();
-                VylithraUI.showToast(data.isMember ? 'Joined community!' : 'Left community', 'success');
+                showNotify(data.isMember ? 'Joined community!' : 'Left community', 'success');
             } catch (err) {
-                VylithraUI.showToast(err.message, 'error');
+                showNotify(err.message, 'error');
             }
         }
 
         async function likeDiscussion(communityId, discId) {
             if (!token) {
-                VylithraUI.showToast('Please sign in to like threads', 'error');
+                showNotify('Please sign in to like threads', 'error');
                 return;
             }
             try {
@@ -829,13 +839,13 @@
                 if (!res.ok) throw new Error(data.msg || 'Failed to like');
                 await fetchCommunities();
             } catch (err) {
-                VylithraUI.showToast(err.message, 'error');
+                showNotify(err.message, 'error');
             }
         }
 
         async function enrollCourse(communityId, courseId) {
             if (!token) {
-                VylithraUI.showToast('Please sign in to enroll', 'error');
+                showNotify('Please sign in to enroll', 'error');
                 return;
             }
             try {
@@ -845,16 +855,16 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Failed to enroll');
-                VylithraUI.showToast('Enrolled in course!', 'success');
+                showNotify('Enrolled in course!', 'success');
                 await fetchCommunities();
             } catch (err) {
-                VylithraUI.showToast(err.message, 'error');
+                showNotify(err.message, 'error');
             }
         }
 
         async function rsvpEvent(communityId, eventId) {
             if (!token) {
-                VylithraUI.showToast('Please sign in to RSVP', 'error');
+                showNotify('Please sign in to RSVP', 'error');
                 return;
             }
             try {
@@ -864,16 +874,16 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Failed to update RSVP');
-                VylithraUI.showToast(data.hasRsvped ? 'RSVP confirmed!' : 'RSVP cancelled', 'success');
+                showNotify(data.hasRsvped ? 'RSVP confirmed!' : 'RSVP cancelled', 'success');
                 await fetchCommunities();
             } catch (err) {
-                VylithraUI.showToast(err.message, 'error');
+                showNotify(err.message, 'error');
             }
         }
 
         function openNewDiscussionModal() {
             if (!token) {
-                VylithraUI.showToast('Please sign in to start discussions', 'error');
+                showNotify('Please sign in to start discussions', 'error');
                 return;
             }
             const modal = document.getElementById('newDiscussionModal');
@@ -895,7 +905,7 @@
             const content = (contentInput ? contentInput.value : '').trim();
 
             if (!communityId || !title || !content) {
-                VylithraUI.showToast('Please fill out all fields', 'error');
+                showNotify('Please fill out all fields', 'error');
                 return;
             }
 
@@ -911,14 +921,14 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.msg || 'Failed to publish');
 
-                VylithraUI.showToast('Discussion published to community!', 'success');
+                showNotify('Discussion published to community!', 'success');
                 if (titleInput) titleInput.value = '';
                 if (contentInput) contentInput.value = '';
                 closeNewDiscussionModal();
                 await fetchCommunities();
                 switchHubTab('discussions', document.querySelectorAll('.hub-tab')[1]);
             } catch (err) {
-                VylithraUI.showToast(err.message, 'error');
+                showNotify(err.message, 'error');
             }
         }
 
