@@ -17,6 +17,14 @@ const PostSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    isExclusive: {
+        type: Boolean,
+        default: false
+    },
+    exclusivePreview: {
+        type: String,
+        default: ''
+    },
     tag: {
         type: String, // Kept for backward compatibility, sync with category if needed
         default: 'General'

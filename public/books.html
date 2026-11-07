@@ -1049,19 +1049,45 @@
     </div>
 
     <!-- Reader Modal -->
-    <div id="readerModal" class="reader-modal">
+    <div id="readerModal" class="reader-modal theme-paper" style="position: fixed; inset: 0; z-index: 10000; display: none; flex-direction: column;">
         
         <!-- Reader Top Bar -->
-        <div class="reader-topbar" style="height: 70px; min-height: 70px; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; padding: 0 40px; border-bottom: 1px solid rgba(0,0,0,0.1); background: transparent;">
-            <div style="display: flex; align-items: center; gap: 20px;">
-                <h2 id="reader-topbar-title" style="font-family: 'Merriweather', serif; font-size: 1.25rem; font-weight: 700; color: #111111; margin: 0; letter-spacing: -0.5px;">Book Title</h2>
+        <div class="reader-topbar" id="readerTopbar" style="height: 70px; min-height: 70px; width: 100%; box-sizing: border-box; display: flex; justify-content: space-between; align-items: center; padding: 0 24px; border-bottom: 1px solid rgba(0,0,0,0.1); background: inherit; transition: background 0.3s, border-color 0.3s;">
+            <div style="display: flex; align-items: center; gap: 14px; min-width: 0;">
+                <h2 id="reader-topbar-title" style="font-family: 'Merriweather', serif; font-size: 1.15rem; font-weight: 700; color: inherit; margin: 0; letter-spacing: -0.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 260px;">Book Title</h2>
+                <div id="readingProgressPill" style="padding: 4px 10px; background: rgba(0, 242, 254, 0.12); border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 20px; font-size: 0.75rem; color: #0284c7; font-weight: 700; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;">
+                    <i class="fas fa-book-reader"></i> <span id="readerProgressText">0% read</span>
+                </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 30px;">
-                <!-- Book Rating Widget (Always accessible in top bar) -->
-                <div class="rating-widget" id="ratingWidget" style="display: flex; align-items: center; gap: 15px; white-space: nowrap;">
-                    <span style="font-family: 'Outfit', sans-serif; font-size: 0.9rem; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 1px;">Rate Book</span>
-                    <div class="stars-container" style="display: flex; gap: 4px; font-size: 1.2rem; color: #d1d5db; cursor: pointer;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: nowrap;">
+                <!-- Reading Theme Toggles -->
+                <div class="reader-theme-selector" style="display: flex; gap: 5px; align-items: center; background: rgba(0,0,0,0.06); padding: 3px 6px; border-radius: 20px;">
+                    <button type="button" onclick="setReaderTheme('paper')" title="Classic Paper" style="width: 20px; height: 20px; border-radius: 50%; background: #fdfbf7; border: 2px solid #d4af37; cursor: pointer;"></button>
+                    <button type="button" onclick="setReaderTheme('sepia')" title="Warm Sepia" style="width: 20px; height: 20px; border-radius: 50%; background: #f4ecd8; border: 1px solid #c2b59b; cursor: pointer;"></button>
+                    <button type="button" onclick="setReaderTheme('dark')" title="Midnight Dark" style="width: 20px; height: 20px; border-radius: 50%; background: #0f172a; border: 1px solid #334155; cursor: pointer;"></button>
+                    <button type="button" onclick="setReaderTheme('black')" title="AMOLED Black" style="width: 20px; height: 20px; border-radius: 50%; background: #000000; border: 1px solid #444; cursor: pointer;"></button>
+                </div>
+
+                <!-- Font Size Controls -->
+                <div style="display: flex; align-items: center; gap: 2px; background: rgba(0,0,0,0.06); border-radius: 20px; padding: 2px 6px;">
+                    <button type="button" onclick="adjustReaderFont(-1)" title="Smaller font" style="background: none; border: none; font-size: 0.8rem; font-weight: 700; color: inherit; cursor: pointer; padding: 2px 6px;">A-</button>
+                    <button type="button" onclick="adjustReaderFont(1)" title="Larger font" style="background: none; border: none; font-size: 0.95rem; font-weight: 700; color: inherit; cursor: pointer; padding: 2px 6px;">A+</button>
+                </div>
+
+                <!-- Bookmark Button -->
+                <button type="button" id="readerBookmarkCurrentBtn" onclick="addCurrentPageBookmark()" style="background: rgba(0, 242, 254, 0.1); border: 1px solid rgba(0, 242, 254, 0.3); color: #0284c7; padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                    <i class="far fa-bookmark"></i> Bookmark
+                </button>
+
+                <!-- Bookmarks Drawer Toggle -->
+                <button type="button" onclick="toggleBookmarksDrawer()" style="background: transparent; border: 1px solid rgba(0,0,0,0.15); color: inherit; padding: 6px 12px; border-radius: 20px; font-size: 0.78rem; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;" title="View all saved bookmarks">
+                    <i class="fas fa-list-ul"></i> (<span id="readerBookmarkCount">0</span>)
+                </button>
+
+                <!-- Book Rating Widget -->
+                <div class="rating-widget" id="ratingWidget" style="display: flex; align-items: center; gap: 8px; white-space: nowrap;">
+                    <div class="stars-container" style="display: flex; gap: 3px; font-size: 1.05rem; color: #d1d5db; cursor: pointer;">
                         <i class="fas fa-star rating-star" data-rating="2"></i>
                         <i class="fas fa-star rating-star" data-rating="4"></i>
                         <i class="fas fa-star rating-star" data-rating="6"></i>
@@ -1070,7 +1096,7 @@
                     </div>
                 </div>
                 
-                <div style="width: 1px; height: 30px; background: #e5e7eb;"></div> <!-- Divider -->
+                <div style="width: 1px; height: 24px; background: rgba(0,0,0,0.12);"></div> <!-- Divider -->
                 
                 <button class="close-reader" onclick="closeReader()"><i class="fas fa-times"></i></button>
             </div>
@@ -1303,9 +1329,12 @@
                             `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
                         }
                         </div>
-                        <div style="margin-top: 8px;">
-                            <button type="button" class="book-action-btn" onclick="openAISummaryModal('${book._id}', event)" style="background:rgba(0, 242, 254, 0.08); border:1px solid rgba(0, 242, 254, 0.25); color:#00f2fe; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem; padding:6px 10px; border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(0, 242, 254, 0.18)'" onmouseout="this.style.background='rgba(0, 242, 254, 0.08)'" title="View AI Key Insights & Summary">
+                        <div style="margin-top: 8px; display: flex; gap: 8px;">
+                            <button type="button" class="book-action-btn" onclick="openAISummaryModal('${book._id}', event)" style="flex: 1; background:rgba(0, 242, 254, 0.08); border:1px solid rgba(0, 242, 254, 0.25); color:#00f2fe; display:inline-flex; align-items:center; justify-content:center; gap:5px; font-size:0.78rem; padding:6px 8px; border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(0, 242, 254, 0.18)'" onmouseout="this.style.background='rgba(0, 242, 254, 0.08)'" title="View AI Key Insights & Summary">
                                 <i class="fas fa-sparkles"></i> AI Summary
+                            </button>
+                            <button type="button" class="book-action-btn" onclick="openReviewsModal('${book._id}', event)" style="flex: 1; background:rgba(168, 85, 247, 0.08); border:1px solid rgba(168, 85, 247, 0.25); color:#c084fc; display:inline-flex; align-items:center; justify-content:center; gap:5px; font-size:0.78rem; padding:6px 8px; border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(168, 85, 247, 0.18)'" onmouseout="this.style.background='rgba(168, 85, 247, 0.08)'" title="Reader Reviews & Ratings">
+                                <i class="fas fa-star"></i> Reviews (${book.ratings ? book.ratings.length : 0})
                             </button>
                         </div>
                     </div>
@@ -1753,6 +1782,53 @@
                 <div style="text-align: center; padding: 40px; color: #94a3b8;">
                     <i class="fas fa-spinner fa-spin" style="color: #00f2fe; font-size: 1.8rem; margin-bottom: 12px; display: block;"></i>
                     Synthesizing executive summary & key themes...
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Book Reviews Modal -->
+    <div id="bookReviewsModal" class="modal vyl-modal" style="display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(12px); z-index: 9999; padding: 20px;">
+        <div class="vyl-modal-card" style="background: #0e121b; border: 1px solid rgba(168, 85, 247, 0.3); border-radius: 20px; max-width: 620px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
+            <div style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: #c084fc; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <h3 id="reviewsModalBookTitle" style="color: #fff; font-size: 1.1rem; margin: 0; font-weight: 700;">Book Reviews</h3>
+                        <p id="reviewsModalSubtitle" style="color: #94a3b8; font-size: 0.82rem; margin: 0;">Verified Reader Reviews & Ratings</p>
+                    </div>
+                </div>
+                <button onclick="closeReviewsModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            
+            <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+                <!-- Write a Review Section -->
+                <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 16px; margin-bottom: 20px;">
+                    <h4 style="margin: 0 0 10px 0; font-size: 0.92rem; color: #f8fafc; font-weight: 600;">Share Your Thoughts</h4>
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                        <span style="font-size: 0.85rem; color: #94a3b8;">Rating:</span>
+                        <div id="writeReviewStars" style="display: flex; gap: 4px; font-size: 1.25rem; color: #fbbf24; cursor: pointer;">
+                            <i class="fas fa-star write-star" data-val="1" onclick="selectReviewRating(1)"></i>
+                            <i class="fas fa-star write-star" data-val="2" onclick="selectReviewRating(2)"></i>
+                            <i class="fas fa-star write-star" data-val="3" onclick="selectReviewRating(3)"></i>
+                            <i class="fas fa-star write-star" data-val="4" onclick="selectReviewRating(4)"></i>
+                            <i class="fas fa-star write-star" data-val="5" onclick="selectReviewRating(5)"></i>
+                        </div>
+                        <span id="selectedRatingText" style="font-size: 0.85rem; color: #fbbf24; font-weight: 700; margin-left: 6px;">5 / 5</span>
+                    </div>
+                    <textarea id="reviewTextInput" placeholder="Write an insightful review for fellow readers..." style="width: 100%; box-sizing: border-box; background: rgba(14, 18, 27, 0.8); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; padding: 10px 14px; font-size: 0.9rem; resize: vertical; min-height: 70px; outline: none; margin-bottom: 10px;"></textarea>
+                    <button type="button" onclick="submitBookReview()" style="background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%); color: #fff; font-weight: 700; border: none; border-radius: 50px; padding: 8px 20px; font-size: 0.85rem; cursor: pointer; box-shadow: 0 4px 15px rgba(168, 85, 247, 0.4);">
+                        Submit Review
+                    </button>
+                </div>
+
+                <!-- Community Reviews List -->
+                <h4 style="margin: 0 0 12px 0; font-size: 0.92rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Reader Reviews</h4>
+                <div id="reviewsListContainer" style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- dynamic reviews injected here -->
                 </div>
             </div>
         </div>

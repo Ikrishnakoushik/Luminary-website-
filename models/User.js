@@ -132,6 +132,15 @@ const UserSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
+    subscriptionPricing: {
+        monthlyPrice: { type: Number, default: 99 },
+        isEnabled: { type: Boolean, default: false },
+        perksDescription: { type: String, default: 'Access to exclusive posts, supporter badge, and early releases' }
+    },
+    subscribersCount: {
+        type: Number,
+        default: 0
+    },
     withdrawalHistory: [{
         amount: { type: Number, required: true },
         date: { type: Date, default: Date.now },

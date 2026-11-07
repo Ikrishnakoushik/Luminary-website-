@@ -2474,6 +2474,7 @@
             </div>
 
             <div class="dv-composer-actions">
+                <label style="display:inline-flex; align-items:center; gap:5px; font-size:0.76rem; color:#fbbf24; cursor:pointer; margin-right:4px; font-weight:600;" title="Make this spread exclusive to supporters"><input type="checkbox" id="quickSpreadExclusive" style="cursor:pointer; accent-color:#fbbf24; width:14px; height:14px;"><i class="fas fa-crown"></i> Supporter Only</label>
                 <button type="button" class="dv-btn dv-btn-ghost" onclick="triggerAIAssistComposer()" style="color:#00f2fe; border-color:rgba(0,242,254,0.3); display:inline-flex; align-items:center; gap:6px;" title="AI Writing Assistant">
                     <i class="fas fa-sparkles"></i> AI Polish
                 </button>
@@ -2963,6 +2964,9 @@
 
                     // Build Post Content HTML
                     let postContentHTML = '';
+                    if (post.isExclusive) {
+                        postContentHTML += `<div style="display:inline-flex; align-items:center; gap:6px; background:linear-gradient(135deg, rgba(234, 179, 8, 0.18), rgba(245, 158, 11, 0.18)); border:1px solid rgba(234, 179, 8, 0.45); color:#fbbf24; padding:3px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; margin-bottom:12px; letter-spacing:0.5px;"><i class="fas fa-crown"></i> SUPPORTER EXCLUSIVE</div>`;
+                    }
 
                     // Title
                     if (post.title) {
@@ -3352,6 +3356,7 @@
                 formData.append('content', content || 'Shared a moment on Vylithra');
                 formData.append('category', 'General');
                 formData.append('type', 'quick');
+                if (document.getElementById('quickSpreadExclusive')?.checked) formData.append('isExclusive', 'true');
                 if (composerSelectedFile) {
                     formData.append('image', composerSelectedFile);
                 }

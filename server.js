@@ -36,6 +36,11 @@ const Coupon = require('./models/Coupon'); // Added Coupon model
 const HeroBanner = require('./models/HeroBanner'); // Added HeroBanner model
 const PlatformSetting = require('./models/PlatformSetting');
 const WebRTCSignal = require('./models/WebRTCSignal');
+const Tip = require('./models/Tip');
+const Subscription = require('./models/Subscription');
+const PayoutRequest = require('./models/PayoutRequest');
+const ReadingProgress = require('./models/ReadingProgress');
+const BookReview = require('./models/BookReview');
 const seedDB = require('./seed.js'); // Required globally so Vercel traces dependencies like @faker-js/faker
 
 const app = express();
@@ -2332,6 +2337,9 @@ app.post('/api/posts', auth, (req, res) => {
             }
 
             // Create new post
+            const isExclusivePost = req.body.isExclusive === 'true' || req.body.isExclusive === true;
+            const previewText = req.body.exclusivePreview || (content ? content.slice(0, 140) + '...' : '');
+
             const newPost = new Post({
                 user: anon ? undefined : req.user.id,
                 username: anon ? 'Anonymous' : req.user.username,
@@ -2343,7 +2351,9 @@ app.post('/api/posts', auth, (req, res) => {
                 videoUrl,
                 attachment,
                 image,
-                type: type || 'quick'
+                type: type || 'quick',
+                isExclusive: isExclusivePost,
+                exclusivePreview: previewText
             });
 
             const post = await newPost.save();
@@ -2765,6 +2775,216 @@ app.post('/api/ai/moderate', auth, async (req, res) => {
     } catch (err) {
         console.error('[AI] Moderate Error:', err.message);
         res.status(500).json({ isSafe: true });
+    }
+});
+
+// ==========================================
+// Vylithra Creator Economy & Memberships API
+// ==========================================
+
+// 1. Send Tip to Creator / Author
+app.post('/api/creator/:creatorId/tip', auth, async (req, res) => {
+    try {
+        const fromUserId = req.user.id;
+        const toCreatorId = req.params.creatorId;
+        const { amount, currency = 'INR', message = '', isAnonymous = false } = req.body;
+
+        if (!amount || amount <= 0) {
+            return res.status(400).json({ msg: 'Valid tip amount is required' });
+        }
+        if (fromUserId === toCreatorId) {
+            return res.status(400).json({ msg: 'You cannot tip yourself' });
+        }
+
+        const creator = await User.findById(toCreatorId);
+        if (!creator) {
+            return res.status(404).json({ msg: 'Creator not found' });
+        }
+
+        const tip = new Tip({
+            fromUser: fromUserId,
+            toCreator: toCreatorId,
+            amount: Number(amount),
+            currency,
+            message: String(message || '').slice(0, 300),
+            isAnonymous: Boolean(isAnonymous),
+            status: 'completed'
+        });
+        await tip.save();
+
+        // Credit Creator's Wallet (90% creator share, 10% platform share)
+        const creatorShare = Math.round(Number(amount) * 0.9 * 100) / 100;
+        creator.walletBalance = (creator.walletBalance || 0) + creatorShare;
+        creator.totalEarned = (creator.totalEarned || 0) + creatorShare;
+        await creator.save();
+
+        res.json({
+            success: true,
+            msg: `Successfully tipped ${creator.displayName || creator.username}!`,
+            tip,
+            creatorBalance: creator.walletBalance
+        });
+    } catch (err) {
+        console.error('[Creator Economy] Tip Error:', err.message);
+        res.status(500).json({ msg: 'Failed to process tip' });
+    }
+});
+
+// 2. Subscribe to Creator Membership
+app.post('/api/creator/:creatorId/subscribe', auth, async (req, res) => {
+    try {
+        const subscriberId = req.user.id;
+        const creatorId = req.params.creatorId;
+
+        if (subscriberId === creatorId) {
+            return res.status(400).json({ msg: 'You cannot subscribe to yourself' });
+        }
+
+        const creator = await User.findById(creatorId);
+        if (!creator) {
+            return res.status(404).json({ msg: 'Creator not found' });
+        }
+
+        const price = (creator.subscriptionPricing && creator.subscriptionPricing.monthlyPrice) || 99;
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 30); // 30-day membership
+
+        // Check for existing subscription to renew
+        let sub = await Subscription.findOne({ subscriber: subscriberId, creator: creatorId });
+        if (sub) {
+            sub.status = 'active';
+            sub.price = price;
+            sub.expiresAt = expiresAt;
+            sub.autoRenew = true;
+            await sub.save();
+        } else {
+            sub = new Subscription({
+                subscriber: subscriberId,
+                creator: creatorId,
+                price,
+                expiresAt,
+                status: 'active'
+            });
+            await sub.save();
+            creator.subscribersCount = (creator.subscribersCount || 0) + 1;
+        }
+
+        // Credit Creator (85% net creator share on monthly memberships)
+        const creatorEarnings = Math.round(price * 0.85 * 100) / 100;
+        creator.walletBalance = (creator.walletBalance || 0) + creatorEarnings;
+        creator.totalEarned = (creator.totalEarned || 0) + creatorEarnings;
+        await creator.save();
+
+        res.json({
+            success: true,
+            msg: `You are now an active supporter of ${creator.displayName || creator.username}!`,
+            subscription: sub
+        });
+    } catch (err) {
+        console.error('[Creator Economy] Subscribe Error:', err.message);
+        res.status(500).json({ msg: 'Failed to complete subscription' });
+    }
+});
+
+// 3. Check Membership Status with Creator
+app.get('/api/creator/:creatorId/membership-status', optionalAuth, async (req, res) => {
+    try {
+        const userId = req.user ? req.user.id : null;
+        const creatorId = req.params.creatorId;
+
+        if (!userId) {
+            return res.json({ isSubscriber: false, isOwner: false });
+        }
+        if (userId === creatorId) {
+            return res.json({ isSubscriber: true, isOwner: true });
+        }
+
+        const sub = await Subscription.findOne({
+            subscriber: userId,
+            creator: creatorId,
+            status: 'active',
+            expiresAt: { $gt: new Date() }
+        });
+
+        res.json({
+            isSubscriber: !!sub,
+            isOwner: false,
+            subscription: sub || null
+        });
+    } catch (err) {
+        console.error('[Creator Economy] Membership Status Error:', err.message);
+        res.status(500).json({ isSubscriber: false });
+    }
+});
+
+// 4. Creator Wallet & Earnings Dashboard
+app.get('/api/creator/wallet', auth, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id).select('walletBalance totalEarned subscribersCount subscriptionPricing withdrawalHistory');
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const [recentTips, recentPayouts, activeSubscribers] = await Promise.all([
+            Tip.find({ toCreator: req.user.id })
+                .sort({ createdAt: -1 })
+                .limit(20)
+                .populate('fromUser', 'username displayName profilePicture'),
+            PayoutRequest.find({ creator: req.user.id }).sort({ createdAt: -1 }).limit(10),
+            Subscription.countDocuments({ creator: req.user.id, status: 'active', expiresAt: { $gt: new Date() } })
+        ]);
+
+        res.json({
+            walletBalance: user.walletBalance || 0,
+            totalEarned: user.totalEarned || 0,
+            subscribersCount: activeSubscribers,
+            subscriptionPricing: user.subscriptionPricing || { monthlyPrice: 99, isEnabled: false },
+            recentTips,
+            recentPayouts
+        });
+    } catch (err) {
+        console.error('[Creator Economy] Wallet Error:', err.message);
+        res.status(500).json({ msg: 'Failed to retrieve wallet' });
+    }
+});
+
+// 5. Submit Creator Payout / Withdrawal Request
+app.post('/api/creator/payout-request', auth, async (req, res) => {
+    try {
+        const { amount, payoutMethod, payoutDetails } = req.body;
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).json({ msg: 'User not found' });
+
+        const payoutAmount = Number(amount);
+        if (!payoutAmount || payoutAmount < 100) {
+            return res.status(400).json({ msg: 'Minimum payout amount is ₹100' });
+        }
+        if ((user.walletBalance || 0) < payoutAmount) {
+            return res.status(400).json({ msg: 'Insufficient wallet balance' });
+        }
+        if (!payoutMethod || !payoutDetails) {
+            return res.status(400).json({ msg: 'Payout method and account details are required' });
+        }
+
+        user.walletBalance -= payoutAmount;
+        await user.save();
+
+        const payout = new PayoutRequest({
+            creator: user._id,
+            amount: payoutAmount,
+            payoutMethod,
+            payoutDetails: String(payoutDetails).trim(),
+            status: 'pending'
+        });
+        await payout.save();
+
+        res.json({
+            success: true,
+            msg: `Payout request for ₹${payoutAmount} submitted successfully!`,
+            newBalance: user.walletBalance,
+            payout
+        });
+    } catch (err) {
+        console.error('[Creator Economy] Payout Error:', err.message);
+        res.status(500).json({ msg: 'Failed to submit payout request' });
     }
 });
 
@@ -3262,6 +3482,187 @@ app.post('/api/books/:id/rate', auth, async (req, res) => {
         console.error('Error rating book:', err);
         if (err.kind === 'ObjectId') return res.status(404).json({ msg: 'Book not found' });
         res.status(500).json({ msg: 'Oops! Our servers took a quick nap. Please try again.' });
+    }
+});
+
+// Get user's reading progress and bookmarks for a book
+app.get('/api/books/:id/progress', auth, async (req, res) => {
+    try {
+        const progress = await ReadingProgress.findOne({
+            user: req.user.id,
+            book: req.params.id
+        });
+        if (!progress) {
+            return res.json({
+                currentPage: 0,
+                totalPages: 1,
+                progressPercent: 0,
+                bookmarks: []
+            });
+        }
+        res.json(progress);
+    } catch (err) {
+        console.error('Error fetching reading progress:', err);
+        res.status(500).json({ msg: 'Failed to fetch reading progress' });
+    }
+});
+
+// Save user's reading progress for a book
+app.post('/api/books/:id/progress', auth, async (req, res) => {
+    try {
+        const { currentPage = 0, totalPages = 1 } = req.body;
+        const pageNum = Math.max(0, parseInt(currentPage) || 0);
+        const totalNum = Math.max(1, parseInt(totalPages) || 1);
+        const progressPercent = Math.min(100, Math.round(((pageNum + 1) / totalNum) * 100));
+
+        const progress = await ReadingProgress.findOneAndUpdate(
+            { user: req.user.id, book: req.params.id },
+            {
+                currentPage: pageNum,
+                totalPages: totalNum,
+                progressPercent,
+                lastReadAt: new Date()
+            },
+            { upsert: true, new: true, setDefaultsOnInsert: true }
+        );
+
+        res.json({ success: true, progress });
+    } catch (err) {
+        console.error('Error saving reading progress:', err);
+        res.status(500).json({ msg: 'Failed to save reading progress' });
+    }
+});
+
+// Add a bookmark to a book
+app.post('/api/books/:id/bookmark', auth, async (req, res) => {
+    try {
+        const { page = 0, note = '', chapter = '' } = req.body;
+        let progress = await ReadingProgress.findOne({
+            user: req.user.id,
+            book: req.params.id
+        });
+        if (!progress) {
+            progress = new ReadingProgress({
+                user: req.user.id,
+                book: req.params.id,
+                currentPage: page
+            });
+        }
+
+        const newBookmark = {
+            page: parseInt(page) || 0,
+            note: String(note).slice(0, 200),
+            chapter: String(chapter).slice(0, 100),
+            createdAt: new Date()
+        };
+
+        progress.bookmarks.push(newBookmark);
+        await progress.save();
+
+        res.json({ success: true, bookmark: progress.bookmarks[progress.bookmarks.length - 1], bookmarks: progress.bookmarks });
+    } catch (err) {
+        console.error('Error saving bookmark:', err);
+        res.status(500).json({ msg: 'Failed to add bookmark' });
+    }
+});
+
+// Delete a bookmark
+app.delete('/api/books/:id/bookmark/:bookmarkId', auth, async (req, res) => {
+    try {
+        const progress = await ReadingProgress.findOne({
+            user: req.user.id,
+            book: req.params.id
+        });
+        if (!progress) return res.status(404).json({ msg: 'Reading progress record not found' });
+
+        progress.bookmarks = progress.bookmarks.filter(b => b._id.toString() !== req.params.bookmarkId);
+        await progress.save();
+
+        res.json({ success: true, bookmarks: progress.bookmarks });
+    } catch (err) {
+        console.error('Error deleting bookmark:', err);
+        res.status(500).json({ msg: 'Failed to delete bookmark' });
+    }
+});
+
+// Get reviews for a book
+app.get('/api/books/:id/reviews', async (req, res) => {
+    try {
+        const reviews = await BookReview.find({ book: req.params.id })
+            .populate('user', 'username profilePicture')
+            .sort({ createdAt: -1 })
+            .limit(50);
+        res.json(reviews);
+    } catch (err) {
+        console.error('Error getting book reviews:', err);
+        res.status(500).json({ msg: 'Failed to get reviews' });
+    }
+});
+
+// Submit/update a book review
+app.post('/api/books/:id/reviews', auth, async (req, res) => {
+    try {
+        const { score, reviewText } = req.body;
+        const numScore = Math.min(5, Math.max(1, parseInt(score) || 5));
+        const book = await Book.findById(req.params.id);
+        if (!book) return res.status(404).json({ msg: 'Book not found' });
+
+        const user = await User.findById(req.user.id);
+        const hasPurchased = user && user.purchasedBooks && user.purchasedBooks.map(String).includes(String(book._id));
+        const isFree = Number(book.price || 0) === 0;
+
+        let review = await BookReview.findOne({ book: req.params.id, user: req.user.id });
+        if (review) {
+            review.score = numScore;
+            review.reviewText = (reviewText || '').trim();
+            review.verifiedReader = hasPurchased || isFree;
+            await review.save();
+        } else {
+            review = await BookReview.create({
+                book: req.params.id,
+                user: req.user.id,
+                score: numScore,
+                reviewText: (reviewText || '').trim(),
+                verifiedReader: hasPurchased || isFree
+            });
+        }
+
+        // Keep Book ratings synchronized
+        const existingRating = book.ratings.find(r => r.user.toString() === req.user.id);
+        if (existingRating) {
+            existingRating.score = numScore * 2;
+        } else {
+            book.ratings.push({ user: req.user.id, score: numScore * 2 });
+        }
+        const totalScore = book.ratings.reduce((acc, curr) => acc + curr.score, 0);
+        book.averageRating = Number((totalScore / book.ratings.length).toFixed(1));
+        await book.save();
+
+        await review.populate('user', 'username profilePicture');
+        res.json({ success: true, review, averageRating: book.averageRating });
+    } catch (err) {
+        console.error('Error saving book review:', err);
+        res.status(500).json({ msg: 'Failed to submit review' });
+    }
+});
+
+// Vote helpful on a review
+app.post('/api/books/:id/reviews/:reviewId/helpful', auth, async (req, res) => {
+    try {
+        const review = await BookReview.findById(req.params.reviewId);
+        if (!review) return res.status(404).json({ msg: 'Review not found' });
+
+        const hasVoted = review.helpfulVotes.some(v => v.toString() === req.user.id);
+        if (hasVoted) {
+            review.helpfulVotes = review.helpfulVotes.filter(v => v.toString() !== req.user.id);
+        } else {
+            review.helpfulVotes.push(req.user.id);
+        }
+        await review.save();
+        res.json({ success: true, helpfulCount: review.helpfulVotes.length, hasVoted: !hasVoted });
+    } catch (err) {
+        console.error('Error toggling review helpful:', err);
+        res.status(500).json({ msg: 'Failed to record helpful vote' });
     }
 });
 
@@ -3845,12 +4246,12 @@ app.post('/api/books/:id/purchase-free', auth, async (req, res) => {
     }
 });
 
-// GET Publisher Earnings Dashboard Data
+// GET Publisher & Creator Earnings Dashboard Data
 app.get('/api/publishers/earnings', auth, async (req, res) => {
     try {
         const user = await User.findById(req.user.id).select('walletBalance totalEarned withdrawalHistory role');
-        if (!user || (user.role !== 'publisher' && user.role !== 'admin')) {
-            return res.status(403).json({ msg: 'Access denied' });
+        if (!user) {
+            return res.status(404).json({ msg: 'User not found' });
         }
         res.json({
             walletBalance: user.walletBalance,
