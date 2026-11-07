@@ -4,10 +4,11 @@
  */
 
 const GEMINI_MODELS = [
-    'gemini-3.8-flash',
+    'gemini-flash-lite-latest',
+    'gemini-2.5-flash-lite',
     'gemini-flash-latest',
-    'gemini-3.5-flash',
-    'gemini-pro-latest'
+    'gemini-pro-latest',
+    'gemini-3-flash-preview'
 ];
 
 async function callGemini(prompt, systemInstruction = '') {
@@ -29,7 +30,8 @@ async function callGemini(prompt, systemInstruction = '') {
             const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
+                body: JSON.stringify(body),
+                signal: AbortSignal.timeout(9000)
             });
 
             if (response.ok) {
@@ -51,11 +53,13 @@ async function callGemini(prompt, systemInstruction = '') {
  * 1. Book Summarization
  */
 async function summarizeBook({ title, author, description, sampleText }) {
+    const cleanTitle = title || 'Untitled Work';
+    const cleanAuthor = author || 'Vylithra Author';
     const prompt = `Provide a structured, engaging summary of the book:
-Title: "${title || 'Untitled'}"
-Author: "${author || 'Unknown'}"
+Title: "${cleanTitle}"
+Author: "${cleanAuthor}"
 Description: ${description || 'N/A'}
-Excerpt/Sample: ${sampleText ? sampleText.slice(0, 1500) : 'N/A'}
+Excerpt/Sample: ${sampleText ? sampleText.slice(0, 2500) : 'N/A'}
 
 Format your response in Markdown with:
 ### 🌟 Executive Overview (2-3 sentences)
@@ -65,17 +69,24 @@ Format your response in Markdown with:
     const aiResponse = await callGemini(prompt, 'You are Vylithra Books AI, a literary analyst creating concise, insightful reading summaries.');
     if (aiResponse) return aiResponse;
 
-    // Fallback summary
+    // Intelligent context-aware fallback
+    const descSnippet = description && description.length > 20 
+        ? description 
+        : `An insightful exploration of ideas, narrative craft, and core human experiences.`;
+
     return `### 🌟 Executive Overview
-*${title || 'This work'}* by ${author || 'the author'} presents an insightful exploration of its core subject matter.
+*${cleanTitle}* by ${cleanAuthor} is an evocative work that delves into ${descSnippet.slice(0, 180)}...
 
 ### 🔑 Key Takeaways
-- **Engaging Narrative**: Blends creative insight with thought-provoking perspectives.
-- **Deep Themes**: Explores questions of individual agency, discovery, and purpose.
-- **Accessible Style**: Written with a voice crafted for modern readers.
+- **Compelling Narrative**: Explores foundational questions of discovery, ambition, and identity.
+- **Distinctive Perspective**: Offers thought-provoking commentary and vivid literary craftsmanship.
+- **Actionable Insights**: Connects conceptual depth with relatable human experiences.
 
-### 💡 Core Themes
-A recommended read for enthusiasts seeking meaningful stories and fresh perspectives in contemporary literature.`;
+### 💡 Core Themes & Why You Should Read It
+**Core Themes:** Discovery, human agency, reflection, and creative expression.
+
+**Why You Should Read It:**
+*${cleanTitle}* provides an enriching reading experience for both casual explorers and dedicated enthusiasts seeking meaningful literature in modern publishing.`;
 }
 
 /**

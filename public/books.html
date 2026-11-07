@@ -1735,23 +1735,27 @@
                 const res = await fetch('/api/ai/summarize-book', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ bookId, title, author })
+                    body: JSON.stringify({ bookId, title, author, description: targetBook.description || '' })
                 });
                 if (res.ok) {
                     const data = await res.json();
                     const raw = data.summary || 'Summary unavailable.';
+                    
+                    // Comprehensive markdown formatting for AI book summary
                     const formatted = raw
-                        .replace(/^### (.*$)/gim, '<h4 style="color:#00f2fe; margin-top:16px; margin-bottom:8px; font-size:1.05rem;">$1</h4>')
-                        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
-                        .replace(/^\- (.*$)/gim, '<li style="margin-left: 18px; margin-bottom: 4px;">$1</li>')
-                        .replace(/\n\n/gim, '<p style="margin-bottom: 12px;"></p>');
-                    contentEl.innerHTML = formatted;
+                        .replace(/^### (.*$)/gim, '<h4 style="color:#00f2fe; margin-top:20px; margin-bottom:10px; font-size:1.05rem; display:flex; align-items:center; gap:8px;">$1</h4>')
+                        .replace(/\*\*(.*?)\*\*/gim, '<strong style="color:#f8fafc;">$1</strong>')
+                        .replace(/\*(.*?)\*/gim, '<em style="color:#cbd5e1;">$1</em>')
+                        .replace(/^[\*\-] (.*$)/gim, '<div style="margin-left: 10px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 8px;"><span style="color: #00f2fe; line-height: 1.5; font-size: 1.1rem;">•</span><div style="flex: 1; line-height: 1.6; color: #cbd5e1;">$1</div></div>')
+                        .replace(/\n\n/gim, '<div style="margin-bottom: 14px;"></div>')
+                        .replace(/\n/gim, '<br>');
+                    
+                    contentEl.innerHTML = `<div style="line-height: 1.7; font-size: 0.94rem;">${formatted}</div>`;
                 } else {
-                    contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;">Could not generate summary at this moment.</div>';
+                    contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;"><i class="fas fa-circle-exclamation" style="font-size:1.8rem; margin-bottom:10px; display:block;"></i>Could not generate summary at this moment.</div>';
                 }
             } catch(err) {
-                contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;">Network error generating summary.</div>';
+                contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;"><i class="fas fa-triangle-exclamation" style="font-size:1.8rem; margin-bottom:10px; display:block;"></i>Network error connecting to Vylithra AI.</div>';
             }
         }
 

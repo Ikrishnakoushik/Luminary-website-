@@ -2728,13 +2728,15 @@ app.post('/api/ai/summarize-book', optionalAuth, async (req, res) => {
         const { bookId, title, author, description, sampleText } = req.body;
         let bookData = { title, author, description, sampleText };
         if (bookId && mongoose.Types.ObjectId.isValid(bookId)) {
-            const book = await Book.findById(bookId);
+            const book = await Book.findById(bookId).populate('author', 'username displayName penName');
             if (book) {
+                const resolvedAuthor = book.penName || (book.author ? (book.author.displayName || book.author.username) : '') || author || 'Vylithra Author';
+                const plainContent = book.content ? book.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim() : '';
                 bookData = {
                     title: book.title,
-                    author: book.author,
-                    description: book.description,
-                    sampleText: book.sampleText || book.description
+                    author: resolvedAuthor,
+                    description: book.description || '',
+                    sampleText: (plainContent.length > 30 ? plainContent.slice(0, 3000) : '') || book.description || ''
                 };
             }
         }
