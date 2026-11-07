@@ -2474,6 +2474,9 @@
             </div>
 
             <div class="dv-composer-actions">
+                <button type="button" class="dv-btn dv-btn-ghost" onclick="triggerAIAssistComposer()" style="color:#00f2fe; border-color:rgba(0,242,254,0.3); display:inline-flex; align-items:center; gap:6px;" title="AI Writing Assistant">
+                    <i class="fas fa-sparkles"></i> AI Polish
+                </button>
                 <button class="dv-btn dv-btn-ghost" onclick="handleCreatePostClick()" title="Start New Spread">New Spread</button>
                 <button class="dv-btn dv-btn-solid" onclick="publishQuickSpread()" title="Publish to Feed">Publish</button>
             </div>
@@ -2482,6 +2485,17 @@
     </div>
 
     <!-- Original Feed Anchor -->
+    
+    <!-- Cyber-Luxe Feed Mode Selector ("For You" vs "Following") -->
+    <div class="feed-tabs-container" style="display: flex; gap: 10px; margin: 18px 0 14px 0; padding: 4px; background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; backdrop-filter: blur(12px);">
+        <button id="feedTabForYou" class="feed-tab-btn active" onclick="switchFeedMode('foryou')" style="flex: 1; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(168, 85, 247, 0.2)); color: #00f2fe; border: 1px solid rgba(0, 242, 254, 0.35);">
+            <i class="fas fa-sparkles"></i> For You
+        </button>
+        <button id="feedTabFollowing" class="feed-tab-btn" onclick="switchFeedMode('following')" style="flex: 1; padding: 10px 16px; border-radius: 12px; font-weight: 600; font-size: 0.92rem; cursor: pointer; transition: all 0.25s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: transparent; color: #94a3b8; border: 1px solid transparent;">
+            <i class="fas fa-user-friends"></i> Following
+        </button>
+    </div>
+
     <div id="feed-container">
 
                 <!-- Posts will be injected here -->
@@ -2765,6 +2779,80 @@
         });
 
 
+        
+        let currentFeedMode = 'foryou';
+
+        function switchFeedMode(mode) {
+            if (currentFeedMode === mode) return;
+            currentFeedMode = mode;
+            const forYouBtn = document.getElementById('feedTabForYou');
+            const followingBtn = document.getElementById('feedTabFollowing');
+            
+            if (mode === 'foryou') {
+                if (forYouBtn) {
+                    forYouBtn.style.background = 'linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(168, 85, 247, 0.2))';
+                    forYouBtn.style.color = '#00f2fe';
+                    forYouBtn.style.borderColor = 'rgba(0, 242, 254, 0.35)';
+                }
+                if (followingBtn) {
+                    followingBtn.style.background = 'transparent';
+                    followingBtn.style.color = '#94a3b8';
+                    followingBtn.style.borderColor = 'transparent';
+                }
+            } else {
+                if (followingBtn) {
+                    followingBtn.style.background = 'linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(168, 85, 247, 0.2))';
+                    followingBtn.style.color = '#00f2fe';
+                    followingBtn.style.borderColor = 'rgba(0, 242, 254, 0.35)';
+                }
+                if (forYouBtn) {
+                    forYouBtn.style.background = 'transparent';
+                    forYouBtn.style.color = '#94a3b8';
+                    forYouBtn.style.borderColor = 'transparent';
+                }
+            }
+            fetchPosts();
+        }
+
+        async function triggerAIAssistComposer() {
+            const input = document.getElementById('composerTextarea') || document.getElementById('postContent') || document.querySelector('.create-input');
+            if (!input || !input.value.trim()) {
+                if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                    VylithraUI.showToast('Type your ideas first, then let AI polish it!', 'info');
+                }
+                return;
+            }
+
+            const originalText = input.value;
+            const token = localStorage.getItem('token');
+            if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                VylithraUI.showToast('Vylithra AI is polishing your post...', 'info');
+            }
+
+            try {
+                const res = await fetch('/api/ai/write-assist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token || ''
+                    },
+                    body: JSON.stringify({ text: originalText, mode: 'polish' })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.result) {
+                        input.value = data.result;
+                        if (typeof VylithraUI !== 'undefined' && VylithraUI.showToast) {
+                            VylithraUI.showToast('Post polished by AI ✨', 'success');
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error('AI Assist error:', e);
+            }
+        }
+
         async function fetchPosts(isRetry = false) {
             console.log('fetchPosts called, isRetry:', isRetry);
             const container = document.getElementById('feed-container');
@@ -2777,7 +2865,9 @@
                 if (loadingText) loadingText.innerText = isRetry ? 'Waking up server, loading feed...' : `Connecting to ${API_URL}...`;
                 console.log(`Fetching from: ${API_URL}/posts`);
 
-                const res = await fetch(`${API_URL}/posts`, { signal: controller.signal });
+                const token = localStorage.getItem('token');
+                const headers = token ? { 'x-auth-token': token } : {};
+                const res = await fetch(`${API_URL}/feed/personalized?mode=${currentFeedMode}`, { signal: controller.signal, headers });
                 clearTimeout(timeoutId);
                 console.log('Fetch response received', res.status);
 

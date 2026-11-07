@@ -2642,6 +2642,132 @@ app.get('/api/posts', optionalAuth, async (req, res) => {
     }
 });
 
+// ==========================================
+// Vylithra Social: Personalized & Smart Feed
+// ==========================================
+app.get('/api/feed/personalized', optionalAuth, async (req, res) => {
+    try {
+        const userId = req.user ? req.user.id : null;
+        const mode = req.query.mode || 'foryou'; // 'foryou' | 'following'
+        const limit = parseInt(req.query.limit) || 30;
+
+        if (mode === 'following' && userId) {
+            const currentUser = await User.findById(userId).select('following');
+            const followingIds = currentUser && currentUser.following ? currentUser.following : [];
+            const posts = await Post.find({
+                user: { $in: followingIds },
+                isUnderReview: { $ne: true }
+            })
+                .sort({ createdAt: -1 })
+                .limit(limit)
+                .populate('user', 'username profilePicture displayName')
+                .populate('comments.user', 'username profilePicture');
+            return res.json(posts);
+        }
+
+        // For You Algorithm: Blend high engagement with recent discoveries
+        const recentPosts = await Post.find({ isUnderReview: { $ne: true } })
+            .sort({ createdAt: -1 })
+            .limit(limit * 2)
+            .populate('user', 'username profilePicture displayName isPrivate followers')
+            .populate('comments.user', 'username profilePicture');
+
+        // Filter private accounts
+        const viewable = recentPosts.filter(post => {
+            if (!post.user) return false;
+            if (post.user.isPrivate) {
+                if (!userId) return false;
+                if (userId === post.user._id.toString()) return true;
+                return post.user.followers && post.user.followers.some(id => id.toString() === userId);
+            }
+            return true;
+        });
+
+        // Compute gravity engagement score: (likes*2 + comments*3 + shares*4 + 1) / (ageHours^1.4)
+        const scored = viewable.map(post => {
+            const likesCount = (post.likes || []).length;
+            const commentsCount = (post.comments || []).length;
+            const sharesCount = (post.shares || []).length || 0;
+            const ageHours = Math.max(0.1, (Date.now() - new Date(post.createdAt).getTime()) / (1000 * 60 * 60));
+            const score = (likesCount * 2 + commentsCount * 3 + sharesCount * 4 + 1) / Math.pow(ageHours, 1.4);
+            return { post, score };
+        });
+
+        scored.sort((a, b) => b.score - a.score);
+        res.json(scored.slice(0, limit).map(s => s.post));
+    } catch (err) {
+        console.error('[API] /api/feed/personalized Error:', err.message);
+        res.status(500).json({ msg: 'Failed to generate personalized feed' });
+    }
+});
+
+// ==========================================
+// Vylithra AI: Smart Services Layer
+// ==========================================
+const aiService = require('./services/ai_service');
+
+// AI Book Summarization
+app.post('/api/ai/summarize-book', optionalAuth, async (req, res) => {
+    try {
+        const { bookId, title, author, description, sampleText } = req.body;
+        let bookData = { title, author, description, sampleText };
+        if (bookId && mongoose.Types.ObjectId.isValid(bookId)) {
+            const book = await Book.findById(bookId);
+            if (book) {
+                bookData = {
+                    title: book.title,
+                    author: book.author,
+                    description: book.description,
+                    sampleText: book.sampleText || book.description
+                };
+            }
+        }
+        const summary = await aiService.summarizeBook(bookData);
+        res.json({ summary });
+    } catch (err) {
+        console.error('[AI] Summarize Error:', err.message);
+        res.status(500).json({ msg: 'AI summarization unavailable' });
+    }
+});
+
+// AI Writing Assistant
+app.post('/api/ai/write-assist', auth, async (req, res) => {
+    try {
+        const { text, mode } = req.body;
+        if (!text) return res.status(400).json({ msg: 'Text is required' });
+        const enhanced = await aiService.assistWriting({ text, mode });
+        res.json({ result: enhanced });
+    } catch (err) {
+        console.error('[AI] Write Assist Error:', err.message);
+        res.status(500).json({ msg: 'AI writing assistant unavailable' });
+    }
+});
+
+// AI Translation
+app.post('/api/ai/translate', optionalAuth, async (req, res) => {
+    try {
+        const { text, targetLanguage } = req.body;
+        if (!text) return res.status(400).json({ msg: 'Text is required' });
+        const translated = await aiService.translateText({ text, targetLanguage });
+        res.json({ translation: translated });
+    } catch (err) {
+        console.error('[AI] Translate Error:', err.message);
+        res.status(500).json({ msg: 'Translation unavailable' });
+    }
+});
+
+// AI Safety Moderation
+app.post('/api/ai/moderate', auth, async (req, res) => {
+    try {
+        const { text } = req.body;
+        const result = await aiService.moderateContent(text);
+        res.json(result);
+    } catch (err) {
+        console.error('[AI] Moderate Error:', err.message);
+        res.status(500).json({ isSafe: true });
+    }
+});
+
 // Health Check
 app.get('/ping', (req, res) => {
     console.log('Ping received');

@@ -1303,6 +1303,11 @@
                             `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
                         }
                         </div>
+                        <div style="margin-top: 8px;">
+                            <button type="button" class="book-action-btn" onclick="openAISummaryModal('${book._id}', event)" style="background:rgba(0, 242, 254, 0.08); border:1px solid rgba(0, 242, 254, 0.25); color:#00f2fe; width:100%; display:inline-flex; align-items:center; justify-content:center; gap:6px; font-size:0.8rem; padding:6px 10px; border-radius:10px; transition:all 0.2s;" onmouseover="this.style.background='rgba(0, 242, 254, 0.18)'" onmouseout="this.style.background='rgba(0, 242, 254, 0.08)'" title="View AI Key Insights & Summary">
+                                <i class="fas fa-sparkles"></i> AI Summary
+                            </button>
+                        </div>
                     </div>
                 `;
                     rowWrap.appendChild(card);
@@ -1679,8 +1684,80 @@
         }
 
         // Run
+        
+        async function openAISummaryModal(bookId, e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            const modal = document.getElementById('aiSummaryModal');
+            const titleEl = document.getElementById('aiModalBookTitle');
+            const authorEl = document.getElementById('aiModalBookAuthor');
+            const contentEl = document.getElementById('aiSummaryContent');
+            if (!modal) return;
+
+            const targetBook = (typeof allBooks !== 'undefined' ? allBooks : []).find(b => b._id === bookId) || {};
+            const title = targetBook.title || 'Book Summary';
+            const author = targetBook.penName || (targetBook.author ? (targetBook.author.displayName || targetBook.author.username || '') : '');
+
+            titleEl.innerText = title;
+            authorEl.innerText = author ? ('By ' + author + ' • Vylithra AI') : 'Powered by Vylithra AI';
+            contentEl.innerHTML = '<div style="text-align: center; padding: 40px; color: #94a3b8;"><i class="fas fa-spinner fa-spin" style="color: #00f2fe; font-size: 1.8rem; margin-bottom: 12px; display: block;"></i>Synthesizing key insights & executive summary...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/ai/summarize-book', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bookId, title, author })
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const raw = data.summary || 'Summary unavailable.';
+                    const formatted = raw
+                        .replace(/^### (.*$)/gim, '<h4 style="color:#00f2fe; margin-top:16px; margin-bottom:8px; font-size:1.05rem;">$1</h4>')
+                        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
+                        .replace(/\*(.*?)\*/gim, '<em>$1</em>')
+                        .replace(/^\- (.*$)/gim, '<li style="margin-left: 18px; margin-bottom: 4px;">$1</li>')
+                        .replace(/\n\n/gim, '<p style="margin-bottom: 12px;"></p>');
+                    contentEl.innerHTML = formatted;
+                } else {
+                    contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;">Could not generate summary at this moment.</div>';
+                }
+            } catch(err) {
+                contentEl.innerHTML = '<div style="color:#ef4444; text-align:center; padding:30px;">Network error generating summary.</div>';
+            }
+        }
+
+        function closeAISummaryModal() {
+            const modal = document.getElementById('aiSummaryModal');
+            if (modal) modal.style.display = 'none';
+        }
+
         init();
     </script>
+
+    <!-- AI Book Summary Modal -->
+    <div id="aiSummaryModal" class="modal vyl-modal" style="display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(12px); z-index: 9999; padding: 20px;">
+        <div class="vyl-modal-card" style="background: #0e121b; border: 1px solid rgba(0, 242, 254, 0.25); border-radius: 20px; max-width: 580px; width: 100%; max-height: 85vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
+            <div style="padding: 20px 24px; border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 36px; height: 36px; border-radius: 10px; background: rgba(0, 242, 254, 0.15); color: #00f2fe; display: flex; align-items: center; justify-content: center; font-size: 1.1rem;">
+                        <i class="fas fa-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 id="aiModalBookTitle" style="color: #fff; font-size: 1.1rem; margin: 0; font-weight: 700;">Book Summary</h3>
+                        <p id="aiModalBookAuthor" style="color: #94a3b8; font-size: 0.82rem; margin: 0;">Powered by Vylithra AI</p>
+                    </div>
+                </div>
+                <button onclick="closeAISummaryModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div id="aiSummaryContent" style="padding: 24px; overflow-y: auto; color: #e2e8f0; font-size: 0.95rem; line-height: 1.65;">
+                <div style="text-align: center; padding: 40px; color: #94a3b8;">
+                    <i class="fas fa-spinner fa-spin" style="color: #00f2fe; font-size: 1.8rem; margin-bottom: 12px; display: block;"></i>
+                    Synthesizing executive summary & key themes...
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 </html>

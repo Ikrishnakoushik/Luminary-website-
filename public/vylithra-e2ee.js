@@ -8,7 +8,7 @@
  *  - Key Storage: Non-Extractable CryptoKey in IndexedDB (XSS-Immune)
  */
 
-(function() {
+(function () {
     // -------------------------------------------------------------
     // Secure Key Storage (IndexedDB Vault - Non-Extractable Keys)
     // -------------------------------------------------------------
@@ -278,7 +278,7 @@
                                     const payload = JSON.parse(jsonPayload);
                                     this.currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
                                 }
-                            } catch(e) {}
+                            } catch (e) { }
                         }
                         if (this.currentUserId) {
                             await this.init(this.currentUserId);
@@ -302,7 +302,7 @@
                                 false,
                                 []
                             );
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     // 2. Try 'spki' if standard SubjectPublicKeyInfo (format exported by Web)
@@ -315,7 +315,7 @@
                                 false,
                                 []
                             );
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     // 3. Fallback: extract last 65 bytes as raw uncompressed EC point
@@ -329,7 +329,7 @@
                                 false,
                                 []
                             );
-                        } catch(e) {}
+                        } catch (e) { }
                     }
 
                     if (!importedRecipientPub) {
@@ -364,7 +364,7 @@
         async encrypt(plaintext, otherUserId) {
             if (!plaintext) return { content: '', iv: null, isE2EE: false };
             const sharedKey = await this.getSharedKey(otherUserId);
-            
+
             if (!sharedKey) {
                 if (window.CryptoJS) {
                     const legacyKey = CryptoJS.SHA256([this.currentUserId, otherUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
@@ -431,7 +431,7 @@
                                 );
                                 return new TextDecoder().decode(decryptedBuf);
                             }
-                        } catch (retryErr) {}
+                        } catch (retryErr) { }
 
                         // Try legacy CryptoJS fallback
                         if (window.CryptoJS) {
@@ -440,7 +440,7 @@
                                 const bytes = CryptoJS.AES.decrypt(ciphertext, legacyKey);
                                 const dec = bytes.toString(CryptoJS.enc.Utf8);
                                 if (dec) return dec === '[Attachment]' ? '📎 Attachment' : dec;
-                            } catch (e) {}
+                            } catch (e) { }
                         }
 
                         // If already readable text
@@ -460,7 +460,7 @@
                     const bytes = CryptoJS.AES.decrypt(ciphertext, legacyKey);
                     const dec = bytes.toString(CryptoJS.enc.Utf8);
                     if (dec) return dec === '[Attachment]' ? '📎 Attachment' : dec;
-                } catch (e) {}
+                } catch (e) { }
             }
 
             return ciphertext;
@@ -593,7 +593,7 @@
                     const bytes = CryptoJS.AES.decrypt(msg.content, key);
                     const dec = bytes.toString(CryptoJS.enc.Utf8);
                     if (dec) return dec === '[Attachment]' ? '📎 Attachment' : dec;
-                } catch (e) {}
+                } catch (e) { }
             }
 
             return msg.content;
