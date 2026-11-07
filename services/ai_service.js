@@ -1,14 +1,20 @@
 /**
  * Vylithra AI Service
- * Powered by Google Gemini API with graceful heuristic fallbacks.
+ * Powered by Google Gemini API with multi-model failover & heuristic fallbacks.
  */
 
-const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_MODELS = [
+    'gemini-3.8-flash',
+    'gemini-flash-latest',
+    'gemini-3.5-flash',
+    'gemini-pro-latest'
+];
 
 async function callGemini(prompt, systemInstruction = '') {
     const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) return null;
 
-    if (apiKey) {
+    for (const model of GEMINI_MODELS) {
         try {
             const body = {
                 contents: [{ parts: [{ text: prompt }] }]
@@ -19,7 +25,8 @@ async function callGemini(prompt, systemInstruction = '') {
                 };
             }
 
-            const response = await fetch(`${GEMINI_API_URL}?key=${apiKey}`, {
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+            const response = await fetch(url, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -30,15 +37,13 @@ async function callGemini(prompt, systemInstruction = '') {
                 const candidate = data.candidates && data.candidates[0];
                 const text = candidate && candidate.content && candidate.content.parts && candidate.content.parts[0] && candidate.content.parts[0].text;
                 if (text) return text.trim();
-            } else {
-                console.warn('[Vylithra AI] Gemini API call returned non-200:', response.status);
             }
         } catch (err) {
-            console.error('[Vylithra AI] Gemini API request failed:', err.message);
+            // Try next model in candidate list
         }
     }
 
-    // Heuristic Fallback when GEMINI_API_KEY is not configured
+    // Heuristic Fallback when API returns 503 or is offline
     return null;
 }
 
@@ -62,15 +67,15 @@ Format your response in Markdown with:
 
     // Fallback summary
     return `### 🌟 Executive Overview
-*${title || 'This work'}* by ${author || 'the author'} presents an exploration of its central narrative.
+*${title || 'This work'}* by ${author || 'the author'} presents an insightful exploration of its core subject matter.
 
 ### 🔑 Key Takeaways
 - **Engaging Narrative**: Blends creative insight with thought-provoking perspectives.
-- **Deep Themes**: Explores questions of individual agency and purpose.
+- **Deep Themes**: Explores questions of individual agency, discovery, and purpose.
 - **Accessible Style**: Written with a voice crafted for modern readers.
 
 ### 💡 Core Themes
-A recommended read for enthusiasts seeking meaningful stories and new perspectives in contemporary literature.`;
+A recommended read for enthusiasts seeking meaningful stories and fresh perspectives in contemporary literature.`;
 }
 
 /**
