@@ -40,3 +40,4 @@ const PayoutRequestSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 module.exports = mongoose.model('PayoutRequest', PayoutRequestSchema);
+

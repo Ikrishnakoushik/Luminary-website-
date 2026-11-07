@@ -14,6 +14,15 @@ const GroupSchema = new mongoose.Schema({
         type: String,
         default: ''
     },
+    type: {
+        type: String,
+        enum: ['group', 'channel'],
+        default: 'group'
+    },
+    isPublic: {
+        type: Boolean,
+        default: false
+    },
     admin: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',

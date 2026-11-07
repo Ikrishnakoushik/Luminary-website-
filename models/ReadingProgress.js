@@ -40,3 +40,4 @@ const ReadingProgressSchema = new mongoose.Schema({
 ReadingProgressSchema.index({ user: 1, book: 1 }, { unique: true });
 
 module.exports = mongoose.model('ReadingProgress', ReadingProgressSchema);
+

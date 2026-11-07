@@ -1098,7 +1098,7 @@ const Group = require('./models/Group');
 
 app.post('/api/groups', auth, async (req, res) => {
     try {
-        const { name, description, memberIds } = req.body;
+        const { name, description, memberIds, type = 'group', isPublic = false } = req.body;
         if (!name || name.trim() === '') return res.status(400).json({ msg: 'Group name required' });
 
         const members = memberIds ? [...new Set([req.user.id, ...memberIds])] : [req.user.id];
@@ -1107,6 +1107,8 @@ app.post('/api/groups', auth, async (req, res) => {
             name: name.trim(),
             description: description || '',
             admin: req.user.id,
+            type: type === 'channel' ? 'channel' : 'group',
+            isPublic: !!isPublic,
             members: members
         });
 
@@ -1164,6 +1166,10 @@ app.post('/api/messages/group/:groupId', auth, async (req, res) => {
     try {
         const group = await Group.findById(req.params.groupId);
         if(!group || !group.members.includes(req.user.id)) return res.status(403).json({ msg: 'Not a member of this group' });
+
+        if (group.type === 'channel' && String(group.admin) !== String(req.user.id)) {
+            return res.status(403).json({ msg: 'This is a broadcast channel. Only the channel admin can send messages.' });
+        }
 
         const { content, iv, isE2EE, attachmentUrl, attachmentType, isSystemLog, isViewOnce } = req.body || {};
 

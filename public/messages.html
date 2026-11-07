@@ -1521,6 +1521,23 @@
                     <input type="text" id="groupNameInput" class="vyl-input" placeholder="e.g. Design Team, Book Club..." maxlength="40">
                 </div>
 
+                <div style="margin-bottom: 14px; display: flex; gap: 10px;">
+                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="groupTypeChoice" value="group" checked style="accent-color: var(--primary);">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;"><i class="fas fa-users" style="color: var(--primary); margin-right: 4px;"></i> Group Chat</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">All members can chat</div>
+                        </div>
+                    </label>
+                    <label style="flex: 1; display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 12px; cursor: pointer;">
+                        <input type="radio" name="groupTypeChoice" value="channel" style="accent-color: var(--primary);">
+                        <div>
+                            <div style="font-weight: 700; font-size: 0.85rem; color: #fff;"><i class="fas fa-bullhorn" style="color: #a855f7; margin-right: 4px;"></i> Channel</div>
+                            <div style="font-size: 0.7rem; color: var(--text-muted);">Admin broadcasts only</div>
+                        </div>
+                    </label>
+                </div>
+
                 <div style="margin-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                         <label style="font-size: 0.85rem; font-weight: 600; color: #cbd5e1;">
@@ -1842,7 +1859,7 @@
                 const res = await fetch(`${API_URL}/groups`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
-                    body: JSON.stringify({ name, memberIds, keyEnvelopes })
+                    body: JSON.stringify({ name, memberIds, keyEnvelopes, type: document.querySelector('input[name="groupTypeChoice"]:checked')?.value || 'group' })
                 });
                 if (res.ok) {
                     const group = await res.json();

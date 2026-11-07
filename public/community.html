@@ -5,28 +5,28 @@
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Community Standards | Vylithra</title>
-    <meta name="description" content="Review the Vylithra community standards. We cultivate a premium, respectful, and visually inspiring space for all creators.">
-    <meta name="keywords" content="Vylithra community, content standards, creator guidelines">
+    <title>Learning & Communities | Vylithra</title>
+    <meta name="description" content="Explore interest-based communities, expert-led discussions, digital courses, and collaborative learning groups on Vylithra.">
+    <meta name="keywords" content="Vylithra communities, learning groups, online courses, expert discussions, tech communities">
     <script src="/theme-loader.js"></script>
     
     <link rel="stylesheet" href="/ui-common.css">
     <script src="/ui-common.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Merriweather:ital,wght@0,400;0,700;1,300&display=swap" rel="stylesheet">
+    
     <style>
-                :root {
+        :root {
             --bg-color: #07090e;
             --surface: #0e121b;
+            --surface-elevated: #141925;
             --primary: #00f2fe;
             --accent: #4facfe;
-            --accent-hover: #00d2de;
+            --purple: #a855f7;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --border: rgba(255, 255, 255, 0.08);
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --card-bg: #0e121b;
-            --card-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            --border-hover: rgba(0, 242, 254, 0.35);
         }
 
         body {
@@ -34,169 +34,375 @@
             font-family: 'Outfit', sans-serif;
             color: var(--text-main);
             margin: 0;
-            padding: 40px;
+            padding: 0;
+            min-height: 100vh;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
+            align-items: center;
         }
 
-        .container {
-            max-width: 800px;
+        .hub-container {
+            max-width: 1140px;
             width: 100%;
+            padding: 30px 20px 80px 20px;
+            box-sizing: border-box;
         }
 
-        .hero {
+        /* Top Nav */
+        .hub-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        .hub-logo {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: inherit;
+        }
+
+        .hub-logo span {
+            font-weight: 800;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Hero */
+        .hub-hero {
             text-align: center;
-            padding: 60px 20px;
+            padding: 30px 20px 40px;
         }
 
-        h1 {
-            font-size: 3rem;
-            margin-bottom: 15px;
+        .hub-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 20px;
+            background: rgba(0, 242, 254, 0.1);
             color: var(--primary);
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            margin-bottom: 15px;
         }
 
-        .intro {
-            font-size: 1.25rem;
+        .hub-hero h1 {
+            font-size: 2.8rem;
+            font-weight: 800;
+            margin: 0 0 12px 0;
+            letter-spacing: -1px;
+            background: linear-gradient(135deg, #ffffff 0%, #00f2fe 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hub-hero p {
+            font-size: 1.15rem;
             color: var(--text-muted);
+            max-width: 620px;
+            margin: 0 auto;
             line-height: 1.6;
         }
 
+        /* Navigation Tabs */
+        .hub-tabs {
+            display: flex;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .hub-tab {
+            padding: 12px 20px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hub-tab:hover {
+            color: #fff;
+        }
+
+        .hub-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Filter Chips */
+        .topic-chips {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+        }
+
+        .topic-chip {
+            padding: 6px 16px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .topic-chip:hover, .topic-chip.active {
+            background: rgba(0, 242, 254, 0.12);
+            color: var(--primary);
+            border-color: rgba(0, 242, 254, 0.4);
+        }
+
+        /* Community Grid */
+        .community-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        .community-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .community-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--border-hover);
+            box-shadow: 0 12px 40px rgba(0, 242, 254, 0.15);
+        }
+
+        .card-banner {
+            height: 90px;
+            padding: 16px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+        }
+
+        .card-icon-badge {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: rgba(14, 18, 27, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-topic-tag {
+            background: rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(8px);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: #f8fafc;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .card-body {
+            padding: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-body h3 {
+            margin: 0 0 8px 0;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .card-tagline {
+            font-size: 0.88rem;
+            color: var(--primary);
+            font-weight: 600;
+            margin: 0 0 10px 0;
+        }
+
+        .card-desc {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            line-height: 1.55;
+            margin: 0 0 18px 0;
+            flex: 1;
+        }
+
+        .card-meta-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid var(--border);
+            padding-top: 14px;
+            margin-top: auto;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 14px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .card-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .btn-join {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(0, 242, 254, 0.1);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            color: var(--primary);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-join:hover {
+            background: var(--primary);
+            color: #07090e;
+        }
+
+        .btn-join.joined {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: rgba(34, 197, 94, 0.4);
+            color: #4ade80;
+        }
+
+        /* Discussion Feed */
+        .discussion-feed {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .discussion-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            transition: border-color 0.2s;
+        }
+
+        .discussion-card:hover {
+            border-color: var(--border-hover);
+        }
+
+        /* Courses Grid */
+        .courses-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .course-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Events Grid */
+        .events-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+        }
+
+        .event-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 22px;
+            border-left: 4px solid var(--primary);
+        }
+
+        /* Guidelines Preserved */
         .guideline-card {
-            background: #0e121b;
-            padding: 30px;
+            background: var(--surface);
+            padding: 24px;
             border-radius: 16px;
             border: 1px solid var(--border);
-            margin-bottom: 20px;
+            margin-bottom: 16px;
             display: flex;
-            gap: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
-            transition: transform 0.2s ease, border-color 0.2s ease;
-        }
-
-        .guideline-card:hover {
-            transform: translateY(-2px);
-            border-color: rgba(0, 242, 254, 0.35);
-        }
-
-        .guideline-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+            gap: 18px;
         }
 
         .icon-box {
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             border-radius: 12px;
             background: rgba(0, 242, 254, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
-            color: #00f2fe;
+            font-size: 1.4rem;
+            color: var(--primary);
             flex-shrink: 0;
             border: 1px solid rgba(0, 242, 254, 0.2);
         }
 
-        .card-content h3 {
-            margin: 0 0 10px 0;
-            font-size: 1.3rem;
-        }
-
-        .card-content p {
-            margin: 0;
-            color: var(--text-muted);
-            line-height: 1.6;
-        }
-
         .report-section {
             text-align: center;
-            margin-top: 60px;
-            padding: 40px;
+            margin-top: 40px;
+            padding: 30px;
             background: rgba(239, 68, 68, 0.08);
             border-radius: 20px;
             border: 1px solid rgba(239, 68, 68, 0.25);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
         }
 
-        /* Mobile Responsive */
         @media (max-width: 768px) {
-            body {
-                padding: 20px;
+            .community-grid, .courses-grid, .events-grid {
+                grid-template-columns: 1fr;
             }
-
-            .hero {
-                padding: 40px 10px;
+            .hub-hero h1 {
+                font-size: 2.1rem;
             }
-
-            h1 {
-                font-size: 2.2rem;
-            }
-
-            .intro {
-                font-size: 1.1rem;
-            }
-
-            .guideline-card {
-                flex-direction: column;
-                gap: 15px;
-                padding: 20px;
-            }
-
-            .icon-box {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
-
-            .report-section {
-                padding: 25px 15px;
-                margin-top: 40px;
-            }
-        }
-
-        .report-section h2 {
-            color: #ef4444;
-            margin-top: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-
-        .report-section p {
-            color: #cbd5e1;
-            margin-bottom: 20px;
-            font-size: 1.05rem;
-        }
-
-        .report-btn {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: #ffffff;
-            padding: 12px 28px;
-            border-radius: 12px;
-            border: none;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            margin-top: 20px;
-            display: inline-block;
-            text-decoration: none;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.35);
-            transition: all 0.2s ease;
-        }
-
-        .report-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
-        }
-
-        .back-link {
-            display: block;
-            text-align: center;
-            margin-top: 40px;
-            color: var(--text-muted);
-            text-decoration: none;
-            opacity: 0.8;
         }
     </style>
 
@@ -205,60 +411,519 @@
 
 <body>
 
-    <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px solid var(--border);">
-        <a href="/main" style="text-decoration: none; display: flex; align-items: center; gap: 10px; color: inherit;">
-            <img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 38px; height: 38px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.45));">
-            <span style="font-weight: 800; font-size: 1.5rem; letter-spacing: -0.5px;">Vylithra</span>
-        </a>
-        <a href="/main" style="color: var(--primary); text-decoration: none; font-weight: 600; display: flex; align-items: center; gap: 6px;"><i class="fas fa-arrow-left"></i> Back to Feed</a>
+    <div class="hub-container">
+        <!-- Top Nav -->
+        <div class="hub-nav">
+            <a href="/main" class="hub-logo">
+                <img src="/vylithra_logo.svg" alt="Vylithra Logo" style="width: 36px; height: 36px; object-fit: contain; filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.45));">
+                <span>Vylithra</span>
+            </a>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <button type="button" onclick="openNewDiscussionModal()" style="background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%); color: #07090e; font-weight: 700; padding: 8px 18px; border-radius: 50px; border: none; cursor: pointer; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0, 242, 254, 0.35);">
+                    <i class="fas fa-plus"></i> New Discussion
+                </button>
+                <a href="/main" style="color: var(--primary); text-decoration: none; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                    <i class="fas fa-arrow-left"></i> Feed
+                </a>
+            </div>
+        </div>
+
+        <!-- Hero Header -->
+        <div class="hub-hero">
+            <div class="hub-badge"><i class="fas fa-graduation-cap"></i> Pillar 6: Learning & Communities</div>
+            <h1>Interest Communities & Learning Hub</h1>
+            <p>Connect with domain experts, participate in intellectual discussions, take creator-led micro-courses, and attend live community masterclasses.</p>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="hub-tabs">
+            <button class="hub-tab active" onclick="switchHubTab('communities', this)"><i class="fas fa-users"></i> Communities</button>
+            <button class="hub-tab" onclick="switchHubTab('discussions', this)"><i class="fas fa-comments"></i> Discussions</button>
+            <button class="hub-tab" onclick="switchHubTab('courses', this)"><i class="fas fa-book-reader"></i> Courses & Modules</button>
+            <button class="hub-tab" onclick="switchHubTab('events', this)"><i class="fas fa-calendar-alt"></i> Live Events</button>
+            <button class="hub-tab" onclick="switchHubTab('standards', this)"><i class="fas fa-shield-alt"></i> Community Standards</button>
+        </div>
+
+        <!-- Topic Filter Chips -->
+        <div class="topic-chips" id="topicChipsContainer">
+            <div class="topic-chip active" onclick="filterByTopic('All', this)">All Topics</div>
+            <div class="topic-chip" onclick="filterByTopic('Tech & AI', this)">Tech & AI</div>
+            <div class="topic-chip" onclick="filterByTopic('Writing & Books', this)">Writing & Books</div>
+            <div class="topic-chip" onclick="filterByTopic('Science', this)">Science</div>
+            <div class="topic-chip" onclick="filterByTopic('Philosophy', this)">Philosophy</div>
+            <div class="topic-chip" onclick="filterByTopic('Art & Design', this)">Art & Design</div>
+            <div class="topic-chip" onclick="filterByTopic('Business', this)">Business</div>
+        </div>
+
+        <!-- TAB 1: Communities Grid -->
+        <div id="tabContent-communities" class="tab-pane">
+            <div class="community-grid" id="communityCardsContainer">
+                <div style="text-align: center; padding: 50px; grid-column: 1 / -1; color: var(--text-muted);">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 2rem; color: var(--primary); margin-bottom: 12px; display: block;"></i>
+                    Synchronizing communities network...
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: Discussions Feed -->
+        <div id="tabContent-discussions" class="tab-pane" style="display: none;">
+            <div class="discussion-feed" id="discussionsFeedContainer">
+                <!-- dynamic discussions injected here -->
+            </div>
+        </div>
+
+        <!-- TAB 3: Courses & Modules -->
+        <div id="tabContent-courses" class="tab-pane" style="display: none;">
+            <div class="courses-grid" id="coursesGridContainer">
+                <!-- dynamic courses injected here -->
+            </div>
+        </div>
+
+        <!-- TAB 4: Events Calendar -->
+        <div id="tabContent-events" class="tab-pane" style="display: none;">
+            <div class="events-grid" id="eventsGridContainer">
+                <!-- dynamic events injected here -->
+            </div>
+        </div>
+
+        <!-- TAB 5: Preserved Community Standards -->
+        <div id="tabContent-standards" class="tab-pane" style="display: none;">
+            <div style="max-width: 820px; margin: 0 auto;">
+                <div class="guideline-card">
+                    <div class="icon-box"><i class="fas fa-heart"></i></div>
+                    <div class="card-content">
+                        <h3 style="margin: 0 0 8px 0;">Be Respectful & Civil</h3>
+                        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">Treat everyone with respect. Harassment, hate speech, and personal attacks are strictly prohibited. We cultivate a space of intellectual generosity and constructive collaboration.</p>
+                    </div>
+                </div>
+
+                <div class="guideline-card">
+                    <div class="icon-box"><i class="fas fa-brain"></i></div>
+                    <div class="card-content">
+                        <h3 style="margin: 0 0 8px 0;">Share Knowledge, Not Noise</h3>
+                        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">Ensure every spread, review, and comment adds genuine value. Low-effort spam, repetitive bot promotion, and irrelevant sales links will be suppressed.</p>
+                    </div>
+                </div>
+
+                <div class="guideline-card">
+                    <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
+                    <div class="card-content">
+                        <h3 style="margin: 0 0 8px 0;">Authenticity & Integrity</h3>
+                        <p style="margin: 0; color: var(--text-muted); line-height: 1.6;">Do not impersonate other authors or spread fabricated claims. When synthesizing information or referencing research, cite your origins with intellectual honesty.</p>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <h2 style="color: #ef4444; margin-top: 0; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <i class="fas fa-flag"></i> Violations & Moderation Support
+                    </h2>
+                    <p style="color: #cbd5e1; margin-bottom: 20px; font-size: 0.95rem;">
+                        If you encounter discussions or material violating these community principles, our safety team investigates reports swiftly.
+                    </p>
+                    <a href="mailto:meta81210@gmail.com" class="vyl-btn-primary" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); text-decoration: none; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-envelope"></i> Contact Safety Desk
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
 
-        <div class="hero">
-            <h1>Community Guidelines</h1>
-            <p class="intro">At Vylithra, we are building a space for thoughtful, respectful, and enriching
-                conversations.
-                These guidelines help keep our community safe.</p>
-        </div>
+    <!-- New Discussion Modal -->
+    <div id="newDiscussionModal" class="modal vyl-modal" style="display: none; align-items: center; justify-content: center; position: fixed; inset: 0; background: rgba(7, 9, 14, 0.85); backdrop-filter: blur(12px); z-index: 9999; padding: 20px;">
+        <div class="vyl-modal-card" style="background: #0e121b; border: 1px solid rgba(0, 242, 254, 0.3); border-radius: 20px; max-width: 580px; width: 100%; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.6);">
+            <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between;">
+                <h3 style="color: #fff; font-size: 1.15rem; margin: 0; font-weight: 700;">Start a Community Discussion</h3>
+                <button onclick="closeNewDiscussionModal()" style="background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer;">&times;</button>
+            </div>
+            <div style="padding: 20px 24px;">
+                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Select Community</label>
+                <select id="discussionCommunitySelect" style="width: 100%; box-sizing: border-box; background: rgba(14, 18, 27, 0.8); border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 10px 14px; font-size: 0.9rem; outline: none; margin-bottom: 14px;">
+                    <!-- dynamic options -->
+                </select>
 
-        <div class="guideline-card">
-            <div class="icon-box"><i class="fas fa-heart"></i></div>
-            <div class="card-content">
-                <h3>Be Respectful</h3>
-                <p>Treat everyone with respect. Harassment, hate speech, and personal attacks are strictly prohibited.
-                    We are here to learn from each other.</p>
+                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Discussion Title</label>
+                <input type="text" id="discussionTitleInput" placeholder="What core question or insight are you exploring?" style="width: 100%; box-sizing: border-box; background: rgba(14, 18, 27, 0.8); border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 10px 14px; font-size: 0.9rem; outline: none; margin-bottom: 14px;">
+
+                <label style="display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px; font-weight: 600;">Content / Context</label>
+                <textarea id="discussionContentInput" placeholder="Share your thesis, supporting arguments, or code snippets..." style="width: 100%; box-sizing: border-box; background: rgba(14, 18, 27, 0.8); border: 1px solid var(--border); border-radius: 10px; color: #fff; padding: 10px 14px; font-size: 0.9rem; outline: none; min-height: 110px; resize: vertical; margin-bottom: 20px;"></textarea>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="closeNewDiscussionModal()" style="background: transparent; border: 1px solid var(--border); color: #cbd5e1; padding: 8px 18px; border-radius: 20px; cursor: pointer; font-size: 0.85rem;">Cancel</button>
+                    <button type="button" onclick="submitCommunityDiscussion()" style="background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%); color: #07090e; font-weight: 700; border: none; padding: 8px 22px; border-radius: 50px; cursor: pointer; font-size: 0.85rem;">Publish Thread</button>
+                </div>
             </div>
         </div>
-
-        <div class="guideline-card">
-            <div class="icon-box"><i class="fas fa-brain"></i></div>
-            <div class="card-content">
-                <h3>Share Knowledge, Not Noise</h3>
-                <p>Vylithra is for high-quality "Spreads". Ensure your content adds value, whether it's an article, a
-                    tutorial, or an insightful thought.</p>
-            </div>
-        </div>
-
-        <div class="guideline-card">
-            <div class="icon-box"><i class="fas fa-shield-alt"></i></div>
-            <div class="card-content">
-                <h3>Authenticity Matters</h3>
-                <p>Do not impersonate others or spread misinformation. Be transparent about your sources and
-                    affiliations.</p>
-            </div>
-        </div>
-
-        <div class="report-section">
-            <h2><i class="fas fa-flag"></i> See something wrong?</h2>
-            <p>If you encounter content that violates these rules, please report it immediately.</p>
-            <a href="mailto:meta81210@gmail.com" class="report-btn">Report an Issue</a>
-        </div>
-
-        <a href="main" class="back-link"><i class="fas fa-arrow-left"></i> Back to Feed</a>
     </div>
 
+    <script>
+        const API_URL = '/api';
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+        try {
+            const u = localStorage.getItem('user');
+            if (u && u !== 'undefined') currentUser = JSON.parse(u);
+        } catch (e) {}
+
+        let allCommunities = [];
+        let activeTopic = 'All';
+
+        async function init() {
+            await fetchCommunities();
+        }
+
+        async function fetchCommunities() {
+            try {
+                const res = await fetch(`${API_URL}/communities`);
+                allCommunities = await res.json();
+                renderCommunities();
+                renderDiscussions();
+                renderCourses();
+                renderEvents();
+                populateCommunitySelect();
+            } catch (err) {
+                console.error('Error fetching communities:', err);
+                const container = document.getElementById('communityCardsContainer');
+                if (container) container.innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px; grid-column: 1 / -1;">Failed to load communities network.</div>';
+            }
+        }
+
+        function switchHubTab(tabName, btn) {
+            document.querySelectorAll('.hub-tab').forEach(t => t.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            document.querySelectorAll('.tab-pane').forEach(p => p.style.display = 'none');
+            const target = document.getElementById(`tabContent-${tabName}`);
+            if (target) target.style.display = 'block';
+
+            const chips = document.getElementById('topicChipsContainer');
+            if (chips) {
+                chips.style.display = (tabName === 'standards') ? 'none' : 'flex';
+            }
+        }
+
+        function filterByTopic(topic, chipEl) {
+            activeTopic = topic;
+            document.querySelectorAll('.topic-chip').forEach(c => c.classList.remove('active'));
+            if (chipEl) chipEl.classList.add('active');
+            renderCommunities();
+            renderDiscussions();
+            renderCourses();
+        }
+
+        function renderCommunities() {
+            const container = document.getElementById('communityCardsContainer');
+            if (!container) return;
+
+            const filtered = (activeTopic === 'All')
+                ? allCommunities
+                : allCommunities.filter(c => c.topic === activeTopic);
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div style="text-align:center; padding: 40px; grid-column: 1 / -1; color: var(--text-muted);">No communities found in ${activeTopic}.</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(c => {
+                const isMember = currentUser && c.members && c.members.some(m => String(m) === String(currentUser._id));
+                const memberCount = c.members ? c.members.length : 0;
+                const discCount = c.discussions ? c.discussions.length : 0;
+
+                return `
+                    <div class="community-card">
+                        <div class="card-banner" style="background: ${c.bannerColor || 'linear-gradient(135deg, #00f2fe 0%, #4facfe 100%)'};">
+                            <div class="card-icon-badge">
+                                <i class="fas ${c.icon || 'fa-brain'}"></i>
+                            </div>
+                            <span class="card-topic-tag">${c.topic || 'General'}</span>
+                        </div>
+                        <div class="card-body">
+                            <h3>${c.name}</h3>
+                            <p class="card-tagline">${c.tagline || ''}</p>
+                            <p class="card-desc">${c.description || ''}</p>
+                            <div class="card-meta-row">
+                                <div class="card-stats">
+                                    <span><i class="fas fa-users"></i> ${memberCount}</span>
+                                    <span><i class="fas fa-comments"></i> ${discCount}</span>
+                                </div>
+                                <button class="btn-join ${isMember ? 'joined' : ''}" onclick="toggleJoinCommunity('${c._id}', event)">
+                                    ${isMember ? '<i class="fas fa-check"></i> Joined' : '<i class="fas fa-plus"></i> Join'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderDiscussions() {
+            const container = document.getElementById('discussionsFeedContainer');
+            if (!container) return;
+
+            const allDiscs = [];
+            allCommunities.forEach(c => {
+                if (activeTopic !== 'All' && c.topic !== activeTopic) return;
+                (c.discussions || []).forEach(d => {
+                    allDiscs.push({ ...d, communityId: c._id, communityName: c.name, communityTopic: c.topic });
+                });
+            });
+
+            allDiscs.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+            if (allDiscs.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 50px; color: var(--text-muted);">No discussions active yet in this topic. Be the first to start a thread!</div>`;
+                return;
+            }
+
+            container.innerHTML = allDiscs.map(d => {
+                const author = d.user?.username || 'Community Member';
+                const avatar = d.user?.profilePicture
+                    ? `<img src="${d.user.profilePicture.startsWith('http') ? d.user.profilePicture : '/' + d.user.profilePicture}" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;">`
+                    : `<div style="width: 34px; height: 34px; border-radius: 50%; background: #334155; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; font-weight: 700;">${author.charAt(0).toUpperCase()}</div>`;
+                
+                const isLiked = currentUser && d.likes && d.likes.some(u => String(u) === String(currentUser._id));
+                const likesCount = d.likes ? d.likes.length : 0;
+                const commentsCount = d.comments ? d.comments.length : 0;
+
+                return `
+                    <div class="discussion-card">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                ${avatar}
+                                <div>
+                                    <div style="font-weight: 700; color: #fff; font-size: 0.9rem;">${author}</div>
+                                    <span style="font-size: 0.72rem; color: var(--primary); font-weight: 600;">${d.communityName} • ${d.communityTopic}</span>
+                                </div>
+                            </div>
+                            <span style="font-size: 0.75rem; color: #64748b;">${d.createdAt ? new Date(d.createdAt).toLocaleDateString() : ''}</span>
+                        </div>
+                        <h4 style="font-size: 1.15rem; font-weight: 700; margin: 0 0 8px 0; color: #fff;">${d.title}</h4>
+                        <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.6; margin: 0 0 14px 0;">${d.content}</p>
+                        <div style="display: flex; align-items: center; gap: 12px; border-top: 1px solid var(--border); padding-top: 10px;">
+                            <button onclick="likeDiscussion('${d.communityId}', '${d._id}')" style="background: none; border: none; color: ${isLiked ? '#00f2fe' : '#94a3b8'}; cursor: pointer; display: flex; align-items: center; gap: 6px; font-size: 0.85rem; font-weight: 600;">
+                                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i> ${likesCount}
+                            </button>
+                            <span style="color: var(--text-muted); font-size: 0.85rem; display: flex; align-items: center; gap: 6px;">
+                                <i class="far fa-comment"></i> ${commentsCount} replies
+                            </span>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderCourses() {
+            const container = document.getElementById('coursesGridContainer');
+            if (!container) return;
+
+            const allCourses = [];
+            allCommunities.forEach(c => {
+                if (activeTopic !== 'All' && c.topic !== activeTopic) return;
+                (c.courses || []).forEach(course => {
+                    allCourses.push({ ...course, communityId: c._id, communityName: c.name });
+                });
+            });
+
+            if (allCourses.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 50px; grid-column: 1 / -1; color: var(--text-muted);">No courses published yet for this topic.</div>`;
+                return;
+            }
+
+            container.innerHTML = allCourses.map(course => {
+                const isEnrolled = currentUser && course.enrolledUsers && course.enrolledUsers.some(u => String(u) === String(currentUser._id));
+                const lessonCount = course.lessons ? course.lessons.length : 0;
+
+                return `
+                    <div class="course-card">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                            <span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 10px; background: rgba(168, 85, 247, 0.15); color: #c084fc; font-weight: 700; border: 1px solid rgba(168, 85, 247, 0.3);">${course.level || 'Beginner'}</span>
+                            <span style="font-size: 0.75rem; color: var(--text-muted);">${course.communityName}</span>
+                        </div>
+                        <h3 style="font-size: 1.15rem; margin: 0 0 8px 0; color: #fff;">${course.title}</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin: 0 0 16px 0; flex: 1;">${course.description}</p>
+                        <div style="border-top: 1px solid var(--border); padding-top: 12px; margin-top: auto; display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fas fa-play-circle"></i> ${lessonCount} Lessons</span>
+                            <button onclick="enrollCourse('${course.communityId}', '${course._id}')" class="btn-join ${isEnrolled ? 'joined' : ''}">
+                                ${isEnrolled ? '<i class="fas fa-check"></i> Enrolled' : '<i class="fas fa-graduation-cap"></i> Enroll'}
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function renderEvents() {
+            const container = document.getElementById('eventsGridContainer');
+            if (!container) return;
+
+            const allEvents = [];
+            allCommunities.forEach(c => {
+                (c.events || []).forEach(e => {
+                    allEvents.push({ ...e, communityId: c._id, communityName: c.name });
+                });
+            });
+
+            if (allEvents.length === 0) {
+                container.innerHTML = `<div style="text-align: center; padding: 50px; grid-column: 1 / -1; color: var(--text-muted);">No upcoming events scheduled right now. Check back soon!</div>`;
+                return;
+            }
+
+            container.innerHTML = allEvents.map(e => {
+                const dateStr = e.date ? new Date(e.date).toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Upcoming';
+                const hasRsvped = currentUser && e.rsvps && e.rsvps.some(u => String(u) === String(currentUser._id));
+                const rsvpCount = e.rsvps ? e.rsvps.length : 0;
+
+                return `
+                    <div class="event-card">
+                        <div style="font-size: 0.78rem; color: var(--primary); font-weight: 700; margin-bottom: 6px;">
+                            <i class="far fa-clock"></i> ${dateStr}
+                        </div>
+                        <h3 style="font-size: 1.15rem; margin: 0 0 8px 0; color: #fff;">${e.title}</h3>
+                        <p style="font-size: 0.85rem; color: var(--text-muted); margin: 0 0 12px 0;">${e.description || ''}</p>
+                        <div style="font-size: 0.8rem; color: #94a3b8; margin-bottom: 14px;">
+                            <i class="fas fa-user-tie"></i> Hosted by: <strong style="color:#cbd5e1;">${e.speaker || 'Vylithra Host'}</strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border); padding-top: 12px;">
+                            <span style="font-size: 0.78rem; color: var(--text-muted);"><i class="fas fa-check-circle"></i> ${rsvpCount} Attending</span>
+                            <button onclick="rsvpEvent('${e.communityId}', '${e._id}')" class="btn-join ${hasRsvped ? 'joined' : ''}">
+                                ${hasRsvped ? '<i class="fas fa-check"></i> Going' : '<i class="fas fa-ticket-alt"></i> RSVP'}
+                            </button>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
+        function populateCommunitySelect() {
+            const select = document.getElementById('discussionCommunitySelect');
+            if (!select) return;
+            select.innerHTML = allCommunities.map(c => `<option value="${c._id}">${c.name} (${c.topic})</option>`).join('');
+        }
+
+        async function toggleJoinCommunity(communityId, e) {
+            if (e) e.stopPropagation();
+            if (!token) {
+                VylithraUI.showToast('Please sign in to join communities', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/communities/${communityId}/join`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Failed to update membership');
+                await fetchCommunities();
+                VylithraUI.showToast(data.isMember ? 'Joined community!' : 'Left community', 'success');
+            } catch (err) {
+                VylithraUI.showToast(err.message, 'error');
+            }
+        }
+
+        async function likeDiscussion(communityId, discId) {
+            if (!token) {
+                VylithraUI.showToast('Please sign in to like threads', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/communities/${communityId}/discussions/${discId}/like`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Failed to like');
+                await fetchCommunities();
+            } catch (err) {
+                VylithraUI.showToast(err.message, 'error');
+            }
+        }
+
+        async function enrollCourse(communityId, courseId) {
+            if (!token) {
+                VylithraUI.showToast('Please sign in to enroll', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/communities/${communityId}/courses/${courseId}/enroll`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Failed to enroll');
+                VylithraUI.showToast('Enrolled in course!', 'success');
+                await fetchCommunities();
+            } catch (err) {
+                VylithraUI.showToast(err.message, 'error');
+            }
+        }
+
+        async function rsvpEvent(communityId, eventId) {
+            if (!token) {
+                VylithraUI.showToast('Please sign in to RSVP', 'error');
+                return;
+            }
+            try {
+                const res = await fetch(`${API_URL}/communities/${communityId}/events/${eventId}/rsvp`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Failed to update RSVP');
+                VylithraUI.showToast(data.hasRsvped ? 'RSVP confirmed!' : 'RSVP cancelled', 'success');
+                await fetchCommunities();
+            } catch (err) {
+                VylithraUI.showToast(err.message, 'error');
+            }
+        }
+
+        function openNewDiscussionModal() {
+            if (!token) {
+                VylithraUI.showToast('Please sign in to start discussions', 'error');
+                return;
+            }
+            const modal = document.getElementById('newDiscussionModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeNewDiscussionModal() {
+            const modal = document.getElementById('newDiscussionModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitCommunityDiscussion() {
+            const select = document.getElementById('discussionCommunitySelect');
+            const titleInput = document.getElementById('discussionTitleInput');
+            const contentInput = document.getElementById('discussionContentInput');
+
+            const communityId = select ? select.value : null;
+            const title = (titleInput ? titleInput.value : '').trim();
+            const content = (contentInput ? contentInput.value : '').trim();
+
+            if (!communityId || !title || !content) {
+                VylithraUI.showToast('Please fill out all fields', 'error');
+                return;
+            }
+
+            try {
+                const res = await fetch(`${API_URL}/communities/${communityId}/discussions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-auth-token': token
+                    },
+                    body: JSON.stringify({ title, content })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.msg || 'Failed to publish');
+
+                VylithraUI.showToast('Discussion published to community!', 'success');
+                if (titleInput) titleInput.value = '';
+                if (contentInput) contentInput.value = '';
+                closeNewDiscussionModal();
+                await fetchCommunities();
+                switchHubTab('discussions', document.querySelectorAll('.hub-tab')[1]);
+            } catch (err) {
+                VylithraUI.showToast(err.message, 'error');
+            }
+        }
+
+        init();
+    </script>
 </body>
 
 </html>
-
-

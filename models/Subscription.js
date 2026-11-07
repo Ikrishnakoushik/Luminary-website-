@@ -49,3 +49,4 @@ const SubscriptionSchema = new mongoose.Schema({
 SubscriptionSchema.index({ subscriber: 1, creator: 1 });
 
 module.exports = mongoose.model('Subscription', SubscriptionSchema);
+
