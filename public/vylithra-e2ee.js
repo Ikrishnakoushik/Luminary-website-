@@ -92,6 +92,8 @@
         sharedKeysCache: new Map(),     // otherUserId -> CryptoKey (AES-GCM)
         groupKeysCache: new Map(),      // groupId -> CryptoKey (AES-GCM)
         userPublicKeysCache: new Map(), // otherUserId -> Base64 SPKI
+        pendingKeyFetches: new Map(),   // otherUserId -> Promise<Base64 SPKI>
+        pendingKeyDerivations: new Map(), // otherUserId -> Promise<CryptoKey>
         mediaCache: new Map(),          // url -> objectUrl
         isReady: false,
 
@@ -221,26 +223,36 @@
             if (this.userPublicKeysCache.has(uid)) {
                 return this.userPublicKeysCache.get(uid);
             }
-
-            const token = localStorage.getItem('token');
-            try {
-                const res = await fetch(`/api/users/${uid}/public-key`, {
-                    headers: {
-                        'x-auth-token': token || '',
-                        'Authorization': token ? `Bearer ${token}` : ''
-                    }
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data && data.publicKey) {
-                        this.userPublicKeysCache.set(uid, data.publicKey);
-                        return data.publicKey;
-                    }
-                }
-            } catch (err) {
-                console.warn(`[Vylithra E2EE] Failed to fetch public key for user ${uid}:`, err);
+            if (this.pendingKeyFetches.has(uid)) {
+                return this.pendingKeyFetches.get(uid);
             }
-            return null;
+
+            const fetchPromise = (async () => {
+                const token = localStorage.getItem('token');
+                try {
+                    const res = await fetch(`/api/users/${uid}/public-key`, {
+                        headers: {
+                            'x-auth-token': token || '',
+                            'Authorization': token ? `Bearer ${token}` : ''
+                        }
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data && data.publicKey) {
+                            this.userPublicKeysCache.set(uid, data.publicKey);
+                            return data.publicKey;
+                        }
+                    }
+                } catch (err) {
+                    console.warn(`[Vylithra E2EE] Failed to fetch public key for user ${uid}:`, err);
+                } finally {
+                    this.pendingKeyFetches.delete(uid);
+                }
+                return null;
+            })();
+
+            this.pendingKeyFetches.set(uid, fetchPromise);
+            return fetchPromise;
         },
 
         // Derive shared AES-GCM-256 key via Diffie-Hellman
@@ -249,90 +261,101 @@
             if (this.sharedKeysCache.has(uid)) {
                 return this.sharedKeysCache.get(uid);
             }
-            if (!this.myPrivateKey) {
-                if (!this.currentUserId) {
-                    try {
-                        const token = localStorage.getItem('token');
-                        if (token) {
-                            const base64Url = token.split('.')[1];
-                            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-                            const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
-                            const payload = JSON.parse(jsonPayload);
-                            this.currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
+            if (this.pendingKeyDerivations.has(uid)) {
+                return this.pendingKeyDerivations.get(uid);
+            }
+
+            const derivationPromise = (async () => {
+                try {
+                    if (!this.myPrivateKey) {
+                        if (!this.currentUserId) {
+                            try {
+                                const token = localStorage.getItem('token');
+                                if (token) {
+                                    const base64Url = token.split('.')[1];
+                                    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+                                    const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)).join(''));
+                                    const payload = JSON.parse(jsonPayload);
+                                    this.currentUserId = (payload.user && (payload.user.id || payload.user._id)) || payload.id || payload._id;
+                                }
+                            } catch(e) {}
                         }
-                    } catch(e) {}
+                        if (this.currentUserId) {
+                            await this.init(this.currentUserId);
+                        }
+                    }
+                    if (!this.myPrivateKey) return null;
+
+                    const recipientPubB64 = await this.getRecipientPublicKey(uid);
+                    if (!recipientPubB64) return null;
+
+                    const pubBuf = this.base64ToBuf(recipientPubB64);
+                    let importedRecipientPub = null;
+
+                    // 1. Try 'raw' if exact 65-byte uncompressed point (format exported by Mobile)
+                    if (pubBuf.byteLength === 65) {
+                        try {
+                            importedRecipientPub = await window.crypto.subtle.importKey(
+                                'raw',
+                                pubBuf,
+                                { name: 'ECDH', namedCurve: 'P-256' },
+                                false,
+                                []
+                            );
+                        } catch(e) {}
+                    }
+
+                    // 2. Try 'spki' if standard SubjectPublicKeyInfo (format exported by Web)
+                    if (!importedRecipientPub) {
+                        try {
+                            importedRecipientPub = await window.crypto.subtle.importKey(
+                                'spki',
+                                pubBuf,
+                                { name: 'ECDH', namedCurve: 'P-256' },
+                                false,
+                                []
+                            );
+                        } catch(e) {}
+                    }
+
+                    // 3. Fallback: extract last 65 bytes as raw uncompressed EC point
+                    if (!importedRecipientPub && pubBuf.byteLength >= 65) {
+                        try {
+                            const rawTail = pubBuf.slice(pubBuf.byteLength - 65);
+                            importedRecipientPub = await window.crypto.subtle.importKey(
+                                'raw',
+                                rawTail,
+                                { name: 'ECDH', namedCurve: 'P-256' },
+                                false,
+                                []
+                            );
+                        } catch(e) {}
+                    }
+
+                    if (!importedRecipientPub) {
+                        throw new Error(`Unable to import public key format (len: ${pubBuf.byteLength})`);
+                    }
+
+                    const sharedKey = await window.crypto.subtle.deriveKey(
+                        { name: 'ECDH', public: importedRecipientPub },
+                        this.myPrivateKey,
+                        { name: 'AES-GCM', length: 256 },
+                        false,
+                        ['encrypt', 'decrypt']
+                    );
+
+                    this.sharedKeysCache.set(uid, sharedKey);
+                    return sharedKey;
+                } catch (err) {
+                    console.error(`[Vylithra E2EE] Key derivation error with ${uid}:`, err);
+                    return null;
+                } finally {
+                    this.pendingKeyDerivations.delete(uid);
                 }
-                if (this.currentUserId) {
-                    await this.init(this.currentUserId);
-                }
-            }
-            if (!this.myPrivateKey) return null;
+            })();
 
-            const recipientPubB64 = await this.getRecipientPublicKey(uid);
-            if (!recipientPubB64) return null;
-
-            try {
-                const pubBuf = this.base64ToBuf(recipientPubB64);
-                let importedRecipientPub = null;
-
-                // 1. Try 'raw' if exact 65-byte uncompressed point (format exported by Mobile)
-                if (pubBuf.byteLength === 65) {
-                    try {
-                        importedRecipientPub = await window.crypto.subtle.importKey(
-                            'raw',
-                            pubBuf,
-                            { name: 'ECDH', namedCurve: 'P-256' },
-                            false,
-                            []
-                        );
-                    } catch(e) {}
-                }
-
-                // 2. Try 'spki' if standard SubjectPublicKeyInfo (format exported by Web)
-                if (!importedRecipientPub) {
-                    try {
-                        importedRecipientPub = await window.crypto.subtle.importKey(
-                            'spki',
-                            pubBuf,
-                            { name: 'ECDH', namedCurve: 'P-256' },
-                            false,
-                            []
-                        );
-                    } catch(e) {}
-                }
-
-                // 3. Fallback: extract last 65 bytes as raw uncompressed EC point
-                if (!importedRecipientPub && pubBuf.byteLength >= 65) {
-                    try {
-                        const rawTail = pubBuf.slice(pubBuf.byteLength - 65);
-                        importedRecipientPub = await window.crypto.subtle.importKey(
-                            'raw',
-                            rawTail,
-                            { name: 'ECDH', namedCurve: 'P-256' },
-                            false,
-                            []
-                        );
-                    } catch(e) {}
-                }
-
-                if (!importedRecipientPub) {
-                    throw new Error(`Unable to import public key format (len: ${pubBuf.byteLength})`);
-                }
-
-                const sharedKey = await window.crypto.subtle.deriveKey(
-                    { name: 'ECDH', public: importedRecipientPub },
-                    this.myPrivateKey,
-                    { name: 'AES-GCM', length: 256 },
-                    false,
-                    ['encrypt', 'decrypt']
-                );
-
-                this.sharedKeysCache.set(uid, sharedKey);
-                return sharedKey;
-            } catch (err) {
-                console.error(`[Vylithra E2EE] Key derivation error with ${uid}:`, err);
-                return null;
-            }
+            this.pendingKeyDerivations.set(uid, derivationPromise);
+            return derivationPromise;
         },
 
         // ---------------------------------------------------------

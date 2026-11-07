@@ -1870,44 +1870,62 @@
 
         let isGroupChatActive = false;
         let activeGroupId = null;
+        let isLoadingConversations = false;
+        let currentChatLoadCounter = 0;
+        let currentGroupLoadCounter = 0;
+
+        function updateSidebarPreview(targetId, msg) {
+            if (!targetId || !msg) return;
+            const previewEl = document.getElementById(`convo-preview-${targetId}`);
+            if (previewEl) {
+                let text = msg.content || '';
+                if (msg.attachmentUrl) text = '📎 Attachment';
+                if (msg.isE2EE && msg.iv) text = '🔒 Encrypted message';
+                if (typeof text === 'string' && text.startsWith('{"caption":')) {
+                    try {
+                        const p = JSON.parse(text);
+                        text = p.caption ? `📎 ${p.caption}` : '📎 Attachment';
+                    } catch(e) {}
+                }
+                previewEl.innerText = text;
+            }
+        }
 
         async function loadConversations() {
+            if (isLoadingConversations) return;
             const token = localStorage.getItem('token');
             if (!token) return;
             const list = document.getElementById('convos-list');
             if (!list) return;
 
+            isLoadingConversations = true;
             try {
                 let dms = [];
                 let groups = [];
 
-                // 1. Fetch DMs safely
-                try {
-                    const res = await fetch(`${API_URL}/messages/conversations`, {
-                        headers: getAuthHeaders()
-                    });
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (Array.isArray(data)) dms = data;
-                    }
-                } catch (dmErr) {
-                    console.warn('[Vylithra] DM conversations fetch warning:', dmErr);
+                // 1. Fetch DMs and Groups concurrently for speed
+                const [dmRes, groupRes] = await Promise.all([
+                    fetch(`${API_URL}/messages/conversations`, { headers: getAuthHeaders() }).catch(dmErr => {
+                        console.warn('[Vylithra] DM conversations fetch warning:', dmErr);
+                        return null;
+                    }),
+                    fetch(`${API_URL}/groups`, { headers: getAuthHeaders() }).catch(grpErr => {
+                        console.warn('[Vylithra] Groups fetch warning:', grpErr);
+                        return null;
+                    })
+                ]);
+
+                if (dmRes && dmRes.ok) {
+                    const data = await dmRes.json().catch(() => null);
+                    if (Array.isArray(data)) dms = data;
                 }
 
-                // 2. Fetch Groups safely
-                try {
-                    const groupRes = await fetch(`${API_URL}/groups`, {
-                        headers: getAuthHeaders()
-                    });
-                    if (groupRes.ok) {
-                        const groupData = await groupRes.json();
-                        if (Array.isArray(groupData)) groups = groupData;
-                    }
-                } catch (grpErr) {
-                    console.warn('[Vylithra] Groups fetch warning:', grpErr);
+                if (groupRes && groupRes.ok) {
+                    const groupData = await groupRes.json().catch(() => null);
+                    if (Array.isArray(groupData)) groups = groupData;
                 }
 
-                // 3. Normalize DMs safely without blocking sequential network delays
+                // 2. Normalize DMs safely
                 const normalizedDMs = [];
                 for (const c of dms) {
                     if (!c || !c.user) continue;
@@ -1917,7 +1935,6 @@
                     let preview = c.lastMessage || 'Start a conversation';
                     if (c.isE2EE && c.lastMessageIv) {
                         preview = '🔒 Encrypted message';
-                        // Decrypt in background and update DOM when available
                         if (window.VylithraCrypto) {
                             window.VylithraCrypto.decrypt({ content: c.lastMessage, iv: c.lastMessageIv, isE2EE: true }, uId)
                                 .then(dec => {
@@ -1956,7 +1973,7 @@
                     });
                 }
 
-                // 4. Normalize Groups safely
+                // 3. Normalize Groups safely
                 const normalizedGroups = [];
                 for (const g of groups) {
                     if (!g || !g._id) continue;
@@ -1983,7 +2000,7 @@
                     foundActiveInList = allConvos.some(c => (c.type === 'dm' && activeChatUserId === c.id) || (c.type === 'group' && activeGroupId === c.id));
                 }
 
-                if (allConvos.length === 0) {
+                if (allConvos.length === 0 && !activeChatUserId) {
                     list.innerHTML = `
                         <div class="empty-state" style="padding:40px 20px;">
                             <i class="far fa-comment-dots"></i>
@@ -2053,11 +2070,7 @@
                             </div>
                         </div>
                     `;
-                    if (allConvos.length === 0) {
-                        list.innerHTML = newConvoItem;
-                    } else {
-                        list.innerHTML = newConvoItem + list.innerHTML;
-                    }
+                    list.innerHTML = newConvoItem + list.innerHTML;
 
                     // Asynchronously fetch profile avatar to enhance the item
                     fetch(`${API_URL}/users/${activeChatUserId}`, { headers: getAuthHeaders() }).then(r => r.json()).then(user => {
@@ -2080,17 +2093,22 @@
 
             } catch (err) {
                 console.error('[Vylithra] Error loading conversations:', err);
-                list.innerHTML = `
-                    <div class="empty-state" style="padding:40px 20px;">
-                        <i class="far fa-comment-dots"></i>
-                        <h4 style="margin-bottom:8px;font-size:1.1rem;color:var(--text-main)">No Chats Yet</h4>
-                        <p style="font-size:0.9rem;">Start a new direct message or group conversation.</p>
-                    </div>
-                `;
+                if (!activeChatUserId && !activeGroupId) {
+                    list.innerHTML = `
+                        <div class="empty-state" style="padding:40px 20px;">
+                            <i class="far fa-comment-dots"></i>
+                            <h4 style="margin-bottom:8px;font-size:1.1rem;color:var(--text-main)">No Chats Yet</h4>
+                            <p style="font-size:0.9rem;">Start a new direct message or group conversation.</p>
+                        </div>
+                    `;
+                }
+            } finally {
+                isLoadingConversations = false;
             }
         }
 
         async function openGroupChat(groupId, groupName, profilePic, isBackground = false) {
+            const thisLoadId = ++currentGroupLoadCounter;
             const isSwitching = activeGroupId !== groupId || !isGroupChatActive;
             activeGroupId = groupId;
             activeChatUserId = null; // Important: Clear DM active state
@@ -2109,8 +2127,8 @@
                 if (!history.state || !history.state.chatOpen) {
                     history.pushState({ chatOpen: true }, '');
                 }
-                document.getElementById('message-input').focus();
-                loadConversations();
+                const msgInput = document.getElementById('message-input');
+                if (msgInput) msgInput.focus();
             }
 
             chatKey = '';
@@ -2147,6 +2165,9 @@
                 const res = await fetch(`${API_URL}/messages/group/${groupId}`, {
                     headers: getAuthHeaders()
                 });
+                if (thisLoadId !== currentGroupLoadCounter || activeGroupId !== groupId || !isGroupChatActive) {
+                    return; // Stale group request, discard!
+                }
                 if (res.ok) {
                     const msgs = await res.json();
                     if (isSwitching || !isBackground) {
@@ -2195,6 +2216,7 @@
 
         async function openChat(userId, username, profilePic, isBackground = false) {
             if (!userId) return;
+            const thisLoadId = ++currentChatLoadCounter;
             const isSwitching = activeChatUserId !== userId || isGroupChatActive;
             activeChatUserId = userId;
             activeChatUsername = username || '';
@@ -2226,7 +2248,6 @@
                 }
                 const msgInput = document.getElementById('message-input');
                 if (msgInput) msgInput.focus();
-                loadConversations();
             }
 
             // Set up E2EE Key
@@ -2258,6 +2279,9 @@
                 const res = await fetch(`${API_URL}/messages/${userId}`, {
                     headers: getAuthHeaders()
                 });
+                if (thisLoadId !== currentChatLoadCounter || activeChatUserId !== userId || isGroupChatActive) {
+                    return; // Stale DM request, discard!
+                }
                 if (res.ok) {
                     const msgs = await res.json();
                     if (!isBackground || isSwitching) {
@@ -2482,8 +2506,8 @@
 
             // Decrypt content (Supports ECDH + AES-GCM-256 E2EE, Group E2EE, and legacy CryptoJS)
             let displayContent = msg.content || '';
-            if (isSent && msgId && sentMessagePlaintexts.has(msgId)) {
-                displayContent = sentMessagePlaintexts.get(msgId);
+            if (isSent && msgId && (sentMessagePlaintexts.has(msgId) || localStorage.getItem('vyl_sent_' + msgId))) {
+                displayContent = sentMessagePlaintexts.get(msgId) || localStorage.getItem('vyl_sent_' + msgId);
             } else if (msg.isE2EE && msg.iv && window.VylithraCrypto) {
                 try {
                     const senderId = msg.sender && (msg.sender._id || msg.sender.id) 
@@ -2836,7 +2860,10 @@
                 // Optimistic UI Render (instant WhatsApp-speed send)
                 const optimisticId = 'opt_' + Date.now();
                 activeRenderedMsgIds.add(optimisticId);
-                if (content) sentMessagePlaintexts.set(optimisticId, content);
+                if (content) {
+                    sentMessagePlaintexts.set(optimisticId, content);
+                    try { localStorage.setItem('vyl_sent_' + optimisticId, content); } catch(e) {}
+                }
 
                 const optimisticMsg = {
                     _id: optimisticId,
@@ -2880,7 +2907,10 @@
                     if (savedMsg && savedMsg._id) {
                         const savedId = String(savedMsg._id);
                         activeRenderedMsgIds.add(savedId);
-                        if (content) sentMessagePlaintexts.set(savedId, content);
+                        if (content) {
+                            sentMessagePlaintexts.set(savedId, content);
+                            try { localStorage.setItem('vyl_sent_' + savedId, content); } catch(e) {}
+                        }
 
                         const optRow = document.getElementById(`msg-row-${optimisticId}`);
                         if (optRow) {
@@ -2891,8 +2921,8 @@
                             const bubble = optRow.querySelector('.message-bubble');
                             if (bubble) bubble.id = `msg-bubble-${savedId}`;
                         }
+                        updateSidebarPreview(isGroupChatActive ? activeGroupId : activeChatUserId, savedMsg);
                     }
-                    loadConversations();
                 } else {
                     VylithraUI.showToast("Oops! Our servers took a quick nap. Please try again.", 'error');
                 }
@@ -3017,10 +3047,26 @@
                     const msgId = String(msg._id);
                     if (activeRenderedMsgIds.has(msgId) || document.getElementById(`msg-row-${msgId}`)) return;
 
-                    const senderId = msg.sender && msg.sender._id ? String(msg.sender._id) : String(msg.sender);
-                    const isSentByMe = senderId === String(currentUserId);
+                    // If it is a group message, let new_group_message handle it
+                    if (msg.groupId) return;
 
-                    if (isSentByMe) {
+                    const senderId = msg.sender && (msg.sender._id || msg.sender.id) 
+                        ? String(msg.sender._id || msg.sender.id) 
+                        : (msg.sender ? String(msg.sender) : '');
+                    const receiverId = msg.receiver && (msg.receiver._id || msg.receiver.id) 
+                        ? String(msg.receiver._id || msg.receiver.id) 
+                        : (msg.receiver ? String(msg.receiver) : '');
+                    const myId = String(currentUserId || '');
+                    const isSentByMe = senderId === myId;
+
+                    // STRICT FILTER: A message belongs to current 1-on-1 chat IF AND ONLY IF:
+                    // (sender is the active partner AND receiver is me) OR (sender is me AND receiver is the active partner)
+                    const belongsToCurrentChat = !isGroupChatActive && activeChatUserId && (
+                        (senderId === activeChatUserId && receiverId === myId) ||
+                        (isSentByMe && receiverId === activeChatUserId)
+                    );
+
+                    if (isSentByMe && receiverId === activeChatUserId) {
                         const optRow = document.querySelector('.message-row.sent-row.optimistic');
                         if (optRow) {
                             optRow.id = `msg-row-${msgId}`;
@@ -3030,29 +3076,33 @@
                             if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msgId}', true)`);
                             const bubble = optRow.querySelector('.message-bubble');
                             if (bubble) bubble.id = `msg-bubble-${msgId}`;
+                            updateSidebarPreview(activeChatUserId, msg);
                             return;
                         } else if (document.getElementById(`msg-row-${msgId}`)) {
                             return;
                         }
                     }
 
-                    const isCurrentChat = (activeChatUserId && (senderId === activeChatUserId || senderId === currentUserId)) ||
-                                          (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId);
-                    if (isCurrentChat) {
+                    if (belongsToCurrentChat) {
                         await renderMessage(msg);
                         scrollToBottom();
                     }
-                    loadConversations();
+                    updateSidebarPreview(isSentByMe ? receiverId : senderId, msg);
                 });
                 chatSocket.on('new_group_message', async (msg) => {
                     if (!msg || !msg._id) return;
                     const msgId = String(msg._id);
                     if (activeRenderedMsgIds.has(msgId) || document.getElementById(`msg-row-${msgId}`)) return;
 
-                    const senderId = msg.sender && msg.sender._id ? String(msg.sender._id) : String(msg.sender);
-                    const isSentByMe = senderId === String(currentUserId);
+                    const gId = msg.groupId ? String(msg.groupId) : '';
+                    if (!gId) return;
 
-                    if (isSentByMe) {
+                    const senderId = msg.sender && (msg.sender._id || msg.sender.id) 
+                        ? String(msg.sender._id || msg.sender.id) 
+                        : (msg.sender ? String(msg.sender) : '');
+                    const isSentByMe = senderId === String(currentUserId || '');
+
+                    if (isSentByMe && isGroupChatActive && activeGroupId === gId) {
                         const optRow = document.querySelector('.message-row.sent-row.optimistic');
                         if (optRow) {
                             optRow.id = `msg-row-${msgId}`;
@@ -3062,17 +3112,18 @@
                             if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${msgId}', true)`);
                             const bubble = optRow.querySelector('.message-bubble');
                             if (bubble) bubble.id = `msg-bubble-${msgId}`;
+                            updateSidebarPreview(gId, msg);
                             return;
                         } else if (document.getElementById(`msg-row-${msgId}`)) {
                             return;
                         }
                     }
 
-                    if (isGroupChatActive && activeGroupId && msg.groupId === activeGroupId) {
+                    if (isGroupChatActive && activeGroupId === gId) {
                         await renderMessage(msg);
                         scrollToBottom();
                     }
-                    loadConversations();
+                    updateSidebarPreview(gId, msg);
                 });
                 chatSocket.on('message_deleted', (data) => {
                     if (!data || !data.messageId) return;
@@ -3131,8 +3182,18 @@
                 fetch(`${API_URL}/users/${targetUser}`, { headers: getAuthHeaders() })
                     .then(r => r.json())
                     .then(uData => {
-                        if (uData && (uData._id || uData.username)) {
-                            openChat(uData._id || targetUser, uData.displayName || uData.username || 'User', uData.profilePicture || '', false);
+                        if (uData && (uData._id || uData.username) && activeChatUserId === (uData._id || targetUser)) {
+                            const name = uData.displayName || uData.username || 'User';
+                            activeChatUsername = name;
+                            const nameEl = document.getElementById('active-name');
+                            if (nameEl) nameEl.innerText = `@${name}`;
+                            if (uData.profilePicture) {
+                                const avEl = document.getElementById('active-avatar');
+                                if (avEl) {
+                                    const src = String(uData.profilePicture).startsWith('http') ? uData.profilePicture : '/' + uData.profilePicture;
+                                    avEl.innerHTML = `<img src="${src}" alt="Avatar">`;
+                                }
+                            }
                         }
                     })
                     .catch(() => {});

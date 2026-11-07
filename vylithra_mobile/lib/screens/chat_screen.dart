@@ -141,9 +141,18 @@ class _ChatScreenState extends State<ChatScreen> {
     // We assume SocketService is already connected globally via HomeScreen.
     _messageSubscription = _socketService.onNewMessage.listen((data) async {
       final senderData = data['sender'];
-      final senderId = senderData is Map ? senderData['_id'] : senderData;
+      final senderId = senderData is Map ? senderData['_id']?.toString() : senderData?.toString();
+      final receiverData = data['receiver'];
+      final receiverId = receiverData is Map ? receiverData['_id']?.toString() : receiverData?.toString();
 
-      if (senderId == widget.targetUserId || senderId == _currentUserId) {
+      // Ignore group messages in 1-on-1 chat
+      if (data['groupId'] != null) return;
+
+      // Strictly verify that this message belongs to the active conversation
+      final isBetweenChatUsers = (senderId == widget.targetUserId && (receiverId == null || receiverId == _currentUserId)) ||
+                                 (senderId == _currentUserId && (receiverId == null || receiverId == widget.targetUserId));
+
+      if (isBetweenChatUsers) {
         if (data['isE2EE'] == true && data['iv'] != null) {
           final currentToken = _token ?? (mounted ? Provider.of<AuthProvider>(context, listen: false).token ?? '' : '');
           final dec = await E2EEService.instance.decryptMessage(
