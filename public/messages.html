@@ -2034,30 +2034,48 @@
                     foundActiveInList = true;
                 }
 
-                // If came from a profile page with ?user=ID
+                // If currently chatting with a user not yet in history, immediately pin them to the sidebar
                 if (activeChatUserId && !foundActiveInList) {
-                    fetch(`${API_URL}/users/${activeChatUserId}`, { headers: getAuthHeaders() }).then(r => r.json()).then(user => {
-                        if (user && user._id) {
-                            const initial = (user.username || 'U').charAt(0).toUpperCase();
-                            const avatarHtml = user.profilePicture ? `<img src="${(user.profilePicture) && String(user.profilePicture).startsWith('http') ? (user.profilePicture) : '/' + (user.profilePicture)}">` : initial;
-                            const newConvoItem = `
-                                <div class="conversation-item active" onclick="openChat('${user._id}', '${user.username}', '${user.profilePicture || ''}')">
-                                    <div class="avatar">
-                                        ${avatarHtml}
-                                        <span class="online-indicator"></span>
-                                    </div>
-                                    <div class="convo-info">
-                                        <div class="convo-header">
-                                            <span class="convo-name">@${user.username}</span>
-                                            <span class="convo-time">Now</span>
-                                        </div>
-                                        <div class="convo-preview">New conversation</div>
-                                    </div>
+                    const uName = (activeChatUsername || '').replace(/^@/, '') || 'User';
+                    const initial = uName.charAt(0).toUpperCase();
+                    const newConvoItem = `
+                        <div class="conversation-item active" onclick="openChat('${activeChatUserId}', '${uName}', '')">
+                            <div class="avatar">
+                                ${initial}
+                                <span class="online-indicator"></span>
+                            </div>
+                            <div class="convo-info">
+                                <div class="convo-header">
+                                    <span class="convo-name">@${uName}</span>
+                                    <span class="convo-time">Now</span>
                                 </div>
-                            `;
-                            list.innerHTML = newConvoItem + list.innerHTML;
+                                <div class="convo-preview">Start typing to connect</div>
+                            </div>
+                        </div>
+                    `;
+                    if (allConvos.length === 0) {
+                        list.innerHTML = newConvoItem;
+                    } else {
+                        list.innerHTML = newConvoItem + list.innerHTML;
+                    }
+
+                    // Asynchronously fetch profile avatar to enhance the item
+                    fetch(`${API_URL}/users/${activeChatUserId}`, { headers: getAuthHeaders() }).then(r => r.json()).then(user => {
+                        if (user && user._id && user.profilePicture) {
+                            const avEl = list.querySelector('.conversation-item.active .avatar');
+                            if (avEl) {
+                                avEl.innerHTML = `<img src="${String(user.profilePicture).startsWith('http') ? user.profilePicture : '/' + user.profilePicture}" alt="Avatar"><span class="online-indicator"></span>`;
+                            }
                         }
                     }).catch(() => {});
+                } else if (allConvos.length === 0 && !activeChatUserId && !activeGroupId) {
+                    list.innerHTML = `
+                        <div class="empty-state" style="padding:40px 20px;">
+                            <i class="far fa-comment-dots"></i>
+                            <h4 style="margin-bottom:8px;font-size:1.1rem;color:var(--text-main)">No Chats Yet</h4>
+                            <p style="font-size:0.9rem;">No active conversations yet. Visit a user's profile to message them or create a group.</p>
+                        </div>
+                    `;
                 }
 
             } catch (err) {
@@ -2249,10 +2267,13 @@
                         activeRenderedMsgIds.clear();
                         if (!msgs || msgs.length === 0) {
                             stream.innerHTML = `
-                                <div class="empty-state" style="padding-top:10%;">
-                                    <div class="avatar" style="width:80px;height:80px;font-size:2rem;margin:0 auto 20px auto;">${initial}</div>
-                                    <h3>@${username}</h3>
-                                    <p>This is the beginning of your direct message history.</p>
+                                <div class="empty-state" style="padding-top:8%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                                    <div class="avatar" style="width:72px; height:72px; font-size:1.8rem; margin:0 auto 16px auto; border-radius:50%; box-shadow:0 8px 24px rgba(20, 184, 166, 0.25);">${initial}</div>
+                                    <h3 style="color:var(--text-main); font-size:1.25rem; font-weight:700; margin-bottom:6px;">@${username}</h3>
+                                    <p style="color:var(--text-muted); font-size:0.9rem; max-width:320px; margin-bottom:20px;">No messages here yet. Say hello to start the conversation!</p>
+                                    <button type="button" onclick="quickSendWave()" style="background:rgba(20, 184, 166, 0.12); border:1px solid rgba(20, 184, 166, 0.35); color:var(--primary); padding:10px 22px; border-radius:24px; font-weight:600; cursor:pointer; font-size:0.92rem; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s;" onmouseover="this.style.background='var(--primary)'; this.style.color='#fff';" onmouseout="this.style.background='rgba(20, 184, 166, 0.12)'; this.style.color='var(--primary)';">
+                                        <i class="fas fa-hand-paper"></i> Say Hello 👋
+                                    </button>
                                 </div>
                             `;
                         } else {
@@ -2682,6 +2703,14 @@
             }
             document.getElementById('file-upload-input').value = '';
             document.getElementById('attachment-preview-container').style.display = 'none';
+        }
+
+        function quickSendWave() {
+            const input = document.getElementById('message-input');
+            if (input) {
+                input.value = '👋 Hello!';
+                sendMessage();
+            }
         }
 
         async function sendMessage(e) {
