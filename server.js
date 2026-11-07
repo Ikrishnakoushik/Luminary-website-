@@ -98,6 +98,79 @@ io.on('connection', (socket) => {
     socket.on('join_room', registerUserSocket);
     socket.on('join-room', registerUserSocket);
 
+    // Direct 1-on-1 WebRTC Call Event Routing
+    socket.on('call-user', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        if (senderId) registerUserSocket(senderId);
+        const outData = { ...data, from: senderId || data.from };
+        io.to(targetUserId).emit('call-made', outData);
+        io.to(targetUserId).emit('webrtc_signal', {
+            type: 'call-made',
+            to: targetUserId,
+            from: senderId || data.from,
+            payload: outData
+        });
+    });
+
+    socket.on('make-answer', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        if (senderId) registerUserSocket(senderId);
+        const outData = { ...data, from: senderId || data.from };
+        io.to(targetUserId).emit('answer-made', outData);
+        io.to(targetUserId).emit('webrtc_signal', {
+            type: 'answer-made',
+            to: targetUserId,
+            from: senderId || data.from,
+            payload: outData
+        });
+    });
+
+    socket.on('reject-call', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        const outData = { ...data, from: senderId || data.from };
+        io.to(targetUserId).emit('call-rejected', outData);
+        io.to(targetUserId).emit('webrtc_signal', {
+            type: 'call-rejected',
+            to: targetUserId,
+            from: senderId || data.from,
+            payload: outData
+        });
+    });
+
+    socket.on('end-call', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        const outData = { ...data, from: senderId || data.from };
+        io.to(targetUserId).emit('call-ended', outData);
+        io.to(targetUserId).emit('webrtc_signal', {
+            type: 'call-ended',
+            to: targetUserId,
+            from: senderId || data.from,
+            payload: outData
+        });
+    });
+
+    socket.on('ice-candidate', (data) => {
+        if (!data || !data.to) return;
+        const targetUserId = String(data.to);
+        const senderId = socket.userId || (data.from ? String(data.from) : null);
+        const outData = { ...data, from: senderId || data.from };
+        io.to(targetUserId).emit('ice-candidate', outData);
+        io.to(targetUserId).emit('webrtc_signal', {
+            type: 'ice-candidate',
+            to: targetUserId,
+            from: senderId || data.from,
+            payload: outData
+        });
+    });
+
     socket.on('join-group-call', (data) => {
         if (!data || !data.groupId) return;
         const groupId = String(data.groupId);
@@ -162,6 +235,9 @@ io.on('connection', (socket) => {
 
         // Forward signal to target user's active room
         io.to(targetUserId).emit('webrtc_signal', data);
+        if (data.type) {
+            io.to(targetUserId).emit(data.type, data.payload || data);
+        }
 
         // Forward to all active sockets for target user to guarantee delivery
         const targetSockets = userSocketMap.get(targetUserId);
@@ -169,6 +245,9 @@ io.on('connection', (socket) => {
             for (const sockId of targetSockets) {
                 if (sockId !== socket.id) {
                     io.to(sockId).emit('webrtc_signal', data);
+                    if (data.type) {
+                        io.to(sockId).emit(data.type, data.payload || data);
+                    }
                 }
             }
         }
@@ -3919,8 +3998,17 @@ app.post('/api/messages/upload', auth, (req, res, next) => {
             }
         }
 
-        // 2. Local filesystem write if not running in Vercel serverless
-        if (!fileUrl && !process.env.VERCEL) {
+        // 2. Guaranteed persistent storage in MongoDB MessageAttachment collection
+        if (!fileUrl) {
+            const attachment = await MessageAttachment.create({
+                filename: req.file.originalname || `upload-${Date.now()}`,
+                contentType: req.file.mimetype || 'application/octet-stream',
+                data: req.file.buffer,
+                size: req.file.size || req.file.buffer.length
+            });
+            fileUrl = `/api/messages/attachment/${attachment._id}`;
+
+            // Optional best-effort local mirror
             try {
                 const fs = require('fs');
                 const path = require('path');
@@ -3930,21 +4018,7 @@ app.post('/api/messages/upload', auth, (req, res, next) => {
                     fs.mkdirSync(uploadDir, { recursive: true });
                 }
                 fs.writeFileSync(path.join(uploadDir, uniqueName), req.file.buffer);
-                fileUrl = `/uploads/${uniqueName}`;
-            } catch (fsErr) {
-                console.warn('[Upload] Local fs write failed:', fsErr.message);
-            }
-        }
-
-        // 3. Guaranteed MongoDB fallback: store in MessageAttachment collection
-        if (!fileUrl) {
-            const attachment = await MessageAttachment.create({
-                filename: req.file.originalname || `upload-${Date.now()}`,
-                contentType: req.file.mimetype || 'application/octet-stream',
-                data: req.file.buffer,
-                size: req.file.size || req.file.buffer.length
-            });
-            fileUrl = `/api/messages/attachment/${attachment._id}`;
+            } catch (fsErr) {}
         }
 
         res.json({ url: fileUrl });

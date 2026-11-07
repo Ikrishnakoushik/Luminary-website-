@@ -1978,6 +1978,11 @@
 
                 const allConvos = [...normalizedDMs, ...normalizedGroups].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
 
+                let foundActiveInList = false;
+                if (activeChatUserId || activeGroupId) {
+                    foundActiveInList = allConvos.some(c => (c.type === 'dm' && activeChatUserId === c.id) || (c.type === 'group' && activeGroupId === c.id));
+                }
+
                 if (allConvos.length === 0) {
                     list.innerHTML = `
                         <div class="empty-state" style="padding:40px 20px;">
@@ -2027,11 +2032,6 @@
                             </div>
                         `;
                     });
-                }
-
-                let foundActiveInList = false;
-                if (allConvos.some(c => (c.type === 'dm' && activeChatUserId === c.id) || (c.type === 'group' && activeGroupId === c.id))) {
-                    foundActiveInList = true;
                 }
 
                 // If currently chatting with a user not yet in history, immediately pin them to the sidebar
@@ -2156,7 +2156,6 @@
                             stream.innerHTML = '<div class="empty-state" style="padding-top:10%;"><p style="color:#94a3b8; font-style:italic;">This group is quiet. Break the ice!</p></div>';
                         } else {
                             for (const m of msgs) {
-                                activeRenderedMsgIds.add(m._id || m.createdAt);
                                 await renderMessage(m);
                             }
                             scrollToBottom();
@@ -2165,9 +2164,8 @@
                         // Silent Background Sync
                         let hasNew = false;
                         for (const m of msgs) {
-                            const key = m._id || m.createdAt;
-                            if (!activeRenderedMsgIds.has(key)) {
-                                activeRenderedMsgIds.add(key);
+                            const key = m._id ? String(m._id) : (m.createdAt ? String(m.createdAt) : '');
+                            if (!activeRenderedMsgIds.has(key) && !document.getElementById(`msg-row-${key}`)) {
                                 await renderMessage(m);
                                 hasNew = true;
                             }
@@ -2278,7 +2276,6 @@
                             `;
                         } else {
                             for (const msg of msgs) {
-                                activeRenderedMsgIds.add(msg._id || msg.createdAt);
                                 await renderMessage(msg);
                             }
                             scrollToBottom();
@@ -2287,9 +2284,8 @@
                         // Silent Background Sync
                         let hasNew = false;
                         for (const msg of msgs) {
-                            const key = msg._id || msg.createdAt;
-                            if (!activeRenderedMsgIds.has(key)) {
-                                activeRenderedMsgIds.add(key);
+                            const key = msg._id ? String(msg._id) : (msg.createdAt ? String(msg.createdAt) : '');
+                            if (!activeRenderedMsgIds.has(key) && !document.getElementById(`msg-row-${key}`)) {
                                 await renderMessage(msg);
                                 hasNew = true;
                             }
@@ -2367,10 +2363,13 @@
             if (/^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?(\/.*)$/i.test(str)) {
                 str = str.replace(/^https?:\/\/(localhost|127\.0\.0\.1|10\.0\.2\.2)(:\d+)?/i, '');
             }
-            if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('blob:')) return str;
+            if (str.startsWith('http://') || str.startsWith('https://') || str.startsWith('blob:') || str.startsWith('data:')) return str;
             if (str.startsWith('/')) return str;
             return '/' + str;
         }
+
+        // Cache of plaintext for messages sent in this session (prevents key unavailability false positives)
+        const sentMessagePlaintexts = new Map();
 
         async function openViewOnceMedia(messageId, mediaUrl, mediaType, encMetaJson) {
             currentViewingMsgId = messageId;
@@ -2379,7 +2378,7 @@
             if (!modal || !holder) return;
 
             modal.style.display = 'flex';
-            holder.innerHTML = '<div style="color:var(--primary); font-size:1.05rem; padding:40px; text-align:center;"><i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Decrypting View Once media...</div>';
+            holder.innerHTML = '<div style="color:var(--primary); font-size:1.05rem; padding:40px; text-align:center;"><i class="fas fa-spinner fa-spin" style="margin-right:10px;"></i> Opening View Once media...</div>';
 
             let encMeta = null;
             if (encMetaJson) {
@@ -2387,7 +2386,7 @@
             }
 
             let displayUrl = getValidMediaUrl(mediaUrl);
-            if (encMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:')) {
+            if (encMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:') && !mediaUrl.startsWith('data:')) {
                 try {
                     const decryptedBlobUrl = await window.VylithraCrypto.decryptMediaUrl(
                         displayUrl, encMeta.fileKeyB64, encMeta.fileIvB64, encMeta.mimeType
@@ -2398,11 +2397,16 @@
                 }
             }
 
+            if (!displayUrl) {
+                holder.innerHTML = '<div style="color:#ef4444; padding:30px; text-align:center;"><i class="fas fa-exclamation-triangle" style="font-size:2rem; margin-bottom:10px; display:block;"></i> This media was already opened or is unavailable.</div>';
+                return;
+            }
+
             const isVideo = mediaType === 'video' || /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(displayUrl);
             if (isVideo) {
-                holder.innerHTML = `<video src="${displayUrl}" controls autoplay playsinline style="max-width:90vw; max-height:80vh; border-radius:12px;"></video>`;
+                holder.innerHTML = `<video src="${displayUrl}" controls autoplay playsinline style="max-width:90vw; max-height:80vh; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8);"></video>`;
             } else {
-                holder.innerHTML = `<img src="${displayUrl}" alt="View Once" style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:12px;" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'color:#ef4444; padding:30px; text-align:center;\\'><i class=\\'fas fa-exclamation-triangle\\'></i> Unable to load image</div>';">`;
+                holder.innerHTML = `<img src="${displayUrl}" alt="View Once Photo" style="max-width:90vw; max-height:80vh; object-fit:contain; border-radius:12px; box-shadow:0 12px 40px rgba(0,0,0,0.8);" onerror="this.onerror=null; this.parentElement.innerHTML='<div style=\\'color:#ef4444; padding:30px; text-align:center;\\'><i class=\\'fas fa-exclamation-triangle\\' style=\\'font-size:2rem; margin-bottom:10px; display:block;\\'></i> Unable to load image</div>';">`;
             }
 
             // Mark as viewed on server
@@ -2478,7 +2482,9 @@
 
             // Decrypt content (Supports ECDH + AES-GCM-256 E2EE, Group E2EE, and legacy CryptoJS)
             let displayContent = msg.content || '';
-            if (msg.isE2EE && msg.iv && window.VylithraCrypto) {
+            if (isSent && msgId && sentMessagePlaintexts.has(msgId)) {
+                displayContent = sentMessagePlaintexts.get(msgId);
+            } else if (msg.isE2EE && msg.iv && window.VylithraCrypto) {
                 try {
                     const senderId = msg.sender && (msg.sender._id || msg.sender.id) 
                         ? String(msg.sender._id || msg.sender.id) 
@@ -2518,8 +2524,45 @@
             }
 
             let attachmentHtml = '';
-            const rawAttachmentUrl = msg.attachmentUrl || msg.fileUrl || msg.mediaUrl || '';
-            if (msg.isViewOnce) {
+            let rawAttachmentUrl = msg.attachmentUrl || msg.fileUrl || msg.mediaUrl || '';
+            
+            // If content itself is an uploaded attachment URL, resolve it
+            if (!rawAttachmentUrl && typeof displayContent === 'string' && (displayContent.startsWith('/uploads/') || displayContent.startsWith('/api/messages/attachment/') || /\.(jpeg|jpg|png|gif|webp|svg|mp4|webm)(\?.*)?$/i.test(displayContent))) {
+                rawAttachmentUrl = displayContent;
+                if (!msg.attachmentType || msg.attachmentType === 'none') {
+                    msg.attachmentType = /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(displayContent) ? 'video' : 'image';
+                }
+            }
+
+            // 1. Call message rendering card
+            const isCallMsg = msg.attachmentType === 'call' || displayContent === 'Voice Call' || displayContent === 'Video Call' || (typeof displayContent === 'string' && displayContent.startsWith('[SystemLog:'));
+            if (isCallMsg) {
+                const isVideo = (displayContent && displayContent.includes('Video')) || msg.attachmentType === 'video_call';
+                let callTitle = isVideo ? 'Video Call' : 'Voice Call';
+                let callSubtitle = isSent ? 'Outgoing call' : 'Incoming call';
+                if (typeof displayContent === 'string' && displayContent.includes('Call Ended')) {
+                    const match = displayContent.match(/-\s*([^\]]+)\]/);
+                    const dur = match ? match[1].trim() : '';
+                    callSubtitle = dur && dur !== '0s' ? `Call ended · ${dur}` : 'Missed call';
+                }
+                const iconClass = isVideo ? 'fa-video' : (callSubtitle === 'Missed call' ? 'fa-phone-slash' : 'fa-phone-alt');
+                const iconColor = callSubtitle === 'Missed call' ? '#ef4444' : '#14b8a6';
+
+                attachmentHtml = `
+                    <div class="message-call-card" style="display:flex; align-items:center; gap:12px; padding:10px 14px; background:rgba(0,0,0,0.22); border-radius:12px; margin-bottom:4px; min-width:210px;">
+                        <div style="width:38px; height:38px; border-radius:50%; background:rgba(20,184,166,0.15); display:flex; align-items:center; justify-content:center; color:${iconColor}; font-size:1.05rem;">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <div style="font-weight:600; font-size:0.92rem; color:var(--text-main);">${callTitle}</div>
+                            <div style="font-size:0.75rem; color:${callSubtitle === 'Missed call' ? '#f87171' : 'var(--text-muted)'};">${callSubtitle}</div>
+                        </div>
+                        <button type="button" onclick="startCall(${isVideo})" style="background:rgba(20,184,166,0.2); border:1px solid rgba(20,184,166,0.4); color:var(--primary); padding:6px 12px; border-radius:16px; font-size:0.75rem; font-weight:600; cursor:pointer;" title="Call back">
+                            Call
+                        </button>
+                    </div>
+                `;
+            } else if (msg.isViewOnce) {
                 const mediaUrl = getValidMediaUrl(rawAttachmentUrl);
                 const typeLabel = (msg.attachmentType === 'video' || /\.(mp4|webm|mkv|mov|avi)(\?.*)?$/i.test(mediaUrl)) ? 'Video' : 'Photo';
                 if (msg.isViewed || !rawAttachmentUrl) {
@@ -2541,7 +2584,7 @@
                 }
             } else if (rawAttachmentUrl) {
                 let mediaUrl = getValidMediaUrl(rawAttachmentUrl);
-                if (mediaEncMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:')) {
+                if (mediaEncMeta && window.VylithraCrypto && !mediaUrl.startsWith('blob:') && !mediaUrl.startsWith('data:')) {
                     try {
                         const decryptedBlobUrl = await window.VylithraCrypto.decryptMediaUrl(
                             mediaUrl, mediaEncMeta.fileKeyB64, mediaEncMeta.fileIvB64, mediaEncMeta.mimeType
@@ -2585,7 +2628,7 @@
             const isE2EEMsg = !!msg.isE2EE;
             const e2eeIcon = isE2EEMsg ? '<i class="fas fa-lock" style="font-size:0.65rem; color:#06b6d4; margin-right:4px;" title="Verified E2EE"></i>' : '';
 
-            const isPureAttachment = (displayContent === '[Attachment]' || displayContent === 'Photo' || displayContent === 'Sent an image' || displayContent === 'Sent a video' || displayContent === '1 Photo · View once' || displayContent === '1 Video · View once' || !displayContent || displayContent.trim() === '');
+            const isPureAttachment = isCallMsg || (displayContent === '[Attachment]' || displayContent === 'Photo' || displayContent === 'Sent an image' || displayContent === 'Sent a video' || displayContent === '1 Photo · View once' || displayContent === '1 Video · View once' || displayContent === 'Voice Call' || displayContent === 'Video Call' || !displayContent || displayContent.trim() === '');
             const textContentHtml = (isPureAttachment && (attachmentHtml || rawAttachmentUrl)) ? '' : `<span class="msg-text">${escapeHtml(displayContent)}</span>`;
 
             const row = document.createElement('div');
@@ -2612,8 +2655,10 @@
         let pendingAttachmentType = 'none';
         let pendingAttachmentEnc = null;
 
+        let activeUploadPromise = null;
+
         async function handleFileSelect(event) {
-            const file = event.target.files[0];
+            const file = event.target.files && event.target.files[0];
             if (!file) return;
 
             const previewContainer = document.getElementById('attachment-preview-container');
@@ -2650,41 +2695,45 @@
             const formData = new FormData();
             formData.append('file', uploadPayload, file.name);
             
-            try {
-                const res = await fetch(`${API_URL}/messages/upload`, {
-                    method: 'POST',
-                    headers: getAuthHeaders(),
-                    body: formData
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    pendingAttachmentUrl = data.url;
-                    pendingAttachmentEnc = fileEncMeta;
+            activeUploadPromise = (async () => {
+                try {
+                    const res = await fetch(`${API_URL}/messages/upload`, {
+                        method: 'POST',
+                        headers: getAuthHeaders(),
+                        body: formData
+                    });
+                    if (res.ok) {
+                        const data = await res.json();
+                        pendingAttachmentUrl = data.url;
+                        pendingAttachmentEnc = fileEncMeta;
 
-                    previewContainer.innerHTML = `
-                        <div class="attachment-preview">
-                            ${immediateThumb}
-                            <div style="flex:1; overflow:hidden; margin-left:10px;">
-                                <div style="font-size:0.85rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(file.name)}</div>
-                                <div style="font-size:0.75rem; color:#10b981;"><i class="fas fa-check-circle"></i> Ready to send</div>
+                        previewContainer.innerHTML = `
+                            <div class="attachment-preview">
+                                ${immediateThumb}
+                                <div style="flex:1; overflow:hidden; margin-left:10px;">
+                                    <div style="font-size:0.85rem; font-weight:600; text-overflow:ellipsis; overflow:hidden; white-space:nowrap;">${escapeHtml(file.name)}</div>
+                                    <div style="font-size:0.75rem; color:#10b981;"><i class="fas fa-check-circle"></i> Ready to send</div>
+                                </div>
+                                <button class="attach-btn" style="width:24px;height:24px;" onclick="cancelAttachment()"><i class="fas fa-times"></i></button>
                             </div>
-                            <button class="attach-btn" style="width:24px;height:24px;" onclick="cancelAttachment()"><i class="fas fa-times"></i></button>
-                        </div>
-                    `;
-                } else {
-                    let errMsg = 'File upload failed';
-                    try {
-                        const errData = await res.json();
-                        if (errData && (errData.msg || errData.error)) errMsg = errData.msg || errData.error;
-                    } catch(e) {}
-                    previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">${errMsg}</div>`;
+                        `;
+                        return data.url;
+                    } else {
+                        let errMsg = 'File upload failed';
+                        try {
+                            const errData = await res.json();
+                            if (errData && (errData.msg || errData.error)) errMsg = errData.msg || errData.error;
+                        } catch(e) {}
+                        previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">${errMsg}</div>`;
+                        setTimeout(cancelAttachment, 2500);
+                    }
+                } catch (e) {
+                    console.error(e);
+                    previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">Upload failed. Please try again.</div>`;
                     setTimeout(cancelAttachment, 2500);
                 }
-            } catch (e) {
-                console.error(e);
-                previewContainer.innerHTML = `<div style="color:#ef4444; font-size:0.85rem; padding: 10px;">Upload failed. Please try again.</div>`;
-                setTimeout(cancelAttachment, 2500);
-            }
+                return null;
+            })();
         }
 
         let isSendingMessage = false;
@@ -2695,13 +2744,15 @@
             pendingAttachmentType = 'none';
             pendingAttachmentEnc = null;
             pendingLocalBlobUrl = null;
+            activeUploadPromise = null;
             isViewOnceActive = false;
             const voBtn = document.getElementById('viewOnceToggleBtn');
             if (voBtn) {
                 voBtn.style.display = 'none';
                 voBtn.classList.remove('active');
             }
-            document.getElementById('file-upload-input').value = '';
+            const fileInput = document.getElementById('file-upload-input');
+            if (fileInput) fileInput.value = '';
             document.getElementById('attachment-preview-container').style.display = 'none';
         }
 
@@ -2720,6 +2771,14 @@
 
             const input = document.getElementById('message-input');
             const content = input ? input.value.trim() : '';
+
+            // If an attachment upload is currently in flight, wait for it
+            if (activeUploadPromise && !pendingAttachmentUrl) {
+                try {
+                    await activeUploadPromise;
+                } catch(e) {}
+            }
+
             if (!content && !pendingAttachmentUrl && !pendingLocalBlobUrl) return;
 
             // Instantly clear input and acquire send mutex to eliminate double/duplicate sending
@@ -2777,6 +2836,8 @@
                 // Optimistic UI Render (instant WhatsApp-speed send)
                 const optimisticId = 'opt_' + Date.now();
                 activeRenderedMsgIds.add(optimisticId);
+                if (content) sentMessagePlaintexts.set(optimisticId, content);
+
                 const optimisticMsg = {
                     _id: optimisticId,
                     content: content || (payloadAttachmentUrl ? '' : ''), 
@@ -2817,15 +2878,18 @@
                 if (res.ok) {
                     const savedMsg = await res.json();
                     if (savedMsg && savedMsg._id) {
-                        activeRenderedMsgIds.add(String(savedMsg._id));
+                        const savedId = String(savedMsg._id);
+                        activeRenderedMsgIds.add(savedId);
+                        if (content) sentMessagePlaintexts.set(savedId, content);
+
                         const optRow = document.getElementById(`msg-row-${optimisticId}`);
                         if (optRow) {
-                            optRow.id = `msg-row-${savedMsg._id}`;
+                            optRow.id = `msg-row-${savedId}`;
                             optRow.classList.remove('optimistic');
                             const delBtn = optRow.querySelector('.msg-delete-btn');
-                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${savedMsg._id}', true)`);
+                            if (delBtn) delBtn.setAttribute('onclick', `deleteMessage('${savedId}', true)`);
                             const bubble = optRow.querySelector('.message-bubble');
-                            if (bubble) bubble.id = `msg-bubble-${savedMsg._id}`;
+                            if (bubble) bubble.id = `msg-bubble-${savedId}`;
                         }
                     }
                     loadConversations();
