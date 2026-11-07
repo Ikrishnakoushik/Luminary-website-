@@ -1907,7 +1907,7 @@
                     console.warn('[Vylithra] Groups fetch warning:', grpErr);
                 }
 
-                // 3. Normalize DMs safely
+                // 3. Normalize DMs safely without blocking sequential network delays
                 const normalizedDMs = [];
                 for (const c of dms) {
                     if (!c || !c.user) continue;
@@ -1915,14 +1915,27 @@
                     if (!uId) continue;
 
                     let preview = c.lastMessage || 'Start a conversation';
-                    try {
-                        if (window.VylithraCrypto && c.isE2EE && c.lastMessageIv) {
-                            preview = await window.VylithraCrypto.decrypt({ content: c.lastMessage, iv: c.lastMessageIv, isE2EE: true }, uId);
-                        } else {
-                            preview = decryptPreview(c.lastMessage, uId, false) || 'Start a conversation';
+                    if (c.isE2EE && c.lastMessageIv) {
+                        preview = '🔒 Encrypted message';
+                        // Decrypt in background and update DOM when available
+                        if (window.VylithraCrypto) {
+                            window.VylithraCrypto.decrypt({ content: c.lastMessage, iv: c.lastMessageIv, isE2EE: true }, uId)
+                                .then(dec => {
+                                    if (dec) {
+                                        if (typeof dec === 'string' && dec.startsWith('{"caption":')) {
+                                            try {
+                                                const p = JSON.parse(dec);
+                                                dec = p.caption ? `📎 ${p.caption}` : '📎 Attachment';
+                                            } catch(e) {}
+                                        }
+                                        const el = document.getElementById(`convo-preview-${uId}`);
+                                        if (el) el.innerText = dec;
+                                    }
+                                })
+                                .catch(() => {});
                         }
-                    } catch (decErr) {
-                        preview = c.lastMessage || 'Start a conversation';
+                    } else {
+                        preview = decryptPreview(c.lastMessage, uId, false) || (c.lastMessage || 'Start a conversation');
                     }
 
                     if (typeof preview === 'string' && preview.startsWith('{"caption":')) {
@@ -2011,7 +2024,7 @@
                                     <span class="convo-time">${timeStr}</span>
                                 </div>
                                 <div class="convo-preview ${c.unread ? 'unread' : ''}">
-                                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:85%;">${c.lastMessage}</span>
+                                    <span id="convo-preview-${c.id}" style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:85%;">${c.lastMessage}</span>
                                     ${c.unread ? '<span class="unread-badge">1</span>' : ''}
                                 </div>
                             </div>
@@ -2021,11 +2034,11 @@
 
                 // If came from a profile page with ?user=ID
                 if (activeChatUserId && !foundActiveInList) {
-                    fetch(`${API_URL}/users/${activeChatUserId}`).then(r => r.json()).then(user => {
+                    fetch(`${API_URL}/users/${activeChatUserId}`, { headers: getAuthHeaders() }).then(r => r.json()).then(user => {
                         if (user && user._id) {
                             const initial = (user.username || 'U').charAt(0).toUpperCase();
                             const avatarHtml = user.profilePicture ? `<img src="${(user.profilePicture) && String(user.profilePicture).startsWith('http') ? (user.profilePicture) : '/' + (user.profilePicture)}">` : initial;
-                            list.innerHTML = `
+                            const newConvoItem = `
                                 <div class="conversation-item active" onclick="openChat('${user._id}', '${user.username}', '${user.profilePicture || ''}')">
                                     <div class="avatar">
                                         ${avatarHtml}
@@ -2039,7 +2052,8 @@
                                         <div class="convo-preview">New conversation</div>
                                     </div>
                                 </div>
-                            ` + list.innerHTML;
+                            `;
+                            list.innerHTML = newConvoItem + list.innerHTML;
                         }
                     }).catch(() => {});
                 }
@@ -2079,7 +2093,12 @@
                 loadConversations();
             }
 
-            chatKey = CryptoJS.SHA256(groupId + 'vylithra-group-e2ee-secret').toString();
+            chatKey = '';
+            if (window.CryptoJS) {
+                try {
+                    chatKey = CryptoJS.SHA256(groupId + 'vylithra-group-e2ee-secret').toString();
+                } catch(e) {}
+            }
             if (window.VylithraCrypto) {
                 fetch(`${API_URL}/groups`, { headers: getAuthHeaders() })
                     .then(r => r.json())
@@ -2193,7 +2212,12 @@
             }
 
             // Set up E2EE Key
-            chatKey = CryptoJS.SHA256([currentUserId, activeChatUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
+            chatKey = '';
+            if (window.CryptoJS) {
+                try {
+                    chatKey = CryptoJS.SHA256([currentUserId, activeChatUserId].sort().join('-') + 'vylithra-e2ee-secret').toString();
+                } catch(e) {}
+            }
             if (window.VylithraCrypto) {
                 window.VylithraCrypto.getSharedKey(activeChatUserId).then(k => {
                     const activeNameEl = document.getElementById('active-name');
@@ -3013,27 +3037,26 @@
             const urlParams = new URLSearchParams(window.location.search);
             const targetUser = urlParams.get('user');
 
-            await loadConversations();
-
             if (targetUser && targetUser !== currentUserId) {
-                try {
-                    const uRes = await fetch(`${API_URL}/users/${targetUser}`, { headers: getAuthHeaders() });
-                    if (uRes.ok) {
-                        const uData = await uRes.json();
-                        await openChat(uData._id || targetUser, uData.username || 'User', uData.profilePicture || '', false);
-                    } else {
-                        await openChat(targetUser, 'User', '', false);
-                    }
-                } catch(e) {
-                    await openChat(targetUser, 'User', '', false);
-                }
-            } else if (window.innerWidth > 768) {
-                // On desktop, auto-open the first conversation if no chat is active
-                const firstConvo = document.querySelector('#convos-list .conversation-item');
-                if (firstConvo && !activeChatUserId && !activeGroupId) {
-                    firstConvo.click();
-                }
+                // Immediately open target chat without waiting for sidebar to load!
+                openChat(targetUser, 'User', '', false);
+                fetch(`${API_URL}/users/${targetUser}`, { headers: getAuthHeaders() })
+                    .then(r => r.json())
+                    .then(uData => {
+                        if (uData && (uData._id || uData.username)) {
+                            openChat(uData._id || targetUser, uData.username || 'User', uData.profilePicture || '', false);
+                        }
+                    })
+                    .catch(() => {});
             }
+
+            // Load conversations in background without blocking
+            loadConversations().then(() => {
+                if (!targetUser && window.innerWidth > 768 && !activeChatUserId && !activeGroupId) {
+                    const firstConvo = document.querySelector('#convos-list .conversation-item');
+                    if (firstConvo) firstConvo.click();
+                }
+            });
 
             // Setup polling for new messages every 8 seconds (silent background sync)
             setInterval(() => {

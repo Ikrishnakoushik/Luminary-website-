@@ -118,66 +118,81 @@
         // ---------------------------------------------------------
         // 1. Device Key Management (Non-Extractable in IndexedDB)
         // ---------------------------------------------------------
+        initPromise: null,
+
         async init(userId) {
             if (!userId) return false;
-            this.currentUserId = String(userId);
+            const uidStr = String(userId);
+            if (this.isReady && this.currentUserId === uidStr && this.myPrivateKey) {
+                return true;
+            }
+            if (this.initPromise && this.currentUserId === uidStr) {
+                return this.initPromise;
+            }
 
-            try {
-                // Try retrieving non-extractable CryptoKey from IndexedDB
-                let privateKey = await KeyStore.get(`priv_${this.currentUserId}`);
-                let pubSpkiB64 = localStorage.getItem(`vyl_e2ee_pub_${this.currentUserId}`);
+            this.currentUserId = uidStr;
+            this.initPromise = (async () => {
+                try {
+                    // Try retrieving non-extractable CryptoKey from IndexedDB
+                    let privateKey = await KeyStore.get(`priv_${this.currentUserId}`);
+                    let pubSpkiB64 = localStorage.getItem(`vyl_e2ee_pub_${this.currentUserId}`);
 
-                if (!privateKey) {
-                    // Check if migrating from legacy localStorage
-                    const legacyPrivStr = localStorage.getItem(`vyl_e2ee_priv_${this.currentUserId}`);
-                    if (legacyPrivStr) {
-                        try {
-                            const jwk = JSON.parse(legacyPrivStr);
-                            privateKey = await window.crypto.subtle.importKey(
-                                'jwk',
-                                jwk,
-                                { name: 'ECDH', namedCurve: 'P-256' },
-                                false, // Import as non-extractable
-                                ['deriveKey', 'deriveBits']
-                            );
-                            await KeyStore.set(`priv_${this.currentUserId}`, privateKey);
-                            localStorage.removeItem(`vyl_e2ee_priv_${this.currentUserId}`); // Purge from localStorage
-                            console.log('[Vylithra E2EE] Migrated private key to secure IndexedDB vault.');
-                        } catch (e) {
-                            console.warn('[Vylithra E2EE] Legacy key migration failed, creating fresh keypair');
+                    if (!privateKey) {
+                        // Check if migrating from legacy localStorage
+                        const legacyPrivStr = localStorage.getItem(`vyl_e2ee_priv_${this.currentUserId}`);
+                        if (legacyPrivStr) {
+                            try {
+                                const jwk = JSON.parse(legacyPrivStr);
+                                privateKey = await window.crypto.subtle.importKey(
+                                    'jwk',
+                                    jwk,
+                                    { name: 'ECDH', namedCurve: 'P-256' },
+                                    false, // Import as non-extractable
+                                    ['deriveKey', 'deriveBits']
+                                );
+                                await KeyStore.set(`priv_${this.currentUserId}`, privateKey);
+                                localStorage.removeItem(`vyl_e2ee_priv_${this.currentUserId}`); // Purge from localStorage
+                                console.log('[Vylithra E2EE] Migrated private key to secure IndexedDB vault.');
+                            } catch (e) {
+                                console.warn('[Vylithra E2EE] Legacy key migration failed, creating fresh keypair');
+                            }
                         }
                     }
+
+                    if (!privateKey || !pubSpkiB64) {
+                        console.log('[Vylithra E2EE] Generating fresh non-extractable ECDH P-256 keypair...');
+                        const keyPair = await window.crypto.subtle.generateKey(
+                            { name: 'ECDH', namedCurve: 'P-256' },
+                            true, // Initial true only to export the public key
+                            ['deriveKey', 'deriveBits']
+                        );
+
+                        // Export only the public key
+                        const exportedPub = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
+                        pubSpkiB64 = this.bufToBase64(exportedPub);
+                        localStorage.setItem(`vyl_e2ee_pub_${this.currentUserId}`, pubSpkiB64);
+
+                        // Re-import or store private key into IndexedDB
+                        await KeyStore.set(`priv_${this.currentUserId}`, keyPair.privateKey);
+                        privateKey = keyPair.privateKey;
+                    }
+
+                    this.myPrivateKey = privateKey;
+                    this.myPublicKeyBase64 = pubSpkiB64;
+                    this.isReady = true;
+
+                    // Sync public key with the backend
+                    this.syncPublicKeyWithServer();
+                    return true;
+                } catch (err) {
+                    console.error('[Vylithra E2EE] Initialization error:', err);
+                    return false;
+                } finally {
+                    this.initPromise = null;
                 }
+            })();
 
-                if (!privateKey || !pubSpkiB64) {
-                    console.log('[Vylithra E2EE] Generating fresh non-extractable ECDH P-256 keypair...');
-                    const keyPair = await window.crypto.subtle.generateKey(
-                        { name: 'ECDH', namedCurve: 'P-256' },
-                        true, // Initial true only to export the public key
-                        ['deriveKey', 'deriveBits']
-                    );
-
-                    // Export only the public key
-                    const exportedPub = await window.crypto.subtle.exportKey('spki', keyPair.publicKey);
-                    pubSpkiB64 = this.bufToBase64(exportedPub);
-                    localStorage.setItem(`vyl_e2ee_pub_${this.currentUserId}`, pubSpkiB64);
-
-                    // Re-import or store private key into IndexedDB
-                    await KeyStore.set(`priv_${this.currentUserId}`, keyPair.privateKey);
-                    privateKey = keyPair.privateKey;
-                }
-
-                this.myPrivateKey = privateKey;
-                this.myPublicKeyBase64 = pubSpkiB64;
-                this.isReady = true;
-
-                // Sync public key with the backend
-                this.syncPublicKeyWithServer();
-                return true;
-            } catch (err) {
-                console.error('[Vylithra E2EE] Initialization error:', err);
-                return false;
-            }
+            return this.initPromise;
         },
 
         async syncPublicKeyWithServer() {
