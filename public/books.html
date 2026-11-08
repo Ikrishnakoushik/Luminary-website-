@@ -1077,6 +1077,903 @@
             border-radius: 20px;
             font-weight: 500;
         }
+    
+        /* =========================================================
+           VYLITHRA BOOKS - MOBILE-FIRST REDESIGN SYSTEM
+           Matches Cyber-Luxe Midnight Navy, Cyan & Purple Aesthetic
+           ========================================================= */
+
+        .mobile-books-header {
+            display: none;
+        }
+
+        .mobile-books-experience {
+            display: none;
+        }
+
+        .mobile-bottom-nav {
+            display: none;
+        }
+
+        @media (max-width: 768px) {
+            /* 1. Global Viewport & Reset */
+            html, body {
+                max-width: 100vw !important;
+                overflow-x: hidden !important;
+                background-color: #07090e !important;
+            }
+
+            body {
+                padding-bottom: calc(72px + env(safe-area-inset-bottom, 0px)) !important;
+            }
+
+            .main-container {
+                padding: 0 !important;
+                margin: 0 !important;
+                max-width: 100vw !important;
+            }
+
+            .content-area {
+                padding: 0 !important;
+            }
+
+            /* Hide Desktop Navigation & Desktop 3D Hero */
+            .top-nav {
+                display: none !important;
+            }
+
+            .hero-section {
+                display: none !important;
+            }
+
+            .tabs-container {
+                display: none !important;
+            }
+
+            .book-category-showcase {
+                display: none !important; /* Category chips rail replaces this on mobile */
+            }
+
+            .collection-header {
+                display: none !important; /* Mobile search & catalog headers take over */
+            }
+
+            /* 2. Compact Mobile Header */
+            .mobile-books-header {
+                display: flex !important;
+                position: sticky;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 56px;
+                background: rgba(7, 9, 14, 0.9);
+                backdrop-filter: blur(20px);
+                -webkit-backdrop-filter: blur(20px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+                z-index: 100;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px;
+                box-sizing: border-box;
+            }
+
+            .mob-header-brand {
+                display: flex;
+                align-items: center;
+                gap: 9px;
+                text-decoration: none;
+            }
+
+            .mob-header-logo {
+                width: 28px;
+                height: 28px;
+                object-fit: contain;
+                filter: drop-shadow(0 0 10px rgba(0, 242, 254, 0.5));
+            }
+
+            .mob-header-title {
+                font-family: 'Outfit', sans-serif;
+                font-weight: 800;
+                font-size: 1.15rem;
+                letter-spacing: -0.4px;
+                color: #ffffff;
+            }
+
+            .mob-header-actions {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+            }
+
+            .mob-header-btn {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.05);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                color: #cbd5e1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.9rem;
+                cursor: pointer;
+                text-decoration: none;
+                transition: all 0.2s;
+            }
+
+            .mob-header-btn:hover, .mob-header-btn:active {
+                background: rgba(0, 242, 254, 0.15);
+                color: #00f2fe;
+                border-color: rgba(0, 242, 254, 0.4);
+            }
+
+            .mob-header-avatar {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                border: 2px solid rgba(0, 242, 254, 0.5);
+                overflow: hidden;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.2), rgba(168, 85, 247, 0.2));
+                color: #00f2fe;
+                font-weight: 700;
+                font-size: 0.8rem;
+                text-decoration: none;
+            }
+
+            .mob-header-avatar img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            /* 3. Mobile Experience Container */
+            .mobile-books-experience {
+                display: block !important;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            /* B. Discovery Hero */
+            .mob-discovery-hero {
+                padding: 18px 16px 14px 16px;
+            }
+
+            .mob-hero-heading {
+                font-size: 1.65rem;
+                font-weight: 800;
+                color: #ffffff;
+                letter-spacing: -0.5px;
+                margin-bottom: 4px;
+                font-family: 'Outfit', sans-serif;
+            }
+
+            .mob-hero-sub {
+                font-size: 0.85rem;
+                color: #94a3b8;
+                margin-bottom: 16px;
+                font-weight: 400;
+            }
+
+            .mob-search-container {
+                position: relative;
+                width: 100%;
+                display: flex;
+                align-items: center;
+            }
+
+            .mob-search-icon {
+                position: absolute;
+                left: 14px;
+                color: #00f2fe;
+                font-size: 0.95rem;
+                pointer-events: none;
+                z-index: 2;
+            }
+
+            .mob-search-input {
+                width: 100%;
+                padding: 12px 38px 12px 42px;
+                border-radius: 24px;
+                background: rgba(14, 18, 27, 0.9);
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                color: #f8fafc;
+                font-size: 0.88rem;
+                font-family: inherit;
+                outline: none;
+                box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.4);
+                transition: all 0.2s ease;
+                box-sizing: border-box;
+            }
+
+            .mob-search-input:focus {
+                border-color: rgba(0, 242, 254, 0.5);
+                box-shadow: 0 0 15px rgba(0, 242, 254, 0.25), inset 0 2px 6px rgba(0,0,0,0.4);
+            }
+
+            .mob-search-input::placeholder {
+                color: #64748b;
+            }
+
+            .mob-search-clear {
+                position: absolute;
+                right: 12px;
+                background: transparent;
+                border: none;
+                color: #94a3b8;
+                font-size: 0.95rem;
+                cursor: pointer;
+                padding: 4px;
+            }
+
+            /* C. Category Chips Rail */
+            .mob-categories-rail-section {
+                margin-bottom: 18px;
+            }
+
+            .mob-categories-rail {
+                display: flex;
+                gap: 8px;
+                overflow-x: auto;
+                padding: 0 16px 6px 16px;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .mob-categories-rail::-webkit-scrollbar {
+                display: none;
+            }
+
+            .mob-cat-chip {
+                padding: 7px 15px;
+                border-radius: 20px;
+                font-size: 0.82rem;
+                font-weight: 600;
+                white-space: nowrap;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                background: rgba(255, 255, 255, 0.05);
+                color: #94a3b8;
+                border: 1px solid rgba(255, 255, 255, 0.09);
+                font-family: inherit;
+                flex-shrink: 0;
+            }
+
+            .mob-cat-chip.active {
+                background: rgba(0, 242, 254, 0.15);
+                color: #00f2fe;
+                border-color: rgba(0, 242, 254, 0.45);
+                box-shadow: 0 0 14px rgba(0, 242, 254, 0.3);
+                font-weight: 700;
+            }
+
+            /* D. Featured Books Banner */
+            .mob-featured-card-section {
+                padding: 0 16px;
+                margin-bottom: 24px;
+            }
+
+            .mob-featured-card {
+                position: relative;
+                border-radius: 18px;
+                background: linear-gradient(135deg, rgba(14, 18, 27, 0.95) 0%, rgba(26, 32, 53, 0.95) 100%);
+                border: 1px solid rgba(168, 85, 247, 0.25);
+                padding: 18px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 14px;
+                overflow: hidden;
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.45);
+            }
+
+            .mob-featured-glow {
+                position: absolute;
+                top: -30px;
+                right: -30px;
+                width: 140px;
+                height: 140px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(168, 85, 247, 0.25) 0%, transparent 70%);
+                filter: blur(20px);
+                pointer-events: none;
+            }
+
+            .mob-featured-info {
+                flex: 1;
+                min-width: 0;
+                position: relative;
+                z-index: 2;
+            }
+
+            .mob-featured-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 5px;
+                font-size: 0.68rem;
+                font-weight: 700;
+                color: #a855f7;
+                letter-spacing: 0.8px;
+                text-transform: uppercase;
+                margin-bottom: 6px;
+            }
+
+            .mob-featured-heading {
+                font-size: 1.15rem;
+                font-weight: 800;
+                color: #ffffff;
+                line-height: 1.25;
+                margin-bottom: 6px;
+                font-family: 'Outfit', sans-serif;
+            }
+
+            .mob-featured-desc {
+                font-size: 0.78rem;
+                color: #94a3b8;
+                line-height: 1.4;
+                margin-bottom: 14px;
+            }
+
+            .mob-featured-cta {
+                padding: 7px 16px;
+                border-radius: 20px;
+                background: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
+                color: #07090e;
+                font-weight: 700;
+                font-size: 0.76rem;
+                border: none;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                box-shadow: 0 0 14px rgba(0, 242, 254, 0.4);
+                transition: transform 0.2s;
+            }
+
+            .mob-featured-cta:active {
+                transform: scale(0.96);
+            }
+
+            .mob-featured-cover-wrap {
+                width: 82px;
+                height: 118px;
+                border-radius: 10px;
+                overflow: hidden;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                flex-shrink: 0;
+                position: relative;
+                z-index: 2;
+                transform: rotate(3deg);
+            }
+
+            .mob-featured-cover {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            /* E. Sections & Headers */
+            .mob-section {
+                margin-bottom: 26px;
+            }
+
+            .mob-section-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px;
+                margin-bottom: 12px;
+            }
+
+            .mob-section-title {
+                font-size: 1.15rem;
+                font-weight: 700;
+                color: #ffffff;
+                letter-spacing: -0.3px;
+                font-family: 'Outfit', sans-serif;
+            }
+
+            .mob-see-all-link {
+                font-size: 0.78rem;
+                color: #00f2fe;
+                font-weight: 600;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            /* Horizontal Scroll Rail (Trending, Authors) */
+            .mob-h-scroll-rail {
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                padding: 0 16px 8px 16px;
+                scrollbar-width: none;
+                -webkit-overflow-scrolling: touch;
+                scroll-snap-type: x mandatory;
+            }
+
+            .mob-h-scroll-rail::-webkit-scrollbar {
+                display: none;
+            }
+
+            /* Trending Card */
+            .mob-trending-card {
+                width: 130px;
+                min-width: 130px;
+                max-width: 130px;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+                cursor: pointer;
+            }
+
+            .mob-card-cover-box {
+                position: relative;
+                width: 100%;
+                height: 185px;
+                border-radius: 12px;
+                overflow: hidden;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
+                margin-bottom: 8px;
+                background: #0e121b;
+            }
+
+            .mob-card-cover {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .mob-card-price {
+                position: absolute;
+                top: 8px;
+                left: 8px;
+                padding: 3px 8px;
+                border-radius: 12px;
+                font-size: 0.65rem;
+                font-weight: 800;
+                letter-spacing: 0.5px;
+                backdrop-filter: blur(8px);
+            }
+
+            .mob-badge-free {
+                background: rgba(16, 185, 129, 0.85);
+                color: #ffffff;
+            }
+
+            .mob-badge-paid {
+                background: rgba(245, 158, 11, 0.85);
+                color: #ffffff;
+            }
+
+            .mob-card-rating {
+                position: absolute;
+                bottom: 8px;
+                right: 8px;
+                padding: 2px 6px;
+                border-radius: 10px;
+                background: rgba(7, 9, 14, 0.8);
+                backdrop-filter: blur(8px);
+                color: #fbbf24;
+                font-size: 0.65rem;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 3px;
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .mob-card-title {
+                font-size: 0.84rem;
+                font-weight: 700;
+                color: #f1f5f9;
+                line-height: 1.3;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mob-card-author {
+                font-size: 0.72rem;
+                color: #94a3b8;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin: 0;
+            }
+
+            /* F. Continue Reading Card */
+            .mob-reading-card {
+                margin: 0 16px 12px 16px;
+                padding: 12px 14px;
+                border-radius: 16px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                box-shadow: 0 4px 18px rgba(0, 0, 0, 0.3);
+            }
+
+            .mob-reading-thumb {
+                width: 48px;
+                height: 68px;
+                border-radius: 8px;
+                object-fit: cover;
+                border: 1px solid rgba(255, 255, 255, 0.12);
+                flex-shrink: 0;
+            }
+
+            .mob-reading-info {
+                flex: 1;
+                min-width: 0;
+            }
+
+            .mob-reading-title {
+                font-size: 0.86rem;
+                font-weight: 700;
+                color: #ffffff;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mob-reading-author {
+                font-size: 0.72rem;
+                color: #94a3b8;
+                margin-bottom: 8px;
+            }
+
+            .mob-progress-bar-bg {
+                width: 100%;
+                height: 5px;
+                border-radius: 10px;
+                background: rgba(255, 255, 255, 0.1);
+                overflow: hidden;
+                margin-bottom: 4px;
+            }
+
+            .mob-progress-bar-fill {
+                height: 100%;
+                border-radius: 10px;
+                background: linear-gradient(90deg, #00f2fe, #a855f7);
+            }
+
+            .mob-progress-text {
+                font-size: 0.68rem;
+                color: #00f2fe;
+                font-weight: 600;
+            }
+
+            .mob-resume-btn {
+                padding: 6px 12px;
+                border-radius: 16px;
+                background: rgba(0, 242, 254, 0.12);
+                border: 1px solid rgba(0, 242, 254, 0.35);
+                color: #00f2fe;
+                font-size: 0.72rem;
+                font-weight: 700;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+
+            /* G. Author Card */
+            .mob-author-card {
+                width: 136px;
+                min-width: 136px;
+                max-width: 136px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 16px;
+                padding: 14px 10px;
+                text-align: center;
+                cursor: pointer;
+                flex-shrink: 0;
+                scroll-snap-align: start;
+            }
+
+            .mob-author-avatar-wrap {
+                width: 52px;
+                height: 52px;
+                border-radius: 50%;
+                margin: 0 auto 8px auto;
+                overflow: hidden;
+                border: 2px solid rgba(0, 242, 254, 0.35);
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.15), rgba(168, 85, 247, 0.15));
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .mob-author-avatar {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+
+            .mob-author-initial {
+                color: #00f2fe;
+                font-weight: 700;
+                font-size: 1.1rem;
+            }
+
+            .mob-author-name {
+                font-size: 0.82rem;
+                font-weight: 700;
+                color: #f8fafc;
+                margin-bottom: 2px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .mob-author-books {
+                font-size: 0.68rem;
+                color: #94a3b8;
+                display: block;
+                margin-bottom: 10px;
+            }
+
+            .mob-author-btn {
+                padding: 4px 10px;
+                border-radius: 14px;
+                background: rgba(0, 242, 254, 0.08);
+                border: 1px solid rgba(0, 242, 254, 0.25);
+                color: #00f2fe;
+                font-size: 0.68rem;
+                font-weight: 600;
+                cursor: pointer;
+                width: 100%;
+            }
+
+            /* H. Publish Promo Card */
+            .mob-publish-promo-section {
+                padding: 0 16px;
+            }
+
+            .mob-publish-card {
+                padding: 20px;
+                border-radius: 18px;
+                background: linear-gradient(135deg, rgba(0, 242, 254, 0.06) 0%, rgba(168, 85, 247, 0.06) 100%);
+                border: 1px dashed rgba(0, 242, 254, 0.3);
+                text-align: center;
+            }
+
+            .mob-publish-icon-box {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: rgba(0, 242, 254, 0.12);
+                color: #00f2fe;
+                margin: 0 auto 10px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1.15rem;
+                border: 1px solid rgba(0, 242, 254, 0.25);
+            }
+
+            .mob-publish-heading {
+                font-size: 1.05rem;
+                font-weight: 700;
+                color: #ffffff;
+                margin-bottom: 4px;
+            }
+
+            .mob-publish-desc {
+                font-size: 0.8rem;
+                color: #94a3b8;
+                margin-bottom: 14px;
+                line-height: 1.45;
+                max-width: 320px;
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .mob-publish-btn {
+                padding: 9px 22px;
+                border-radius: 20px;
+                background: linear-gradient(135deg, #00f2fe 0%, #a855f7 100%);
+                color: #07090e;
+                font-weight: 700;
+                font-size: 0.82rem;
+                text-decoration: none;
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+            }
+
+            /* Catalog Header & Tabs */
+            .mob-catalog-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 16px 14px 16px;
+            }
+
+            .mob-catalog-tabs {
+                display: flex;
+                gap: 6px;
+                background: rgba(255, 255, 255, 0.05);
+                padding: 3px;
+                border-radius: 16px;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .mob-cat-tab {
+                padding: 4px 12px;
+                border-radius: 12px;
+                border: none;
+                background: transparent;
+                color: #94a3b8;
+                font-size: 0.74rem;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .mob-cat-tab.active {
+                background: rgba(0, 242, 254, 0.15);
+                color: #00f2fe;
+                font-weight: 700;
+            }
+
+            /* 4. Responsive Books Grid & Mobile Card Adjustments */
+            .books-grid {
+                display: flex !important;
+                flex-direction: column !important;
+                gap: 24px !important;
+                padding: 0 16px 30px 16px !important;
+            }
+
+            .category-section {
+                width: 100% !important;
+            }
+
+            .category-row-title {
+                font-size: 1.15rem !important;
+                margin-bottom: 10px !important;
+                color: #f1f5f9 !important;
+            }
+
+            .category-scroll-wrapper {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                scrollbar-width: none !important;
+                padding-bottom: 10px !important;
+                margin-bottom: 0 !important;
+            }
+
+            .category-scroll-wrapper::-webkit-scrollbar {
+                display: none !important;
+            }
+
+            .category-row {
+                display: flex !important;
+                gap: 12px !important;
+                padding: 4px 0 !important;
+                width: max-content !important;
+            }
+
+            .book-card {
+                width: 155px !important;
+                min-width: 155px !important;
+                max-width: 155px !important;
+                padding: 10px !important;
+                border-radius: 14px !important;
+                background: #0e121b !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            }
+
+            .cover-wrapper {
+                height: 210px !important;
+                margin-bottom: 10px !important;
+                border-radius: 10px !important;
+            }
+
+            .book-title {
+                font-size: 0.88rem !important;
+                line-height: 1.25 !important;
+                height: 2.5em !important;
+                overflow: hidden !important;
+                display: -webkit-box !important;
+                -webkit-line-clamp: 2 !important;
+                -webkit-box-orient: vertical !important;
+                margin-bottom: 2px !important;
+            }
+
+            .book-author {
+                font-size: 0.72rem !important;
+                margin-bottom: 8px !important;
+                color: #94a3b8 !important;
+                white-space: nowrap !important;
+                overflow: hidden !important;
+                text-overflow: ellipsis !important;
+            }
+
+            .book-price {
+                font-size: 0.82rem !important;
+                font-weight: 700 !important;
+            }
+
+            .book-action-btn {
+                padding: 6px 8px !important;
+                font-size: 0.74rem !important;
+                border-radius: 8px !important;
+            }
+
+            /* Reader overlay on mobile */
+            .reader-viewport {
+                width: 100% !important;
+                padding: 20px 14px !important;
+            }
+
+            .reader-controls {
+                width: 100% !important;
+                padding: 0 14px !important;
+            }
+
+            .reader-text-body {
+                font-size: 1rem !important;
+                line-height: 1.75 !important;
+            }
+
+            /* Mobile Bottom Navigation */
+            .mobile-bottom-nav {
+                display: flex !important;
+                position: fixed !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                height: 60px !important;
+                background: rgba(7, 9, 14, 0.94) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+                z-index: 9999 !important;
+                align-items: center !important;
+                justify-content: space-around !important;
+                padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+            }
+
+            .bottom-nav-item {
+                display: flex !important;
+                flex-direction: column !important;
+                align-items: center !important;
+                justify-content: center !important;
+                color: #94a3b8 !important;
+                text-decoration: none !important;
+                font-size: 0.68rem !important;
+                font-weight: 500 !important;
+                gap: 4px !important;
+                flex: 1 !important;
+                height: 100% !important;
+                transition: color 0.15s ease !important;
+            }
+
+            .bottom-nav-item i {
+                font-size: 1.15rem !important;
+            }
+
+            .bottom-nav-item.active {
+                color: #00f2fe !important;
+                font-weight: 700 !important;
+            }
+
+            .bottom-nav-item.active i {
+                color: #00f2fe !important;
+                filter: drop-shadow(0 0 8px rgba(0, 242, 254, 0.6)) !important;
+            }
+        }
+
     </style>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- Google Font for reading -->
@@ -1087,6 +1984,26 @@
 </head>
 
 <body>
+
+    <!-- 2A. Compact Mobile Top Navigation Header -->
+    <header class="mobile-books-header">
+        <a href="/" class="mob-header-brand">
+            <img src="/vylithra_logo.svg" alt="Vylithra Logo" class="mob-header-logo">
+            <span class="mob-header-title">Books</span>
+        </a>
+        <div class="mob-header-actions">
+            <button type="button" class="mob-header-btn" onclick="focusMobileSearch()" aria-label="Search Books" title="Search Books">
+                <i class="fas fa-search"></i>
+            </button>
+            <a href="/messages" class="mob-header-btn" aria-label="Messages" title="Messages">
+                <i class="far fa-envelope"></i>
+            </a>
+            <a href="/profile" class="mob-header-avatar" id="mobHeaderAvatar" aria-label="Profile" title="Profile">
+                <i class="fas fa-user"></i>
+            </a>
+        </div>
+    </header>
+
 
     <!-- Top Navigation -->
     <nav class="top-nav">
@@ -1228,6 +2145,111 @@
                 </div>
             </section>
 
+            
+        <!-- ==============================================
+             DEDICATED MOBILE BOOKS DISCOVERY EXPERIENCE
+             ============================================== -->
+        <div class="mobile-books-experience">
+            <!-- 2B. Discovery Hero -->
+            <section class="mob-discovery-hero">
+                <h1 class="mob-hero-heading">Discover Books</h1>
+                <p class="mob-hero-sub">Stories, knowledge, and new worlds.</p>
+                <div class="mob-search-container">
+                    <i class="fas fa-search mob-search-icon"></i>
+                    <input type="text" id="mobileSearchInput" class="mob-search-input" placeholder="Search books, authors, or topics..." oninput="handleMobileSearch(event)">
+                    <button type="button" id="mobileSearchClear" class="mob-search-clear" onclick="clearMobileSearch()" style="display:none;" aria-label="Clear Search">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- 2C. Horizontally Scrollable Category Chips Rail -->
+            <section class="mob-categories-rail-section">
+                <div class="mob-categories-rail" id="mobCategoryChipsRail">
+                    <button type="button" class="mob-cat-chip active" onclick="selectMobileCategoryChip('all', this)">For You</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Novels', this)">Fiction</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Technology & Science', this)">Technology</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Self-Help & Personal Growth', this)">Self Growth</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Poetry', this)">Poetry</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Business', this)">Business</button>
+                    <button type="button" class="mob-cat-chip" onclick="selectMobileCategoryChip('Study Materials & Academic', this)">Education</button>
+                </div>
+            </section>
+
+            <!-- 2D. Featured Books Collection Banner -->
+            <section class="mob-featured-card-section" id="mobFeaturedSection">
+                <div class="mob-featured-card">
+                    <div class="mob-featured-glow"></div>
+                    <div class="mob-featured-info">
+                        <span class="mob-featured-badge"><i class="fas fa-sparkles"></i> Featured Collection</span>
+                        <h2 class="mob-featured-heading">Explore Your Next Favorite</h2>
+                        <p class="mob-featured-desc">Discover stories from independent authors.</p>
+                        <button type="button" class="mob-featured-cta" onclick="scrollMobToCollection()">
+                            Explore Collection <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    <div class="mob-featured-cover-wrap">
+                        <img id="mobFeaturedImg" src="/book_cover_clean.png" alt="Featured Book" class="mob-featured-cover" onerror="this.src='/book_cover_clean.png'">
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2E. Trending Books Section -->
+            <section class="mob-section mob-trending-section">
+                <div class="mob-section-header">
+                    <h2 class="mob-section-title">Trending Books</h2>
+                    <a href="#booksGrid" class="mob-see-all-link" onclick="scrollMobToCollection(event)">See All <i class="fas fa-chevron-right" style="font-size:0.65rem;"></i></a>
+                </div>
+                <div class="mob-h-scroll-rail" id="mobTrendingRail">
+                    <!-- Populated dynamically from allBooks -->
+                </div>
+            </section>
+
+            <!-- 2F. Continue Reading Progress (Authenticated User) -->
+            <section class="mob-section mob-reading-section" id="mobContinueReadingSection">
+                <div class="mob-section-header">
+                    <h2 class="mob-section-title">Continue Reading</h2>
+                    <span class="mob-see-all-link" id="readingCountHint" style="color:#94a3b8; font-weight:500;">0 in progress</span>
+                </div>
+                <div id="mobContinueReadingContainer">
+                    <!-- Populated dynamically or friendly empty state -->
+                </div>
+            </section>
+
+            <!-- 2G. Recommended Authors -->
+            <section class="mob-section mob-authors-section" id="mobAuthorsSection">
+                <div class="mob-section-header">
+                    <h2 class="mob-section-title">Discover Vylithra Authors</h2>
+                </div>
+                <div class="mob-h-scroll-rail" id="mobAuthorsRail">
+                    <!-- Populated dynamically from allBooks authors -->
+                </div>
+            </section>
+
+            <!-- 2H. Publish a Book Promotion Card -->
+            <section class="mob-section mob-publish-promo-section">
+                <div class="mob-publish-card">
+                    <div class="mob-publish-icon-box">
+                        <i class="fas fa-feather-pointed"></i>
+                    </div>
+                    <h3 class="mob-publish-heading">Have a story to share?</h3>
+                    <p class="mob-publish-desc">Publish your book and reach readers across Vylithra.</p>
+                    <a href="/publish-book" class="mob-publish-btn">
+                        <i class="fas fa-cloud-arrow-up"></i> Publish Your Book
+                    </a>
+                </div>
+            </section>
+
+            <!-- Catalog Sub-header & Mode Switcher -->
+            <div class="mob-catalog-header">
+                <h2 class="mob-section-title" id="mobCatalogTitle">Book Catalog</h2>
+                <div class="mob-catalog-tabs">
+                    <button type="button" class="mob-cat-tab active" id="mobStoreTab" onclick="switchMobileTab('store', this)">Store</button>
+                    <button type="button" class="mob-cat-tab" id="mobMyBooksTab" onclick="switchMobileTab('my-books', this)">My Library</button>
+                </div>
+            </div>
+        </div>
+
             <div class="collection-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <h2 class="collection-title">Explore Library</h2>
                 <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -1345,6 +2367,7 @@
 
             // Initial fetch
             await fetchBooks();
+            initMobileExperience();
             initCarousel();
             renderBooks();
 
@@ -1377,6 +2400,242 @@
         }
 
         // Fetch Books
+        
+        /* ========================================================
+           MOBILE BOOKS LOGIC & INTERACTIVITY ENGINE
+           ======================================================== */
+
+        function focusMobileSearch() {
+            const input = document.getElementById('mobileSearchInput');
+            if (input) {
+                input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                setTimeout(() => input.focus(), 350);
+            }
+        }
+
+        function handleMobileSearch(e) {
+            const query = e.target.value;
+            const clearBtn = document.getElementById('mobileSearchClear');
+            if (clearBtn) clearBtn.style.display = query.trim().length > 0 ? 'block' : 'none';
+
+            // Sync with desktop search input
+            const desktopSearch = document.querySelector('.search-bar input');
+            if (desktopSearch) desktopSearch.value = query;
+
+            renderBooks(query);
+        }
+
+        function clearMobileSearch() {
+            const input = document.getElementById('mobileSearchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('mobileSearchClear');
+            if (clearBtn) clearBtn.style.display = 'none';
+
+            const desktopSearch = document.querySelector('.search-bar input');
+            if (desktopSearch) desktopSearch.value = '';
+
+            renderBooks('');
+        }
+
+        function selectMobileCategoryChip(cat, el) {
+            document.querySelectorAll('.mob-cat-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+
+            // Sync with desktop category logic
+            selectBookCategory(cat);
+        }
+
+        function switchMobileTab(tab, el) {
+            document.querySelectorAll('.mob-cat-tab').forEach(t => t.classList.remove('active'));
+            if (el) el.classList.add('active');
+            switchTab(tab);
+        }
+
+        function scrollMobToCollection(e) {
+            if (e && e.preventDefault) e.preventDefault();
+            const grid = document.getElementById('booksGrid');
+            if (grid) {
+                grid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        // Render Mobile Trending Section
+        function renderMobileTrending() {
+            const rail = document.getElementById('mobTrendingRail');
+            if (!rail) return;
+
+            const trending = [...allBooks]
+                .sort((a, b) => ((b.ratings ? b.ratings.length : 0) - (a.ratings ? a.ratings.length : 0)))
+                .slice(0, 8);
+
+            if (trending.length === 0) {
+                rail.innerHTML = '<p style="color:#64748b; font-size:0.8rem; padding:10px 0;">No trending books found.</p>';
+                return;
+            }
+
+            rail.innerHTML = trending.map(b => {
+                const authorName = b.penName ? b.penName : (b.author ? (b.author.displayName || b.author.username) : 'Vylithra Author');
+                const priceLabel = b.price === 0 ? 'FREE' : '₹' + b.price;
+                const priceClass = b.price === 0 ? 'mob-badge-free' : 'mob-badge-paid';
+                const cover = b.coverImage || '/book_cover_clean.png';
+
+                let avgRating = 0;
+                if (b.ratings && b.ratings.length > 0) {
+                    const sum = b.ratings.reduce((acc, r) => acc + (r.score || 0), 0);
+                    avgRating = (sum / b.ratings.length).toFixed(1);
+                }
+
+                return `
+                    <div class="mob-trending-card" onclick="openReader('${b._id}')">
+                        <div class="mob-card-cover-box">
+                            <img src="${cover}" alt="${b.title}" class="mob-card-cover" onerror="this.src='/book_cover_clean.png'" loading="lazy">
+                            <span class="mob-card-price ${priceClass}">${priceLabel}</span>
+                            ${avgRating > 0 ? `<span class="mob-card-rating"><i class="fas fa-star"></i> ${avgRating}</span>` : ''}
+                        </div>
+                        <h4 class="mob-card-title">${b.title}</h4>
+                        <p class="mob-card-author">${authorName}</p>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // Render Mobile Featured Banner Artwork
+        function renderMobileFeatured() {
+            if (allBooks.length === 0) return;
+            const topBook = allBooks[0];
+            const coverImg = document.getElementById('mobFeaturedImg');
+            if (coverImg && topBook.coverImage) {
+                coverImg.src = topBook.coverImage;
+            }
+        }
+
+        // Render Mobile Recommended Authors
+        function renderMobileAuthors() {
+            const rail = document.getElementById('mobAuthorsRail');
+            if (!rail) return;
+
+            const authorMap = new Map();
+            allBooks.forEach(b => {
+                if (!b.author || !b.author._id) return;
+                const id = b.author._id;
+                if (!authorMap.has(id)) {
+                    authorMap.set(id, {
+                        _id: id,
+                        name: b.penName || b.author.displayName || b.author.username || 'Author',
+                        avatar: b.author.profilePicture || '',
+                        bookCount: 1
+                    });
+                } else {
+                    authorMap.get(id).bookCount += 1;
+                }
+            });
+
+            const authors = Array.from(authorMap.values());
+            if (authors.length === 0) {
+                const section = document.getElementById('mobAuthorsSection');
+                if (section) section.style.display = 'none';
+                return;
+            }
+
+            rail.innerHTML = authors.map(a => `
+                <div class="mob-author-card" onclick="window.location.href='/profile?user=${a._id}'">
+                    <div class="mob-author-avatar-wrap">
+                        ${a.avatar ? `<img src="${a.avatar}" class="mob-author-avatar" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'mob-author-initial\\'>${a.name.charAt(0).toUpperCase()}</div>';">` : `<div class="mob-author-initial">${a.name.charAt(0).toUpperCase()}</div>`}
+                    </div>
+                    <h4 class="mob-author-name">${a.name}</h4>
+                    <span class="mob-author-books">${a.bookCount} published ${a.bookCount === 1 ? 'work' : 'works'}</span>
+                    <button type="button" class="mob-author-btn">View Profile</button>
+                </div>
+            `).join('');
+        }
+
+        // Reading Progress Engine
+        function saveReadingProgress(bookId, currentPage = 1, totalPages = 10) {
+            try {
+                const book = allBooks.find(b => b._id === bookId);
+                if (!book) return;
+                let history = JSON.parse(localStorage.getItem('vyl_reading_history') || '[]');
+                history = history.filter(h => h.bookId !== bookId);
+                const percent = Math.min(100, Math.max(5, Math.round((currentPage / (totalPages || 1)) * 100)));
+                history.unshift({
+                    bookId: book._id,
+                    title: book.title,
+                    author: book.penName || (book.author ? (book.author.displayName || book.author.username) : 'Vylithra Author'),
+                    cover: book.coverImage || '/book_cover_clean.png',
+                    currentPage,
+                    totalPages,
+                    percent,
+                    updatedAt: Date.now()
+                });
+                localStorage.setItem('vyl_reading_history', JSON.stringify(history.slice(0, 5)));
+                renderContinueReadingSection();
+            } catch (e) {
+                console.error('Error saving reading progress:', e);
+            }
+        }
+
+        function renderContinueReadingSection() {
+            const container = document.getElementById('mobContinueReadingContainer');
+            const hint = document.getElementById('readingCountHint');
+            if (!container) return;
+
+            let history = [];
+            try {
+                history = JSON.parse(localStorage.getItem('vyl_reading_history') || '[]');
+            } catch (e) {
+                history = [];
+            }
+
+            if (hint) {
+                hint.innerText = history.length > 0 ? `${history.length} in progress` : '0 in progress';
+            }
+
+            if (!history || history.length === 0) {
+                container.innerHTML = `
+                    <div style="margin: 0 16px 12px 16px; padding: 18px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.02); border: 1px dashed rgba(255, 255, 255, 0.1); text-align: center;">
+                        <i class="fas fa-book-open" style="color: #64748b; font-size: 1.3rem; margin-bottom: 6px; display: block;"></i>
+                        <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">No books in progress yet. Tap any book below to start reading!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = history.slice(0, 3).map(item => `
+                <div class="mob-reading-card" onclick="openReader('${item.bookId}')">
+                    <img src="${item.cover}" alt="${item.title}" class="mob-reading-thumb" onerror="this.src='/book_cover_clean.png'">
+                    <div class="mob-reading-info">
+                        <h4 class="mob-reading-title">${item.title}</h4>
+                        <p class="mob-reading-author">${item.author}</p>
+                        <div class="mob-progress-bar-bg">
+                            <div class="mob-progress-bar-fill" style="width: ${item.percent}%;"></div>
+                        </div>
+                        <span class="mob-progress-text">${item.percent}% completed • Page ${item.currentPage}</span>
+                    </div>
+                    <button type="button" class="mob-resume-btn" onclick="event.stopPropagation(); openReader('${item.bookId}')">Resume</button>
+                </div>
+            `).join('');
+        }
+
+        // Hook mobile initializations after books are fetched
+        function initMobileExperience() {
+            renderMobileTrending();
+            renderMobileFeatured();
+            renderMobileAuthors();
+            renderContinueReadingSection();
+
+            // Mobile Avatar sync
+            const mobAvatarEl = document.getElementById('mobHeaderAvatar');
+            if (mobAvatarEl && currentUser) {
+                if (currentUser.profilePicture) {
+                    mobAvatarEl.innerHTML = `<img src="${currentUser.profilePicture}" alt="${currentUser.username}">`;
+                } else {
+                    const initial = (currentUser.displayName || currentUser.username || 'U').charAt(0).toUpperCase();
+                    mobAvatarEl.innerText = initial;
+                }
+            }
+        }
+
+
         async function fetchBooks() {
             document.getElementById('loading').style.display = 'block';
             document.getElementById('booksGrid').innerHTML = '';
@@ -2144,6 +3403,31 @@
             </div>
         </div>
     </div>
+
+
+    <!-- 2I. Universal Mobile Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav">
+        <a href="/main" class="bottom-nav-item">
+            <i class="fas fa-home"></i>
+            <span>Home</span>
+        </a>
+        <a href="/reels" class="bottom-nav-item">
+            <i class="fas fa-play-circle"></i>
+            <span>Reels</span>
+        </a>
+        <a href="/books" class="bottom-nav-item active">
+            <i class="fas fa-book"></i>
+            <span>Books</span>
+        </a>
+        <a href="/messages" class="bottom-nav-item">
+            <i class="fas fa-envelope"></i>
+            <span>Messages</span>
+        </a>
+        <a href="/profile" class="bottom-nav-item">
+            <i class="fas fa-user"></i>
+            <span>Profile</span>
+        </a>
+    </nav>
 
 </body>
 
