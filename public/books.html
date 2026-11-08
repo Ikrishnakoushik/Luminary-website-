@@ -504,6 +504,152 @@
             gap: 50px;
         }
 
+        
+        /* === VISUAL CATEGORY SHOWCASE (CYBER-LUXE GENRE TILES) === */
+        .book-category-showcase {
+            margin: 0 0 35px 0;
+            padding: 0 5%;
+        }
+
+        .category-header-wrap {
+            margin-bottom: 18px;
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .book-category-title {
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+            font-family: 'Outfit', sans-serif;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .category-subtitle {
+            font-size: 0.88rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .book-category-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 960px) {
+            .book-category-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .book-category-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+            .book-category-title {
+                font-size: 1.5rem;
+            }
+            .cat-card {
+                height: 90px !important;
+            }
+            .cat-label {
+                font-size: 0.88rem !important;
+                letter-spacing: 1.5px !important;
+            }
+        }
+
+        .cat-card {
+            position: relative;
+            height: 105px;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            transition: all 0.28s cubic-bezier(0.2, 0.8, 0.2, 1);
+            user-select: none;
+            background: #0e121b;
+        }
+
+        .cat-bg-img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.45s ease, filter 0.45s ease;
+            filter: brightness(0.62) contrast(1.15);
+        }
+
+        .cat-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(7, 9, 14, 0.65) 0%, rgba(14, 18, 27, 0.55) 100%);
+            transition: background 0.3s ease;
+        }
+
+        .cat-label {
+            position: relative;
+            z-index: 2;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 800;
+            letter-spacing: 2.2px;
+            color: #ffffff;
+            text-transform: uppercase;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+            transition: all 0.25s ease;
+        }
+
+        .cat-card:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: rgba(0, 242, 254, 0.55);
+            box-shadow: 0 12px 30px rgba(0, 242, 254, 0.3);
+        }
+
+        .cat-card:hover .cat-bg-img {
+            transform: scale(1.08);
+            filter: brightness(0.85) contrast(1.2);
+        }
+
+        .cat-card:hover .cat-overlay {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.2) 0%, rgba(7, 9, 14, 0.5) 100%);
+        }
+
+        .cat-card:hover .cat-label {
+            color: #00f2fe;
+            letter-spacing: 2.8px;
+            text-shadow: 0 0 18px rgba(0, 242, 254, 0.7);
+        }
+
+        .cat-card.active {
+            border-color: #00f2fe;
+            box-shadow: 0 0 24px rgba(0, 242, 254, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .cat-card.active .cat-overlay {
+            background: linear-gradient(135deg, rgba(0, 242, 254, 0.3) 0%, rgba(168, 85, 247, 0.25) 100%);
+        }
+
+        .cat-card.active .cat-label {
+            color: #00f2fe;
+            text-shadow: 0 0 20px rgba(0, 242, 254, 0.9);
+        }
+
         .category-section {
             display: flex;
             flex-direction: column;
@@ -1029,6 +1175,59 @@
                     <div class="tab" onclick="switchTab('my-books')">My Library</div>
                 </div>
             </div>
+            
+            <!-- Visual Category Showcase Grid -->
+            <section class="book-category-showcase" id="categoryShowcase">
+                <div class="category-header-wrap">
+                    <h2 class="book-category-title">
+                        Category
+                    </h2>
+                    <span class="category-subtitle" id="activeCategoryIndicator">Showing all categories</span>
+                </div>
+                <div class="book-category-grid">
+                    <div class="cat-card" onclick="selectBookCategory('History', this)">
+                        <img src="https://images.unsplash.com/photo-1461360370896-922624d12aa1?auto=format&fit=crop&w=500&q=80" alt="History" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">HISTORY</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Fantasy', this)">
+                        <img src="https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=500&q=80" alt="Fantasy" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">FANTASY</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Medicine', this)">
+                        <img src="https://images.unsplash.com/photo-1532938911079-1b06ac7ceec7?auto=format&fit=crop&w=500&q=80" alt="Medicine" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">MEDICINE</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Law', this)">
+                        <img src="https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=500&q=80" alt="Law" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">LAW</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Poetry', this)">
+                        <img src="https://images.unsplash.com/photo-1455390582262-044cdead277a?auto=format&fit=crop&w=500&q=80" alt="Poetry" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">POETRY</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Business', this)">
+                        <img src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=500&q=80" alt="Business" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">BUSINESS</span>
+                    </div>
+                    <div class="cat-card" onclick="selectBookCategory('Novels', this)">
+                        <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=500&q=80" alt="Novels" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">NOVELS</span>
+                    </div>
+                    <div class="cat-card cat-card-all active" onclick="selectBookCategory('all', this)">
+                        <img src="https://images.unsplash.com/photo-1507842229451-7f01be7ef7ab?auto=format&fit=crop&w=500&q=80" alt="All Genres" class="cat-bg-img" loading="lazy">
+                        <div class="cat-overlay"></div>
+                        <span class="cat-label">MORE...</span>
+                    </div>
+                </div>
+            </section>
+
             <div class="collection-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
                 <h2 class="collection-title">Explore Library</h2>
                 <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
@@ -1214,6 +1413,38 @@
         });
 
         // Render Books based on Tab and Search Filter
+        
+        let currentCategoryFilter = 'all';
+
+        function selectBookCategory(category, el) {
+            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+            const indicator = document.getElementById('activeCategoryIndicator');
+
+            if (currentCategoryFilter.toLowerCase() === category.toLowerCase() && category !== 'all') {
+                // Toggle off -> Show all
+                currentCategoryFilter = 'all';
+                const allCard = document.querySelector('.cat-card-all');
+                if (allCard) allCard.classList.add('active');
+                if (indicator) indicator.innerText = 'Showing all categories';
+            } else {
+                currentCategoryFilter = category;
+                if (el) el.classList.add('active');
+                if (indicator) {
+                    indicator.innerText = category === 'all' 
+                        ? 'Showing all categories' 
+                        : `Filtered by: ${category} (Click to reset)`;
+                }
+            }
+
+            renderBooks(document.querySelector('.search-bar input')?.value || '');
+            
+            // Smoothly focus on book collection if specific category selected
+            if (category !== 'all') {
+                const targetHeader = document.querySelector('.collection-header');
+                if (targetHeader) targetHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
         function renderBooks(searchTerm = '') {
             const grid = document.getElementById('booksGrid');
             grid.innerHTML = '';
@@ -1233,6 +1464,38 @@
                     grid.innerHTML = '<div style="color: var(--text-muted); grid-column: 1/-1; text-align: center; padding: 40px;">Please <a href="/auth" style="color: var(--primary);">log in</a> to view your library.</div>';
                     return;
                 }
+            }
+
+            // Apply category filter if active
+            if (currentCategoryFilter && currentCategoryFilter !== 'all') {
+                const catQuery = currentCategoryFilter.toLowerCase();
+                booksToShow = booksToShow.filter(b => {
+                    const cat = (b.category || '').toLowerCase();
+                    const title = (b.title || '').toLowerCase();
+                    const desc = (b.description || '').toLowerCase();
+                    if (catQuery === 'novels') {
+                        return cat.includes('novel') || cat.includes('fiction') || cat.includes('story') || cat.includes('literature') || desc.includes('novel');
+                    }
+                    if (catQuery === 'fantasy') {
+                        return cat.includes('fantasy') || cat.includes('sci-fi') || cat.includes('science fiction') || cat.includes('magic');
+                    }
+                    if (catQuery === 'medicine') {
+                        return cat.includes('med') || cat.includes('health') || cat.includes('clinical') || cat.includes('bio');
+                    }
+                    if (catQuery === 'business') {
+                        return cat.includes('business') || cat.includes('economic') || cat.includes('finance') || cat.includes('growth');
+                    }
+                    if (catQuery === 'history') {
+                        return cat.includes('history') || cat.includes('culture') || cat.includes('historical') || cat.includes('ancient');
+                    }
+                    if (catQuery === 'law') {
+                        return cat.includes('law') || cat.includes('legal') || cat.includes('governance') || cat.includes('court');
+                    }
+                    if (catQuery === 'poetry') {
+                        return cat.includes('poet') || cat.includes('verse') || cat.includes('rhyme') || cat.includes('anthology');
+                    }
+                    return cat.includes(catQuery) || title.includes(catQuery);
+                });
             }
 
             // Apply search filter if present
