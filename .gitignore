@@ -6,6 +6,7 @@ node_modules
 *.diff
 *.txt
 !public/ads.txt
+!ads.txt
 *.log
 *.err
 backups/

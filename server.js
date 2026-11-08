@@ -509,6 +509,10 @@ app.use(express.static(path.join(__dirname, 'public'), {
 app.get('/privacy', (req, res) => res.sendFile(path.join(__dirname, 'public/privacy.html')));
 app.get('/terms', (req, res) => res.sendFile(path.join(__dirname, 'public/terms.html')));
 app.get('/robots.txt', (req, res) => res.sendFile(path.join(__dirname, 'public/robots.txt')));
+app.get('/ads.txt', (req, res) => {
+    res.type('text/plain');
+    res.send('google.com, pub-4334731678615084, DIRECT, f08c47fec0942fa0\n');
+});
 app.get('/forgot-password', (req, res) => res.sendFile(path.join(__dirname, 'public/forgot-password.html')));
 app.get('/reset-password', (req, res) => res.sendFile(path.join(__dirname, 'public/reset-password.html')));
 

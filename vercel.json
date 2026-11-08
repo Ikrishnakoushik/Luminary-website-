@@ -37,6 +37,10 @@
             "destination": "/server.js"
         },
         {
+            "source": "/ads.txt",
+            "destination": "/server.js"
+        },
+        {
             "source": "/(.*)",
             "destination": "/public/$1"
         }
