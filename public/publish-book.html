@@ -473,9 +473,36 @@
                     </div>
 
                     <div class="form-group" style="flex: 1; min-width: 150px;">
-                        <label for="bookPrice">Sale Price ($)</label>
-                        <input type="number" id="bookPrice" class="form-control" min="0" step="0.01" value="0" required>
+                        <label for="bookPrice">Sale Price (₹ INR)</label>
+                        <input type="number" id="bookPrice" class="form-control" min="0" step="1" value="0" required>
                     </div>
+                </div>
+
+                <!-- Digital Book File Upload (PDF / EPUB) -->
+                <div class="form-group" style="margin-top: 20px; background: rgba(255,255,255,0.02); border: 1px dashed rgba(0, 242, 254, 0.35); border-radius: 14px; padding: 18px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #00f2fe;"><i class="fas fa-file-arrow-up" style="margin-right: 8px;"></i>Digital Book File (PDF or EPUB)</label>
+                        <span style="font-size: 0.78rem; color: #94a3b8;"><i class="fas fa-shield-halved"></i> Max limit: 100MB</span>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.84rem; margin-bottom: 12px;">Upload your pre-formatted PDF or EPUB manuscript. Readers can preview excerpts and read via the interactive Vylithra Reader.</p>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input type="file" id="bookManuscriptFile" accept=".pdf,.epub,.docx,.txt" class="form-control" style="flex: 1; padding: 12px; cursor: pointer;" onchange="handleManuscriptSelect(this)">
+                        <input type="hidden" id="bookFileUrl" value="">
+                        <input type="hidden" id="bookFileType" value="text">
+                        <input type="hidden" id="bookFileSize" value="0">
+                    </div>
+                    <div id="manuscriptUploadProgress" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #00f2fe;">
+                        <i class="fas fa-spinner fa-spin" style="margin-right: 6px;"></i> Uploading and verifying manuscript file...
+                    </div>
+                    <div id="manuscriptStatusBadge" style="display: none; margin-top: 10px; font-size: 0.85rem; color: #10b981;">
+                        <i class="fas fa-check-circle" style="margin-right: 6px;"></i> <span id="manuscriptFileName">File attached</span>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 20px;">
+                    <label>Free Sample Preview (Chapter 1 / Teaser Excerpt)</label>
+                    <p style="color: var(--text-muted); font-size: 0.84rem; margin-bottom: 8px;">Unpurchased readers will see this sample preview before the paywall.</p>
+                    <textarea id="previewExcerpt" class="form-control" rows="3" placeholder="Paste the opening pages or Chapter 1 teaser to entice readers..."></textarea>
                 </div>
 
                 <div class="form-group" style="margin-top: 20px;">
@@ -646,6 +673,73 @@
             });
         }
 
+        let uploadedManuscriptUrl = '';
+        let uploadedManuscriptType = 'text';
+        let uploadedManuscriptSize = 0;
+
+        async function handleManuscriptSelect(input) {
+            if (!input.files || !input.files[0]) return;
+            const file = input.files[0];
+            const MAX_SIZE = 100 * 1024 * 1024; // 100MB limit
+            if (file.size > MAX_SIZE) {
+                if (typeof VylithraUI !== 'undefined') {
+                    VylithraUI.showToast('File size exceeds the 100MB limit. Please select a file under 100MB.', 'error');
+                } else {
+                    alert('File size exceeds the 100MB limit. Please select a file under 100MB.');
+                }
+                input.value = '';
+                return;
+            }
+
+            const ext = file.name.split('.').pop().toLowerCase();
+            const progressEl = document.getElementById('manuscriptUploadProgress');
+            const badgeEl = document.getElementById('manuscriptStatusBadge');
+            const nameEl = document.getElementById('manuscriptFileName');
+
+            if (progressEl) progressEl.style.display = 'block';
+            if (badgeEl) badgeEl.style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+                const currentToken = localStorage.getItem('token');
+                const res = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': currentToken },
+                    body: formData
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    uploadedManuscriptUrl = data.url;
+                    uploadedManuscriptType = ext;
+                    uploadedManuscriptSize = file.size;
+                    document.getElementById('bookFileUrl').value = data.url;
+                    document.getElementById('bookFileType').value = ext;
+                    document.getElementById('bookFileSize').value = file.size;
+                    
+                    if (progressEl) progressEl.style.display = 'none';
+                    if (badgeEl) {
+                        nameEl.innerText = `${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB) attached successfully!`;
+                        badgeEl.style.display = 'block';
+                    }
+                    if (typeof VylithraUI !== 'undefined') VylithraUI.showToast('Manuscript file uploaded and verified!', 'success');
+
+                    // If editor is empty, auto-render viewer frame for PDF
+                    const editor = document.getElementById('bookContent');
+                    if (ext === 'pdf' && (!editor.innerHTML || editor.innerHTML.trim() === '')) {
+                        const fileSrc = data.url.startsWith('http') ? data.url : '/' + data.url;
+                        editor.innerHTML = `<div contenteditable="false" style="margin: 20px 0; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; overflow: hidden; width: 100%;"><iframe src="${fileSrc}" width="100%" height="700px" style="border: none; display: block;" title="Book Manuscript Preview"></iframe></div>`;
+                    }
+                } else {
+                    throw new Error('Server rejected file upload');
+                }
+            } catch (err) {
+                console.error('Error uploading manuscript:', err);
+                if (progressEl) progressEl.style.display = 'none';
+                if (typeof VylithraUI !== 'undefined') VylithraUI.showToast('Could not upload manuscript file. Check connection.', 'error');
+            }
+        }
+
         const urlParams = new URLSearchParams(window.location.search);
         const editId = urlParams.get('editId');
 
@@ -743,6 +837,16 @@
                 formData.append('content', content);
                 formData.append('penName', penName);
                 formData.append('category', category);
+                
+                const fileUrl = document.getElementById('bookFileUrl')?.value || uploadedManuscriptUrl;
+                const fileType = document.getElementById('bookFileType')?.value || uploadedManuscriptType;
+                const fileSize = document.getElementById('bookFileSize')?.value || uploadedManuscriptSize;
+                const previewExcerpt = document.getElementById('previewExcerpt')?.value || '';
+                
+                if (fileUrl) formData.append('fileUrl', fileUrl);
+                if (fileType) formData.append('fileType', fileType);
+                if (fileSize) formData.append('fileSize', fileSize);
+                if (previewExcerpt) formData.append('previewExcerpt', previewExcerpt);
 
                 const coverImageFile = document.getElementById('bookCoverFile').files[0];
                 if (coverImageFile) {

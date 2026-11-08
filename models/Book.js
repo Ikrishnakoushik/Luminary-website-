@@ -34,6 +34,22 @@ const BookSchema = new mongoose.Schema({
         type: String, // Storing HTML or structured JSON depending on editor
         required: true
     },
+    fileUrl: {
+        type: String, // Cloud URL for uploaded PDF or EPUB file
+        default: ''
+    },
+    fileType: {
+        type: String, // 'pdf', 'epub', 'doc', 'text'
+        default: 'text'
+    },
+    fileSize: {
+        type: Number, // in bytes
+        default: 0
+    },
+    previewExcerpt: {
+        type: String, // Sample chapter or preview snippet for unpurchased books
+        default: ''
+    },
     isPublished: {
         type: Boolean,
         default: true

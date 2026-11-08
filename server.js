@@ -3284,7 +3284,37 @@ app.get('/api/books/:id', auth, async (req, res) => {
 
         if (!isAuthor && !hasPurchased && book.price > 0) {
             const restrictedBook = book.toObject();
-            restrictedBook.content = "Please purchase the book to read the full content.";
+            
+            // Generate clean sample preview (previewExcerpt, or first 1500 chars of content)
+            let previewText = book.previewExcerpt;
+            if (!previewText && book.content) {
+                const clean = book.content.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                previewText = clean.length > 50 ? (clean.slice(0, 1500) + '...') : '';
+            }
+            if (!previewText) previewText = book.description || 'Sample preview unavailable.';
+
+            restrictedBook.content = `
+                <div class="book-preview-container" style="line-height: 1.8; font-size: 1.05rem;">
+                    <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(0,242,254,0.1); border:1px solid rgba(0,242,254,0.3); color:#00f2fe; padding:4px 12px; border-radius:20px; font-size:0.75rem; font-weight:700; margin-bottom:16px;">
+                        <i class="fas fa-eye"></i> FREE SAMPLE PREVIEW
+                    </div>
+                    <div class="preview-body" style="margin-bottom: 30px; color: #cbd5e1; white-space: pre-line;">
+                        ${previewText}
+                    </div>
+                    <div class="paywall-lock-card" style="background: linear-gradient(135deg, rgba(14, 18, 27, 0.95), rgba(20, 26, 40, 0.95)); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 16px; padding: 24px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                        <div style="width: 48px; height: 48px; border-radius: 50%; background: rgba(212, 175, 55, 0.15); color: #fbbf24; display: inline-flex; align-items: center; justify-content: center; font-size: 1.3rem; margin-bottom: 12px;">
+                            <i class="fas fa-lock"></i>
+                        </div>
+                        <h3 style="color: #ffffff; font-size: 1.15rem; margin-bottom: 6px;">End of Free Sample</h3>
+                        <p style="color: #94a3b8; font-size: 0.9rem; max-width: 420px; margin: 0 auto 18px;">Unlock the complete book to read all chapters, access downloads, and support the author directly.</p>
+                        <a href="/checkout.html?bookId=${book._id}" style="display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #00f2fe, #a855f7); color: #07090e; font-weight: 700; padding: 10px 24px; border-radius: 25px; text-decoration: none; box-shadow: 0 0 15px rgba(0,242,254,0.4);">
+                            <i class="fas fa-shopping-bag"></i> Buy Full Book (₹${book.price})
+                        </a>
+                    </div>
+                </div>
+            `;
+            // DRM: Scrub raw fileUrl for unpurchased users
+            restrictedBook.fileUrl = '';
             return res.json(restrictedBook);
         }
 
@@ -3303,7 +3333,7 @@ app.post('/api/books', auth, (req, res) => {
             return res.status(400).json({ msg: err.message || err });
         }
         try {
-            const { title, description, price, coverImage, content, penName, category } = req.body;
+            const { title, description, price, coverImage, content, penName, category, fileUrl, fileType, fileSize, previewExcerpt } = req.body;
 
             // Any authenticated user can create books regardless of role
 
@@ -3323,6 +3353,10 @@ app.post('/api/books', auth, (req, res) => {
                 price: price || 0,
                 coverImage: finalCoverImage,
                 content,
+                fileUrl: fileUrl || '',
+                fileType: fileType || 'text',
+                fileSize: fileSize || 0,
+                previewExcerpt: previewExcerpt || '',
                 penName: penName || '',
                 category: category || 'General',
                 author: req.user.id
@@ -3349,7 +3383,7 @@ app.put('/api/books/:id', auth, (req, res) => {
             return res.status(400).json({ msg: err.message || err });
         }
         try {
-            const { title, description, price, coverImage, content, penName, category } = req.body;
+            const { title, description, price, coverImage, content, penName, category, fileUrl, fileType, fileSize, previewExcerpt } = req.body;
 
             let book = await Book.findById(req.params.id);
             if (!book) return res.status(404).json({ msg: 'Book not found' });
@@ -3375,6 +3409,10 @@ app.put('/api/books/:id', auth, (req, res) => {
             if (price !== undefined) book.price = price;
             if (finalCoverImage !== undefined) book.coverImage = finalCoverImage;
             if (content) book.content = content;
+            if (fileUrl !== undefined) book.fileUrl = fileUrl;
+            if (fileType !== undefined) book.fileType = fileType;
+            if (fileSize !== undefined) book.fileSize = fileSize;
+            if (previewExcerpt !== undefined) book.previewExcerpt = previewExcerpt;
             if (penName !== undefined) book.penName = penName;
             if (category) book.category = category;
 

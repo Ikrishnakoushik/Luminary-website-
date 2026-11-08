@@ -1326,7 +1326,10 @@
                                 `<button class="book-action-btn" onclick="exportBookAsPDF('${book._id}', event)" style="background:transparent; color:var(--primary); border: 1px solid var(--primary); margin-left:10px;"><i class="fas fa-download"></i> PDF</button>` :
                                 `<button class="book-action-btn" onclick="window.location.href='/checkout-download.html?bookId=${book._id}'" style="background:transparent; color:#d4af37; border: 1px solid #d4af37; margin-left:10px;"><i class="fas fa-lock"></i> PDF</button>`
                              }` :
-                            `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
+                            `(book.price === 0 ?
+    `<button class="book-action-btn" onclick="acquireFreeBook('${book._id}', event)" style="background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#fff; border:none;"><i class="fas fa-plus"></i> Add Free</button>` :
+    `<button class="book-action-btn" onclick="buyBook('${book._id}', ${book.price})">Get Book</button>`
+)`
                         }
                         </div>
                         <div style="margin-top: 8px; display: flex; gap: 8px;">
@@ -1349,6 +1352,47 @@
         }
 
 
+
+        // Instant 1-Click Free Book Acquisition
+        async function acquireFreeBook(bookId, e) {
+            if (e && e.stopPropagation) e.stopPropagation();
+            if (!token) {
+                if (typeof VylithraUI !== 'undefined') {
+                    VylithraUI.showToast('Please log in to add free books to your library', 'error');
+                } else {
+                    alert('Please log in to add free books');
+                }
+                setTimeout(() => window.location.href = '/auth', 1500);
+                return;
+            }
+            try {
+                const btn = e.currentTarget;
+                const prev = btn.innerHTML;
+                btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i>`;
+                btn.disabled = true;
+
+                const res = await fetch(`${API_URL}/books/${bookId}/purchase-free`, {
+                    method: 'POST',
+                    headers: { 'x-auth-token': token }
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    if (typeof VylithraUI !== 'undefined') VylithraUI.showToast(data.msg || 'Book added to your library!', 'success');
+                    if (currentUser) {
+                        if (!currentUser.purchasedBooks) currentUser.purchasedBooks = [];
+                        currentUser.purchasedBooks.push(bookId);
+                    }
+                    btn.outerHTML = `<button class="book-action-btn" onclick="openReader('${bookId}')">Read Book</button>`;
+                } else {
+                    if (typeof VylithraUI !== 'undefined') VylithraUI.showToast(data.msg || 'Could not add book', 'error');
+                    btn.innerHTML = prev;
+                    btn.disabled = false;
+                }
+            } catch (err) {
+                console.error('Free order error:', err);
+                if (typeof VylithraUI !== 'undefined') VylithraUI.showToast('Network error adding book', 'error');
+            }
+        }
 
         // Redirect to Checkout Page
         async function buyBook(bookId) {
@@ -1391,7 +1435,7 @@
                             ${bookToExport.content}
                         </div>
                         <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #888;">
-                            <i>Certified Authorized Export • Vylithra Platform</i>
+                            <i>Certified Authorized Copy for ${currentUser ? (currentUser.displayName || currentUser.username) : 'Subscriber'} • Vylithra Platform DRM Protected • ${new Date().toLocaleDateString()}</i>
                         </div>
                     </div>
                 `;

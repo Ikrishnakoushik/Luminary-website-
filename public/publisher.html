@@ -1047,7 +1047,7 @@
                 });
                 if (res.ok) {
                     const data = await res.json();
-                    document.getElementById('balanceDisplay').innerText = `$${(data.balance || 0).toFixed(2)}`;
+                    document.getElementById('balanceDisplay').innerText = `₹${(data.balance || 0).toFixed(2)}`;
 
                     if (data.preferredPaymentMethod && data.preferredPaymentMethod !== 'manual') {
                         document.getElementById('payoutStatusMsg').style.display = 'block';
